@@ -1,0 +1,7 @@
+*.o
+*.cmake
+*.bin
+*.out
+*.make
+*.internal
+build
