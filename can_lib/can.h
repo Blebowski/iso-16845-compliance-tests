@@ -69,8 +69,13 @@ namespace can {
         BIT_TYPE_OVERLOAD_DELIMITER
     };
 
-    enum BitValue
+    struct BitTypeName
     {
+        BitType bitType;
+        std::string name;
+    };
+
+    enum BitValue {
         DOMINANT = 0,
         RECESSIVE = 1
     };

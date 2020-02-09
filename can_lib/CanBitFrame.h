@@ -40,12 +40,27 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        int insertStuffBits();
-        
+        int insertNormalStuffBits();
+
         /**
          * 
          */
-        bool insertStuffCount();
+        bool insertStuffCountStuffBits();
+
+        /**
+         * 
+         */
+        void insertCrcFixedStuffBits();
+
+        /**
+         * 
+         */
+        bool setStuffCount();
+
+        /**
+         * 
+         */
+        bool setStuffParity();
 
         /**
          * 
@@ -65,7 +80,7 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        int getBitIndex(CanBit canBit);
+        int getBitIndex(CanBit *canBit);
 
         /**
          * 
@@ -173,6 +188,24 @@ class CanBitFrame : public CanFrame {
         uint32_t crc21_;
 
         uint8_t stuffCount_;
+        uint8_t stuffCountEncoded_;
+
+        /**
+         * 
+         */
+        void printSingleBitField(list<CanBit>::iterator& bit, string *vals,
+                                 string *names);
+
+        /**
+         * 
+         */
+        void printMultiBitField(list<CanBit>::iterator& bit, string *vals,
+                                string *names);
+
+        /**
+         * 
+         */
+        void printMultiBitField(list<CanBit>::iterator &startBit);
 
         void push_bit(uint8_t bit_val, BitType bitType);
 };

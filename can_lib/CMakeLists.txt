@@ -11,3 +11,5 @@ add_library(
     CanBitFrame.cpp
     CanFrame.cpp
 )
+
+add_compile_options(CAN_LIB -g)

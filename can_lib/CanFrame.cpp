@@ -121,7 +121,7 @@ uint8_t CanFrame::getData(int index)
 
 void CanFrame::setFdf(FlexibleDataRate isFdf)
 {
-    if (isRtr_){
+    if (isRtr_ == RTR_FRAME){
         std::cerr << "Can't set FDF flag on RTR frame" << std::endl;
         return;
     }
@@ -135,7 +135,7 @@ void CanFrame::setIde(ExtendedIdentifier isIde)
 
 void CanFrame::setRtr(RemoteTransmissionRequest isRtr)
 {
-    if (isFdf_ == CAN_FD){
+    if (isFdf_ == CAN_FD && isRtr == RTR_FRAME){
         std::cerr << "Can't set RTR flag on CAN FD frame" << std::endl;
         return;
     }

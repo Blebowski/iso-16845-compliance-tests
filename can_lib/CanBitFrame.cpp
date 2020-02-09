@@ -5,7 +5,11 @@
 #include <iostream>
 #include <assert.h>
 
+#include "can.h"
+#include "CanBit.h"
 #include "CanBitFrame.h"
+
+using namespace std;
 
 CanBitFrame::CanBitFrame(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
                          RemoteTransmissionRequest isRtr, BitRateShift isBrs,
@@ -14,9 +18,21 @@ CanBitFrame::CanBitFrame(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
              CanFrame(isFdf, isIde, isRtr, isBrs, isEsi, dlc, identifier, data)
 {
     buildFrameBits();
-    insertStuffBits();
-    insertStuffCount();
-    calculateCRC();
+    cout << "CAN Frame before stuff bits: \n";
+    print();
+
+    if (isFdf_ == CAN_2_0){
+        calculateCRC();
+        insertNormalStuffBits();
+    } else {
+        insertNormalStuffBits();
+        setStuffCount();
+        setStuffParity();
+        insertStuffCountStuffBits();
+        calculateCRC();
+        insertCrcFixedStuffBits();
+    }
+    print();
 }
 
 uint32_t CanBitFrame::getBaseIdentifier()
@@ -155,7 +171,7 @@ void CanBitFrame::buildFrameBits()
     }
 
     // Build DLC
-    for (int i = 4; i > 0; i++)
+    for (int i = 4; i > 0; i--)
         push_bit(dlc_ >> i, BIT_TYPE_DLC);
 
     // Build data field
@@ -163,11 +179,11 @@ void CanBitFrame::buildFrameBits()
         for (int j = 7; j >= 0; j--)
             push_bit(getData(i) >> j, BIT_TYPE_DATA);
     }
-
+    
     // Build Stuff count + parity (put dummy as we don't know number of
     // stuff bits yet)!
     for (int i = 0; i < 3; i++)
-        bits_.push_back(CanBit(BIT_TYPE_STUFF_COUNT, RECESSIVE));
+        bits_.push_back(CanBit(BIT_TYPE_STUFF_COUNT, DOMINANT));
     bits_.push_back(CanBit(BIT_TYPE_STUFF_PARITY, RECESSIVE));
 
     // Calculate CRC (it is OK from what we have built so far...) and build it
@@ -195,10 +211,10 @@ void CanBitFrame::buildFrameBits()
         bits_.push_back(CanBit(BIT_TYPE_INTERMISSION, RECESSIVE));
 }
 
-int CanBitFrame::insertStuffBits()
+int CanBitFrame::insertNormalStuffBits()
 {
     std::list<CanBit>::iterator bit, firstFixedBit, lastNonFixedBit;
-    int same_bits = 1;
+    int sameBits = 1;
     stuffCount_ = 0;
     BitValue prevValue = DOMINANT; // As if SOF
 
@@ -211,7 +227,7 @@ int CanBitFrame::insertStuffBits()
         std::cerr << "At least 5 bits needed for bit stuffing!" << std::endl;
     }
 
-    // First do "normal" bit stuffing, start from first bit of Base identifier
+    // Start from first bit of Base identifier
     for (bit = ++(bits_.begin());; ++bit)
     {
         // Break when we reach Stuff count (CAN FD) or CRC delimiter (CAN 2.0).
@@ -226,57 +242,87 @@ int CanBitFrame::insertStuffBits()
         }
 
         if (bit->bitValue == prevValue)
-            same_bits++;
+            sameBits++;
         else
-            same_bits = 1;
+            sameBits = 1;
         bit->stuffBitType = STUFF_NO;
 
-        if (same_bits == 5)
+        if (sameBits == 5)
         {
             BitValue stuffValue = bit->getOppositeValue();
             BitType stuffBitType = bit->bitType;
-            bits_.insert(++bit, CanBit(stuffBitType, stuffValue));
-            same_bits = 1;
+            bit++;
+            bit = bits_.insert(bit, CanBit(stuffBitType, stuffValue));
             bit->stuffBitType = STUFF_NORMAL;
+            sameBits = 1;
+
             stuffCount_ = (stuffCount_ + 1) % 8;
         }
         prevValue = bit->bitValue;
         lastNonFixedBit = bit;
     }
 
-    // For CAN FD frames (they always have stuff count) do fixed stuffing
-    // We support only ISO CAN FD, so FD frame always contains Stuff count!
-    if (getFdf() == CAN_FD) {
+    return stuffCount_;
+}
 
-        // Insert one just in the start of stuff count
-        if (lastNonFixedBit->stuffBitType == STUFF_NO) {
-            bits_.insert(firstFixedBit, CanBit(BIT_TYPE_STUFF_COUNT,
-                         lastNonFixedBit->getOppositeValue()));
-            firstFixedBit->stuffBitType = STUFF_FIXED;
-        }
-        same_bits = 1;
 
-        for (bit = ++firstFixedBit; bit->bitType != BIT_TYPE_CRC_DELIMITER; ++bit)
+bool CanBitFrame::insertStuffCountStuffBits()
+{
+    std::list<CanBit>::iterator bit;
+    BitValue stuffBitValue;
+
+    if (getFdf() == CAN_2_0)
+        return false;
+
+    for (bit = bits_.begin(); bit->bitType != BIT_TYPE_STUFF_COUNT; bit++)
+        ;
+    bit--;
+    stuffBitValue = bit->getOppositeValue();
+    bit++;
+
+    bit = bits_.insert(bit, CanBit(BIT_TYPE_STUFF_COUNT, stuffBitValue)); 
+    bit->stuffBitType = STUFF_FIXED;
+
+    // Move one beyond stuff parity and calculate stuff bit post parity
+    for (int i = 0; i < 4; i++)
+        bit++;
+    stuffBitValue = bit->getOppositeValue();
+    bit++;
+
+    bit = bits_.insert(bit, CanBit(BIT_TYPE_STUFF_COUNT, stuffBitValue)); 
+    bit->stuffBitType = STUFF_FIXED;
+
+    return true;
+}
+
+void CanBitFrame::insertCrcFixedStuffBits()
+{
+    std::list<CanBit>::iterator bit;
+    std::list<CanBit>::iterator lastNonFixedBit;
+    int sameBits = 0;
+
+    // Search first bit of CRC 
+    for (bit = bits_.begin(); bit->bitType != BIT_TYPE_CRC; bit++)
+        ;
+
+    for (; bit->bitType != BIT_TYPE_CRC_DELIMITER; ++bit)
+    {
+        sameBits++;
+        if ((sameBits % 4) == 0)
         {
-            same_bits++;
-            if ((same_bits % 4) == 0){
 
-                // Second fixed stuff bit is still in Stuff count field!
-                // This is important for CRC calculation!
-                BitType bitType;
-                BitValue bitValue;
-                if (same_bits == 4)
-                    bitType = BIT_TYPE_STUFF_COUNT;
-                else
-                    bitType = BIT_TYPE_CRC;
-
-                bitValue = bit->getOppositeValue();
-                bits_.insert(++bit, CanBit(bitType, bitValue));
-            }
+            // Second fixed stuff bit is still in Stuff count field!
+            // This is important for CRC calculation!
+            BitType bitType;
+            BitValue bitValue;
+            
+            bitType = BIT_TYPE_CRC;
+            bitValue = bit->getOppositeValue();
+            bit = bits_.insert(++bit, CanBit(bitType, bitValue));
+            bit->stuffBitType = STUFF_FIXED;
         }
     }
 
-    return stuffCount_;
 }
 
 uint32_t CanBitFrame::calculateCRC()
@@ -324,29 +370,80 @@ uint32_t CanBitFrame::calculateCRC()
     return crc21_;
 }
 
-bool CanBitFrame::insertStuffCount()
+bool CanBitFrame::setStuffCount()
 {
     std::list<CanBit>::iterator bit;
-
+    stuffCountEncoded_ = 0;
     bit = bits_.begin();
-    
+
     // No sense to try to set Stuff count on CAN 2.0 frames!
     if (isFdf_ == CAN_2_0)
         return false;
 
-    while (bit->bitType != BIT_TYPE_STUFF_COUNT || bit != bits_.end())
+    while (bit->bitType != BIT_TYPE_STUFF_COUNT && bit != bits_.end())
         bit++;
 
-    // First Stuff count bit should be a stuff bit, ignore it!
-    assert(bit->stuffBitType == STUFF_FIXED);
-    bit++;
+    if (bit == bits_.end())
+    {
+        std::cerr << "Did not find stuff count field!" << std::endl;
+        return false;
+    }
+
+    assert(stuffCount_ < 8);
+
+    switch (stuffCount_){
+        case 0x0 :
+            stuffCountEncoded_ = 0b000;
+            break;
+        case 0x1:
+            stuffCountEncoded_ = 0b001;
+            break;
+        case 0x2 :
+            stuffCountEncoded_ = 0b011;
+            break;
+        case 0x3 :
+            stuffCountEncoded_ = 0b010;
+            break;
+        case 0x4 :
+            stuffCountEncoded_ = 0b110;
+            break;
+        case 0x5 :
+            stuffCountEncoded_ = 0b111;
+            break;
+        case 0x6 :
+            stuffCountEncoded_ = 0b101;
+            break;
+        case 0x7 :
+            stuffCountEncoded_ = 0b100;
+            break;
+    };
 
     for (int i = 2; i >= 0; i--)
     {
         assert(bit->bitType == BIT_TYPE_STUFF_COUNT);
-        bit->bitValue = (BitValue)((stuffCount_ >> i) & 0x1);
+        bit->bitValue = (BitValue)((stuffCountEncoded_ >> i) & 0x1);
         bit++;
     }
+    return true;
+}
+
+bool CanBitFrame::setStuffParity()
+{
+    std::list<CanBit>::iterator bit;
+    uint8_t val = 0;
+
+    if (isFdf_ == CAN_2_0)
+        return false;
+
+    for (bit = bits_.begin(); bit->bitType != BIT_TYPE_STUFF_PARITY; bit++)
+        ;
+    for (int i = 0; i < 3; i++)
+        val ^= (stuffCountEncoded_ >> i) & 0x1;
+    bit->setBitValue((BitValue)val);
+
+    // We must correct value of Fixed stuff bit after the stuff parity!
+
+    return true;
 }
 
 CanBit* CanBitFrame::getBit(int index)
@@ -375,6 +472,18 @@ CanBit* CanBitFrame::getBit(int index, BitType bitType)
         return nullptr;
 
     return &(*bit);
+}
+
+int CanBitFrame::getBitIndex(CanBit *canBit)
+{
+    std::list<CanBit>::iterator bit = bits_.begin();
+    int i = 0;
+
+    while (&(*bit) != canBit && bit != bits_.end()) {
+        i++;
+        bit++;
+    }
+    return i;
 }
 
 CanBit* CanBitFrame::getStuffBit(int index)
@@ -482,7 +591,7 @@ bool CanBitFrame::insertActiveErrorFrame(int index)
 
 bool CanBitFrame::insertActiveErrorFrame(CanBit *canBit)
 {
-    return insertActiveErrorFrame(getBitIndex(*canBit));
+    return insertActiveErrorFrame(getBitIndex(canBit));
 }
 
 bool CanBitFrame::insertPassiveErrorFrame(int index)
@@ -505,7 +614,7 @@ bool CanBitFrame::insertPassiveErrorFrame(int index)
 
 bool CanBitFrame::insertPassiveErrorFrame(CanBit *canBit)
 {
-    return insertPassiveErrorFrame(getBitIndex(*canBit));
+    return insertPassiveErrorFrame(getBitIndex(canBit));
 }
 
 bool CanBitFrame::insertOverloadFrame(int index)
@@ -533,7 +642,7 @@ bool CanBitFrame::insertOverloadFrame(int index)
 
 bool CanBitFrame::insertOverloadFrame(CanBit *canBit)
 {
-    return insertOverloadFrame(getBitIndex(*canBit));
+    return insertOverloadFrame(getBitIndex(canBit));
 }
 
 bool CanBitFrame::looseArbitration(int index)
@@ -550,8 +659,9 @@ bool CanBitFrame::looseArbitration(int index)
         canBit->bitType != BIT_TYPE_SRR &&
         canBit->bitType != BIT_TYPE_IDE)
     {
-        std:cerr << "Can't loos arbitration on " << canBit->bitType << std::endl;
-            return false;
+        std:
+        cerr << "Can't loose arbitration on " << canBit->bitType << std::endl;
+        return false;
     }
 
     // Move to position where we want to loose arbitration
@@ -569,11 +679,91 @@ bool CanBitFrame::looseArbitration(int index)
 
 bool CanBitFrame::looseArbitration(CanBit *canBit)
 {
-    return looseArbitration(getBitIndex(*canBit));
+    return looseArbitration(getBitIndex(canBit));
 }
+
 
 void CanBitFrame::print()
 {
-    
+    list<CanBit>::iterator bit;
+
+    std::string vals = "";
+    std::string names = "";
+
+    for (bit = bits_.begin(); bit != bits_.end();)
+    {
+        // Print separators betwen different field types (also prints separator
+        //  at start of frame)
+        vals += "|";
+        names += " ";
+
+        // Both methods advance iterator when bit is printed.
+        if (bit->isSingleBitField())
+            printSingleBitField(bit, &vals, &names);
+        else
+            printMultiBitField(bit, &vals, &names);
+    }
+
+    std::cout << names << std::endl;
+    std::cout << string(names.length(), '-') << std::endl;
+    std::cout << vals << std::endl;
+    std::cout << string(names.length(), '-') << std::endl;
 }
 
+
+
+void CanBitFrame::printSingleBitField(list<CanBit>::iterator& bit, string *vals,
+                         string *names)
+{
+    list<CanBit>::iterator nxtBit;
+    nxtBit = bit;
+    nxtBit++;
+    vals->append(" " + bit->getStringValue()+ " ");
+
+
+    // Assumes name length is 3 otherwise lines will not be aligned...
+    names->append(bit->getBitTypeName());
+    bit++;
+
+    // Handle stuff bit. If stuff bit is inserted behind a single bit
+    // field it is marked with the same bit field!
+    if (nxtBit->bitType == bit->bitType &&
+        (nxtBit->stuffBitType == STUFF_FIXED ||
+         nxtBit->stuffBitType == STUFF_NORMAL))
+    {
+        names->append(std::string(3, ' '));
+        vals->append(" " + bit->getStringValue() + " ");
+        bit++;
+    }
+}
+
+void CanBitFrame::printMultiBitField(list<CanBit>::iterator& bit, string *vals,
+                                     string *names)
+{
+    int len = 0;
+    int preOffset = 0;
+    int postOffset = 0;
+    string fieldName = bit->getBitTypeName();
+    list<CanBit>::iterator firstBit = bit;
+
+    for (; bit->bitType == firstBit->bitType; bit++)
+    {
+        len += 2;
+        vals->append(bit->getStringValue() + " ");
+    }
+
+    preOffset = (len - fieldName.length()) / 2;
+    postOffset = preOffset;
+    if (fieldName.length() % 2 == 1)
+        postOffset++;
+
+    // Do best effort here, if name is longer, keep no offset
+    if (postOffset < 0)
+        postOffset = 0;
+    if (preOffset < 0)
+        preOffset = 0;
+
+    names->append(string(preOffset, ' '));
+    names->append(fieldName);
+    names->append(string(postOffset, ' '));
+}
