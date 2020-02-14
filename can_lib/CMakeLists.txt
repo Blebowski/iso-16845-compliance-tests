@@ -3,13 +3,23 @@ add_library(
     CAN_LIB
 
     can.h
-    CanBit.h
-    CanFrame.h
-    CanBitFrame.h
+    
+    Bit.h
+    CycleBit.h
 
-    CanBit.cpp
-    CanBitFrame.cpp
-    CanFrame.cpp
+    Frame.h
+    BitFrame.h
+    
+    FrameFlags.h
+    BitTiming.h
+
+    Bit.cpp
+
+    Frame.cpp
+    BitFrame.cpp
+    
+    FrameFlags.cpp
+    BitTiming.cpp
 )
 
 add_compile_options(CAN_LIB -g)

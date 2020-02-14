@@ -5,52 +5,58 @@
 #include <iostream>
 
 #include "can.h"
-#include "CanBit.h"
+#include "Bit.h"
 
-using namespace can;
-
-CanBit::CanBit()
+can::Bit::Bit()
 {
     this->bitType = BitType::BIT_TYPE_IDLE;
     this->bitValue = BitValue::RECESSIVE;
 }
 
-CanBit::CanBit(BitType bitType, BitValue bitValue)
+can::Bit::Bit(BitType bitType, BitValue bitValue)
 {
     this->bitType = bitType;
     this->bitValue = bitValue;
+    this->stuffBitType = STUFF_NO;
 }
 
-BitValue CanBit::getbitValue()
+can::Bit::Bit(BitType bitType, BitValue bitValue, StuffBitType stuffBitType)
+{
+    this->bitType = bitType;
+    this->bitValue = bitValue;
+    this->stuffBitType = stuffBitType;
+}
+
+can::BitValue can::Bit::getbitValue()
 {
     return bitValue;
 }
 
-bool CanBit::setBitValue(BitValue bitValue)
+bool can::Bit::setBitValue(BitValue bitValue)
 {
     this->bitValue = bitValue;
 }
 
-void CanBit::flipBitValue()
+void can::Bit::flipBitValue()
 {
     bitValue = getOppositeValue();
 }
 
-BitValue CanBit::getOppositeValue()
+can::BitValue can::Bit::getOppositeValue()
 {
     if (bitValue == DOMINANT)
         return RECESSIVE;
     return DOMINANT;
 }
 
-bool CanBit::isStuffBit()
+bool can::Bit::isStuffBit()
 {
     if (stuffBitType == STUFF_NORMAL || stuffBitType == STUFF_FIXED)
         return true;
     return false;
 }
 
-std::string CanBit::getBitTypeName()
+std::string can::Bit::getBitTypeName()
 {
     for (int i = 0; i < sizeof(bitTypeNames) / sizeof(BitTypeName); i++)
         if (bitTypeNames[i].bitType == bitType)
@@ -58,7 +64,7 @@ std::string CanBit::getBitTypeName()
     return " ";
 }
 
-std::string CanBit::getStringValue()
+std::string can::Bit::getStringValue()
 {
     if (isStuffBit())
         return "\033[1;32m" + std::to_string((int)bitValue) + "\033[0m";
@@ -66,7 +72,7 @@ std::string CanBit::getStringValue()
         return std::to_string((int)bitValue);
 }
 
-bool CanBit::isSingleBitField()
+bool can::Bit::isSingleBitField()
 {
     if (bitType == BIT_TYPE_SOF ||
         bitType == BIT_TYPE_R0 ||

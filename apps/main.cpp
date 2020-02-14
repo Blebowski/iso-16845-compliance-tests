@@ -5,14 +5,14 @@
 #include <iostream>
 
 #include "../can_lib/can.h"
-#include "../can_lib/CanFrame.h"
-#include "../can_lib/CanBitFrame.h"
+#include "../can_lib/Frame.h"
+#include "../can_lib/BitFrame.h"
+#include "../can_lib/FrameFlags.h"
 
 using namespace can;
 
 int main()
 {
-    std::cout << "Hello world!" << std::endl;
 
     uint8_t data[64] =
     {
@@ -26,11 +26,11 @@ int main()
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
     };
 
-    CanFrame canFrame = CanFrame();
-    CanBitFrame canBitFrame = CanBitFrame(
-        CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-        BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE,
-        0x1, 32, &(data[0]));
+    can::Frame frame = Frame();
+    can::BitFrame bitFrame = BitFrame(
+        FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
+                   BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE),
+        5, 32, &(data[0]));
 
-    canFrame.print();
+    frame.print();
 }

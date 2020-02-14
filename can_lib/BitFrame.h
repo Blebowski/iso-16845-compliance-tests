@@ -5,22 +5,17 @@
 #include <cstdint>
 #include <list>
 
-#include "CanFrame.h"
-#include "CanBit.h"
+#include "Frame.h"
+#include "Bit.h"
 
-using namespace std;
-using namespace can;
+#ifndef BIT_FRAME
+#define BIT_FRAME
 
-#ifndef CAN_BIT_FRAME
-#define CAN_BIT_FRAME
-
-class CanBitFrame : public CanFrame {
+class can::BitFrame : public Frame {
 
     public:
-        CanBitFrame(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                    RemoteTransmissionRequest isRtr, BitRateShift isBrs,
-                    ErrorStateIndicator isEsi, uint8_t dlc, int identifier,
-                    uint8_t *data);
+        BitFrame(FrameFlags frameFlags, uint8_t dlc, int identifier,
+                 uint8_t *data);
 
         /**
          * 
@@ -65,42 +60,57 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        uint32_t calculateCRC();
+        uint32_t calculateCrc();
 
         /**
          * 
          */
-        CanBit* getBit(int index);
+        uint32_t setCrc();
 
         /**
          * 
          */
-        CanBit* getBit(int index, BitType bitType);
+        Bit* getBit(int index);
+        
+        /**
+         * 
+         */
+        std::list<Bit>::iterator getBitIterator(int index);
+        
+        /**
+         * 
+         */
+        Bit* getBitOf(int index, BitType bitType);
 
         /**
          * 
          */
-        int getBitIndex(CanBit *canBit);
+        std::list<Bit>::iterator getBitOfIterator(int index, BitType bitType);
 
         /**
          * 
          */
-        CanBit* getStuffBit(int index);
+        int getBitIndex(Bit *canBit);
 
         /**
          * 
          */
-        CanBit* getFixedStuffBit(int index);
+        Bit* getStuffBit(int index);
 
         /**
          * 
          */
-        bool insertBit(CanBit canBit, int index);
+        Bit* getFixedStuffBit(int index);
 
         /**
          * 
          */
-        bool removeBit(CanBit *canBit);
+        bool insertBit(Bit canBit, int index);
+
+        /**
+         * 
+         */
+        bool removeBit(Bit *canBit);
 
         /**
          * 
@@ -120,7 +130,7 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        bool insertActiveErrorFrame(CanBit *canBit);
+        bool insertActiveErrorFrame(Bit *canBit);
 
         /**
          * 
@@ -130,7 +140,7 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        bool insertPassiveErrorFrame(CanBit *canBit);
+        bool insertPassiveErrorFrame(Bit *canBit);
 
         /**
          * 
@@ -140,7 +150,7 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        bool insertOverloadFrame(CanBit *canBit);
+        bool insertOverloadFrame(Bit *canBit);
 
         /**
          * 
@@ -150,7 +160,7 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        bool looseArbitration(CanBit *canBit);
+        bool looseArbitration(Bit *canBit);
 
         /**
          * 
@@ -175,13 +185,13 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        void print();
+        void print(bool printStuffBits);
 
         // TODO: We might consider having methods for setting DLC, FDF, IDE (etc...)
         //       which modify according fields of "bits_" list!
 
     private:
-        std::list<CanBit> bits_;
+        std::list<Bit> bits_;
 
         uint32_t crc15_;
         uint32_t crc17_;
@@ -193,19 +203,23 @@ class CanBitFrame : public CanFrame {
         /**
          * 
          */
-        void printSingleBitField(list<CanBit>::iterator& bit, string *vals,
-                                 string *names);
+        void printSingleBitField(std::list<Bit>::iterator& bit,
+                                 std::string *vals,
+                                 std::string *names,
+                                 bool printStuffBits);
 
         /**
          * 
          */
-        void printMultiBitField(list<CanBit>::iterator& bit, string *vals,
-                                string *names);
+        void printMultiBitField(std::list<Bit>::iterator& bit,
+                                std::string *vals,
+                                std::string *names,
+                                bool printStuffBits);
 
         /**
          * 
          */
-        void printMultiBitField(list<CanBit>::iterator &startBit);
+        void printMultiBitField(std::list<Bit>::iterator &startBit);
 
         void push_bit(uint8_t bit_val, BitType bitType);
 };

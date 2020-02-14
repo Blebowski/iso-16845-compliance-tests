@@ -86,6 +86,17 @@ namespace can {
         STUFF_NORMAL,
         STUFF_FIXED
     };
-};
+
+    class Bit;
+    class CycleBit;
+    
+    class Frame;
+    class BitFrame;
+    class CycleFrame;
+
+    class FrameFlags;
+    class CycleBitValue;
+
+}; // namespace can
 
 #endif

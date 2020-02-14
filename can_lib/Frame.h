@@ -4,46 +4,30 @@
 
 #include <cstdint>
 #include "can.h"
-
-using namespace can;
+#include "FrameFlags.h"
 
 #ifndef CAN_FRAME
 #define CAN_FRAME
 
-class CanFrame {
+class can::Frame {
 
     public:
-        CanFrame();
-        CanFrame(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                 RemoteTransmissionRequest isRtr, BitRateShift isBrs,
-                 ErrorStateIndicator isEsi, uint8_t dlc, int identifier,
-                 uint8_t *data);
-        CanFrame(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                 RemoteTransmissionRequest isRtr, BitRateShift isBrs,
-                 ErrorStateIndicator isEsi, int dataLength,
-                 int identifier, uint8_t *data);
-        void Copy(CanFrame canFrame);
+        Frame();
+        Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
+              uint8_t *data);
+        Frame(FrameFlags frameFlags, int dataLength,  int identifier,
+              uint8_t *data);
+        void Copy(Frame frame);
 
-        // Getters and setters are declared on this data structure to avoid
-        // invalid frame combinations (e.g. RTR frame with FDF flag)
-
-        FlexibleDataRate getFdf();
-        ExtendedIdentifier getIde();
-        RemoteTransmissionRequest getRtr();
-        BitRateShift getBrs();
-        ErrorStateIndicator getEsi();
+        FrameFlags getFrameFlags();
         uint8_t getDlc();
         int getDataLenght();
         int getIdentifier();
         uint8_t* getData();
         uint8_t getData(int index);
 
-        void setFdf(FlexibleDataRate isFdf);
-        void setIde(ExtendedIdentifier isIde);
-        void setRtr(RemoteTransmissionRequest isRtr);
-        void setBrs(BitRateShift isBrs);
+        void setFrameFlags(FrameFlags frameFlags);
         void setDlc(uint8_t dlc);
-        void setEsi(ErrorStateIndicator isEsi);
         bool setDataLenght(int dataLenght);
         void setIdentifer(int identifier);
         void copyData(uint8_t *data, int dataLen);
@@ -51,11 +35,7 @@ class CanFrame {
         void print();
 
     protected:
-        FlexibleDataRate isFdf_;
-        ExtendedIdentifier isIde_;
-        RemoteTransmissionRequest isRtr_;
-        BitRateShift isBrs_;
-        ErrorStateIndicator isEsi_;
+        FrameFlags frameFlags_;
 
         // Data length code
         uint8_t dlc_;

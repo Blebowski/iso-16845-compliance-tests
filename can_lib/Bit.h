@@ -5,16 +5,15 @@
 #include <iostream>
 #include "can.h"
 
-using namespace can;
+#ifndef BIT
+#define BIT
 
-#ifndef CAN_BIT
-#define CAN_BIT
-
-class CanBit {
+class can::Bit {
 
     public:
-        CanBit();
-        CanBit(BitType bitType, BitValue bitValue);
+        Bit();
+        Bit(BitType bitType, BitValue bitValue);
+        Bit(BitType bitType, BitValue bitValue, StuffBitType stuffBitType);
 
         BitType bitType;
         StuffBitType stuffBitType;
