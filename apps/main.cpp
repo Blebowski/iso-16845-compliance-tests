@@ -8,6 +8,7 @@
 #include "../can_lib/Frame.h"
 #include "../can_lib/BitFrame.h"
 #include "../can_lib/FrameFlags.h"
+#include "../can_lib/BitTiming.h"
 
 using namespace can;
 
@@ -26,11 +27,15 @@ int main()
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
     };
 
+    BitTiming nbt = BitTiming(2, 2, 2, 4, 1);
+    BitTiming dbt = BitTiming(2, 2, 2, 1, 1);
+
     can::Frame frame = Frame();
     can::BitFrame bitFrame = BitFrame(
         FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
                    BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE),
-        5, 32, &(data[0]));
+        2, 32, &(data[0]), &nbt, &dbt);
 
     frame.print();
+    bitFrame.print(true);
 }

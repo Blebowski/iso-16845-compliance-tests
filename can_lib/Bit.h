@@ -3,7 +3,17 @@
  */
 
 #include <iostream>
+#include <cstdint>
+#include <algorithm>
+#include <list>
+#include <assert.h>
+
 #include "can.h"
+#include "CycleBitValue.h"
+#include "FrameFlags.h"
+#include "BitTiming.h"
+#include "TimeQuanta.h"
+
 
 #ifndef BIT
 #define BIT
@@ -11,25 +21,151 @@
 class can::Bit {
 
     public:
-        Bit();
-        Bit(BitType bitType, BitValue bitValue);
-        Bit(BitType bitType, BitValue bitValue, StuffBitType stuffBitType);
+        Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
+            BitTiming* nominalBitTiming, BitTiming* dataBitTiming);
 
-        BitType bitType;
-        StuffBitType stuffBitType;
-        BitValue bitValue;
+        Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
+            BitTiming* nominalBitTiming, BitTiming* dataBitTiming,
+            StuffBitType stuffBitType);
 
+        /**
+         *
+         */
         bool setBitValue(BitValue bitValue);
-        BitValue getbitValue();
+
+        /**
+         *
+         */
+        BitValue getBitValue();
+
+        /**
+         *
+         */
+        BitType getBitType();
+
+        /**
+         * 
+         */
+        StuffBitType getStuffBitType();
+
+        /**
+         *
+         */
         void flipBitValue();
+
+        /**
+         *
+         */
         bool isStuffBit();
+
+        /**
+         *
+         */
         bool isSingleBitField();
+
+        /**
+         *
+         */
         std::string getStringValue();
 
+        /**
+         *
+         */
         std::string getBitTypeName();
 
+        /**
+         *
+         */
         BitValue getOppositeValue();
 
+        /**
+         *
+         */
+        bool hasPhase(BitPhase bitPhase);
+
+        /*
+         *
+         */
+        bool hasNonDefaultValues();
+
+        /*
+         *
+         */
+        void setAllDefaultValues();
+
+        /*
+         *
+         */
+        int getPhaseLenTimeQuanta(BitPhase bitPhase);
+
+        /*
+         *
+         */
+        int getPhaseLenCycles(BitPhase bitPhase);
+
+        /*
+         *
+         */
+        int getLenTimeQuanta();
+
+        /*
+         *
+         */
+        int getLenCycles();
+
+        /**
+         *
+         */
+        int shortenPhase(BitPhase bitPhase, int numTimeQuanta);
+
+        /**
+         *
+         */
+        void lengthenPhase(BitPhase bitPhase, int numTimeQuanta);
+
+        /**
+         *
+         */
+        TimeQuanta* getTimeQuanta(int index);
+
+        /**
+         *
+         */
+        TimeQuanta* getTimeQuanta(BitPhase bitPhase, int index);
+
+        /*
+         * 
+         */
+        bool forceTimeQuanta(int index, BitValue bitValue);
+
+        /*
+         * 
+         */
+        int forceTimeQuanta(int fromIndex, int toIndex, BitValue bitValue);
+
+        /*
+         * 
+         */
+        bool forceTimeQuanta(int index, BitPhase bitPhase, BitValue bitValue);
+
+        /*
+         * 
+         */
+        bool forceTimeQuanta(int fromIndex, int toIndex, BitPhase bitPhase,
+                             BitValue bitValue);
+
+
+    protected:
+        
+        BitType bitType;
+        
+        StuffBitType stuffBitType;
+        
+        BitValue bitValue;
+
+        /**
+         *
+         */
         const BitTypeName bitTypeNames[29] =
         {
             {BIT_TYPE_SOF, "SOF"},
@@ -60,7 +196,32 @@ class can::Bit {
             {BIT_TYPE_ERROR_DELIMITER, "Error delimiter"},
             {BIT_TYPE_OVERLOAD_FLAG, "Overload flag"},
             {BIT_TYPE_OVERLOAD_DELIMITER, "Overload delimiter"}
-    };
+        };
+
+        // These hold information about bit timing and fact whether Bit-rate has
+        // shifted so they are important for manipulation of bit cycles!
+        BitTiming* nominalBitTiming;
+        BitTiming* dataBitTiming;
+        FrameFlags* frameFlags;
+
+        /**
+         * 
+         */
+        std::list<TimeQuanta> timeQuantas_;
+
+        /**
+         * 
+         */
+        void constructTimeQuantas(BitTiming *nominalBitTiming, BitTiming *dataBitTiming);
+
+        BitPhase prevBitPhase(BitPhase bitPhase);
+        BitPhase nextBitPhase(BitPhase bitPhase);
+
+        BitRate getPhaseBitRate(BitPhase bitPhase);
+        BitTiming* getPhaseBitTiming(BitPhase bitPhase);
+
+        std::list<TimeQuanta>::iterator getFirstTimeQuantaIterator(BitPhase bitPhase);
+        std::list<TimeQuanta>::iterator getLastTimeQuantaIterator(BitPhase bitPhase);
 };
 
 #endif

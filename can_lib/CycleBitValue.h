@@ -16,6 +16,9 @@ class can::CycleBitValue
         CycleBitValue();
         CycleBitValue(BitValue bitValue);
 
+        void forceValue(BitValue bitValue);
+        void releaseValue();
+
         // Default value from CanBit should be taken
         bool hasDefaultValue;
 

@@ -5,25 +5,17 @@
 #ifndef BIT_TIMING
 #define BIT_TIMING
 
-class BitTiming
+class can::BitTiming
 {
     public:
-        unsigned int propNbt;
-        unsigned int ph1Nbt;
-        unsigned int ph2Nbt;
-        unsigned int tqNbt;
-        unsigned int sjwNbt;
+        unsigned int prop;
+        unsigned int ph1;
+        unsigned int ph2;
+        unsigned int brp;
+        unsigned int sjw;
 
-        unsigned int propDbt;
-        unsigned int ph1Dbt;
-        unsigned int ph2Dbt;
-        unsigned int tqDbt;
-        unsigned int sjwDbt;
-
-        BitTiming(unsigned int propNbt, unsigned int ph1Nbt, unsigned int ph2Nbt,
-                  unsigned int tqNbt, unsigned int sjwNbt, unsigned int propDbt,
-                  unsigned int ph1Dbt, unsigned int ph2Dbt, unsigned int tqDbt,
-                  unsigned int sjwDbt);
+        BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
+                  unsigned int brp, unsigned int sjw);
 };
 
 #endif

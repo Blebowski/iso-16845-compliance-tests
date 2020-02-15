@@ -2,10 +2,13 @@
 add_library(
     CAN_LIB
 
+    # CAN namespace
     can.h
     
+    # Headers
     Bit.h
-    CycleBit.h
+    TimeQuanta.h
+    CycleBitValue.h
 
     Frame.h
     BitFrame.h
@@ -13,7 +16,10 @@ add_library(
     FrameFlags.h
     BitTiming.h
 
+    # Implementation
     Bit.cpp
+    TimeQuanta.cpp
+    CycleBitValue.cpp
 
     Frame.cpp
     BitFrame.cpp

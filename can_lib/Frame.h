@@ -26,12 +26,6 @@ class can::Frame {
         uint8_t* getData();
         uint8_t getData(int index);
 
-        void setFrameFlags(FrameFlags frameFlags);
-        void setDlc(uint8_t dlc);
-        bool setDataLenght(int dataLenght);
-        void setIdentifer(int identifier);
-        void copyData(uint8_t *data, int dataLen);
-
         void print();
 
     protected:
@@ -70,8 +64,44 @@ class can::Frame {
             {0b1111, 64}
         };
 
+        /**
+         * 
+         */
+        void setFrameFlags(FrameFlags frameFlags);
+
+        /**
+         * 
+         */
+        void setDlc(uint8_t dlc);
+
+        /**
+         * 
+         */
+        bool setDataLenght(int dataLenght);
+
+        /**
+         * 
+         */
+        void setIdentifer(int identifier);
+
+        /**
+         * 
+         */
+        void copyData(uint8_t *data, int dataLen);
+
+        /**
+         * 
+         */
         int convertDlcToDataLenght(uint8_t dlc);
+
+        /**
+         * 
+         */
         uint8_t convertDataLenghtToDlc(int dataLenght);
+
+        /**
+         * 
+         */
         bool isValidDataLength(int dataLenght);
 };
 

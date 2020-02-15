@@ -5,6 +5,8 @@
 #ifndef CAN
 #define CAN
 
+#include <iostream>
+
 namespace can {
 
     enum FlexibleDataRate
@@ -87,6 +89,20 @@ namespace can {
         STUFF_FIXED
     };
 
+    enum BitRate
+    {
+        NOMINAL_BIT_RATE,
+        DATA_BIT_RATE
+    };
+
+    enum BitPhase
+    {
+        SYNC_PHASE,
+        PROP_PHASE,
+        PH1_PHASE,
+        PH2_PHASE
+    };
+
     class Bit;
     class CycleBit;
     
@@ -95,7 +111,11 @@ namespace can {
     class CycleFrame;
 
     class FrameFlags;
+
     class CycleBitValue;
+    class TimeQuanta;
+
+    class BitTiming;
 
 }; // namespace can
 
