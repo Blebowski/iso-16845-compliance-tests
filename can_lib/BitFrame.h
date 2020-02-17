@@ -20,6 +20,11 @@ class can::BitFrame : public Frame {
         /**
          * 
          */
+        int getBitCount();
+
+        /**
+         * 
+         */
         Bit* getBit(int index);
 
         /**

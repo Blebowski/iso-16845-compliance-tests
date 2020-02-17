@@ -47,6 +47,13 @@ int can::TimeQuanta::getLengthCycles()
 }
 
 
+can::CycleBitValue* can::TimeQuanta::getCycleBitValue(int index)
+{
+    auto iterator = cycleBitValues_.begin();
+    std::advance(iterator, index);
+    return &(*iterator);
+}
+
 void can::TimeQuanta::lengthen(int byCycles)
 {
     for (int i = 0; i < byCycles; i++)

@@ -488,6 +488,12 @@ bool can::BitFrame::setStuffParity()
 }
 
 
+int can::BitFrame::getBitCount()
+{
+    return bits_.size();
+}
+
+
 can::Bit* can::BitFrame::getBit(int index)
 {
     std::list<Bit>::iterator bitIt = bits_.begin();
@@ -727,6 +733,8 @@ bool can::BitFrame::insertOverloadFrame(int index)
             std::endl;
         return false;
     }
+
+    clearFrameBits(index);
 
     for (int i = 0; i < 6; i++)
         appendBit(BIT_TYPE_OVERLOAD_FLAG, DOMINANT);

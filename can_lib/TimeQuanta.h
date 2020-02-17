@@ -46,6 +46,11 @@ class can::TimeQuanta
         int getLengthCycles();
 
         /**
+         * 
+         */
+        CycleBitValue *getCycleBitValue(int index);
+
+        /**
          *
          */
         void lengthen(int byCycles);

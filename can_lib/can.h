@@ -103,6 +103,13 @@ namespace can {
         PH2_PHASE
     };
 
+    enum ErrorState
+    {
+        ERROR_ACTIVE,
+        ERROR_PASSIVE,
+        BUS_OFF
+    };
+
     class Bit;
     class CycleBit;
     
@@ -116,6 +123,9 @@ namespace can {
     class TimeQuanta;
 
     class BitTiming;
+
+    // Test related classes
+    class DutInterface;
 
 }; // namespace can
 

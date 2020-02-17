@@ -100,6 +100,13 @@ std::string can::Bit::getStringValue()
 {
     if (isStuffBit())
         return "\033[1;32m" + std::to_string((int)bitValue) + "\033[0m";
+    else if (bitType == BIT_TYPE_ACTIVE_ERROR_FLAG ||
+             bitType == BIT_TYPE_PASSIVE_ERROR_FLAG ||
+             bitType == BIT_TYPE_ERROR_DELIMITER)
+        return "\033[1;31m" + std::to_string((int)bitValue) + "\033[0m";
+    else if (bitType == BIT_TYPE_OVERLOAD_FLAG ||
+             bitType == BIT_TYPE_OVERLOAD_DELIMITER)
+        return "\033[1;36m" + std::to_string((int)bitValue) + "\033[0m";
     else
         return std::to_string((int)bitValue);
 }
@@ -158,7 +165,7 @@ int can::Bit::getPhaseLenTimeQuanta(BitPhase bitPhase)
     int numTimeQuanta = 0;
 
     for (auto timeQuanta : timeQuantas_)
-        if (timeQuanta.bitPhase = bitPhase)
+        if (timeQuanta.bitPhase == bitPhase)
             numTimeQuanta++;
 
     return numTimeQuanta;
@@ -170,7 +177,8 @@ int can::Bit::getPhaseLenCycles(BitPhase bitPhase)
     int numCycles = 0;
 
     for (auto timeQuanta : timeQuantas_)
-        numCycles += timeQuanta.getLengthCycles();
+        if (timeQuanta.bitPhase == bitPhase)
+            numCycles += timeQuanta.getLengthCycles();
 
     return numCycles;
 }
