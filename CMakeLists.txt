@@ -6,8 +6,12 @@ project(CAN_FD_MODEL)
 add_subdirectory(can_lib)
 add_subdirectory(test_lib)
 
+# Simulation interface
+add_subdirectory(simulator_interface)
+
 # Example executable
 add_executable(example apps/main.cpp)
+
 target_compile_options(example PUBLIC -Wall -g)
 target_link_libraries(example PUBLIC CAN_LIB)
 target_link_libraries(example PUBLIC TEST_LIB)
