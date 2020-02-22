@@ -6,20 +6,15 @@
 #include <string.h>
 
 #include "vpi_user.h"
+#include "vpi_utils.h"
 
-#define VPI_TAG "VPI: "
+//#include "../test_lib/TestLoader.h"
 
-// Top level VPI signals in VHDL TB
-#define VPI_CONTROL_REQ "vpi_control_req"
-#define VPI_CONTROL_GNT "vpi_control_gnt"
+/**
+ * Function imported from C++
+ */
+int RunCppTest(char *testName);
 
-
-// Global variables
-/*
-vpiHandle topIterator;
-vpiHandle topModule;
-vpiHandle topScope;
-*/
 
 /**
  * Register hook on signal which gives away control to SW part of TB!
@@ -28,33 +23,28 @@ vpiHandle topScope;
 void sw_control_req_callback(struct t_cb_data*cb)
 {
     vpi_printf("%s Simulator requests passing control to SW!\n", VPI_TAG);
-
-    // Issue grant for SW
-    vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
-    vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle topScope = vpi_handle(vpiScope, topModule);
-    vpiHandle netIterator = vpi_iterate(vpiNet, topScope);
-    vpiHandle signalHandle;
-    const char *sigName;
-
-    while ((signalHandle = (vpiHandle)vpi_scan(netIterator)) != NULL)
-    {
-        sigName = vpi_get_str(vpiName, signalHandle);
-
-        if (strcmp(sigName, VPI_CONTROL_GNT) == 0)
-            goto issue_ack;
-    }
-    vpi_printf("%s Can't find %s signal", VPI_TAG, VPI_CONTROL_GNT);
-    fprintf(stderr, "%s Can't find %s signal", VPI_TAG, VPI_CONTROL_GNT);
-
-issue_ack:;
-    s_vpi_value vpi_value;
-    vpi_value.format = vpiBinStrVal;
-    vpi_value.value.str = "1";
-    vpi_put_value(signalHandle, &vpi_value, NULL, vpiNoDelay);
+    vpiDriveStrValue(VPI_SIGNAL_CONTROL_GNT, "1");
     vpi_printf("%s Control passed to SW\n", VPI_TAG);
 
-    // TODO: Here call the main test function which forks SystemC test object!
+    /* Obtain test name. This is an ugly hack since GHDL VPI does not support
+     * passing strings or custom arrays! Passed via std_logic_vector by 
+     * converting each character to ASCII bit vector */
+    char testNameBinary[1024];
+    char testName[128];
+    memset(testNameBinary, 0, sizeof(testNameBinary));
+    memset(testName, 0, sizeof(testName));
+    vpiReadStrValue(VPI_SIGNAL_TEST_NAME_ARRAY, &(testNameBinary[0]));
+    for (int i = 0; i < strlen(testNameBinary); i += 8)
+    {
+        char letter = 0;
+        for (int j = 0; j < 8; j++)
+            if (testNameBinary[i + j] == '1')
+                letter |= 0x1 << (7 - j);
+        testName[i / 8] = letter;
+    }
+    vpi_printf("%s Test name fetched from TB: \033[1;32m%s\n\033[0m", VPI_TAG, testName);
+
+    RunCppTest(testName);
 }
 
 /**
@@ -65,33 +55,16 @@ void vpi_start_of_sim(){
 
     vpi_printf("%s Simulation start callback\n", VPI_TAG);
 
-    // Register hook on signal which gives away control to SW part of 
-    // testbench
-
-    // Getting common handles
+    // Get request signal handle
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle topScope = vpi_handle(vpiScope, topModule);
-
-    vpiHandle netIterator = vpi_iterate(vpiNet, topScope);
-    vpiHandle signalHandle;
-    const char *modName;
-
-    vpi_printf("%s Registering TB request for passing control to SW on: %s\n",
-               VPI_TAG, VPI_CONTROL_REQ);
-    while ((signalHandle = (vpiHandle)vpi_scan(netIterator)) != NULL)
+    vpiHandle reqHandle = getNetHandle(topModule, VPI_SIGNAL_CONTROL_REQ);
+    if (reqHandle == NULL)
     {
-        modName = vpi_get_str(vpiName, signalHandle);
-
-        if (strcmp(modName, VPI_CONTROL_REQ) == 0)
-            goto control_req;
+        vpi_printf("%s Can't register request handle\n", VPI_TAG);
+        fprintf(stderr, "%s Can't register request handle\n", VPI_TAG);
+        return;
     }
-
-    vpi_printf("%s Top level signal: %s not found\n", VPI_TAG, VPI_CONTROL_REQ);
-    fprintf(stderr, "%s Top level signal: %s not found\n", VPI_TAG, VPI_CONTROL_REQ);
-    return;
-
-control_req:;
 
     // This function should be called only once, it should not matter we make
     // the callback declarations static here!
@@ -99,11 +72,12 @@ control_req:;
     static s_vpi_value valueStruct = {vpiBinStrVal};
     static s_cb_data cbDataStruct;
 
+    // Register hook for function which gives away control of TB to SW!
     cbDataStruct.reason = cbValueChange;
     cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&sw_control_req_callback);
     cbDataStruct.time = &timeStruct;
     cbDataStruct.value = &valueStruct;
-    cbDataStruct.obj = signalHandle;
+    cbDataStruct.obj = reqHandle;
 
     if (vpi_register_cb (&cbDataStruct) == NULL)
     {
@@ -114,8 +88,6 @@ control_req:;
     vpi_printf("%s Done\n", VPI_TAG);
     return;
 }
-
-
 
 
 /**
@@ -139,6 +111,7 @@ void handleRegister()
     }
     vpi_printf("%s Done\n", VPI_TAG);
 }
+
 
 /**
  * Defined by VPI standard where simulator will look for callbacks when it loads

@@ -1,6 +1,6 @@
 
 add_library(
-    CAN_LIB
+    CAN_LIB SHARED
 
     # CAN namespace
     can.h
@@ -28,4 +28,4 @@ add_library(
     BitTiming.cpp
 )
 
-add_compile_options(CAN_LIB -g)
+add_compile_options(CAN_LIB -g -fPIC)

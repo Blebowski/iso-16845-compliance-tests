@@ -1,6 +1,6 @@
 
 add_library(
-    TEST_LIB
+    TEST_LIB SHARED
 
     # CAN namespace
     test_lib.h
@@ -9,11 +9,13 @@ add_library(
     DriverItem.h
     MonitorItem.h
     TestSequence.h
+    TestLoader.h
 
     # Implementation
     DriverItem.cpp
     MonitorItem.cpp
     TestSequence.cpp
+    TestLoader.cpp
 )
 
-add_compile_options(TEST_LIB -g)
+add_compile_options(TEST_LIB -g -fPIC)
