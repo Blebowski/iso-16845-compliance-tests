@@ -2,15 +2,17 @@
  * TODO: License
  */
 
-#include <iostream>
+#include "test_lib.h"
 
-class TestBase
+#ifndef TEST_BASE
+#define TEST_BASE
+
+class test_lib::TestBase
 {
-
     public:
-        TestBase(std::string name);
+        TestBase();
 
-        bool Run();
+        virtual int run();
+};
 
-        std::string name;
-}
+#endif

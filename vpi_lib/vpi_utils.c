@@ -3,10 +3,25 @@
  */
 
 #include <unistd.h>
+#include <pthread.h>
 
 #include "_pli_types.h"
 #include "vpi_user.h"
 #include "vpi_utils.h"
+
+pthread_mutex_t handshakeMutex;
+
+
+void lockHandshakeMutex()
+{
+    pthread_mutex_lock(&handshakeMutex);
+}
+
+
+void unlockHandshakeMutex()
+{
+    pthread_mutex_unlock(&handshakeMutex);
+}
 
 
 vpiHandle getNetHandle(vpiHandle moduleHandle, const char *netName)
@@ -19,7 +34,6 @@ vpiHandle getNetHandle(vpiHandle moduleHandle, const char *netName)
     while ((signalHandle = (vpiHandle)vpi_scan(netIterator)) != NULL)
     {
         name = vpi_get_str(vpiName, signalHandle);
-        //vpi_printf("Searching net: %s\n", name);
         if (strcmp(name, netName) == 0)
             return signalHandle;
     }
@@ -31,6 +45,8 @@ vpiHandle getNetHandle(vpiHandle moduleHandle, const char *netName)
 
 int vpiDriveStrValue(const char *signalName, char *value)
 {
+    lockHandshakeMutex();
+
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
     vpiHandle signalHandle = getNetHandle(topModule, signalName);
@@ -39,37 +55,15 @@ int vpiDriveStrValue(const char *signalName, char *value)
     vpiValue.format = vpiBinStrVal;
     vpiValue.value.str = value;
     vpi_put_value(signalHandle, &vpiValue, NULL, vpiNoDelay);
-}
 
-
-int vpiDriveIntValue(const char* signalName, int value)
-{
-    vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
-    vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle signalHandle = getNetHandle(topModule, signalName);
-
-    s_vpi_value vpiValue;
-    vpiValue.format = vpiIntVal;
-    vpiValue.value.integer = value;
-    vpi_put_value(signalHandle, &vpiValue, NULL, vpiNoDelay);
-}
-
-
-int vpiReadIntValue(const char *signalName, int *retValue)
-{
-    vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
-    vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle signalHandle = getNetHandle(topModule, signalName);
-
-    s_vpi_value vpiValue;
-    vpiValue.format = vpiIntVal;
-    vpi_get_value(signalHandle, &vpiValue);
-    *retValue = vpiValue.value.integer;
+    unlockHandshakeMutex();
 }
 
 
 int vpiReadStrValue(const char *signalName, char *retValue)
 {
+    lockHandshakeMutex();
+
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
     vpiHandle signalHandle = getNetHandle(topModule, signalName);
@@ -80,18 +74,21 @@ int vpiReadStrValue(const char *signalName, char *retValue)
 
     // TODO: Will this work? Is string passed null terminated??
     memcpy(retValue, vpiValue.value.str, strlen(vpiValue.value.str));
+
+    unlockHandshakeMutex();
 }
 
 
 int vpiWaitTillStrValue(const char *signalName, char *value)
 {
     char readValue[128];
+    memset(readValue, 0, sizeof(readValue));
     while (1)
     {
         vpiReadStrValue(signalName, &(readValue[0]));
-        if (strcmp(value, readValue) == 0)
+        if (strcmp(value, readValue) == 0){
             break;
-        usleep(10);
+        }
     }
 }
 
@@ -106,12 +103,12 @@ void vpi_full_handshake()
 void vpi_begin_handshake()
 {
     vpiDriveStrValue(VPI_SIGNAL_REQ, "1");
-    vpiWaitTillValue(VPI_SIGNAL_ACK, "1");
+    vpiWaitTillStrValue(VPI_SIGNAL_ACK, "1");
 }
 
 
 void vpi_end_handshake()
 {
     vpiDriveStrValue(VPI_SIGNAL_REQ, "0");
-    vpiWaitTillValue(VPI_SIGNAL_ACK, "0");
+    vpiWaitTillStrValue(VPI_SIGNAL_ACK, "0");
 }

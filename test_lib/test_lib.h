@@ -44,6 +44,9 @@ namespace test_lib
     class MonitorItem;
     class TestSequence;
 
+    class TestBase;
+    class TestDemo;
+
 } // namespace test_lib
 
 #endif

@@ -10,12 +10,14 @@ add_library(
     MonitorItem.h
     TestSequence.h
     TestLoader.h
-
+    TestBase.h
+    
     # Implementation
     DriverItem.cpp
     MonitorItem.cpp
     TestSequence.cpp
     TestLoader.cpp
+    TestBase.cpp
 )
 
 add_compile_options(TEST_LIB -g -fPIC)

@@ -4,6 +4,8 @@
 # etc...) to single shared library and link that one to GHDL!
 get_target_property(TEST_LIB_SOURCES_RAW TEST_LIB SOURCES)
 get_target_property(CAN_LIB_SOURCES_RAW CAN_LIB SOURCES)
+get_target_property(COMPLIANCE_TESTS_RAW COMPLIANCE_TESTS SOURCES)
+get_target_property(VPI_LIB_RAW VPI_LIB SOURCES)
 
 foreach (LIST_ITEM ${TEST_LIB_SOURCES_RAW})
     list(APPEND TEST_LIB_SOURCES "../test_lib/${LIST_ITEM}")
@@ -13,35 +15,25 @@ foreach (LIST_ITEM ${CAN_LIB_SOURCES_RAW})
     list(APPEND CAN_LIB_SOURCES "../can_lib/${LIST_ITEM}")
 endforeach(LIST_ITEM)
 
+foreach (LIST_ITEM ${COMPLIANCE_TESTS_RAW})
+    list(APPEND COMPLIANCE_LIB_SOURCES "../compliance_tests/${LIST_ITEM}")
+endforeach(LIST_ITEM)
+
+foreach (LIST_ITEM ${VPI_LIB_RAW})
+    list(APPEND VPI_LIB_SOURCES "../vpi_lib/${LIST_ITEM}")
+endforeach(LIST_ITEM)
 
 add_library(
-    VPI_LIBRARY SHARED
-    
-    vpi_user.h
-    vpi_utils.h
-    vpi_compliance_lib.h
-    _pli_types.h
+    SIMULATOR_INTERFACE_LIB SHARED
 
-    vpi_utils.c
-    vpi_compliance_lib.c
-    ghdl.c
+    simulator_interface.c
 
-    ../test_lib/test_lib.h
-    
-    # Headers
-    ../test_lib/DriverItem.h
-    ../test_lib/MonitorItem.h
-    ../test_lib/TestSequence.h
-    ../test_lib/TestLoader.h
-
-    # Implementation
-    ../test_lib/DriverItem.cpp
-    ../test_lib/MonitorItem.cpp
-    ../test_lib/TestSequence.cpp
-    ../test_lib/TestLoader.cpp
-
+    ${VPI_LIB_SOURCES}
     ${CAN_LIB_SOURCES}
     ${TEST_LIB_SOURCES}
+    ${COMPLIANCE_LIB_SOURCES}
 )
 
-add_compile_options(VPI_LIBRARY -fPIC -Wall -g -I -c -shared)
+add_compile_options(SIMULATOR_INTERFACE_LIB -fPIC -Wall -g -I -c -O0)
+
+target_link_options(SIMULATOR_INTERFACE_LIB PUBLIC -pthread)
