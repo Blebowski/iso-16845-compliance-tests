@@ -34,6 +34,9 @@
 #define VPI_SIGNAL_DATA_IN "vpi_data_in"
 #define VPI_SIGNAL_DATA_OUT "vpi_data_out"
 
+// Size of vpi_data_in and vpi_data out vectors
+#define VPI_DBUF_SIZE 64
+
 // Handshake mutex
 extern pthread_mutex_t handshakeMutex;
 

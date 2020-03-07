@@ -5,9 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 
-extern "C" {
-    #include "../vpi_lib/vpi_compliance_lib.h"
-}
+#include "../vpi_lib/vpi_compliance_lib.hpp"
 
 #include "../test_lib/test_lib.h"
 #include "../test_lib/TestBase.h"

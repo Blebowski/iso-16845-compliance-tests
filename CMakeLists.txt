@@ -12,11 +12,12 @@ add_subdirectory(simulator_interface)
 
 # Example executable
 #add_executable(example apps/main.cpp)
+add_executable(test apps/test.cpp)
 
 #target_compile_options(example PUBLIC -Wall -g)
 #target_link_libraries(example PUBLIC CAN_LIB)
 #target_link_libraries(example PUBLIC TEST_LIB)
-#target_link_libraries(example PUBLIC VPI_LIBRARY)
+#target_link_libraries(example PUBLIC VPI_LIB)
 #target_link_libraries(example PUBLIC COMPLIANCE_TESTS)
 
 #target_link_options(example PUBLIC -pthread)
