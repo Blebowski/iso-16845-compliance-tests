@@ -71,9 +71,7 @@ int vpiReadStrValue(const char *signalName, char *retValue)
     s_vpi_value vpiValue;
     vpiValue.format = vpiBinStrVal;
     vpi_get_value(signalHandle, &vpiValue);
-
-    // TODO: Will this work? Is string passed null terminated??
-    memcpy(retValue, vpiValue.value.str, strlen(vpiValue.value.str));
+    strcpy(retValue, vpiValue.value.str);
 
     unlockHandshakeMutex();
 }

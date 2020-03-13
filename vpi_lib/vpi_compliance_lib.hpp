@@ -42,6 +42,21 @@ extern "C" {
 #define VPI_CLK_AGNT_CMD_DUTY_SET     "00000111"
 #define VPI_CLK_AGNT_CMD_DUTY_GET     "00001000"
 
+/*
+ * Memory bus agent
+ */
+#define VPI_MEM_BUS_AGNT_START             "00000001"
+#define VPI_MEM_BUS_AGNT_STOP              "00000010"
+#define VPI_MEM_BUS_AGNT_WRITE             "00000011"
+#define VPI_MEM_BUS_AGNT_READ              "00000100"
+#define VPI_MEM_BUS_AGNT_X_MODE_START      "00000101"
+#define VPI_MEM_BUS_AGNT_X_MODE_STOP       "00000110"
+#define VPI_MEM_BUS_AGNT_SET_X_MODE_SETUP  "00000111"
+#define VPI_MEM_BUS_AGNT_SET_X_MODE_HOLD   "00001000"
+#define VPI_MEM_BUS_AGNT_SET_PERIOD        "00001001"
+#define VPI_MEM_BUS_AGNT_SET_OUTPUT_DELAY  "00001010"
+#define VPI_MEM_BUS_AGNT_WAIT_DONE         "00001011"
+
 
 /******************************************************************************
  * Reset agent functions
@@ -111,6 +126,81 @@ int clock_agent_duty_set(int duty);
  *
  */
 int clock_agent_duty_get();
+
+
+/******************************************************************************
+ * Memory bus agent functions
+ *****************************************************************************/
+
+/*
+ *
+ */
+void mem_bus_agent_start();
+
+/*
+ *
+ */
+void mem_bus_agent_stop();
+
+/*
+ *
+ */
+void mem_bus_agent_write32(int address, uint32_t data);
+
+/*
+ *
+ */
+void mem_bus_agent_write16(int address, uint16_t data);
+
+/*
+ *
+ */
+void mem_bus_agent_write8(int address, uint8_t data);
+
+/*
+ *
+ */
+uint32_t mem_bus_agent_read32(int address);
+
+/*
+ *
+ */
+uint16_t mem_bus_agent_read16(int address);
+
+/*
+ *
+ */
+uint8_t mem_bus_agent_read8(int address);
+
+/*
+ *
+ */
+void mem_bus_agent_x_mode_start();
+
+/*
+ *
+ */
+void mem_bus_agent_x_mode_stop();
+
+/*
+ *
+ */
+void mem_bus_agent_set_x_mode_setup(std::chrono::nanoseconds setup);
+
+/*
+ *
+ */
+void mem_bus_agent_set_x_mode_hold(std::chrono::nanoseconds hold);
+
+/*
+ *
+ */
+void mem_bus_agent_set_period(std::chrono::nanoseconds period);
+
+/*
+ *
+ */
+void mem_bus_agent_set_output_delay(std::chrono::nanoseconds delay);
 
 
 #endif

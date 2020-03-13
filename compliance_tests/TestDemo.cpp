@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <chrono>
 
 #include "../vpi_lib/vpi_compliance_lib.hpp"
 
@@ -25,6 +26,7 @@ int test_lib::TestDemo::run()
     int polarity = 1;
     int polarity_read = 0;
 
+    /*
     for (int i = 0; i < 10; i++)
     {
         if (polarity == 0)
@@ -37,8 +39,30 @@ int test_lib::TestDemo::run()
         //test_message("Polarity read:");
         //test_message();
     }
+    */
 
-    test_message("TestDemo: Run Exiting");
+   reset_agent_polarity_set(0);
+   reset_agent_assert();
+   reset_agent_deassert();
 
-    return 0;
+   std::chrono::nanoseconds clkPer(10);
+   mem_bus_agent_set_period(clkPer);
+   mem_bus_agent_start();
+   mem_bus_agent_write32(16, 0xAABBCCDD);
+   uint8_t A;
+   A = mem_bus_agent_read8(0);
+   printf("%x\n", A);
+   A = mem_bus_agent_read8(1);
+   printf("%x\n", A);
+   A = mem_bus_agent_read8(2);
+   printf("%x\n", A);
+   A = mem_bus_agent_read8(3);
+   printf("%x\n", A);
+
+   uint16_t B = mem_bus_agent_read16(0);
+   printf("%x\n", B);
+
+   test_message("TestDemo: Run Exiting");
+
+   return 0;
 }
