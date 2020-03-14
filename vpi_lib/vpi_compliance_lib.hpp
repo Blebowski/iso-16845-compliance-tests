@@ -58,6 +58,58 @@ extern "C" {
 #define VPI_MEM_BUS_AGNT_WAIT_DONE         "00001011"
 
 
+#define VPI_CAN_AGNT_DRIVER_START                  "00000001"
+#define VPI_CAN_AGNT_DRIVER_STOP                   "00000010"
+#define VPI_CAN_AGNT_DRIVER_FLUSH                  "00000011"
+#define VPI_CAN_AGNT_DRIVER_GET_PROGRESS           "00000100"
+#define VPI_CAN_AGNT_DRIVER_GET_DRIVEN_VAL         "00000101"
+#define VPI_CAN_AGNT_DRIVER_PUSH_ITEM              "00000110"
+#define VPI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT       "00000111"
+#define VPI_CAN_AGNT_DRIVER_WAIT_FINISH            "00001000"
+#define VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM      "00001001"
+#define VPI_CAN_AGNT_DRIVER_DRIVE_ALL_ITEM         "00001010"
+
+#define VPI_CAN_AGNT_MONITOR_START                 "00001011"
+#define VPI_CAN_AGNT_MONITOR_STOP                  "00001100"
+#define VPI_CAN_AGNT_MONITOR_FLUSH                 "00001101"
+#define VPI_CAN_AGNT_MONITOR_GET_STATE             "00001110"
+#define VPI_CAN_AGNT_MONITOR_GET_MONITORED_VAL     "00001111"
+#define VPI_CAN_AGNT_MONITOR_PUSH_ITEM             "00010000"
+#define VPI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT      "00010001"
+#define VPI_CAN_AGNT_MONITOR_WAIT_FINISH           "00010010"
+#define VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM   "00010011"
+#define VPI_CAN_AGNT_MONITOR_MONITOR_ALL_ITEMS     "00010100"
+
+#define VPI_CAN_AGNT_MONITOR_SET_TRIGGER           "00010101"
+#define VPI_CAN_AGNT_MONITOR_GET_TRIGGER           "00010110"
+
+#define VPI_CAN_AGNT_MONITOR_SET_SAMPLE_RATE       "00010111"
+#define VPI_CAN_AGNT_MONITOR_GET_SAMPLE_RATE       "00011000"
+
+#define VPI_CAN_AGNT_MONITOR_CHECK_RESULT          "00011001"
+
+enum CanAgentMonitorState
+{
+    CAN_AGENT_MONITOR_DISABLED,
+    CAN_AGENT_MONITOR_WAITING_FOR_TRIGGER,
+    CAN_AGENT_MONITOR_RUNNING,
+    CAN_AGENT_MONITOR_PASSED,
+    CAN_AGENT_MONITOR_FAILED
+};
+
+enum CanAgentMonitorTrigger
+{
+     CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY,
+     CAN_AGENT_MONITOR_TRIGGER_RX_RISING,
+     CAN_AGENT_MONITOR_TRIGGER_RX_FALLING,
+     CAN_AGENT_MONITOR_TRIGGER_TX_RISING,
+     CAN_AGENT_MONITOR_TRIGGER_TX_FALLING,
+     CAN_AGENT_MONITOR_TRIGGER_TIME_ELAPSED,
+     CAN_AGENT_MONITOR_TRIGGER_DRIVER_START,
+     CAN_AGENT_MONITOR_TRIGGER_DRIVER_STOP
+};
+
+
 /******************************************************************************
  * Reset agent functions
  *****************************************************************************/
@@ -65,22 +117,22 @@ extern "C" {
 /*
  *
  */
-void reset_agent_assert();
+void resetAgentAssert();
 
 /*
  *
  */
-void reset_agent_deassert();
+void resetAgentDeassert();
 
 /*
  *
  */
-void reset_agent_polarity_set(int polarity);
+void resetAgentPolaritySet(int polarity);
 
 /*
  *
  */
-int reset_agent_polarity_get();
+int resetAgentPolarityGet();
 
 
 /******************************************************************************
@@ -90,42 +142,42 @@ int reset_agent_polarity_get();
 /*
  *
  */
-int clock_agent_start();
+int clockAgentStart();
 
 /*
  *
  */
-int clock_agent_stop();
+int clockAgentStop();
 
 /*
  *
  */
-int clock_agent_set_period(std::chrono::nanoseconds clockPeriod);
+int clockAgentSetPeriod(std::chrono::nanoseconds clockPeriod);
 
 /*
  *
  */
-std::chrono::nanoseconds clock_agent_get_period();
+std::chrono::nanoseconds clockAgentGetPeriod();
 
 /*
  *
  */
-int clock_agent_set_jitter(std::chrono::nanoseconds clockPeriod);
+int clockAgentSetJitter(std::chrono::nanoseconds clockPeriod);
 
 /*
  *
  */
-std::chrono::nanoseconds clock_agent_get_jitter();
+std::chrono::nanoseconds clockAgentGetJitter();
 
 /*
  *
  */
-int clock_agent_duty_set(int duty);
+int clockAgentSetDuty(int duty);
 
 /*
  *
  */
-int clock_agent_duty_get();
+int clockAgentGetDuty();
 
 
 /******************************************************************************
@@ -135,72 +187,226 @@ int clock_agent_duty_get();
 /*
  *
  */
-void mem_bus_agent_start();
+void memBusAgentStart();
 
 /*
  *
  */
-void mem_bus_agent_stop();
+void memBusAgentStop();
 
 /*
  *
  */
-void mem_bus_agent_write32(int address, uint32_t data);
+void memBusAgentWrite32(int address, uint32_t data);
 
 /*
  *
  */
-void mem_bus_agent_write16(int address, uint16_t data);
+void memBusAgentWrite16(int address, uint16_t data);
 
 /*
  *
  */
-void mem_bus_agent_write8(int address, uint8_t data);
+void memBusAgentWrite8(int address, uint8_t data);
 
 /*
  *
  */
-uint32_t mem_bus_agent_read32(int address);
+uint32_t memBusAgentRead32(int address);
 
 /*
  *
  */
-uint16_t mem_bus_agent_read16(int address);
+uint16_t memBusAgentRead16(int address);
 
 /*
  *
  */
-uint8_t mem_bus_agent_read8(int address);
+uint8_t memBusAgentRead8(int address);
 
 /*
  *
  */
-void mem_bus_agent_x_mode_start();
+void memBusAgentXModeStart();
 
 /*
  *
  */
-void mem_bus_agent_x_mode_stop();
+void memBusAgentXModeStop();
 
 /*
  *
  */
-void mem_bus_agent_set_x_mode_setup(std::chrono::nanoseconds setup);
+void memBusAgentSetXModeSetup(std::chrono::nanoseconds setup);
 
 /*
  *
  */
-void mem_bus_agent_set_x_mode_hold(std::chrono::nanoseconds hold);
+void memBusAgentSetXModeHold(std::chrono::nanoseconds hold);
 
 /*
  *
  */
-void mem_bus_agent_set_period(std::chrono::nanoseconds period);
+void memBusAgentSetPeriod(std::chrono::nanoseconds period);
 
 /*
  *
  */
-void mem_bus_agent_set_output_delay(std::chrono::nanoseconds delay);
+void memBusAgentSetOutputDelay(std::chrono::nanoseconds delay);
 
+
+/******************************************************************************
+ * CAN Agent functions
+ *****************************************************************************/
+
+/*
+ *
+ */
+void canAgentDriverStart();
+
+/*
+ *
+ */
+void canAgentDriverStop();
+
+/*
+ *
+ */
+void canAgentDriverFlush();
+
+/*
+ *
+ */
+bool canAgentDriverGetProgress();
+
+/*
+ *
+ */
+char canAgentDriverGetDrivenVal();
+
+/*
+ *
+ */
+void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration);
+
+/*
+ *
+ */
+void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg);
+
+/*
+ *
+ */
+void canAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout);
+
+/*
+ *
+ */
+void canAgentDriverWaitFinish();
+
+/*
+ *
+ */
+void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg);
+
+/*
+ *
+ */
+void canAgentDriveSingleItem(char vdrivenValuealue, std::chrono::nanoseconds duration);
+
+/*
+ *
+ */
+void canAgentDriveAllItems();
+
+/*
+ *
+ */
+void canAgentDriveAllItems();
+
+/*
+ *
+ */
+void canAgentMonitorStart();
+
+/*
+ *
+ */
+void canAgentMonitorStop();
+
+/*
+ *
+ */
+void canAgentMonitorFlush();
+
+/*
+ *
+ */
+CanAgentMonitorState canAgentMonitorGetState();
+
+/*
+ *
+ */
+char canAgentMonitorGetMonitoredVal();
+
+/*
+ *
+ */
+void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration);
+
+/*
+ *
+ */
+void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration, std::string msg);
+
+/*
+ *
+ */
+void canAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout);
+
+/*
+ *
+ */
+void canAgentMonitorWaitFinish();
+
+/*
+ *
+ */
+void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration);
+
+/*
+ *
+ */
+void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration, std::string msg);
+
+/*
+ *
+ */
+void canAgentMonitorAllItems();
+
+/*
+ *
+ */
+void canAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger);
+
+/*
+ *
+ */
+CanAgentMonitorTrigger canAgentMonitorGetTrigger();
+
+/*
+ *
+ */
+void canAgentMonitorSetSampleRate(std::chrono::nanoseconds sampleRate);
+
+/*
+ *
+ */
+std::chrono::nanoseconds canAgentMonitorgetSampleRate();
+
+/*
+ *
+ */
+void canAgentCheckResult();
 
 #endif

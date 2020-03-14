@@ -12,19 +12,19 @@
 pthread_mutex_t handshakeMutex;
 
 
-void lockHandshakeMutex()
+void lock_handshake_mutex()
 {
     pthread_mutex_lock(&handshakeMutex);
 }
 
 
-void unlockHandshakeMutex()
+void unlock_handshake_mutex()
 {
     pthread_mutex_unlock(&handshakeMutex);
 }
 
 
-vpiHandle getNetHandle(vpiHandle moduleHandle, const char *netName)
+vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName)
 {
     vpiHandle topScope = vpi_handle(vpiScope, moduleHandle);
     vpiHandle netIterator = vpi_iterate(vpiNet, topScope);
@@ -43,47 +43,47 @@ vpiHandle getNetHandle(vpiHandle moduleHandle, const char *netName)
 }
 
 
-int vpiDriveStrValue(const char *signalName, char *value)
+int vpi_drive_str_value(const char *signalName, char *value)
 {
-    lockHandshakeMutex();
+    lock_handshake_mutex();
 
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle signalHandle = getNetHandle(topModule, signalName);
+    vpiHandle signalHandle = get_net_handle(topModule, signalName);
 
     s_vpi_value vpiValue;
     vpiValue.format = vpiBinStrVal;
     vpiValue.value.str = value;
     vpi_put_value(signalHandle, &vpiValue, NULL, vpiNoDelay);
 
-    unlockHandshakeMutex();
+    unlock_handshake_mutex();
 }
 
 
-int vpiReadStrValue(const char *signalName, char *retValue)
+int vpi_read_str_value(const char *signalName, char *retValue)
 {
-    lockHandshakeMutex();
+    lock_handshake_mutex();
 
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle signalHandle = getNetHandle(topModule, signalName);
+    vpiHandle signalHandle = get_net_handle(topModule, signalName);
 
     s_vpi_value vpiValue;
     vpiValue.format = vpiBinStrVal;
     vpi_get_value(signalHandle, &vpiValue);
     strcpy(retValue, vpiValue.value.str);
 
-    unlockHandshakeMutex();
+    unlock_handshake_mutex();
 }
 
 
-int vpiWaitTillStrValue(const char *signalName, char *value)
+int vpi_wait_till_str_value(const char *signalName, char *value)
 {
     char readValue[128];
     memset(readValue, 0, sizeof(readValue));
     while (1)
     {
-        vpiReadStrValue(signalName, &(readValue[0]));
+        vpi_read_str_value(signalName, &(readValue[0]));
         if (strcmp(value, readValue) == 0){
             break;
         }
@@ -100,13 +100,13 @@ void vpi_full_handshake()
 
 void vpi_begin_handshake()
 {
-    vpiDriveStrValue(VPI_SIGNAL_REQ, "1");
-    vpiWaitTillStrValue(VPI_SIGNAL_ACK, "1");
+    vpi_drive_str_value(VPI_SIGNAL_REQ, "1");
+    vpi_wait_till_str_value(VPI_SIGNAL_ACK, "1");
 }
 
 
 void vpi_end_handshake()
 {
-    vpiDriveStrValue(VPI_SIGNAL_REQ, "0");
-    vpiWaitTillStrValue(VPI_SIGNAL_ACK, "0");
+    vpi_drive_str_value(VPI_SIGNAL_REQ, "0");
+    vpi_wait_till_str_value(VPI_SIGNAL_ACK, "0");
 }

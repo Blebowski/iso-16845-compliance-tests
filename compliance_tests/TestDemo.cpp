@@ -41,25 +41,25 @@ int test_lib::TestDemo::run()
     }
     */
 
-   reset_agent_polarity_set(0);
-   reset_agent_assert();
-   reset_agent_deassert();
+   resetAgentPolaritySet(0);
+   resetAgentAssert();
+   resetAgentDeassert();
 
    std::chrono::nanoseconds clkPer(10);
-   mem_bus_agent_set_period(clkPer);
-   mem_bus_agent_start();
-   mem_bus_agent_write32(16, 0xAABBCCDD);
+   memBusAgentSetPeriod(clkPer);
+   memBusAgentStart();
+   memBusAgentWrite32(16, 0xAABBCCDD);
    uint8_t A;
-   A = mem_bus_agent_read8(0);
+   A = memBusAgentRead8(0);
    printf("%x\n", A);
-   A = mem_bus_agent_read8(1);
+   A = memBusAgentRead8(1);
    printf("%x\n", A);
-   A = mem_bus_agent_read8(2);
+   A = memBusAgentRead8(2);
    printf("%x\n", A);
-   A = mem_bus_agent_read8(3);
+   A = memBusAgentRead8(3);
    printf("%x\n", A);
 
-   uint16_t B = mem_bus_agent_read16(0);
+   uint16_t B = memBusAgentRead16(0);
    printf("%x\n", B);
 
    test_message("TestDemo: Run Exiting");

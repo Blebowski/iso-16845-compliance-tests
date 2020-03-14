@@ -24,7 +24,7 @@ void* runCppTest(char* testName);
 void sw_control_req_callback(struct t_cb_data*cb)
 {
     vpi_printf("%s Simulator requests passing control to SW!\n", VPI_TAG);
-    vpiDriveStrValue(VPI_SIGNAL_CONTROL_GNT, "1");
+    vpi_drive_str_value(VPI_SIGNAL_CONTROL_GNT, "1");
     vpi_printf("%s Control passed to SW\n", VPI_TAG);
 
     /* Obtain test name. This is an ugly hack since GHDL VPI does not support
@@ -33,7 +33,7 @@ void sw_control_req_callback(struct t_cb_data*cb)
     char testNameBinary[1024];
     memset(testNameBinary, 0, sizeof(testNameBinary));
     memset(testName, 0, sizeof(testName));
-    vpiReadStrValue(VPI_SIGNAL_TEST_NAME_ARRAY, &(testNameBinary[0]));
+    vpi_read_str_value(VPI_SIGNAL_TEST_NAME_ARRAY, &(testNameBinary[0]));
     for (int i = 0; i < strlen(testNameBinary); i += 8)
     {
         char letter = 0;
@@ -54,7 +54,7 @@ int register_start_of_sim_cb()
 {
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = getNetHandle(topModule, VPI_SIGNAL_CONTROL_REQ);
+    vpiHandle reqHandle = get_net_handle(topModule, VPI_SIGNAL_CONTROL_REQ);
     if (reqHandle == NULL)
     {
         vpi_printf("%s Can't register request handle\n", VPI_TAG);
@@ -89,7 +89,7 @@ int register_mutex_lock_callback()
 {
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = getNetHandle(topModule, VPI_MUTEX_LOCK);
+    vpiHandle reqHandle = get_net_handle(topModule, VPI_MUTEX_LOCK);
     if (reqHandle == NULL)
     {
         vpi_printf("%s Can't register request handle\n", VPI_TAG);
@@ -105,7 +105,7 @@ int register_mutex_lock_callback()
 
     // Register hook for function which gives away control of TB to SW!
     cbDataStruct.reason = cbValueChange;
-    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&lockHandshakeMutex);
+    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&lock_handshake_mutex);
     cbDataStruct.time = &timeStruct;
     cbDataStruct.value = &valueStruct;
     cbDataStruct.obj = reqHandle;
@@ -124,7 +124,7 @@ int register_mutex_unlock_callback()
 {
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = getNetHandle(topModule, VPI_MUTEX_UNLOCK);
+    vpiHandle reqHandle = get_net_handle(topModule, VPI_MUTEX_UNLOCK);
     if (reqHandle == NULL)
     {
         vpi_printf("%s Can't register request handle\n", VPI_TAG);
@@ -140,7 +140,7 @@ int register_mutex_unlock_callback()
 
     // Register hook for function which gives away control of TB to SW!
     cbDataStruct.reason = cbValueChange;
-    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&unlockHandshakeMutex);
+    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&unlock_handshake_mutex);
     cbDataStruct.time = &timeStruct;
     cbDataStruct.value = &valueStruct;
     cbDataStruct.obj = reqHandle;

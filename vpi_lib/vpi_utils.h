@@ -34,6 +34,9 @@
 #define VPI_SIGNAL_DATA_IN "vpi_data_in"
 #define VPI_SIGNAL_DATA_OUT "vpi_data_out"
 
+#define VPI_STR_BUF_IN "vpi_str_buf_in"
+#define VPI_STR_BUF_SIZE 64  // Each character is 8 bit vector
+
 // Size of vpi_data_in and vpi_data out vectors
 #define VPI_DBUF_SIZE 64
 
@@ -43,35 +46,35 @@ extern pthread_mutex_t handshakeMutex;
 /**
  * 
  */
-void lockHandshakeMutex();
+void lock_handshake_mutex();
 
 /**
  * 
  */
-void unlockHandshakeMutex();
+void unlock_handshake_mutex();
 
 /**
  * 
  */
-vpiHandle getNetHandle(vpiHandle moduleHandle, const char *netName);
+vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName);
 
 
 /**
  *
  */
-int vpiDriveStrValue(const char *signalName, char *value);
+int vpi_drive_str_value(const char *signalName, char *value);
 
 
 /**
  *
  */
-int vpiReadStrValue(const char *signalName, char *retValue);
+int vpi_read_str_value(const char *signalName, char *retValue);
 
 
 /**
  *
  */
-int vpiWaitTillStrValue(const char *signalName, char *value);
+int vpi_wait_till_str_value(const char *signalName, char *value);
 
 
 /**
