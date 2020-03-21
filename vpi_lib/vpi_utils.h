@@ -13,6 +13,7 @@
 #define VPI_TAG "\033[1;33mVPI: \033[0m"
 
 // Testbench control interface
+#define VPI_SIGNAL_CLOCK "vpi_clk"
 #define VPI_SIGNAL_CONTROL_REQ "vpi_control_req"
 #define VPI_SIGNAL_CONTROL_GNT "vpi_control_gnt"
 #define VPI_SIGNAL_ALLOW_TIME_FLOW "vpi_allow_time_flow"
@@ -42,16 +43,28 @@
 
 // Handshake mutex
 extern pthread_mutex_t handshakeMutex;
+extern pthread_mutexattr_t handshakeMutexAttr;
 
 /**
  * 
  */
-void lock_handshake_mutex();
+void test_lock_handshake_mutex();
 
 /**
  * 
  */
-void unlock_handshake_mutex();
+void test_unlock_handshake_mutex();
+
+/**
+ * 
+ */
+void simulator_lock_handshake_mutex(struct t_cb_data*cb);
+
+/**
+ * 
+ */
+void simulator_unlock_handshake_mutex(struct t_cb_data*cb);
+
 
 /**
  * 

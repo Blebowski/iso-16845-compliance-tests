@@ -55,6 +55,11 @@ class test_lib::TestSequence
          */
         void printMonitoredValues();
 
+        /**
+         * 
+         */
+        void pushDriverValuesToSimulator();
+
     private:
         std::vector<DriverItem> drivenValues;
         std::vector<MonitorItem> monitoredValues;

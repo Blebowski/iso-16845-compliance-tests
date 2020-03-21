@@ -20,4 +20,4 @@ add_library(
     TestBase.cpp
 )
 
-add_compile_options(TEST_LIB -g -fPIC)
+add_compile_options(TEST_LIB -g -fPIC -Wall -O0)

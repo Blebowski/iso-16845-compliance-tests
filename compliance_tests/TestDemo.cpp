@@ -10,11 +10,23 @@
 
 #include "../test_lib/test_lib.h"
 #include "../test_lib/TestBase.h"
+#include "../test_lib/TestSequence.h"
+#include "../test_lib/DriverItem.h"
+#include "../test_lib/MonitorItem.h"
+
 #include "../compliance_tests_includes/TestDemo.h"
+
+#include "../can_lib/can.h"
+#include "../can_lib/Frame.h"
+#include "../can_lib/BitFrame.h"
+#include "../can_lib/FrameFlags.h"
+#include "../can_lib/BitTiming.h"
+
+using namespace can;
 
 test_lib::TestDemo::TestDemo() : TestBase()
 {
-    
+    //TODO
 };
 
 
@@ -22,47 +34,62 @@ int test_lib::TestDemo::run()
 {
     TestBase::run();
 
-    test_message("TestDemo: Run Entered");
+    testMessage("TestDemo: Run Entered");
     int polarity = 1;
     int polarity_read = 0;
 
     /*
-    for (int i = 0; i < 10; i++)
-    {
-        if (polarity == 0)
-            polarity = 1;
-        else
-            polarity = 0;
+    std::chrono::nanoseconds clkPer(10);
+    memBusAgentSetPeriod(clkPer);
+    memBusAgentStart();
+    memBusAgentWrite32(16, 0xAABBCCDD);
+    uint8_t A;
+    A = memBusAgentRead8(0);
+    //printf("%x\n", A);
+    A = memBusAgentRead8(1);
+    //printf("%x\n", A);
+    A = memBusAgentRead8(2);
+    //printf("%x\n", A);
+    A = memBusAgentRead8(3);
+    //printf("%x\n", A);
 
-        reset_agent_polarity_set(polarity);
-        polarity_read = reset_agent_polarity_get();
-        //test_message("Polarity read:");
-        //test_message();
-    }
+    uint16_t B = memBusAgentRead16(0);
+    //printf("%x\n", B);
+    
+    uint8_t data[64] =
+    {
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
+        0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
+    };
+
+    BitTiming nbt = BitTiming(2, 2, 2, 4, 1);
+    BitTiming dbt = BitTiming(2, 2, 2, 1, 1);
+
+    BitFrame bitFrame = BitFrame(
+        FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
+                   BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE),
+        0, 32, &(data[0]), &nbt, &dbt);
+
+    bitFrame.print(true);
+
+    test_lib::TestSequence testSequence =
+        test_lib::TestSequence(std::chrono::nanoseconds(10), bitFrame, test_lib::DRIVER_SEQUENCE);
+    testSequence.pushDriverValuesToSimulator();
+
+    canAgentDriverStart();
+    canAgentDriverWaitFinish();
+    
     */
 
-   resetAgentPolaritySet(0);
-   resetAgentAssert();
-   resetAgentDeassert();
+    testControllerAgentEndTest(false);
 
-   std::chrono::nanoseconds clkPer(10);
-   memBusAgentSetPeriod(clkPer);
-   memBusAgentStart();
-   memBusAgentWrite32(16, 0xAABBCCDD);
-   uint8_t A;
-   A = memBusAgentRead8(0);
-   printf("%x\n", A);
-   A = memBusAgentRead8(1);
-   printf("%x\n", A);
-   A = memBusAgentRead8(2);
-   printf("%x\n", A);
-   A = memBusAgentRead8(3);
-   printf("%x\n", A);
+    testMessage("TestDemo: Run Exiting");
 
-   uint16_t B = memBusAgentRead16(0);
-   printf("%x\n", B);
-
-   test_message("TestDemo: Run Exiting");
-
-   return 0;
+    return 0;
 }

@@ -15,7 +15,17 @@ char testName[128];
 /**
  * Function imported from C++
  */
-void* runCppTest(char* testName);
+void runCppTest(char* testName);
+void processVpiClkCallback();
+
+
+/**
+ * VPI Clock callback
+ */
+s_vpi_time vpi_clk_time_data = {vpiSimTime};
+s_vpi_value vpi_clk_value_data = {vpiBinStrVal};
+s_cb_data vpi_clk_cb_struct;
+
 
 /**
  * Register hook on signal which gives away control to SW part of TB!
@@ -46,6 +56,16 @@ void sw_control_req_callback(struct t_cb_data*cb)
 
     runCppTest(testName);
 }
+
+
+/**
+ * 
+ */
+void vpi_clk_callback(struct t_cb_data*cb)
+{
+    processVpiClkCallback();
+}
+
 
 /**
  * 
@@ -85,11 +105,11 @@ int register_start_of_sim_cb()
 }
 
 
-int register_mutex_lock_callback()
+int register_vpi_clk_cb()
 {
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = get_net_handle(topModule, VPI_MUTEX_LOCK);
+    vpiHandle reqHandle = get_net_handle(topModule, VPI_SIGNAL_CLOCK);
     if (reqHandle == NULL)
     {
         vpi_printf("%s Can't register request handle\n", VPI_TAG);
@@ -97,62 +117,22 @@ int register_mutex_lock_callback()
         return -1;
     }
 
-    // This function should be called only once, it should not matter we make
-    // the callback declarations static here!
-    static s_vpi_time timeStruct = {vpiSimTime};
-    static s_vpi_value valueStruct = {vpiBinStrVal};
-    static s_cb_data cbDataStruct;
-
-    // Register hook for function which gives away control of TB to SW!
-    cbDataStruct.reason = cbValueChange;
-    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&lock_handshake_mutex);
-    cbDataStruct.time = &timeStruct;
-    cbDataStruct.value = &valueStruct;
-    cbDataStruct.obj = reqHandle;
-
-    if (vpi_register_cb (&cbDataStruct) == NULL)
+    vpi_clk_cb_struct.reason = cbValueChange;
+    vpi_clk_cb_struct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&vpi_clk_callback);
+    vpi_clk_cb_struct.time = &vpi_clk_time_data;
+    vpi_clk_cb_struct.value = &vpi_clk_value_data;
+    vpi_clk_cb_struct.obj = reqHandle;
+ 
+    if (vpi_register_cb(&vpi_clk_cb_struct) == NULL)
     {
-        vpi_printf ("%s Cannot register cbValueChange call back\n", VPI_TAG);
-        fprintf(stderr, "%s Cannot register cbValueChange call back\n", VPI_TAG);
+        vpi_printf("%s Cannot register VPI clock callback\n", VPI_TAG);
+        fprintf(stderr, "%s Cannot register VPI clock callback\n", VPI_TAG);
         return -2;
     }
+
     return 0;
 }
 
-
-int register_mutex_unlock_callback()
-{
-    vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
-    vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = get_net_handle(topModule, VPI_MUTEX_UNLOCK);
-    if (reqHandle == NULL)
-    {
-        vpi_printf("%s Can't register request handle\n", VPI_TAG);
-        fprintf(stderr, "%s Can't register request handle\n", VPI_TAG);
-        return -1;
-    }
-
-    // This function should be called only once, it should not matter we make
-    // the callback declarations static here!
-    static s_vpi_time timeStruct = {vpiSimTime};
-    static s_vpi_value valueStruct = {vpiBinStrVal};
-    static s_cb_data cbDataStruct;
-
-    // Register hook for function which gives away control of TB to SW!
-    cbDataStruct.reason = cbValueChange;
-    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&unlock_handshake_mutex);
-    cbDataStruct.time = &timeStruct;
-    cbDataStruct.value = &valueStruct;
-    cbDataStruct.obj = reqHandle;
-
-    if (vpi_register_cb (&cbDataStruct) == NULL)
-    {
-        vpi_printf ("%s Cannot register cbValueChange call back\n", VPI_TAG);
-        fprintf(stderr, "%s Cannot register cbValueChange call back\n", VPI_TAG);
-        return -2;
-    }
-    return 0;
-}
 
 /**
  * Register hook on signal which gives away control to SW part of TB!
@@ -162,29 +142,13 @@ void vpi_start_of_sim(){
 
     vpi_printf("%s Simulation start callback\n", VPI_TAG);
 
-    // Get request signal handle
     vpi_printf("%s Registring callback for control to SW\n", VPI_TAG);
     if (register_start_of_sim_cb() != 0)
         return;
     vpi_printf("%s Done\n", VPI_TAG);
 
-    // Initialize mutex for handshake communication between simulator and test
-    vpi_printf("%s Initializing simulator <-> test handshake mutex \n", VPI_TAG);
-    if (pthread_mutex_init(&handshakeMutex, NULL) != 0)
-    {
-        vpi_printf("%s Cannot initialize handshake mutex for simulator <-> test communication\n", VPI_TAG);
-        fprintf(stderr, "%s Cannot initialize handshake mutex for simulator <-> test communication\n", VPI_TAG);
-        return;
-    }
-
-    // Register callbacks for lock/unlock mutex for handshake interface
-    vpi_printf("%s Registring callback for handshake mutex lock SW\n", VPI_TAG);
-    if (register_mutex_lock_callback() != 0)
-        return;
-    vpi_printf("%s Done\n", VPI_TAG);
-
-    vpi_printf("%s Registring callback for handshake mutex unlock SW\n", VPI_TAG);
-    if (register_mutex_unlock_callback() != 0)
+    vpi_printf("%s Registering VPI clock callback\n", VPI_TAG);
+    if (register_vpi_clk_cb() != 0)
         return;
     vpi_printf("%s Done\n", VPI_TAG);
 

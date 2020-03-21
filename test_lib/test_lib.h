@@ -7,45 +7,45 @@
 
 namespace test_lib
 {
-    enum StdLogic
-    {
-        LOGIC_0,    // Logic 0
-        LOGIC_1,    // Logic 1
-        LOGIC_H,    // Pull up
-        LOGIC_L,    // Pull down
-        LOGIC_Z,    // High impedance
-        LOGIC_X,    // Logic X
-        LOGIC_W,    // Weak signal
-        LOGIC_U,    // Unknown
-        LOGIC_Y,    // Don't care
-    };
+enum StdLogic : char
+{
+    LOGIC_0 = '0',  // Logic 0
+    LOGIC_1 = '1',  // Logic 1
+    LOGIC_H = 'H', // Pull up
+    LOGIC_L = 'L',        // Pull down
+    LOGIC_Z = 'Z',        // High impedance
+    LOGIC_X = 'X',        // Logic X
+    LOGIC_W = 'W',        // Weak signal
+    LOGIC_U = 'U',        // Unknown
+    LOGIC_DC = '-',       // Don't care
+};
 
-    enum LoggerSeverity
-    {
-        DEBUG,
-        INFO,
-        WARNING,
-        ERROR,
-        FATAL
-    };
+enum LoggerSeverity
+{
+    DEBUG,
+    INFO,
+    WARNING,
+    ERROR,
+    FATAL
+};
 
-    enum MonitorTrigger
-    {
-        TODO
-    };
+enum MonitorTrigger
+{
+    TODO
+};
 
-    enum SequenceType
-    {
-        DRIVER_SEQUENCE,
-        MONITOR_SEQUENCE
-    };
+enum SequenceType
+{
+    DRIVER_SEQUENCE,
+    MONITOR_SEQUENCE
+};
 
-    class DriverItem;
-    class MonitorItem;
-    class TestSequence;
+class DriverItem;
+class MonitorItem;
+class TestSequence;
 
-    class TestBase;
-    class TestDemo;
+class TestBase;
+class TestDemo;
 
 } // namespace test_lib
 

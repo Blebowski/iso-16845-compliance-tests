@@ -19,21 +19,24 @@ test_lib::TestBase::TestBase()
 
 int test_lib::TestBase::run()
 {
-    test_message("TestBase: Run Entered");
+    testMessage("TestBase: Run Entered");
 
-    test_message("Configuring Reset agent, executing reset");
-    resetAgentPolaritySet(0);
-    resetAgentAssert();
-    // TODO: We should do some kind of wait which will be synchronized to
-    //       simulation flow of time!!
-    resetAgentDeassert();
+    testMessage("Configuring Reset agent, executing reset");
+    //resetAgentPolaritySet(0);
 
-    test_message("Configuring Clock generator agent");    
+    for (int i = 0; i < 1000; i++)
+    {
+        resetAgentDeassert();
+        resetAgentAssert();
+    }
+
+    /*
+    testMessage("Configuring Clock generator agent");    
     clockAgentSetPeriod(std::chrono::nanoseconds(10)); // TODO: Use clock period provided by configuration from VUnit!
     clockAgentSetJitter(std::chrono::nanoseconds(0));
     clockAgentSetDuty(50);
 
-    test_message("Configuring Memory bus agent");
+    testMessage("Configuring Memory bus agent");
     memBusAgentXModeStart();
     memBusAgentSetPeriod(std::chrono::nanoseconds(10)); // TODO: Use clock period provided by configuration from VUnit!
     memBusAgentSetXModeSetup(std::chrono::nanoseconds(2));
@@ -41,13 +44,14 @@ int test_lib::TestBase::run()
     memBusAgentSetOutputDelay(std::chrono::nanoseconds(4));
     memBusAgentStart();
 
-    test_message("Configuring CAN Agent");
+    testMessage("Configuring CAN Agent");
     canAgentDriverFlush();
     canAgentMonitorFlush();
     canAgentDriverStop();
     canAgentMonitorStop();
     canAgentMonitorSetSampleRate(std::chrono::nanoseconds(1));
+    */
 
-    test_message("TestBase: Run Exiting");
+    testMessage("TestBase: Run Exiting");
     return 0;
 }

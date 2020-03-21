@@ -10,17 +10,37 @@
 #include "vpi_utils.h"
 
 pthread_mutex_t handshakeMutex;
+pthread_mutexattr_t handshakeMutexAttr;
 
 
-void lock_handshake_mutex()
+void test_lock_handshake_mutex()
 {
+    //printf("TEST: LOCK\n");
     pthread_mutex_lock(&handshakeMutex);
+    //printf("TEST: LOCK OK\n");
 }
 
 
-void unlock_handshake_mutex()
+void test_unlock_handshake_mutex()
 {
+    //printf("TEST: UNLOCK\n");
     pthread_mutex_unlock(&handshakeMutex);
+    //printf("TEST: UNLOCK OK\n");
+}
+
+void simulator_lock_handshake_mutex(struct t_cb_data*cb)
+{
+    //printf("SIMULATOR: LOCK\n");
+    pthread_mutex_lock(&handshakeMutex);
+    //printf("SIMULATOR: LOCK OK\n");
+}
+
+
+void simulator_unlock_handshake_mutex(struct t_cb_data*cb)
+{
+    //printf("SIMULATOR: UNLOCK\n");
+    pthread_mutex_unlock(&handshakeMutex);
+    //printf("SIMULATOR: UNLOCK OK\n");
 }
 
 
@@ -45,8 +65,6 @@ vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName)
 
 int vpi_drive_str_value(const char *signalName, char *value)
 {
-    lock_handshake_mutex();
-
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
     vpiHandle signalHandle = get_net_handle(topModule, signalName);
@@ -55,15 +73,11 @@ int vpi_drive_str_value(const char *signalName, char *value)
     vpiValue.format = vpiBinStrVal;
     vpiValue.value.str = value;
     vpi_put_value(signalHandle, &vpiValue, NULL, vpiNoDelay);
-
-    unlock_handshake_mutex();
 }
 
 
 int vpi_read_str_value(const char *signalName, char *retValue)
 {
-    lock_handshake_mutex();
-
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
     vpiHandle topModule = vpi_scan(topIterator);
     vpiHandle signalHandle = get_net_handle(topModule, signalName);
@@ -72,8 +86,6 @@ int vpi_read_str_value(const char *signalName, char *retValue)
     vpiValue.format = vpiBinStrVal;
     vpi_get_value(signalHandle, &vpiValue);
     strcpy(retValue, vpiValue.value.str);
-
-    unlock_handshake_mutex();
 }
 
 
@@ -83,10 +95,13 @@ int vpi_wait_till_str_value(const char *signalName, char *value)
     memset(readValue, 0, sizeof(readValue));
     while (1)
     {
+        test_lock_handshake_mutex();
         vpi_read_str_value(signalName, &(readValue[0]));
+        test_unlock_handshake_mutex();
         if (strcmp(value, readValue) == 0){
             break;
         }
+        usleep(100);
     }
 }
 
@@ -100,13 +115,17 @@ void vpi_full_handshake()
 
 void vpi_begin_handshake()
 {
+    test_lock_handshake_mutex();
     vpi_drive_str_value(VPI_SIGNAL_REQ, "1");
+    test_unlock_handshake_mutex();
     vpi_wait_till_str_value(VPI_SIGNAL_ACK, "1");
 }
 
 
 void vpi_end_handshake()
 {
+    test_lock_handshake_mutex();
     vpi_drive_str_value(VPI_SIGNAL_REQ, "0");
+    test_unlock_handshake_mutex();
     vpi_wait_till_str_value(VPI_SIGNAL_ACK, "0");
 }

@@ -3,6 +3,7 @@
  */
 
 #include <chrono>
+#include <atomic>
 
 extern "C" {
     #include "vpi_utils.h"
@@ -16,77 +17,77 @@ extern "C" {
 /*
  * Agent destinations with testbench
  */
-#define VPI_DEST_TEST_CONTROLLER_AGENT "00000000"
-#define VPI_DEST_CLK_GEN_AGENT         "00000001"
-#define VPI_DEST_RES_GEN_AGENT         "00000010"
-#define VPI_DEST_MEM_BUS_AGENT         "00000011"
-#define VPI_DEST_CAN_AGENT             "00000100"
+#define VPI_DEST_TEST_CONTROLLER_AGENT (char*)"00000000"
+#define VPI_DEST_CLK_GEN_AGENT         (char*)"00000001"
+#define VPI_DEST_RES_GEN_AGENT         (char*)"00000010"
+#define VPI_DEST_MEM_BUS_AGENT         (char*)"00000011"
+#define VPI_DEST_CAN_AGENT             (char*)"00000100"
 
 /*
  * Reset agent
  */
-#define VPI_RST_AGNT_CMD_ASSERT        "00000001"
-#define VPI_RST_AGNT_CMD_DEASSERT      "00000010"
-#define VPI_RST_AGNT_CMD_POLARITY_SET  "00000011"
-#define VPI_RST_AGNT_CMD_POLARITY_GET  "00000100"
+#define VPI_RST_AGNT_CMD_ASSERT        (char*)"00000001"
+#define VPI_RST_AGNT_CMD_DEASSERT      (char*)"00000010"
+#define VPI_RST_AGNT_CMD_POLARITY_SET  (char*)"00000011"
+#define VPI_RST_AGNT_CMD_POLARITY_GET  (char*)"00000100"
 
 /*
  * Clock generator agent
  */
-#define VPI_CLK_AGNT_CMD_START        "00000001"
-#define VPI_CLK_AGNT_CMD_STOP         "00000010"
-#define VPI_CLK_AGNT_CMD_PERIOD_SET   "00000011"
-#define VPI_CLK_AGNT_CMD_PERIOD_GET   "00000100"
-#define VPI_CLK_AGNT_CMD_JITTER_SET   "00000101"
-#define VPI_CLK_AGNT_CMD_JITTER_GET   "00000110"
-#define VPI_CLK_AGNT_CMD_DUTY_SET     "00000111"
-#define VPI_CLK_AGNT_CMD_DUTY_GET     "00001000"
+#define VPI_CLK_AGNT_CMD_START        (char*)"00000001"
+#define VPI_CLK_AGNT_CMD_STOP         (char*)"00000010"
+#define VPI_CLK_AGNT_CMD_PERIOD_SET   (char*)"00000011"
+#define VPI_CLK_AGNT_CMD_PERIOD_GET   (char*)"00000100"
+#define VPI_CLK_AGNT_CMD_JITTER_SET   (char*)"00000101"
+#define VPI_CLK_AGNT_CMD_JITTER_GET   (char*)"00000110"
+#define VPI_CLK_AGNT_CMD_DUTY_SET     (char*)"00000111"
+#define VPI_CLK_AGNT_CMD_DUTY_GET     (char*)"00001000"
 
 /*
  * Memory bus agent
  */
-#define VPI_MEM_BUS_AGNT_START             "00000001"
-#define VPI_MEM_BUS_AGNT_STOP              "00000010"
-#define VPI_MEM_BUS_AGNT_WRITE             "00000011"
-#define VPI_MEM_BUS_AGNT_READ              "00000100"
-#define VPI_MEM_BUS_AGNT_X_MODE_START      "00000101"
-#define VPI_MEM_BUS_AGNT_X_MODE_STOP       "00000110"
-#define VPI_MEM_BUS_AGNT_SET_X_MODE_SETUP  "00000111"
-#define VPI_MEM_BUS_AGNT_SET_X_MODE_HOLD   "00001000"
-#define VPI_MEM_BUS_AGNT_SET_PERIOD        "00001001"
-#define VPI_MEM_BUS_AGNT_SET_OUTPUT_DELAY  "00001010"
-#define VPI_MEM_BUS_AGNT_WAIT_DONE         "00001011"
+#define VPI_MEM_BUS_AGNT_START             (char*)"00000001"
+#define VPI_MEM_BUS_AGNT_STOP              (char*)"00000010"
+#define VPI_MEM_BUS_AGNT_WRITE             (char*)"00000011"
+#define VPI_MEM_BUS_AGNT_READ              (char*)"00000100"
+#define VPI_MEM_BUS_AGNT_X_MODE_START      (char*)"00000101"
+#define VPI_MEM_BUS_AGNT_X_MODE_STOP       (char*)"00000110"
+#define VPI_MEM_BUS_AGNT_SET_X_MODE_SETUP  (char*)"00000111"
+#define VPI_MEM_BUS_AGNT_SET_X_MODE_HOLD   (char*)"00001000"
+#define VPI_MEM_BUS_AGNT_SET_PERIOD        (char*)"00001001"
+#define VPI_MEM_BUS_AGNT_SET_OUTPUT_DELAY  (char*)"00001010"
+#define VPI_MEM_BUS_AGNT_WAIT_DONE         (char*)"00001011"
 
 
-#define VPI_CAN_AGNT_DRIVER_START                  "00000001"
-#define VPI_CAN_AGNT_DRIVER_STOP                   "00000010"
-#define VPI_CAN_AGNT_DRIVER_FLUSH                  "00000011"
-#define VPI_CAN_AGNT_DRIVER_GET_PROGRESS           "00000100"
-#define VPI_CAN_AGNT_DRIVER_GET_DRIVEN_VAL         "00000101"
-#define VPI_CAN_AGNT_DRIVER_PUSH_ITEM              "00000110"
-#define VPI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT       "00000111"
-#define VPI_CAN_AGNT_DRIVER_WAIT_FINISH            "00001000"
-#define VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM      "00001001"
-#define VPI_CAN_AGNT_DRIVER_DRIVE_ALL_ITEM         "00001010"
+#define VPI_CAN_AGNT_DRIVER_START                  (char*)"00000001"
+#define VPI_CAN_AGNT_DRIVER_STOP                   (char*)"00000010"
+#define VPI_CAN_AGNT_DRIVER_FLUSH                  (char*)"00000011"
+#define VPI_CAN_AGNT_DRIVER_GET_PROGRESS           (char*)"00000100"
+#define VPI_CAN_AGNT_DRIVER_GET_DRIVEN_VAL         (char*)"00000101"
+#define VPI_CAN_AGNT_DRIVER_PUSH_ITEM              (char*)"00000110"
+#define VPI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT       (char*)"00000111"
+#define VPI_CAN_AGNT_DRIVER_WAIT_FINISH            (char*)"00001000"
+#define VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM      (char*)"00001001"
+#define VPI_CAN_AGNT_DRIVER_DRIVE_ALL_ITEM         (char*)"00001010"
 
-#define VPI_CAN_AGNT_MONITOR_START                 "00001011"
-#define VPI_CAN_AGNT_MONITOR_STOP                  "00001100"
-#define VPI_CAN_AGNT_MONITOR_FLUSH                 "00001101"
-#define VPI_CAN_AGNT_MONITOR_GET_STATE             "00001110"
-#define VPI_CAN_AGNT_MONITOR_GET_MONITORED_VAL     "00001111"
-#define VPI_CAN_AGNT_MONITOR_PUSH_ITEM             "00010000"
-#define VPI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT      "00010001"
-#define VPI_CAN_AGNT_MONITOR_WAIT_FINISH           "00010010"
-#define VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM   "00010011"
-#define VPI_CAN_AGNT_MONITOR_MONITOR_ALL_ITEMS     "00010100"
+#define VPI_CAN_AGNT_MONITOR_START                 (char*)"00001011"
+#define VPI_CAN_AGNT_MONITOR_STOP                  (char*)"00001100"
+#define VPI_CAN_AGNT_MONITOR_FLUSH                 (char*)"00001101"
+#define VPI_CAN_AGNT_MONITOR_GET_STATE             (char*)"00001110"
+#define VPI_CAN_AGNT_MONITOR_GET_MONITORED_VAL     (char*)"00001111"
+#define VPI_CAN_AGNT_MONITOR_PUSH_ITEM             (char*)"00010000"
+#define VPI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT      (char*)"00010001"
+#define VPI_CAN_AGNT_MONITOR_WAIT_FINISH           (char*)"00010010"
+#define VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM   (char*)"00010011"
+#define VPI_CAN_AGNT_MONITOR_MONITOR_ALL_ITEMS     (char*)"00010100"
 
-#define VPI_CAN_AGNT_MONITOR_SET_TRIGGER           "00010101"
-#define VPI_CAN_AGNT_MONITOR_GET_TRIGGER           "00010110"
+#define VPI_CAN_AGNT_MONITOR_SET_TRIGGER           (char*)"00010101"
+#define VPI_CAN_AGNT_MONITOR_GET_TRIGGER           (char*)"00010110"
 
-#define VPI_CAN_AGNT_MONITOR_SET_SAMPLE_RATE       "00010111"
-#define VPI_CAN_AGNT_MONITOR_GET_SAMPLE_RATE       "00011000"
+#define VPI_CAN_AGNT_MONITOR_SET_SAMPLE_RATE       (char*)"00010111"
+#define VPI_CAN_AGNT_MONITOR_GET_SAMPLE_RATE       (char*)"00011000"
 
-#define VPI_CAN_AGNT_MONITOR_CHECK_RESULT          "00011001"
+#define VPI_CAN_AGNT_MONITOR_CHECK_RESULT          (char*)"00011001"
 
 enum CanAgentMonitorState
 {
@@ -408,5 +409,15 @@ std::chrono::nanoseconds canAgentMonitorgetSampleRate();
  *
  */
 void canAgentCheckResult();
+
+
+/******************************************************************************
+ * Test controller agent functions
+ *****************************************************************************/
+
+/*
+ *
+ */
+void testControllerAgentEndTest(bool success);
 
 #endif

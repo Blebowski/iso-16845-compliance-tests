@@ -8,6 +8,8 @@
 #include "TestSequence.h"
 #include "../can_lib/BitFrame.h"
 
+#include "../vpi_lib/vpi_compliance_lib.hpp"
+
 test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clockPeriod)
 {
     this->clockPeriod = clockPeriod;
@@ -113,6 +115,7 @@ void test_lib::TestSequence::appendBit(std::vector<Item>& vector, can::Bit* bit)
     }
 }
 
+
 template <class Item>
 void test_lib::TestSequence::pushValue(std::vector<Item>& vector,
                                        std::chrono::nanoseconds duration,
@@ -128,6 +131,7 @@ void test_lib::TestSequence::pushValue(std::vector<Item>& vector,
     vector.push_back(Item(duration, logicVal));
 }
 
+
 void test_lib::TestSequence::printDrivenValues()
 {
     for (auto drivenValue : drivenValues)
@@ -135,9 +139,24 @@ void test_lib::TestSequence::printDrivenValues()
     std::cout << std::endl;
 }
 
+
 void test_lib::TestSequence::printMonitoredValues()
 {
     for (auto monitoredValue : monitoredValues)
         monitoredValue.print();
     std::cout << std::endl;
+}
+
+
+void test_lib::TestSequence::pushDriverValuesToSimulator()
+{
+    char val;
+    for (auto drivenValue : drivenValues)
+    {
+        //if (drivenValue.hasMessage())
+        //    canAgentDriverPushItem(drivenValue.value, drivenValue.duration,
+        //                            drivenValue.message);
+        //else
+        canAgentDriverPushItem(drivenValue.value, drivenValue.duration);
+    }
 }
