@@ -28,4 +28,4 @@ add_library(
     BitTiming.cpp
 )
 
-add_compile_options(CAN_LIB -g -fPIC)
+add_compile_options(CAN_LIB -g -fPIC -Wall -O0)
