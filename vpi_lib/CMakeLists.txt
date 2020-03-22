@@ -6,11 +6,11 @@ add_library(
     vpi_user.h
     vpi_utils.h
     SimulatorChannel.hpp
-    vpi_compliance_lib.hpp
+    vpiComplianceLib.hpp
     
     vpi_utils.c
     SimulatorChannel.cpp
-    vpi_compliance_lib.cpp
+    vpiComplianceLib.cpp
 )
 
 add_compile_options(VPI_LIB -fPIC -Wall -O0 -g -I -c -shared)

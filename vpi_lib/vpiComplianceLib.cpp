@@ -8,12 +8,7 @@
 #include <string>
 #include <atomic>
 
-
-extern "C" {
-    #include "vpi_utils.h"
-}
-
-#include "vpi_compliance_lib.hpp"
+#include "vpiComplianceLib.hpp"
 #include "SimulatorChannel.hpp"
 
 

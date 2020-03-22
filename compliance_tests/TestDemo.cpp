@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpi_compliance_lib.hpp"
+#include "../vpi_lib/vpiComplianceLib.hpp"
 
 #include "../test_lib/test_lib.h"
 #include "../test_lib/TestBase.h"
@@ -40,25 +40,14 @@ int test_lib::TestDemo::run()
 
     std::chrono::nanoseconds clkPer(10);    
     memBusAgentSetPeriod(clkPer);
-    testMessage("A");
     memBusAgentStart();
-    testMessage("B");
     memBusAgentWrite32(16, 0xAABBCCDD);
-    testMessage("C");
     uint8_t A;
     A = memBusAgentRead8(0);
-    testMessage("D");
-    //printf("%x\n", A);
     A = memBusAgentRead8(1);
-    testMessage("E");
-    //printf("%x\n", A);
     A = memBusAgentRead8(2);
-    testMessage("F");
-    //printf("%x\n", A);
     A = memBusAgentRead8(3);
-    testMessage("G");
-    //printf("%x\n", A);
-
+    
     uint16_t B = memBusAgentRead16(0);
     testMessage("H");
     //printf("%x\n", B);

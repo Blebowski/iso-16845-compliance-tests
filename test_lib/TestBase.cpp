@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "../test_lib/test_lib.h"
-#include "../vpi_lib/vpi_compliance_lib.hpp"
+#include "../vpi_lib/vpiComplianceLib.hpp"
 
 test_lib::TestBase::TestBase()
 {

@@ -8,12 +8,13 @@
 #include "TestSequence.h"
 #include "../can_lib/BitFrame.h"
 
-#include "../vpi_lib/vpi_compliance_lib.hpp"
+#include "../vpi_lib/vpiComplianceLib.hpp"
 
 test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clockPeriod)
 {
     this->clockPeriod = clockPeriod;
 };
+
 
 test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clockPeriod,
                                      can::BitFrame& frame,

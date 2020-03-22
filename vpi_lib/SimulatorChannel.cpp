@@ -7,7 +7,7 @@
 #include <atomic>
 
 #include "SimulatorChannel.hpp"
-#include "vpi_compliance_lib.hpp"
+#include "vpiComplianceLib.hpp"
 
 extern "C" {
     #include "vpi_utils.h"
