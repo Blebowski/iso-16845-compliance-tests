@@ -38,22 +38,29 @@ int test_lib::TestDemo::run()
     int polarity = 1;
     int polarity_read = 0;
 
-    /*
-    std::chrono::nanoseconds clkPer(10);
+    std::chrono::nanoseconds clkPer(10);    
     memBusAgentSetPeriod(clkPer);
+    testMessage("A");
     memBusAgentStart();
+    testMessage("B");
     memBusAgentWrite32(16, 0xAABBCCDD);
+    testMessage("C");
     uint8_t A;
     A = memBusAgentRead8(0);
+    testMessage("D");
     //printf("%x\n", A);
     A = memBusAgentRead8(1);
+    testMessage("E");
     //printf("%x\n", A);
     A = memBusAgentRead8(2);
+    testMessage("F");
     //printf("%x\n", A);
     A = memBusAgentRead8(3);
+    testMessage("G");
     //printf("%x\n", A);
 
     uint16_t B = memBusAgentRead16(0);
+    testMessage("H");
     //printf("%x\n", B);
     
     uint8_t data[64] =
@@ -84,8 +91,6 @@ int test_lib::TestDemo::run()
 
     canAgentDriverStart();
     canAgentDriverWaitFinish();
-    
-    */
 
     testControllerAgentEndTest(false);
 

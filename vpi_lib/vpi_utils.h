@@ -41,31 +41,6 @@
 // Size of vpi_data_in and vpi_data out vectors
 #define VPI_DBUF_SIZE 64
 
-// Handshake mutex
-extern pthread_mutex_t handshakeMutex;
-extern pthread_mutexattr_t handshakeMutexAttr;
-
-/**
- * 
- */
-void test_lock_handshake_mutex();
-
-/**
- * 
- */
-void test_unlock_handshake_mutex();
-
-/**
- * 
- */
-void simulator_lock_handshake_mutex(struct t_cb_data*cb);
-
-/**
- * 
- */
-void simulator_unlock_handshake_mutex(struct t_cb_data*cb);
-
-
 /**
  * 
  */
@@ -83,39 +58,5 @@ int vpi_drive_str_value(const char *signalName, char *value);
  */
 int vpi_read_str_value(const char *signalName, char *retValue);
 
-
-/**
- *
- */
-int vpi_wait_till_str_value(const char *signalName, char *value);
-
-
-/**
- *
- */
-void vpi_full_handshake();
-
-
-/**
- *
- */
-void vpi_begin_handshake();
-
-
-/**
- *
- */
-void vpi_end_handshake();
-
-/**
- * 
- */
-void vpi_info(char *);
-
-
-/**
- * 
- */
-//void vpi_info(char *);
 
 #endif

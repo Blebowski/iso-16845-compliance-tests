@@ -89,6 +89,12 @@ extern "C" {
 
 #define VPI_CAN_AGNT_MONITOR_CHECK_RESULT          (char*)"00011001"
 
+/*
+ * Memory bus agent
+ */
+#define VPI_TEST_AGNT_TEST_END                     (char*)"00000001"
+
+
 enum CanAgentMonitorState
 {
     CAN_AGENT_MONITOR_DISABLED,
@@ -163,7 +169,7 @@ std::chrono::nanoseconds clockAgentGetPeriod();
 /*
  *
  */
-int clockAgentSetJitter(std::chrono::nanoseconds clockPeriod);
+int clockAgentSetJitter(std::chrono::nanoseconds jitter);
 
 /*
  *

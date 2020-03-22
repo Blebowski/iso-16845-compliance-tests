@@ -22,15 +22,10 @@ int test_lib::TestBase::run()
     testMessage("TestBase: Run Entered");
 
     testMessage("Configuring Reset agent, executing reset");
-    //resetAgentPolaritySet(0);
+    resetAgentPolaritySet(0);
+    resetAgentAssert();
+    resetAgentDeassert();
 
-    for (int i = 0; i < 1000; i++)
-    {
-        resetAgentDeassert();
-        resetAgentAssert();
-    }
-
-    /*
     testMessage("Configuring Clock generator agent");    
     clockAgentSetPeriod(std::chrono::nanoseconds(10)); // TODO: Use clock period provided by configuration from VUnit!
     clockAgentSetJitter(std::chrono::nanoseconds(0));
@@ -50,7 +45,6 @@ int test_lib::TestBase::run()
     canAgentDriverStop();
     canAgentMonitorStop();
     canAgentMonitorSetSampleRate(std::chrono::nanoseconds(1));
-    */
 
     testMessage("TestBase: Run Exiting");
     return 0;

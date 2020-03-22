@@ -106,8 +106,8 @@ void processVpiClkCallback()
             // Copy back read data for read access
             if (simulatorChannel.readAccess)
             {
-                vpi_read_str_value(vpiReadData, vpiReadData);
-                simulatorChannel.vpiDataOut = vpiReadData;
+                vpi_read_str_value(VPI_SIGNAL_DATA_OUT, vpiReadData);
+                simulatorChannel.vpiDataOut = std::string(vpiReadData);
             }
             vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "0");
             simulatorChannel.fsm.store(SIM_CHANNEL_ACK_UP);
