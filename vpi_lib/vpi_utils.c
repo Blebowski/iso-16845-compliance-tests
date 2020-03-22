@@ -38,12 +38,16 @@ int vpi_drive_str_value(const char *signalName, char *value)
     vpiHandle topModule = vpi_scan(topIterator);
     vpiHandle signalHandle = get_net_handle(topModule, signalName);
 
+    if (signalHandle == NULL)
+        return -1;
+
     s_vpi_value vpiValue;
     vpiValue.format = vpiBinStrVal;
     vpiValue.value.str = value;
     vpi_put_value(signalHandle, &vpiValue, NULL, vpiNoDelay);
-}
 
+    return 0;
+}
 
 int vpi_read_str_value(const char *signalName, char *retValue)
 {
@@ -51,8 +55,13 @@ int vpi_read_str_value(const char *signalName, char *retValue)
     vpiHandle topModule = vpi_scan(topIterator);
     vpiHandle signalHandle = get_net_handle(topModule, signalName);
 
+    if (signalHandle == NULL)
+        return -1;
+
     s_vpi_value vpiValue;
     vpiValue.format = vpiBinStrVal;
     vpi_get_value(signalHandle, &vpiValue);
     strcpy(retValue, vpiValue.value.str);
+
+    return 0;
 }

@@ -50,7 +50,6 @@ int test_lib::TestDemo::run()
     
     uint16_t B = memBusAgentRead16(0);
     testMessage("H");
-    //printf("%x\n", B);
     
     uint8_t data[64] =
     {

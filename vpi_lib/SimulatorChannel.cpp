@@ -33,12 +33,14 @@ SimulatorChannel simulatorChannel =
 
 void simulatorChannelStartRequest()
 {
+    std::atomic_thread_fence(std::memory_order_seq_cst);
     simulatorChannel.req.store(true);
 }
 
 
 void simulatorChannelWaitRequestDone()
 {
+    std::atomic_thread_fence(std::memory_order_seq_cst);
     while(simulatorChannel.req.load())
         usleep(100);
 }

@@ -23,10 +23,6 @@
 #define VPI_SIGNAL_TEST_NAME_LENGHT "vpi_test_name_lenght"
 #define VPI_SIGNAL_TEST_NAME_ARRAY "vpi_test_name_array"
 
-// Mutex acquire interface
-#define VPI_MUTEX_LOCK "vpi_mutex_lock"
-#define VPI_MUTEX_UNLOCK "vpi_mutex_unlock"
-
 // Communication interface
 #define VPI_SIGNAL_REQ "vpi_req"
 #define VPI_SIGNAL_ACK "vpi_ack"
@@ -42,19 +38,43 @@
 #define VPI_DBUF_SIZE 64
 
 /**
+ * @brief Obtain VPI handle to a net in Simulator.
  * 
+ * @param moduleHandle Handle to a module/entity containing the signal.
+ * @param netName Name of the net.
+ * @returns Handle to the net.
+ * 
+ * @warning This function should be called only in simulator context as result
+ *          of simulator callback.
  */
 vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName);
 
 
 /**
- *
+ * @brief Drive value to top level net in Simulator. Signal shall be logic or
+ *        logic vector.
+ * 
+ * @param signalName Name of the signal/net to be driven.
+ * @param value Value to be driven to the signal. String shall have format:
+ *                 "10UZXLH" for all values of std_logic_vector.
+ * @returns 0 if succesfull, -1 otherwise
+ * 
+ * @warning This function should be called only in simulator context as result
+ *          of simulator callback.
  */
 int vpi_drive_str_value(const char *signalName, char *value);
 
 
 /**
- *
+ * @brief Read value from top level net in Simulator. Signal shall be logic or
+ *        logic vector.
+ * 
+ * @param signalName Name of the signal/net to read value from.
+ * @param value Value read from the signal.
+ * @returns 0 if succesfull, -1 otherwise
+ * 
+ * @warning This function should be called only in simulator context as result
+ *          of simulator callback.
  */
 int vpi_read_str_value(const char *signalName, char *retValue);
 

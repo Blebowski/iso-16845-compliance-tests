@@ -30,6 +30,7 @@ int test_lib::TestBase::run()
     clockAgentSetPeriod(std::chrono::nanoseconds(10)); // TODO: Use clock period provided by configuration from VUnit!
     clockAgentSetJitter(std::chrono::nanoseconds(0));
     clockAgentSetDuty(50);
+    clockAgentStart();
 
     testMessage("Configuring Memory bus agent");
     memBusAgentXModeStart();

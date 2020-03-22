@@ -22,7 +22,6 @@ void resetAgentAssert()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_ASSERT);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
 
     simulatorChannelProcessRequest();
 }
@@ -34,8 +33,7 @@ void resetAgentDeassert()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_DEASSERT);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -50,8 +48,7 @@ void resetAgentPolaritySet(int polarity)
     simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_POLARITY_SET);
     simulatorChannel.vpiDataIn = pol;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -62,8 +59,7 @@ int resetAgentPolarityGet()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_POLARITY_GET);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     return atoi(&simulatorChannel.vpiDataOut.at(0));
@@ -74,31 +70,29 @@ int resetAgentPolarityGet()
  * Clock generator agent functions
  ****************************************************************************/
 
-int clockAgentStart()
+void clockAgentStart()
 {
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_START);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
 
-int clockAgentStop()
+void clockAgentStop()
 {
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_STOP);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
 
-int clockAgentSetPeriod(std::chrono::nanoseconds clockPeriod)
+void clockAgentSetPeriod(std::chrono::nanoseconds clockPeriod)
 {
     unsigned long long timeVal = clockPeriod.count() * 1000000;
 
@@ -107,8 +101,7 @@ int clockAgentSetPeriod(std::chrono::nanoseconds clockPeriod)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_PERIOD_SET);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -121,15 +114,14 @@ std::chrono::nanoseconds clockAgentGetPeriod()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_PERIOD_GET);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
     readTime = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
     return std::chrono::nanoseconds(readTime);
 }
 
 
-int clockAgentSetJitter(std::chrono::nanoseconds jitter)
+void clockAgentSetJitter(std::chrono::nanoseconds jitter)
 {
     unsigned long long timeVal = jitter.count() * 1000000;
 
@@ -138,8 +130,7 @@ int clockAgentSetJitter(std::chrono::nanoseconds jitter)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_JITTER_SET);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -152,23 +143,21 @@ std::chrono::nanoseconds clockAgentGetJitter()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_JITTER_GET);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
     readJitter = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
     return std::chrono::nanoseconds(readJitter);
 }
 
 
-int clockAgentSetDuty(int duty)
+void clockAgentSetDuty(int duty)
 {
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_DUTY_SET);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(duty).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -179,8 +168,7 @@ int clockAgentGetDuty()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_DUTY_GET);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
     return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
 }
@@ -196,8 +184,7 @@ void memBusAgentStart()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_START);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -208,8 +195,7 @@ void memBusAgentStop()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_STOP);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -226,8 +212,7 @@ void memBusAgentWrite32(int address, uint32_t data)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -245,8 +230,7 @@ void memBusAgentWrite16(int address, uint16_t data)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -264,8 +248,7 @@ void memBusAgentWrite8(int address, uint8_t data)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -282,8 +265,7 @@ uint32_t memBusAgentRead32(int address)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_READ);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     return (uint32_t)strtoul(simulatorChannel.vpiDataOut.c_str(), NULL, 2);
@@ -301,8 +283,7 @@ uint16_t memBusAgentRead16(int address)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_READ);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     return (uint16_t)strtoul(simulatorChannel.vpiDataOut.c_str(), NULL, 2);
@@ -321,8 +302,7 @@ uint8_t memBusAgentRead8(int address)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_READ);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     return (uint8_t)strtoul(simulatorChannel.vpiDataOut.c_str(), NULL, 2);
@@ -335,8 +315,7 @@ void memBusAgentXModeStart()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_X_MODE_START);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -347,8 +326,7 @@ void memBusAgentXModeStop()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_X_MODE_STOP);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -362,8 +340,7 @@ void memBusAgentSetXModeSetup(std::chrono::nanoseconds setup)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_X_MODE_SETUP);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -377,8 +354,7 @@ void memBusAgentSetXModeHold(std::chrono::nanoseconds hold)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_X_MODE_HOLD);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -392,8 +368,7 @@ void memBusAgentSetPeriod(std::chrono::nanoseconds period)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_PERIOD);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -407,8 +382,7 @@ void memBusAgentSetOutputDelay(std::chrono::nanoseconds delay)
     simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_OUTPUT_DELAY);
     simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -419,8 +393,7 @@ void canAgentDriverStart()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_START);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -431,8 +404,7 @@ void canAgentDriverStop()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_STOP);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -443,8 +415,7 @@ void canAgentDriverFlush()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_FLUSH);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -455,8 +426,7 @@ bool canAgentDriverGetProgress()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_GET_PROGRESS);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     if (simulatorChannel.vpiDataOut.at(0) == '1')
@@ -471,8 +441,7 @@ char canAgentDriverGetDrivenVal()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_GET_DRIVEN_VAL);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     return simulatorChannel.vpiDataOut.c_str()[0];
@@ -492,8 +461,7 @@ void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -522,8 +490,7 @@ void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration,
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
     simulatorChannel.vpiMessageData = vpiMsg;
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -537,8 +504,7 @@ void canAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT);
     simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -549,8 +515,7 @@ void canAgentDriverWaitFinish()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_WAIT_FINISH);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -579,8 +544,7 @@ void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
     simulatorChannel.vpiMessageData = vpiMsg;
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -598,8 +562,7 @@ void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -610,8 +573,7 @@ void canAgentDriveAllItems()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_ALL_ITEM);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -622,8 +584,7 @@ void canAgentMonitorStart()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_START);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -634,8 +595,7 @@ void canAgentMonitorStop()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_STOP);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -646,8 +606,7 @@ void canAgentMonitorFlush()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_FLUSH);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -660,8 +619,7 @@ CanAgentMonitorState canAgentMonitorGetState()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_STATE);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     if (!simulatorChannel.vpiDataOut.compare("000"))
@@ -685,8 +643,7 @@ char canAgentMonitorGetMonitoredVal()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_MONITORED_VAL);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     return simulatorChannel.vpiDataOut.at(0);
@@ -705,8 +662,7 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -734,8 +690,7 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -749,8 +704,7 @@ void canAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT);
     simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -761,8 +715,7 @@ void canAgentMonitorWaitFinish()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_WAIT_FINISH);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -781,8 +734,7 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -811,8 +763,7 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
     simulatorChannel.vpiMessageData = vpiMsg;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -823,8 +774,7 @@ void canAgentMonitorAllItems()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_ALL_ITEMS);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -864,8 +814,7 @@ void canAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_TRIGGER);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -876,8 +825,7 @@ CanAgentMonitorTrigger canAgentMonitorGetTrigger()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_TRIGGER);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     if (!simulatorChannel.vpiDataOut.compare("000"))
@@ -910,8 +858,7 @@ void canAgentMonitorSetSampleRate(std::chrono::nanoseconds sampleRate)
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_SAMPLE_RATE);
     simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -924,8 +871,7 @@ std::chrono::nanoseconds canAgentMonitorgetSampleRate()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_SAMPLE_RATE);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 
     readTime = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
@@ -939,8 +885,7 @@ void canAgentCheckResult()
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_CHECK_RESULT);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     simulatorChannelProcessRequest();
 }
 
@@ -951,8 +896,7 @@ void testControllerAgentEndTest(bool success)
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_TEST_END);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-
+    
     if (success)
         simulatorChannel.vpiDataIn = std::string("1");
     else
