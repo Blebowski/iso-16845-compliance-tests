@@ -35,5 +35,6 @@ add_library(
 )
 
 add_compile_options(SIMULATOR_INTERFACE_LIB -fPIC -Wall -g -I -c -O0)
+target_compile_definitions(SIMULATOR_INTERFACE_LIB PUBLIC -D__LITTLE_ENDIAN_BITFIELD)
 
 target_link_options(SIMULATOR_INTERFACE_LIB PUBLIC -pthread)
