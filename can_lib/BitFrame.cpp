@@ -164,7 +164,7 @@ void can::BitFrame::buildFrameBits()
 
     // Build IDE, Extended Identifier and one bit post Extended Identifier
     if (frameFlags_.isIde_ == EXTENDED_IDENTIFIER) {
-        appendBit(BIT_TYPE_IDE, DOMINANT);
+        appendBit(BIT_TYPE_IDE, RECESSIVE);
 
         uint32_t extId = getIdentifierExtension();
         for (int i = 18; i > 0; i--)
@@ -180,7 +180,7 @@ void can::BitFrame::buildFrameBits()
             }
         }
     } else {
-        appendBit(BIT_TYPE_IDE, RECESSIVE);
+        appendBit(BIT_TYPE_IDE, DOMINANT);
     }
 
     // Build EDL/r0/r1 bit
