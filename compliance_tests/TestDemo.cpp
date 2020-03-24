@@ -35,21 +35,6 @@ int test_lib::TestDemo::run()
     TestBase::run();
 
     testMessage("TestDemo: Run Entered");
-    int polarity = 1;
-    int polarity_read = 0;
-
-    std::chrono::nanoseconds clkPer(10);    
-    memBusAgentSetPeriod(clkPer);
-    memBusAgentStart();
-    memBusAgentWrite32(16, 0xAABBCCDD);
-    uint8_t A;
-    A = memBusAgentRead8(0);
-    A = memBusAgentRead8(1);
-    A = memBusAgentRead8(2);
-    A = memBusAgentRead8(3);
-    
-    uint16_t B = memBusAgentRead16(0);
-    testMessage("H");
     
     uint8_t data[64] =
     {
@@ -63,13 +48,10 @@ int test_lib::TestDemo::run()
         0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
     };
 
-    BitTiming nbt = BitTiming(2, 2, 2, 4, 1);
-    BitTiming dbt = BitTiming(2, 2, 2, 1, 1);
-
     BitFrame bitFrame = BitFrame(
         FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                   BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE),
-        0, 32, &(data[0]), &nbt, &dbt);
+                   BIT_RATE_SHIFT, ESI_ERROR_ACTIVE),
+        2, 32, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
 
     bitFrame.print(true);
 

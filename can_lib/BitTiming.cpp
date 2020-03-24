@@ -25,3 +25,15 @@ can::BitTiming::BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
     assert(sjw <= prop + ph1 + 1);
     assert(sjw <= ph2);
 }
+
+can::BitTiming::BitTiming(){};
+
+
+void can::BitTiming::print()
+{
+    std::cout << "BRP:  " << this->brp << std::endl;
+    std::cout << "PROP: " << this->prop << std::endl;
+    std::cout << "PH1:  " << this->ph1 << std::endl;
+    std::cout << "PH2:  " << this->ph2 << std::endl;
+    std::cout << "SJW:  " << this->sjw << std::endl;
+}

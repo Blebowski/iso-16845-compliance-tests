@@ -126,6 +126,7 @@ namespace can {
 
     // Test related classes
     class DutInterface;
+    class CtuCanFdInterface;
 
 }; // namespace can
 

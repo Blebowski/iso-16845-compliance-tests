@@ -16,6 +16,9 @@ class can::BitTiming
 
         BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
                   unsigned int brp, unsigned int sjw);
+        BitTiming();
+
+        void print();
 };
 
 #endif

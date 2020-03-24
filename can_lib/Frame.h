@@ -13,8 +13,16 @@ class can::Frame {
 
     public:
         Frame();
+
+        /**
+         * TODO: State that data are copied!
+         */
         Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
               uint8_t *data);
+
+        /**
+         * TODO: State that data are copied!
+         */
         Frame(FrameFlags frameFlags, int dataLength,  int identifier,
               uint8_t *data);
         void Copy(Frame frame);
