@@ -904,3 +904,33 @@ void testControllerAgentEndTest(bool success)
 
     simulatorChannelProcessRequest();
 }
+
+
+std::chrono::nanoseconds testControllerAgentGetCfgDutClockPeriod()
+{
+    unsigned long long readTime;
+
+    simulatorChannel.readAccess = true;
+    simulatorChannel.useMsgData = true;
+    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_GET_CFG);
+    simulatorChannel.vpiMessageData = "CFG_DUT_CLOCK_PERIOD";
+
+    simulatorChannelProcessRequest();
+
+    readTime = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
+    return std::chrono::nanoseconds(readTime);
+}
+
+
+int testControllerAgentGetBitTimingElement(std::string elemName)
+{
+    simulatorChannel.readAccess = true;
+    simulatorChannel.useMsgData = true;
+    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_GET_CFG);
+    simulatorChannel.vpiMessageData = elemName;
+
+    simulatorChannelProcessRequest();
+    return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
+}

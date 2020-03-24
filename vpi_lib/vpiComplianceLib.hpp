@@ -100,6 +100,7 @@ extern "C" {
  * @subsection Test controller bus agent
  */
 #define VPI_TEST_AGNT_TEST_END                     (char*)"00000001"
+#define VPI_TEST_AGNT_GET_CFG                      (char*)"00000010"
 
 /**
  * @enum CAN Agent Monitor State.
@@ -759,5 +760,24 @@ void canAgentCheckResult();
  * @param success Test result. This will be passed to VUnit.
  */
 void testControllerAgentEndTest(bool success);
+
+
+/**
+ * @ingroup testControllerAgent
+ * 
+ * @brief 
+ * @return
+ */
+std::chrono::nanoseconds testControllerAgentGetCfgDutClockPeriod();
+
+
+/**
+ * @ingroup testControllerAgent
+ * 
+ * @brief 
+ * @return
+ */
+int testControllerAgentGetBitTimingElement(std::string elemName);
+
 
 #endif

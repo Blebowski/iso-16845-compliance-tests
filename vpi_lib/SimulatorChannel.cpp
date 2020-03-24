@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <atomic>
+#include <bitset>
 
 #include "SimulatorChannel.hpp"
 #include "vpiComplianceLib.hpp"
@@ -89,7 +90,13 @@ void processVpiClkCallback()
                 vpi_drive_str_value(VPI_SIGNAL_CMD, (char*)simulatorChannel.vpiCmd.c_str());
                 vpi_drive_str_value(VPI_SIGNAL_DATA_IN, (char*)simulatorChannel.vpiDataIn.c_str());
                 if (simulatorChannel.useMsgData)
-                    vpi_drive_str_value(VPI_STR_BUF_IN, (char*)simulatorChannel.vpiMessageData.c_str());
+                {
+                    std::string vector = "";
+                    for (int i = 0; i < simulatorChannel.vpiMessageData.length(); i++)
+                        vector.append(std::bitset<8>(simulatorChannel.vpiMessageData.at(i)).to_string());
+
+                    vpi_drive_str_value(VPI_STR_BUF_IN, (char *)vector.c_str());
+                }
 
                 std::atomic_thread_fence(std::memory_order_acquire);
                 vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "1");
