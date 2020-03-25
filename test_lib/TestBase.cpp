@@ -83,7 +83,7 @@ int test_lib::TestBase::run()
 
     testMessage("Waiting till DUT is error active!");
     while (this->dutIfc->getErrorState() != can::ERROR_ACTIVE)
-        usleep(500);
+        usleep(2000);
 
     testMessage("DUT ON! Test can start!");
 

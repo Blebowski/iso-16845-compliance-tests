@@ -154,10 +154,10 @@ void test_lib::TestSequence::pushDriverValuesToSimulator()
     char val;
     for (auto drivenValue : drivenValues)
     {
-        //if (drivenValue.hasMessage())
-        //    canAgentDriverPushItem(drivenValue.value, drivenValue.duration,
-        //                            drivenValue.message);
-        //else
-        canAgentDriverPushItem(drivenValue.value, drivenValue.duration);
+        if (drivenValue.hasMessage())
+            canAgentDriverPushItem(drivenValue.value, drivenValue.duration,
+                                    drivenValue.message);
+        else
+            canAgentDriverPushItem(drivenValue.value, drivenValue.duration);
     }
 }

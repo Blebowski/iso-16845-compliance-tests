@@ -40,11 +40,21 @@ can::BitFrame::BitFrame(FrameFlags frameFlags, uint8_t dlc, int identifier,
 uint32_t can::BitFrame::setCrc()
 {
     std::list<Bit>::iterator bitIt = getBitOfIterator(0, BIT_TYPE_CRC);
-    int i = 0;
     uint32_t crc = getCrc();
+    int i;
+
+    if (frameFlags_.isFdf_ == CAN_2_0)
+        i = 14;
+    else if (dataLenght_ > 16)
+        i = 20;
+    else
+        i = 16;
+
+    printf("Setting CRC of 0x%x\n", crc);
 
     while (bitIt->getBitType() == BIT_TYPE_CRC)
     {
+        printf("Setting CRC bit\n");
         // CRC should be set in CAN FD frames before stuff bits in CRC are
         // inserted (as CRC affects value of these stuff bits), therefore
         // it is illegal to calculate CRC when stuff bits in it are already
@@ -52,6 +62,7 @@ uint32_t can::BitFrame::setCrc()
         assert(bitIt->getStuffBitType() == STUFF_NO);
 
         bitIt->setBitValue((BitValue)((crc >> i) & 0x1));
+        i--;
         bitIt++;
     }
 }
@@ -87,7 +98,7 @@ uint8_t can::BitFrame::getStuffCount()
 
 uint32_t can::BitFrame::getCrc()
 {
-    if (frameFlags_.isFdf_ == CAN_FD)
+    if (frameFlags_.isFdf_ == CAN_2_0)
         return crc15_;
     if (dataLenght_ > 16)
         return crc21_;
@@ -211,7 +222,7 @@ void can::BitFrame::buildFrameBits()
     }
 
     // Build DLC
-    for (int i = 4; i > 0; i--)
+    for (int i = 3; i >= 0; i--)
         appendBit(BIT_TYPE_DLC, dlc_ >> i);
 
     // Build data field
@@ -382,16 +393,20 @@ uint32_t can::BitFrame::calculateCrc()
             break;
 
         BitValue bitValue = bitIt->getBitValue();
-        crcNxt15 = (int)(bitValue) ^ ((crc15_ >> 15) & 0x1);
-        crcNxt17 = (int)(bitValue) ^ ((crc17_ >> 17) & 0x1);
-        crcNxt21 = (int)(bitValue) ^ ((crc15_ >> 21) & 0x1);
+        crcNxt15 = (uint32_t)(bitValue) ^ ((crc15_ >> 14) & 0x1);
+        crcNxt17 = (uint32_t)(bitValue) ^ ((crc17_ >> 16) & 0x1);
+        crcNxt21 = (uint32_t)(bitValue) ^ ((crc15_ >> 20) & 0x1);
 
         // Shift left, CRC 15 always without stuff bits
         if (bitIt->getStuffBitType() == STUFF_NO)
-            crc15_ = (crc15_ << 1) | ((uint32_t)(bitValue) & 0x1);
+            crc15_ = (crc15_ << 1);
 
-        crc17_ = (crc17_ << 1) | ((uint32_t)(bitValue) & 0x1);
-        crc21_ = (crc21_ << 1) | ((uint32_t)(bitValue) & 0x1);
+        crc17_ = (crc17_ << 1);
+        crc21_ = (crc21_ << 1);
+
+        crc15_ &= 0x7FFF;
+        crc17_ &= 0x1FFFF;
+        crc21_ &= 0x1FFFFF;
 
         // Calculate by polynomial
         if (crcNxt15 == 1 && bitIt->getStuffBitType() == STUFF_NO)
@@ -404,11 +419,16 @@ uint32_t can::BitFrame::calculateCrc()
         bitIt++;
     }
 
+    printf("Calculated CRC 15 : 0x%x\n", crc15_);
+    printf("Calculated CRC 17 : 0x%x\n", crc17_);
+    printf("Calculated CRC 21 : 0x%x\n", crc21_);
+
     if (frameFlags_.isFdf_ == CAN_2_0)
         return crc15_;
-    if (dataLenght_ <= 16)
+    else if (dataLenght_ <= 16)
         return crc17_;
-    return crc21_;
+    else
+        return crc21_;
 }
 
 

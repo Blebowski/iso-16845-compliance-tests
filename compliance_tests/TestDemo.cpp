@@ -49,11 +49,14 @@ int test_lib::TestDemo::run()
     };
 
     BitFrame bitFrame = BitFrame(
-        FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
+        FrameFlags(CAN_2_0, EXTENDED_IDENTIFIER, DATA_FRAME,
                    BIT_RATE_SHIFT, ESI_ERROR_ACTIVE),
-        2, 32, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
+        8, 32, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
 
     bitFrame.print(true);
+
+    // Insert ACK to received sequence!
+    bitFrame.getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
 
     test_lib::TestSequence testSequence =
         test_lib::TestSequence(std::chrono::nanoseconds(10), bitFrame, test_lib::DRIVER_SEQUENCE);
