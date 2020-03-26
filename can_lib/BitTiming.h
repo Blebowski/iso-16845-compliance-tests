@@ -19,6 +19,7 @@ class can::BitTiming
         BitTiming();
 
         void print();
+        
 };
 
 #endif

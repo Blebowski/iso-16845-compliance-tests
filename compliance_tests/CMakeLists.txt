@@ -2,10 +2,6 @@
 add_library(
     COMPLIANCE_TESTS SHARED
 
-    # Headers
-    ../compliance_tests_includes/TestDemo.h
-
-    # Implementation
     TestDemo.cpp
 )
 

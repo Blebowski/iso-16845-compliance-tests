@@ -61,7 +61,7 @@ int test_lib::TestBase::run()
 
     testMessage("Configuring Memory bus agent");
     memBusAgentXModeStart();
-    memBusAgentSetPeriod(std::chrono::nanoseconds(10)); // TODO: Use clock period provided by configuration from VUnit!
+    memBusAgentSetPeriod(std::chrono::nanoseconds(this->dutClockPeriod));
     memBusAgentSetXModeSetup(std::chrono::nanoseconds(2));
     memBusAgentSetXModeHold(std::chrono::nanoseconds(2));
     memBusAgentSetOutputDelay(std::chrono::nanoseconds(4));
@@ -72,7 +72,8 @@ int test_lib::TestBase::run()
     canAgentMonitorFlush();
     canAgentDriverStop();
     canAgentMonitorStop();
-    canAgentMonitorSetSampleRate(std::chrono::nanoseconds(1));
+    canAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
+    canAgentMonitorSetSampleRate(std::chrono::nanoseconds(this->dutClockPeriod));
 
     testMessage("Configuring DUT");
     this->dutIfc->reset();

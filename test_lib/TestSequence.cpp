@@ -156,7 +156,6 @@ void test_lib::TestSequence::printMonitoredValues()
 
 void test_lib::TestSequence::pushDriverValuesToSimulator()
 {
-    char val;
     for (auto drivenValue : drivenValues)
     {
         if (drivenValue.hasMessage())
@@ -164,5 +163,18 @@ void test_lib::TestSequence::pushDriverValuesToSimulator()
                                     drivenValue.message);
         else
             canAgentDriverPushItem(drivenValue.value, drivenValue.duration);
+    }
+}
+
+
+void test_lib::TestSequence::pushMonitorValuesToSimulator()
+{
+    for (auto monitorValue : monitoredValues)
+    {
+        if (monitorValue.hasMessage())
+            canAgentMonitorPushItem(monitorValue.value, monitorValue.duration,
+                                    monitorValue.message);
+        else
+            canAgentMonitorPushItem(monitorValue.value, monitorValue.duration);
     }
 }

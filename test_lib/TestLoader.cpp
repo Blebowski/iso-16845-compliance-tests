@@ -10,18 +10,25 @@
 #include "TestLoader.h"
 
 #include "TestBase.h"
-#include "../compliance_tests_includes/TestDemo.h"
 
+/******************************************************************************
+ * Implementations of compliance tests
+ *****************************************************************************/
+#include "../compliance_tests/TestDemo.cpp"
+
+
+/******************************************************************************
+ *****************************************************************************/
 
 test_lib::TestBase *cppTest;
 std::thread *testThread;
 
 
-/**
+/******************************************************************************
  * Mapping of test name to Class representing the test.
  * This is simple workaround so that we don't have to implement some form
  * of reflection/factory solution which would convert us string to constructor
- */
+ *****************************************************************************/
 test_lib::TestBase* constructTestObject(std::string name)
 {
     test_lib::TestBase *testPtr = NULL;

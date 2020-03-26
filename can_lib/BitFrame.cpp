@@ -810,6 +810,18 @@ bool can::BitFrame::looseArbitration(Bit *bit)
 }
 
 
+void can::BitFrame::turnReceivedFrame()
+{
+    std::list<Bit>::iterator bitIt;
+
+    for (bitIt = bits_.begin(); bitIt != bits_.end(); bitIt++)
+        if (bitIt->getBitType() == BIT_TYPE_ACK)
+            bitIt->setBitValue(DOMINANT);
+        else
+            bitIt->setBitValue(RECESSIVE);
+}
+
+
 void can::BitFrame::print(bool printStuffBits)
 {
     std::list<Bit>::iterator bitIt;

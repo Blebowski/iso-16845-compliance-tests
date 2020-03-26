@@ -120,6 +120,11 @@ class can::BitFrame : public Frame {
         /**
          * 
          */
+        void turnReceivedFrame();
+
+        /**
+         * 
+         */
         uint32_t getCrc();
 
         /**
