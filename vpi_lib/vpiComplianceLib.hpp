@@ -96,6 +96,8 @@ extern "C" {
 
 #define VPI_CAN_AGNT_MONITOR_CHECK_RESULT          (char*)"00011001"
 
+#define VPI_CAN_AGNT_MONITOR_SET_INPUT_DELAY       (char*)"00011010"
+
 /**
  * @subsection Test controller bus agent
  */
@@ -745,6 +747,17 @@ std::chrono::nanoseconds canAgentMonitorgetSampleRate();
  *        was succesfull. Print result to simulator log.
  */
 void canAgentCheckResult();
+
+
+/**
+ * @ingroup canAgent
+ * 
+ * @brief Set Monitor input delay. Monitor will apply additional input delay
+ *        after trigger before monitoring first item! This delay corresponds
+ *        to DUT input delay.
+ * @param inputDelay Input delay to set
+ */
+void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay);
 
 
 /******************************************************************************

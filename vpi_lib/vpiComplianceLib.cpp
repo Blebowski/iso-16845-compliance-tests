@@ -890,6 +890,20 @@ void canAgentCheckResult()
 }
 
 
+void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay)
+{
+    unsigned long long timeVal = inputDelay.count() * 1000000;
+
+    simulatorChannel.readAccess = false;
+    simulatorChannel.useMsgData = false;
+    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
+    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_INPUT_DELAY);
+    simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
+
+    simulatorChannelProcessRequest();
+}
+
+
 void testControllerAgentEndTest(bool success)
 {
     simulatorChannel.readAccess = false;
