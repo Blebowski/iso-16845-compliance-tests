@@ -98,19 +98,24 @@ void test_lib::TestSequence::appendBit(std::vector<Item>& vector, can::Bit* bit)
                 currentValue = cycleBitValue->bitValue;
 
             // Note: This ignores non-default values which are equal to
-            //       its default value (as expected)
+            //       its default value (as expected) and merges them into
+            //       single monitored / driven item!
+
+            // If we did not detect bit value change -> it still belongs to the
+            // same segment -> legnthen it
+            if (currentValue == lastValue)
+                duration += clockPeriod;
 
             // We detected value change or are at the end of bit, add item.
             if (currentValue != lastValue ||
                 ((i == timeQuantas - 1) && (j == cycles - 1))) {
                 // TODO: Push with message on first Item of bit
                 // TODO: Push with message on each next item signalling glitch!
+                
                 if (duration.count() > 0)
                     pushValue(vector, duration, currentValue);
                 duration = clockPeriod;
                 lastValue = currentValue;
-            } else {
-                duration += clockPeriod;
             }
         }
     }
