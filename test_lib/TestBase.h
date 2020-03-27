@@ -64,6 +64,11 @@ class test_lib::TestBase
         can::BitTiming dataBitTiming;
 
         /**
+         * Test name
+         */
+        std::string testName;
+
+        /**
          * Pointer to DUT Interface object. Object created when TestBase object
          * is created. Used to access DUT by tests.
          */

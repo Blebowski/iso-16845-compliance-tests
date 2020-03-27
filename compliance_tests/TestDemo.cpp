@@ -34,6 +34,7 @@ using namespace can;
 class test_lib::TestDemo : public TestBase
 {
     public:
+
         // Here put any test dependent declarations!
 
         /**
@@ -44,7 +45,6 @@ class test_lib::TestDemo : public TestBase
             // Here initialize test specific variables, create test specific
             // objects.
         }
-
 
         /**
          *
@@ -58,7 +58,7 @@ class test_lib::TestDemo : public TestBase
              * Test sequence start
              ****************************************************************/
 
-            testMessage("TestDemo: Run Entered");
+            testMessage("Test %s : Run Entered", testName);
 
             // Write your test code here!
 
@@ -78,8 +78,8 @@ class test_lib::TestDemo : public TestBase
                 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
             };
 
-            BitFrame driverFrame = BitFrame(frameFlags, 1, 32, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
-            BitFrame monitorFrame = BitFrame(frameFlags, 1, 32, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
+            BitFrame driverFrame = BitFrame(frameFlags, 0xF, 0xAAAA, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
+            BitFrame monitorFrame = BitFrame(frameFlags, 0xF, 0xAAAA, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
 
             driverFrame.print(true);
 
@@ -106,7 +106,8 @@ class test_lib::TestDemo : public TestBase
 
             testControllerAgentEndTest(true);
 
-            testMessage("TestDemo: Run Exiting");
+
+            testMessage("Test %s : Run Exiting", testName);
 
             return 0;
 

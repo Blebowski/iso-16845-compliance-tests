@@ -49,6 +49,8 @@ test_lib::TestBase* constructTestObject(std::string name)
         std::cerr << "Unknown test name: " << name << std::endl;
     }
 
+    testPtr->testName = name;
+
     return testPtr;
 }
 
