@@ -13,13 +13,15 @@
 class test_lib::MonitorItem
 {
     public:
-        MonitorItem(std::chrono::nanoseconds duration, StdLogic value);
         MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                    std::string message);
+                    std::chrono::nanoseconds sampleRate);
         MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+                    std::chrono::nanoseconds sampleRate, std::string message);
+        MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+                    std::chrono::nanoseconds sampleRate, LoggerSeverity loggerSeverity);
+        MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+                    std::chrono::nanoseconds sampleRate, std::string message,
                     LoggerSeverity loggerSeverity);
-        MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                    std::string message, LoggerSeverity loggerSeverity);
 
         bool hasMessage();
 
@@ -27,6 +29,9 @@ class test_lib::MonitorItem
 
         // Time for which the item is monitored
         std::chrono::nanoseconds duration;
+
+        // Sample rate used to sample and compare this item
+        std::chrono::nanoseconds sampleRate;
 
         // Value that is monitored
         StdLogic value;

@@ -9,9 +9,11 @@
 #include "MonitorItem.h"
 
 
-test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value)
+test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+                                   std::chrono::nanoseconds sampleRate)
 {
     this->duration = duration;
+    this->sampleRate = sampleRate;
     this->value = value;
     this->message = std::string();
     this->loggerSeverity = LoggerSeverity::WARNING;
@@ -19,9 +21,10 @@ test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic v
 
 
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                  std::string message)
+                                   std::chrono::nanoseconds sampleRate, std::string message)
 {
     this->duration = duration;
+    this->sampleRate = sampleRate;
     this->value = value;
     this->message = message;
     this->loggerSeverity = LoggerSeverity::WARNING;
@@ -29,9 +32,11 @@ test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic v
 
 
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+                                   std::chrono::nanoseconds sampleRate,
                                    LoggerSeverity loggerSeverity)
 {
     this->duration = duration;
+    this->sampleRate = sampleRate;
     this->value = value;
     this->message = std::string();
     this->loggerSeverity = loggerSeverity;
@@ -39,9 +44,11 @@ test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic v
 
 
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::string message, LoggerSeverity loggerSeverity)
+                                   std::chrono::nanoseconds sampleRate, std::string message,
+                                   LoggerSeverity loggerSeverity)
 {
     this->duration = duration;
+    this->sampleRate = sampleRate;
     this->value = value;
     this->message = message;
     this->loggerSeverity = loggerSeverity;

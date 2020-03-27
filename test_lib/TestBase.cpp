@@ -73,7 +73,6 @@ int test_lib::TestBase::run()
     canAgentDriverStop();
     canAgentMonitorStop();
     canAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
-    canAgentMonitorSetSampleRate(std::chrono::nanoseconds(this->dutClockPeriod));
 
     testMessage("Configuring DUT");
     this->dutIfc->reset();

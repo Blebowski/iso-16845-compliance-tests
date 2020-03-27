@@ -91,9 +91,6 @@ extern "C" {
 #define VPI_CAN_AGNT_MONITOR_SET_TRIGGER           (char*)"00010101"
 #define VPI_CAN_AGNT_MONITOR_GET_TRIGGER           (char*)"00010110"
 
-#define VPI_CAN_AGNT_MONITOR_SET_SAMPLE_RATE       (char*)"00010111"
-#define VPI_CAN_AGNT_MONITOR_GET_SAMPLE_RATE       (char*)"00011000"
-
 #define VPI_CAN_AGNT_MONITOR_CHECK_RESULT          (char*)"00011001"
 
 #define VPI_CAN_AGNT_MONITOR_SET_INPUT_DELAY       (char*)"00011010"
@@ -629,8 +626,10 @@ char canAgentMonitorGetMonitoredVal();
  * @brief Insert Item to Monitor FIFO.
  * @param monitorValue Value to be monitored
  * @param duration Time for which monitorValue is monitored.
+ * @param sampleRate Sample rate used to check this item during monitoring.
  */
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration);
+void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
+                             std::chrono::nanoseconds sampleRate);
 
 
 /**
@@ -641,7 +640,8 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
  * @param duration Time for which monitorValue is monitored.
  * @param msg Message to be printed when monitoring of this item starts.
  */
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration, std::string msg);
+void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
+                             std::chrono::nanoseconds sampleRate, std::string msg);
 
 
 /**
@@ -677,7 +677,8 @@ void canAgentMonitorWaitFinish();
  * Monitor Wait timeout is upper threshold for waiting on end of CAN Agent
  * monitoring from Monitor FIFO.
  */
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration);
+void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
+                               std::chrono::nanoseconds sampleRate);
 
 
 /**
@@ -692,7 +693,8 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
  * Monitor Wait timeout is upper threshold for waiting on end of CAN Agent
  * monitoring from Monitor FIFO.
  */
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration, std::string msg);
+void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
+                               std::chrono::nanoseconds sampleRate, std::string msg);
 
 
 /**
@@ -719,25 +721,6 @@ void canAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger);
  * @return Monitor Trigger type
  */
 CanAgentMonitorTrigger canAgentMonitorGetTrigger();
-
-
-/**
- * @ingroup canAgent
- * 
- * @brief Configure Monitor sample rate. Monitor samples "can_tx" signal
- *        with this sample rate during monitoring of an item.
- * @param sampleRate Sample rate to be configured.
- */
-void canAgentMonitorSetSampleRate(std::chrono::nanoseconds sampleRate);
-
-
-/**
- * @ingroup canAgent
- * 
- * @brief Get Monitor Sample rate.
- * @return Monitor sample rate.
- */
-std::chrono::nanoseconds canAgentMonitorgetSampleRate();
 
 
 /**

@@ -56,6 +56,14 @@ struct SimulatorChannel
     std::string vpiDataIn;
 
     /**
+     * VPI Data In 2
+     * Input data for request to simulator. Additional data buffer. Meaning is
+     * command specific (vpiCmd) for each command. This will be translated to
+     * "vpi_data_in_2" signal in TB.
+     */
+    std::string vpiDataIn2;
+
+    /**
      * VPI Data Out
      * Output data from simulator for a request. Meaning of these data is command
      * specific (vpiCmd) for each command. This value is taken from "vpi_data_out"

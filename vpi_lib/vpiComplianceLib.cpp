@@ -649,7 +649,8 @@ char canAgentMonitorGetMonitoredVal()
     return simulatorChannel.vpiDataOut.at(0);
 }
 
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration)
+void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
+                             std::chrono::nanoseconds sampleRate)
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
@@ -657,17 +658,23 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
     vpiDataIn.append("0");      // No message
     vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
+    unsigned long long sampleRateVal = sampleRate.count() * 1000000;
+    std::string vpiDataIn2 = "";
+    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    
+    simulatorChannel.vpiDataIn2 = vpiDataIn2;
+
     simulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration, std::string msg)
+void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
+                             std::chrono::nanoseconds sampleRate, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
@@ -685,12 +692,17 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
     vpiDataIn.append("1");   // Message included
     vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
+    unsigned long long sampleRateVal = sampleRate.count() * 1000000;
+    std::string vpiDataIn2 = "";
+    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    
+    simulatorChannel.vpiDataIn2 = vpiDataIn2;
+
     simulatorChannelProcessRequest();
 }
 
@@ -720,7 +732,8 @@ void canAgentMonitorWaitFinish()
 }
 
 
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration)
+void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
+                               std::chrono::nanoseconds sampleRate)
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
@@ -729,17 +742,23 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
     vpiDataIn.append("0");   // No Message
     vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
+    unsigned long long sampleRateVal = sampleRate.count() * 1000000;
+    std::string vpiDataIn2 = "";
+    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = false;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
-    
+    simulatorChannel.vpiDataIn2 = vpiDataIn2;
+
     simulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration, std::string msg)
+void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
+                               std::chrono::nanoseconds sampleRate, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
@@ -757,13 +776,18 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
     vpiDataIn.append("1");   // Message included
     vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
+    unsigned long long sampleRateVal = sampleRate.count() * 1000000;
+    std::string vpiDataIn2 = "";
+    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+
     simulatorChannel.readAccess = false;
     simulatorChannel.useMsgData = true;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
+    simulatorChannel.vpiDataIn2 = vpiDataIn2;
     simulatorChannel.vpiMessageData = vpiMsg;
-    
+
     simulatorChannelProcessRequest();
 }
 
@@ -846,36 +870,6 @@ CanAgentMonitorTrigger canAgentMonitorGetTrigger()
         return CAN_AGENT_MONITOR_TRIGGER_DRIVER_STOP;
 
     return CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY;
-}
-
-
-void canAgentMonitorSetSampleRate(std::chrono::nanoseconds sampleRate)
-{
-    unsigned long long timeVal = sampleRate.count() * 1000000;
-
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_SAMPLE_RATE);
-    simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
-    
-    simulatorChannelProcessRequest();
-}
-
-
-std::chrono::nanoseconds canAgentMonitorgetSampleRate()
-{
-    unsigned long long readTime;
-
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_SAMPLE_RATE);
-    
-    simulatorChannelProcessRequest();
-
-    readTime = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
-    return std::chrono::nanoseconds(readTime);
 }
 
 

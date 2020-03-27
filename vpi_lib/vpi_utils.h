@@ -29,6 +29,7 @@
 #define VPI_SIGNAL_CMD "vpi_cmd"
 #define VPI_SIGNAL_DEST "vpi_dest"
 #define VPI_SIGNAL_DATA_IN "vpi_data_in"
+#define VPI_SIGNAL_DATA_IN_2 "vpi_data_in_2"
 #define VPI_SIGNAL_DATA_OUT "vpi_data_out"
 
 #define VPI_STR_BUF_IN "vpi_str_buf_in"

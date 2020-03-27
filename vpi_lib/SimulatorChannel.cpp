@@ -22,6 +22,7 @@ SimulatorChannel simulatorChannel =
     .vpiDest = "",
     .vpiCmd = "",
     .vpiDataIn = "",
+    .vpiDataIn2 = "",
     .vpiDataOut = "",
     .vpiMessageData = "",
 
@@ -89,6 +90,7 @@ void processVpiClkCallback()
                 vpi_drive_str_value(VPI_SIGNAL_DEST, (char*)simulatorChannel.vpiDest.c_str());
                 vpi_drive_str_value(VPI_SIGNAL_CMD, (char*)simulatorChannel.vpiCmd.c_str());
                 vpi_drive_str_value(VPI_SIGNAL_DATA_IN, (char*)simulatorChannel.vpiDataIn.c_str());
+                vpi_drive_str_value(VPI_SIGNAL_DATA_IN_2, (char *)simulatorChannel.vpiDataIn2.c_str());
                 if (simulatorChannel.useMsgData)
                 {
                     std::string vector = "";
