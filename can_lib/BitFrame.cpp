@@ -389,9 +389,9 @@ uint32_t can::BitFrame::calculateCrc()
     uint32_t crcNxt17 = 0;
     uint32_t crcNxt21 = 0;
 
-    crc15_ = 0x0;
-    crc17_ = (1 << 17);
-    crc21_ = (1 << 21);
+    crc15_ = 0;
+    crc17_ = (1 << 16);
+    crc21_ = (1 << 20);
 
     // CRC calculation as in CAN FD spec!
     bitIt = bits_.begin();
@@ -403,33 +403,36 @@ uint32_t can::BitFrame::calculateCrc()
         BitValue bitValue = bitIt->getBitValue();
         crcNxt15 = (uint32_t)(bitValue) ^ ((crc15_ >> 14) & 0x1);
         crcNxt17 = (uint32_t)(bitValue) ^ ((crc17_ >> 16) & 0x1);
-        crcNxt21 = (uint32_t)(bitValue) ^ ((crc15_ >> 20) & 0x1);
+        crcNxt21 = (uint32_t)(bitValue) ^ ((crc21_ >> 20) & 0x1);
 
         // Shift left, CRC 15 always without stuff bits
         if (bitIt->getStuffBitType() == STUFF_NO)
             crc15_ = (crc15_ << 1);
 
-        crc17_ = (crc17_ << 1);
-        crc21_ = (crc21_ << 1);
+        if (bitIt->getStuffBitType() != STUFF_FIXED)
+        {
+            crc17_ = (crc17_ << 1);
+            crc21_ = (crc21_ << 1);
+        }
 
         crc15_ &= 0x7FFF;
         crc17_ &= 0x1FFFF;
         crc21_ &= 0x1FFFFF;
 
         // Calculate by polynomial
-        if (crcNxt15 == 1 && bitIt->getStuffBitType() == STUFF_NO)
+        if ((crcNxt15 == 1) && (bitIt->getStuffBitType() == STUFF_NO))
             crc15_ ^= 0xC599;
-        if (crcNxt17 == 1)
+        if ((crcNxt17 == 1) && (bitIt->getStuffBitType() != STUFF_FIXED))
             crc17_ ^= 0x3685B;
-        if (crcNxt21 == 1)
+        if ((crcNxt21 == 1) && (bitIt->getStuffBitType() != STUFF_FIXED))
             crc21_ ^= 0x302899;
 
         bitIt++;
     }
 
-    printf("Calculated CRC 15 : 0x%x\n", crc15_);
-    printf("Calculated CRC 17 : 0x%x\n", crc17_);
-    printf("Calculated CRC 21 : 0x%x\n", crc21_);
+    //printf("Calculated CRC 15 : 0x%x\n", crc15_);
+    //printf("Calculated CRC 17 : 0x%x\n", crc17_);
+    //printf("Calculated CRC 21 : 0x%x\n", crc21_);
 
     if (frameFlags_.isFdf_ == CAN_2_0)
         return crc15_;

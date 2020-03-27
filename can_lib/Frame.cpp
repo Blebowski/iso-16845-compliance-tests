@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <assert.h>
 
 #include "Frame.h"
 #include "FrameFlags.h"
@@ -42,14 +43,6 @@ can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
     copyData(data, dataLenght_);
 }
 
-can::Frame::Frame(FrameFlags frameFlags, int dataLength, int identifier,
-                  uint8_t *data)
-{
-    frameFlags_ = frameFlags;
-    setDataLenght(dataLength);    
-    setIdentifer(identifier);
-    copyData(data, dataLenght_);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Getters
@@ -152,11 +145,9 @@ int can::Frame::convertDlcToDataLenght(uint8_t dlc)
     if (frameFlags_.isFdf_ == CAN_2_0 && dlc >= 0x8)
         return 0x8;
 
-    for (int i = 0; i < 16; i++){
-        if (uint8_t(dlcToDataLenghtTable_[i][0]) == dlc)
-            return dlcToDataLenghtTable_[i][0];
-    }
-    return -1;
+    assert(dlc <= 16);
+
+    return dlcToDataLenghtTable_[dlc][1];
 }
 
 uint8_t can::Frame::convertDataLenghtToDlc(int dataLenght)
