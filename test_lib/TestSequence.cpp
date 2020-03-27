@@ -1,6 +1,14 @@
-/**
- * TODO: License
- */
+/****************************************************************************** 
+ * 
+ * @copyright Copyright (C) Ondrej Ille - All Rights Reserved
+ * 
+ * Copying, publishing, distributing of this file is stricly prohibited unless
+ * previously aggreed with author of this text.
+ * 
+ * @author Ondrej Ille, <ondrej.ille@gmail.com>
+ * @date 27.3.2020
+ * 
+ *****************************************************************************/
 
 #include "test_lib.h"
 #include "../can_lib/can.h"
@@ -53,7 +61,7 @@ void test_lib::TestSequence::appendDriverFrame(can::BitFrame& driveFrame)
     for (int i = 0; i < bitCount; i++)
     {
         bit = driveFrame.getBit(i);
-        appendDriverBit(drivenValues, bit);
+        appendDriverBit(bit);
     }
 }
 
@@ -66,12 +74,12 @@ void test_lib::TestSequence::appendMonitorFrame(can::BitFrame& monitorFrame)
     for (int i = 0; i < bitCount; i++)
     {
         bit = monitorFrame.getBit(i);
-        appendMonitorBit(monitoredValues, bit);
+        appendMonitorBit(bit);
     }
 }
 
 
-void test_lib::TestSequence::appendDriverBit(std::vector<DriverItem>& vector, can::Bit* bit)
+void test_lib::TestSequence::appendDriverBit(can::Bit* bit)
 {
     int timeQuantas = bit->getLenTimeQuanta();
     can::BitValue bitValue = bit->getBitValue();
@@ -112,7 +120,7 @@ void test_lib::TestSequence::appendDriverBit(std::vector<DriverItem>& vector, ca
                 // TODO: Push with message on each next item signalling glitch!
                 
                 if (duration.count() > 0)
-                    pushDriverValue(vector, duration, currentValue);
+                    pushDriverValue(duration, currentValue);
                 duration = clockPeriod;
                 lastValue = currentValue;
             }
@@ -120,8 +128,7 @@ void test_lib::TestSequence::appendDriverBit(std::vector<DriverItem>& vector, ca
     }
 }
 
-void test_lib::TestSequence::appendMonitorBitWithShift(
-                std::vector<MonitorItem> &vector, can::Bit *bit)
+void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 {
     std::chrono::nanoseconds tseg1Duration (0);
     std::chrono::nanoseconds tseg2Duration (0);
@@ -143,13 +150,12 @@ void test_lib::TestSequence::appendMonitorBitWithShift(
     std::chrono::nanoseconds sampleRateNominal = brp * clockPeriod;
     std::chrono::nanoseconds sampleRateData = brpFd * clockPeriod;
 
-    pushMonitorValue(vector, tseg1Duration, sampleRateNominal, bit->getBitValue());
-    pushMonitorValue(vector, tseg2Duration, sampleRateData, bit->getBitValue());
+    pushMonitorValue(tseg1Duration, sampleRateNominal, bit->getBitValue());
+    pushMonitorValue(tseg2Duration, sampleRateData, bit->getBitValue());
 }
 
 
-void test_lib::TestSequence::appendMonitorNotShift(
-                std::vector<MonitorItem> &vector, can::Bit *bit)
+void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
     std::chrono::nanoseconds duration (0);
 
@@ -161,11 +167,11 @@ void test_lib::TestSequence::appendMonitorNotShift(
     int brp = bit->getTimeQuanta(0)->getLengthCycles();
     std::chrono::nanoseconds sampleRate = brp * clockPeriod;
 
-    pushMonitorValue(vector, duration, sampleRate, bit->getBitValue());
+    pushMonitorValue(duration, sampleRate, bit->getBitValue());
 }
 
 
-void test_lib::TestSequence::appendMonitorBit(std::vector<MonitorItem>& vector, can::Bit* bit)
+void test_lib::TestSequence::appendMonitorBit(can::Bit* bit)
 {
     can::BitValue currentValue;
     can::TimeQuanta *timeQuanta;
@@ -175,15 +181,14 @@ void test_lib::TestSequence::appendMonitorBit(std::vector<MonitorItem>& vector, 
 
     if (bit->getBitType() == can::BIT_TYPE_BRS ||
         bit->getBitType() == can::BIT_TYPE_CRC_DELIMITER)
-        appendMonitorBitWithShift(vector, bit);
+        appendMonitorBitWithShift(bit);
     else
-        appendMonitorNotShift(vector, bit);
+        appendMonitorNotShift(bit);
 }
 
 
-void test_lib::TestSequence::pushDriverValue(std::vector<DriverItem> &vector,
-                                              std::chrono::nanoseconds duration,
-                                              can::BitValue bitValue)
+void test_lib::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
+                                             can::BitValue bitValue)
 {
     // TODO: This conversion should ideally be separated!
     StdLogic logicVal;
@@ -192,12 +197,11 @@ void test_lib::TestSequence::pushDriverValue(std::vector<DriverItem> &vector,
     else
         logicVal = LOGIC_1;
 
-    vector.push_back(DriverItem(duration, logicVal));
+    drivenValues.push_back(DriverItem(duration, logicVal));
 }
 
 
-void test_lib::TestSequence::pushMonitorValue(std::vector<MonitorItem> &vector,
-                                              std::chrono::nanoseconds duration,
+void test_lib::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
                                               std::chrono::nanoseconds sampleRate,
                                               can::BitValue bitValue)
 {
@@ -208,7 +212,7 @@ void test_lib::TestSequence::pushMonitorValue(std::vector<MonitorItem> &vector,
     else
         logicVal = LOGIC_1;
 
-    vector.push_back(MonitorItem(duration, logicVal, sampleRate));
+    monitoredValues.push_back(MonitorItem(duration, logicVal, sampleRate));
 }
 
 

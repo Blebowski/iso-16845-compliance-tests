@@ -1,6 +1,14 @@
-/**
- * TODO: License
- */
+/****************************************************************************** 
+ * 
+ * @copyright Copyright (C) Ondrej Ille - All Rights Reserved
+ * 
+ * Copying, publishing, distributing of this file is stricly prohibited unless
+ * previously aggreed with author of this text.
+ * 
+ * @author Ondrej Ille, <ondrej.ille@gmail.com>
+ * @date 27.3.2020
+ * 
+ *****************************************************************************/
 
 #include "can.h"
 #include "Frame.h"
@@ -21,7 +29,8 @@ class can::CtuCanFdInterface : public can::DutInterface
         void enable();
         void disable();
         void reset();
-        void setFdStandardType(bool isIso);
+        bool setFdStandardType(bool isIso);
+        bool setCanVersion(CanVersion canVersion);
         void configureBitTiming(can::BitTiming nominalBitTiming,
                                 can::BitTiming dataBitTiming);
         void sendFrame(can::Frame frame);

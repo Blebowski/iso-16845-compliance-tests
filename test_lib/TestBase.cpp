@@ -1,6 +1,14 @@
-/**
- * TODO: License
- */
+/****************************************************************************** 
+ * 
+ * @copyright Copyright (C) Ondrej Ille - All Rights Reserved
+ * 
+ * Copying, publishing, distributing of this file is stricly prohibited unless
+ * previously aggreed with author of this text.
+ * 
+ * @author Ondrej Ille, <ondrej.ille@gmail.com>
+ * @date 27.3.2020
+ * 
+ *****************************************************************************/
 
 #include <iostream>
 
@@ -15,16 +23,13 @@
 
 test_lib::TestBase::TestBase()
 {
-    return;
+    this->dutIfc = new can::CtuCanFdInterface;
 }
 
 
 int test_lib::TestBase::run()
 {
-    testMessage("TestBase: Run Entered");
-
-    // Create DUT interface!
-    this->dutIfc = new can::CtuCanFdInterface;
+    testMessage("TestBase: Run Entered");    
 
     testMessage("Querying test configuration from TB:");
     this->dutClockPeriod = testControllerAgentGetCfgDutClockPeriod();
@@ -77,7 +82,8 @@ int test_lib::TestBase::run()
     testMessage("Configuring DUT");
     this->dutIfc->reset();
     this->dutIfc->configureBitTiming(this->nominalBitTiming, this->dataBitTiming);
-    
+    this->dutIfc->setCanVersion(can::CanVersion::CAN_FD_ENABLED_VERSION);
+
     testMessage("Enabling DUT");
     this->dutIfc->enable();
 

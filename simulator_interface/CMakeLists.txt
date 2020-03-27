@@ -1,7 +1,20 @@
+###############################################################################
+# 
+# Copyright (C) Ondrej Ille - All Rights Reserved
+#  
+# Copying, publishing, distributing of this file is stricly prohibited unless
+# previously aggreed with author of this text.
+# 
+# Author: Ondrej Ille, <ondrej.ille@gmail.com>
+# Date: 27.3.2020
+# 
+###############################################################################
 
+###############################################################################
 # I did not find a way how to link several shared libraries to GHDL VPI, so
 # I build everything including sources from other libraries (model, testlib,
 # etc...) to single shared library and link that one to GHDL!
+###############################################################################
 get_target_property(TEST_LIB_SOURCES_RAW TEST_LIB SOURCES)
 get_target_property(CAN_LIB_SOURCES_RAW CAN_LIB SOURCES)
 get_target_property(COMPLIANCE_TESTS_RAW COMPLIANCE_TESTS SOURCES)

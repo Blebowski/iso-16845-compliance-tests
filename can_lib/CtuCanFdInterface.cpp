@@ -1,6 +1,14 @@
-/**
- * TODO: License
- */
+/****************************************************************************** 
+ * 
+ * @copyright Copyright (C) Ondrej Ille - All Rights Reserved
+ * 
+ * Copying, publishing, distributing of this file is stricly prohibited unless
+ * previously aggreed with author of this text.
+ * 
+ * @author Ondrej Ille, <ondrej.ille@gmail.com>
+ * @date 27.3.2020
+ * 
+ *****************************************************************************/
 
 #include <assert.h>
 
@@ -48,7 +56,7 @@ void can::CtuCanFdInterface::reset()
 }
 
 
-void can::CtuCanFdInterface::setFdStandardType(bool isIso)
+bool can::CtuCanFdInterface::setFdStandardType(bool isIso)
 {
     union ctu_can_fd_mode_settings data;
     data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
@@ -57,7 +65,38 @@ void can::CtuCanFdInterface::setFdStandardType(bool isIso)
     else
         data.s.nisofd = NON_ISO_FD;
     memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+
+    return true;
 }
+
+
+bool can::CtuCanFdInterface::setCanVersion(CanVersion canVersion)
+{
+    union ctu_can_fd_mode_settings data;
+    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+
+    switch (canVersion)
+    {
+    case CAN_2_0_VERSION:
+        data.s.fde = FDE_DISABLE;
+        memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+        return true;
+        break;
+
+    case CAN_FD_ENABLED_VERSION:
+        data.s.fde = FDE_ENABLE;
+        memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+        return true;
+        break;
+
+    case CAN_FD_TOLERANT_VERSION:
+        std::cerr << "CTU CAN FD does not support CAN FD tolerant operation!" <<
+        std::endl;
+        return false;
+        break;
+    }
+}
+
 
 
 void can::CtuCanFdInterface::configureBitTiming(can::BitTiming nominalBitTiming,
