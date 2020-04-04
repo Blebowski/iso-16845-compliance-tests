@@ -279,13 +279,13 @@ can::Frame can::CtuCanFdInterface::readFrame()
         identifier = identifierWord.s.identifier_base;
 
     // Read data
-    for (int i = 0; i < rwcnt; i++)
+    for (int i = 0; i < rwcnt - 3; i++)
     {
         dataWord = memBusAgentRead32(CTU_CAN_FD_RX_DATA);
 
         for (int j = 0; j < 4; j++)
         {
-            data[i + j] = (uint8_t)(dataWord & 0xFF);
+            data[(i * 4) + j] = (uint8_t)(dataWord & 0xFF);
             dataWord >>= 8;
         }
     }
