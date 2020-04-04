@@ -24,6 +24,8 @@
 test_lib::TestBase::TestBase()
 {
     this->dutIfc = new can::CtuCanFdInterface;
+    this->canVersion = can::CanVersion::CAN_FD_ENABLED_VERSION;
+    this->testResult = false;
 }
 
 
@@ -82,7 +84,7 @@ int test_lib::TestBase::run()
     testMessage("Configuring DUT");
     this->dutIfc->reset();
     this->dutIfc->configureBitTiming(this->nominalBitTiming, this->dataBitTiming);
-    this->dutIfc->setCanVersion(can::CanVersion::CAN_FD_ENABLED_VERSION);
+    this->dutIfc->setCanVersion(this->canVersion);
 
     testMessage("Enabling DUT");
     this->dutIfc->enable();
@@ -95,4 +97,46 @@ int test_lib::TestBase::run()
 
     testMessage("TestBase: Run Exiting");
     return 0;
+}
+
+
+/**
+ * Note that operator overloading was not used on purpose because if operator is
+ * overloaded it is non-member function of class. When this is linked with GHDL
+ * simulation, it throws out linkage errors!
+ */
+bool test_lib::TestBase::compareFrames(can::Frame &expectedFrame, can::Frame &realFrame)
+{
+    bool retVal = true;
+
+    if (expectedFrame.getIdentifier() != realFrame.getIdentifier())
+        retVal = false;
+    if (expectedFrame.getDlc() != realFrame.getDlc())
+        retVal = false;
+
+    // Compare frame flags
+    if (!(expectedFrame.getFrameFlags().isBrs_ == realFrame.getFrameFlags().isBrs_))
+        retVal = false;
+    if (!(expectedFrame.getFrameFlags().isEsi_ == realFrame.getFrameFlags().isEsi_))
+        retVal = false;
+    if (!(expectedFrame.getFrameFlags().isFdf_ == realFrame.getFrameFlags().isFdf_))
+        retVal = false;
+    if (!(expectedFrame.getFrameFlags().isIde_ == realFrame.getFrameFlags().isIde_))
+        retVal = false;
+    if (!(expectedFrame.getFrameFlags().isRtr_ == realFrame.getFrameFlags().isRtr_))
+        retVal = false;
+
+    for (int i = 0; i < expectedFrame.getDataLenght(); i++)
+        if (expectedFrame.getData(i) != realFrame.getData(i))
+            retVal = false;
+
+    if (retVal == false)
+    {
+        testMessage("Frame read from DUT does not match send frame!");
+        testMessage("Expected frame:");
+        expectedFrame.print();
+        testMessage("Real frame:");
+        realFrame.print();
+    }
+    return retVal;
 }

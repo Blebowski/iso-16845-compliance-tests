@@ -75,10 +75,25 @@ class test_lib::TestBase
         can::DutInterface* dutIfc;
 
         /**
+         * Version of CAN FD protocol that should be used for the test.
+         */
+        can::CanVersion canVersion;
+
+        /**
+         * Test result
+         */
+        bool testResult;
+
+        /**
          * Pointer to DUT Interface object. Object created when TestBase object
          * is created. Used to access DUT by tests.
          */
         virtual int run();
+
+        /**
+         * TODO
+         */
+        bool compareFrames(can::Frame &lhs, can::Frame &rhs);
 };
 
 #endif
