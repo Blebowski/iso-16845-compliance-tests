@@ -37,6 +37,8 @@ class can::Frame {
         uint8_t* getData();
         uint8_t getData(int index);
 
+        friend bool operator==(Frame& lhs, Frame& rhs);
+
         void print();
 
     protected:

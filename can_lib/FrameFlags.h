@@ -28,6 +28,8 @@ class can::FrameFlags
         FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
                    RemoteTransmissionRequest isRtr, BitRateShift isBrs,
                    ErrorStateIndicator isEsi);
+
+        friend bool operator==(const FrameFlags &lhs, const FrameFlags rhs);
 };
 
 #endif

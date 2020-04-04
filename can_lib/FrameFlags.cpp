@@ -49,3 +49,19 @@ can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
         isEsi_ = ESI_ERROR_ACTIVE; // Error active is assumed default
     }
 };
+
+
+bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
+{
+    if (lhs.isBrs_ != rhs.isBrs_)
+        return false;
+    if (lhs.isEsi_ != rhs.isEsi_)
+        return false;
+    if (lhs.isFdf_ != rhs.isFdf_)
+        return false;
+    if (lhs.isIde_ != rhs.isIde_)
+        return false;
+    if (lhs.isRtr_ != rhs.isRtr_)
+        return false;
+    return true;
+}

@@ -78,6 +78,19 @@ uint8_t can::Frame::getData(int index)
     return data_[index];
 }
 
+bool operator==(can::Frame& lhs, can::Frame& rhs)
+{
+    if (lhs.getIdentifier() != rhs.getIdentifier())
+        return false;
+    if (lhs.getDlc() != rhs.getDlc())
+        return false;
+    if (!(lhs.getFrameFlags() == rhs.getFrameFlags()))
+        return false;
+    for (int i = 0; i < lhs.getDataLenght(); i++)
+        if (lhs.getData(i) != rhs.getData(i))
+            return false;
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Setters
@@ -177,12 +190,12 @@ void can::Frame::print()
         std::cout << "BRS: " << frameFlags_.isBrs_ << std::endl;
     else
         std::cout << "RTR: " << frameFlags_.isRtr_ << std::endl;
-    std::cout << "DLC: " << (int)dlc_ << std::endl;
+    printf("DLC: 0x%x\n", dlc_);
     std::cout << "Data field length: " << dataLenght_ << std::endl;
-    std::cout << "Identifier: " << identifier_ << std::endl;
+    printf("Identifier: 0x%x\n", identifier_);
     std::cout << "Data: ";
     for (int i = 0; i < dataLenght_; i++)
-        printf("0x%u", data_[i]);
+        printf("0x%u ", data_[i]);
     std::cout << std::endl;
     std::cout << std::string(80, '*') << std::endl;
 }
