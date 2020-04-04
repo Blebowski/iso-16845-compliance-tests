@@ -37,8 +37,8 @@ namespace can {
 
     enum RemoteTransmissionRequest
     {
-        RTR_FRAME,
-        DATA_FRAME
+        DATA_FRAME,
+        RTR_FRAME
     };
 
     enum ErrorStateIndicator
