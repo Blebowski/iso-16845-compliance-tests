@@ -99,8 +99,8 @@ class TestIso_7_1_8 : public test_lib::TestBase
                 testBigMessage("\n\nIteration nr: %d\n", i + 1);
 
                 // Generate frame (Set DLC and CAN 2.0, randomize other)
-                FrameFlags frameFlagsFd = FrameFlags(CAN_2_0);
-                goldenFrame = new Frame(frameFlagsFd, dlcs[i]);
+                FrameFlags frameFlags = FrameFlags(CAN_2_0);
+                goldenFrame = new Frame(frameFlags, dlcs[i]);
                 goldenFrame->randomize();
                 testBigMessage("Test frame:");
                 goldenFrame->print();

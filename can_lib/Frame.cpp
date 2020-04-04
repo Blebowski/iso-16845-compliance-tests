@@ -176,10 +176,7 @@ void can::Frame::setDlc(uint8_t dlc)
         return;
     }
     dlc_ = dlc;
-    printf("DLC: %d\n", dlc);
-    printf("RTR: %d\n", frameFlags_.isRtr_);
     dataLenght_ = convertDlcToDataLenght(dlc);
-    printf("DATA LENGTH: %d\n", dataLenght_);
 }
 
 bool can::Frame::setDataLenght(int dataLenght)

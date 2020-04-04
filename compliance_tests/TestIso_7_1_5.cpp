@@ -124,9 +124,9 @@ class TestIso_7_1_5 : public test_lib::TestBase
                 for (int i = 1; i <= 3; i++)
                 {
                     // Generate frame (Set Extended ID, Data frame, randomize others)
-                    FrameFlags frameFlagsFd = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER,
-                                                         DATA_FRAME);
-                    goldenFrame = new Frame(frameFlagsFd);
+                    FrameFlags frameFlags = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER,
+                                                       DATA_FRAME);
+                    goldenFrame = new Frame(frameFlags);
                     goldenFrame->randomize();
                     testBigMessage("Test frame:");
                     goldenFrame->print();
