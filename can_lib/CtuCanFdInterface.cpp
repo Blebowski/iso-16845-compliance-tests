@@ -273,7 +273,7 @@ can::Frame can::CtuCanFdInterface::readFrame()
 
     // Read identifier
     if (isIde == ExtendedIdentifier::EXTENDED_IDENTIFIER)
-        identifier = (identifierWord.s.identifier_base << 18) ||
+        identifier = (identifierWord.s.identifier_base << 18) |
                      identifierWord.s.identifier_ext;
     else
         identifier = identifierWord.s.identifier_base;
