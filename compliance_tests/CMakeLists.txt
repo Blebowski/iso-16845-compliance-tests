@@ -15,6 +15,8 @@ add_library(
     COMPLIANCE_TESTS SHARED
 
     TestDemo.cpp
+    TestIso_7_1_1.cpp
+    TestIso_7_1_4.cpp
 )
 
 add_compile_options(COMPLIANCE_TESTS -g -fPIC -Wall -O0)

@@ -23,6 +23,8 @@
  * Implementations of compliance tests
  *****************************************************************************/
 #include "../compliance_tests/TestDemo.cpp"
+#include "../compliance_tests/TestIso_7_1_1.cpp"
+#include "../compliance_tests/TestIso_7_1_4.cpp"
 
 
 /******************************************************************************
@@ -45,6 +47,10 @@ test_lib::TestBase* constructTestObject(std::string name)
         testPtr = new test_lib::TestBase();
     } else if (name == "demo") {
         testPtr = new test_lib::TestDemo();
+    } else if (name == "iso_7_1_1") {
+        testPtr = new TestIso_7_1_1();
+    } else if (name == "iso_7_1_4") {
+        testPtr = new TestIso_7_1_4();
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
     }
