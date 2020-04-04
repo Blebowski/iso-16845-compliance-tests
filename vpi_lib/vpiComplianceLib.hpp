@@ -108,6 +108,7 @@ extern "C" {
  */
 #define VPI_TEST_AGNT_TEST_END                     (char*)"00000001"
 #define VPI_TEST_AGNT_GET_CFG                      (char*)"00000010"
+#define VPI_TEST_AGNT_GET_SEED                     (char*)"00000011"
 
 /**
  * @enum CAN Agent Monitor State.
@@ -782,6 +783,15 @@ std::chrono::nanoseconds testControllerAgentGetCfgDutClockPeriod();
  * @return
  */
 int testControllerAgentGetBitTimingElement(std::string elemName);
+
+
+/**
+ * @ingroup testControllerAgent
+ * 
+ * @brief 
+ * @return
+ */
+int testControllerAgentGetSeed();
 
 
 #endif

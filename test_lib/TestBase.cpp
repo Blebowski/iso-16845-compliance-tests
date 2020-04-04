@@ -15,17 +15,19 @@
 #include "test_lib.h"
 #include "TestBase.h"
 #include "TestLoader.h"
+#include "TestSequence.h"
 #include <unistd.h>
 
 #include "../test_lib/test_lib.h"
 #include "../vpi_lib/vpiComplianceLib.hpp"
 #include "../can_lib/CtuCanFdInterface.h"
 
+
 test_lib::TestBase::TestBase()
 {
     this->dutIfc = new can::CtuCanFdInterface;
     this->canVersion = can::CanVersion::CAN_FD_ENABLED_VERSION;
-    this->testResult = false;
+    this->testResult = true;
 }
 
 
@@ -49,6 +51,11 @@ int test_lib::TestBase::run()
     this->dataBitTiming.ph1 = testControllerAgentGetBitTimingElement("CFG_DUT_PH1_FD");
     this->dataBitTiming.ph2 = testControllerAgentGetBitTimingElement("CFG_DUT_PH2_FD");
     this->dataBitTiming.sjw = testControllerAgentGetBitTimingElement("CFG_DUT_SJW_FD");
+
+    this->seed = testControllerAgentGetSeed();
+    testMessage("Seed: %d", this->seed);
+    printf("Seed: %d\n", seed);
+    srand(seed);
 
     testMessage("Nominal Bit Timing configuration from TB:");
     this->nominalBitTiming.print();
@@ -81,6 +88,10 @@ int test_lib::TestBase::run()
     canAgentMonitorStop();
     canAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
 
+    // Most of TCs use driver and monitor simultaneously, therefore there is no
+    // need to configure Trigger in each of them!
+    canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_DRIVER_START);
+
     testMessage("Configuring DUT");
     this->dutIfc->reset();
     this->dutIfc->configureBitTiming(this->nominalBitTiming, this->dataBitTiming);
@@ -96,6 +107,7 @@ int test_lib::TestBase::run()
     testMessage("DUT ON! Test can start!");
 
     testMessage("TestBase: Run Exiting");
+
     return 0;
 }
 
@@ -139,4 +151,44 @@ bool test_lib::TestBase::compareFrames(can::Frame &expectedFrame, can::Frame &re
         realFrame.print();
     }
     return retVal;
+}
+
+
+void test_lib::TestBase::pushFramesToLowerTester(can::BitFrame &driverBitFrame,
+                                                 can::BitFrame &monitorBitFrame)
+{
+    TestSequence *testSequence;
+
+    testSequence = new TestSequence(this->dutClockPeriod, driverBitFrame, monitorBitFrame);
+    testSequence->pushDriverValuesToSimulator();
+    testSequence->pushMonitorValuesToSimulator();
+
+    delete testSequence;
+}
+
+
+void test_lib::TestBase::runLowerTester(bool startDriver, bool startMonitor)
+{
+
+    // Note: It is important to start monitor first because it waits for driver
+    //       in most cases!
+
+    if (startMonitor)
+        canAgentMonitorStart();
+    
+    if (startDriver)
+        canAgentDriverStart();
+
+    canAgentDriverWaitFinish();
+    testMessage("Lower tester (CAN agent) ended!");
+}
+
+
+void test_lib::TestBase::checkLowerTesterResult()
+{
+    canAgentCheckResult();
+    canAgentMonitorStop();
+    canAgentDriverStop();
+    canAgentMonitorFlush();
+    canAgentDriverFlush();
 }

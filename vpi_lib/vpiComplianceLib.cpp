@@ -950,3 +950,15 @@ int testControllerAgentGetBitTimingElement(std::string elemName)
     simulatorChannelProcessRequest();
     return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
 }
+
+
+int testControllerAgentGetSeed()
+{
+    simulatorChannel.readAccess = true;
+    simulatorChannel.useMsgData = false;
+    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_GET_SEED);
+
+    simulatorChannelProcessRequest();
+    return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
+}

@@ -55,4 +55,9 @@ test_lib::TestBase *constructTestObject(std::string name);
 void testMessage(std::string message, ...);
 
 
+/**
+ * @brief TODO
+ */
+void testBigMessage(std::string message, ...);
+
 #endif

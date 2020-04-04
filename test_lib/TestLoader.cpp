@@ -25,6 +25,7 @@
 #include "../compliance_tests/TestDemo.cpp"
 #include "../compliance_tests/TestIso_7_1_1.cpp"
 #include "../compliance_tests/TestIso_7_1_4.cpp"
+#include "../compliance_tests/TestIso_7_1_5.cpp"
 
 
 /******************************************************************************
@@ -51,6 +52,8 @@ test_lib::TestBase* constructTestObject(std::string name)
         testPtr = new TestIso_7_1_1();
     } else if (name == "iso_7_1_4") {
         testPtr = new TestIso_7_1_4();
+    } else if (name == "iso_7_1_5") {
+        testPtr = new TestIso_7_1_5();
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
     }
@@ -64,6 +67,14 @@ test_lib::TestBase* constructTestObject(std::string name)
 void testMessage(std::string message, ...)
 {
     std::cout << "\033[1;92mSW test: \033[0m" << message << std::endl;
+}
+
+
+void testBigMessage(std::string message, ...)
+{
+    testMessage(std::string(80, '*'));
+    testMessage(message);
+    testMessage(std::string(80, '*'));
 }
 
 
