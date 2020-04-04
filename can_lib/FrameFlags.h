@@ -18,16 +18,35 @@
 class can::FrameFlags
 {
     public:
+
+        // CAN frame flags
         FlexibleDataRate isFdf_;
         ExtendedIdentifier isIde_;
         RemoteTransmissionRequest isRtr_;
         BitRateShift isBrs_;
         ErrorStateIndicator isEsi_;
 
+        // Randomization attributes
+        bool randomizeFdf;
+        bool randomizeIde;
+        bool randomizeRtr;
+        bool randomizeBrs;
+        bool randomizeEsi;
+
         FrameFlags();
         FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
                    RemoteTransmissionRequest isRtr, BitRateShift isBrs,
                    ErrorStateIndicator isEsi);
+        FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
+                   RemoteTransmissionRequest isRtr);
+        FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde);
+        FrameFlags(FlexibleDataRate isFdf, RemoteTransmissionRequest isRtr);
+        FrameFlags(FlexibleDataRate isFdf);
+        FrameFlags(ExtendedIdentifier isIde);
+
+        void randomize();
+        void randomizeEnableAll();
+        void randomizeDisableAll();
 
         friend bool operator==(const FrameFlags &lhs, const FrameFlags rhs);
 };

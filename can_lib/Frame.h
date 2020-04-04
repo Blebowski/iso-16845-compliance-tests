@@ -23,10 +23,23 @@ class can::Frame {
         Frame();
 
         /**
-         * TODO: State that data are copied!
+         * @brief Create CAN Frame
+         * @param frameFlags Frame flags to use (copied)
+         * @param dlc Data length code
+         * @param identifier CAN Identifier
+         * @param data Pointer to data to set. Should be pointer to array of 64
+         *             uint8_t.
+         * 
+         * No parameter will be allowed for randomization.
          */
         Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
               uint8_t *data);
+
+        Frame(FrameFlags frameFlags, uint8_t dlc, int identifier);
+
+        Frame(FrameFlags frameFlags, uint8_t dlc);
+
+        Frame(FrameFlags frameFlags);
 
         void Copy(Frame frame);
 
@@ -36,6 +49,8 @@ class can::Frame {
         int getIdentifier();
         uint8_t* getData();
         uint8_t getData(int index);
+
+        void randomize();
 
         friend bool operator==(Frame& lhs, Frame& rhs);
 
@@ -55,6 +70,11 @@ class can::Frame {
 
         // Data payload
         uint8_t data_[64];
+
+        // Randomization attributes
+        bool randomizeDlc;
+        bool randomizeIdentifier;
+        bool randomizeData;
 
         // Supported DLC / Datalength combinations
         const int dlcToDataLenghtTable_ [16][2] =
