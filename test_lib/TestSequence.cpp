@@ -142,7 +142,7 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
             tseg1Duration += clockPeriod;
 
     for (int i = 0; i < tseg2Len; i++)
-        for (int j = 0; j < bit->getTimeQuanta(i)->getLengthCycles(); j++)
+        for (int j = 0; j < bit->getTimeQuanta(can::PH2_PHASE, i)->getLengthCycles(); j++)
             tseg2Duration += clockPeriod;
 
     int brp = bit->getTimeQuanta(can::SYNC_PHASE, 0)->getLengthCycles();
