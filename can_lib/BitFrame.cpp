@@ -17,17 +17,11 @@
 #include "Bit.h"
 #include "BitFrame.h"
 
-can::BitFrame::BitFrame(FrameFlags frameFlags, uint8_t dlc, int identifier,
-                        uint8_t *data, BitTiming* nominalBitTiming,
-                        BitTiming* dataBitTiming):
-                Frame(frameFlags, dlc, identifier, data)
+void can::BitFrame::constructFrame()
 {
-    this->nominalBitTiming = nominalBitTiming;
-    this->dataBitTiming = dataBitTiming;
-
     buildFrameBits();
 
-    if (frameFlags.isFdf_ == CAN_2_0){
+    if (getFrameFlags().isFdf_ == CAN_2_0){
         calculateCrc();
         setCrc();
 
@@ -45,6 +39,31 @@ can::BitFrame::BitFrame(FrameFlags frameFlags, uint8_t dlc, int identifier,
     }
 }
 
+
+can::BitFrame::BitFrame(FrameFlags frameFlags, uint8_t dlc, int identifier,
+                        uint8_t *data, BitTiming* nominalBitTiming,
+                        BitTiming* dataBitTiming):
+                Frame(frameFlags, dlc, identifier, data)
+{
+    this->nominalBitTiming = nominalBitTiming;
+    this->dataBitTiming = dataBitTiming;
+
+    constructFrame();
+}
+
+
+can::BitFrame::BitFrame(Frame &frame, BitTiming *nominalBitTiming,
+                        BitTiming *dataBitTiming):
+                Frame(frame.getFrameFlags(), frame.getDlc(),
+                      frame.getIdentifier(), frame.getData())
+{
+    this->nominalBitTiming = nominalBitTiming;
+    this->dataBitTiming = dataBitTiming;
+
+    constructFrame();
+}
+
+
 uint32_t can::BitFrame::setCrc()
 {
     std::list<Bit>::iterator bitIt = getBitOfIterator(0, BIT_TYPE_CRC);
@@ -58,11 +77,8 @@ uint32_t can::BitFrame::setCrc()
     else
         i = 16;
 
-    printf("Setting CRC of 0x%x\n", crc);
-
     while (bitIt->getBitType() == BIT_TYPE_CRC)
     {
-        printf("Setting CRC bit\n");
         // CRC should be set in CAN FD frames before stuff bits in CRC are
         // inserted (as CRC affects value of these stuff bits), therefore
         // it is illegal to calculate CRC when stuff bits in it are already
@@ -164,7 +180,7 @@ void can::BitFrame::buildFrameBits()
 
     // Build base ID
     uint32_t baseId = getBaseIdentifier();
-    for (int i = 11; i > 0; i--)
+    for (int i = 10; i >= 0; i--)
         appendBit(BIT_TYPE_BASE_ID, baseId >> i);
 
     // Build RTR/r1/SRR
@@ -186,7 +202,7 @@ void can::BitFrame::buildFrameBits()
         appendBit(BIT_TYPE_IDE, RECESSIVE);
 
         uint32_t extId = getIdentifierExtension();
-        for (int i = 18; i > 0; i--)
+        for (int i = 17; i >= 0; i--)
             appendBit(BIT_TYPE_EXTENDED_ID, extId >> i);
 
         if (frameFlags_.isFdf_ == CAN_FD) {
@@ -861,6 +877,34 @@ void can::BitFrame::print(bool printStuffBits)
     std::cout << std::string(names.length(), '-') << std::endl;
     std::cout << vals << std::endl;
     std::cout << std::string(names.length(), '-') << std::endl;
+}
+
+
+void can::BitFrame::updateFrame()
+{
+    // First remove all stuff bits!
+    for (auto bitIt = bits_.begin(); bitIt != bits_.end(); bitIt++)
+        if (bitIt->getStuffBitType() == STUFF_FIXED ||
+            bitIt->getStuffBitType() == STUFF_NORMAL)
+            bitIt = bits_.erase(bitIt);
+
+    // Recalculate CRC and add stuff bits!
+    if (getFrameFlags().isFdf_ == CAN_2_0){
+        calculateCrc();
+        setCrc();
+
+        // We must set CRC before Stuff bits are inserted because in CAN 2.0
+        // frames regular stuff bits are inserted also to CRC!
+        insertNormalStuffBits();
+    } else {
+        insertNormalStuffBits();
+        setStuffCount();
+        setStuffParity();
+        insertStuffCountStuffBits();
+        calculateCrc();
+        setCrc();
+        insertCrcFixedStuffBits();
+    }
 }
 
 

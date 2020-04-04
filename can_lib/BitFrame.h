@@ -25,6 +25,8 @@ class can::BitFrame : public Frame {
         BitFrame(FrameFlags frameFlags, uint8_t dlc, int identifier, uint8_t *data,
                  BitTiming* nominalBitTiming, BitTiming* dataBitTiming);
 
+        BitFrame(Frame &frame, BitTiming *nominalBitTiming, BitTiming *dataBitTiming);
+
         /**
          * 
          */
@@ -155,6 +157,11 @@ class can::BitFrame : public Frame {
          */
         void print(bool printStuffBits);
 
+        /**
+         * 
+         */
+        void updateFrame();
+
     private:
         std::list<Bit> bits_;
 
@@ -248,6 +255,12 @@ class can::BitFrame : public Frame {
          * 
          */
         void appendBit(BitType bitType, BitValue bitValue);
+
+    private:
+        /**
+         * 
+         */
+        void constructFrame();
 };
 
 #endif
