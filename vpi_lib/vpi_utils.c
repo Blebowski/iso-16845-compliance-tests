@@ -32,10 +32,16 @@ vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName)
     {
         name = vpi_get_str(vpiName, signalHandle);
         if (strcmp(name, netName) == 0)
+        {
+            vpi_free_object(netIterator);
+            vpi_free_object(topScope);
             return signalHandle;
+        }
     }
     vpi_printf("%s Can't find %s signal", VPI_TAG, netName);
     fprintf(stderr, "%s Can't find %s signal", VPI_TAG, netName);
+    vpi_free_object(netIterator);
+    vpi_free_object(topScope);
     return NULL;
 }
 
@@ -54,8 +60,13 @@ int vpi_drive_str_value(const char *signalName, char *value)
     vpiValue.value.str = value;
     vpi_put_value(signalHandle, &vpiValue, NULL, vpiNoDelay);
 
+    vpi_free_object(signalHandle);
+    vpi_free_object(topModule);
+    vpi_free_object(topIterator);
+
     return 0;
 }
+
 
 int vpi_read_str_value(const char *signalName, char *retValue)
 {
@@ -70,6 +81,10 @@ int vpi_read_str_value(const char *signalName, char *retValue)
     vpiValue.format = vpiBinStrVal;
     vpi_get_value(signalHandle, &vpiValue);
     strcpy(retValue, vpiValue.value.str);
+
+    vpi_free_object(signalHandle);
+    vpi_free_object(topModule);
+    vpi_free_object(topIterator);
 
     return 0;
 }

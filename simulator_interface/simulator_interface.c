@@ -122,6 +122,9 @@ int register_vpi_clk_cb()
     {
         vpi_printf("%s Can't register request handle\n", VPI_TAG);
         fprintf(stderr, "%s Can't register request handle\n", VPI_TAG);
+        vpi_free_object(reqHandle);
+        vpi_free_object(topModule);
+        vpi_free_object(topIterator);
         return -1;
     }
 
@@ -135,8 +138,15 @@ int register_vpi_clk_cb()
     {
         vpi_printf("%s Cannot register VPI clock callback\n", VPI_TAG);
         fprintf(stderr, "%s Cannot register VPI clock callback\n", VPI_TAG);
+        vpi_free_object(reqHandle);
+        vpi_free_object(topModule);
+        vpi_free_object(topIterator);
         return -2;
     }
+
+    vpi_free_object(reqHandle);
+    vpi_free_object(topModule);
+    vpi_free_object(topIterator);
 
     return 0;
 }
