@@ -77,6 +77,7 @@ class TestIso_7_1_1 : public test_lib::TestBase
 {
     public:
 
+        // TODO: Use approach with randomization!
         FrameFlags frameFlags_2_0 = FrameFlags(CAN_2_0, BASE_IDENTIFIER,
             DATA_FRAME, BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
         FrameFlags frameFlags_fd = FrameFlags(CAN_FD, BASE_IDENTIFIER,
@@ -88,7 +89,6 @@ class TestIso_7_1_1 : public test_lib::TestBase
         Frame *goldenFrame;
         BitFrame *driverBitFrame;
         BitFrame *monitorBitFrame;
-        test_lib::TestSequence *testSequence;
 
         /**
          * Test constructor.
@@ -111,10 +111,6 @@ class TestIso_7_1_1 : public test_lib::TestBase
             // Run Base test to setup TB
             TestBase::run();
 
-            /*****************************************************************
-             * Test sequence start
-             ****************************************************************/
-
             testMessage("Test %s : Run Entered", testName);
 
             /*****************************************************************
@@ -131,41 +127,22 @@ class TestIso_7_1_1 : public test_lib::TestBase
 
                     // Create frames
                     goldenFrame = new Frame(frameFlags_2_0, dlc, idList[id], data);
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driverBitFrame = new BitFrame(*goldenFrame, &nominalBitTiming,
+                                                    &dataBitTiming);
+                    monitorBitFrame = new BitFrame(*goldenFrame, &nominalBitTiming,
+                                                    &dataBitTiming);
 
-                    testMessage(std::string(80, '*'));
-                    testMessage("Test frame:");
-                    testMessage(std::string(80, '*'));
+                    testBigMessage("Test frame:");
                     goldenFrame->print();
 
                     // Monitor frame as if received, driver frame must have ACK too!
                     monitorBitFrame->turnReceivedFrame();
                     driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
 
-                    // Convert to test sequences and push to simulation
-                    testSequence = new test_lib::TestSequence(this->dutClockPeriod,
-                        *driverBitFrame, *monitorBitFrame);
-                    testSequence->pushDriverValuesToSimulator();
-                    testSequence->pushMonitorValuesToSimulator();
-
-                    // Configure CAN Agent
-                    canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_DRIVER_START);
-                    
-                    // Execute test
-                    canAgentMonitorStart();
-                    canAgentDriverStart();
-                    canAgentDriverWaitFinish();
-                    testMessage("Driver ended!");
-
-                    // Check and Cleanup
-                    canAgentCheckResult();
-                    canAgentMonitorStop();
-                    canAgentDriverStop();
-                    canAgentMonitorFlush();
-                    canAgentDriverFlush();
+                    // Convert frames to test sequences, push to Lower tester, run and check!
+                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
+                    runLowerTester(true, true);
+                    checkLowerTesterResult();
 
                     // Read received frame from DUT and compare with sent frame
                     Frame readFrame = this->dutIfc->readFrame();
@@ -175,13 +152,10 @@ class TestIso_7_1_1 : public test_lib::TestBase
                         testControllerAgentEndTest(testResult);
                     }
 
-                    // Free allocated objects
                     delete goldenFrame;
                     delete driverBitFrame;
                     delete monitorBitFrame;
-                    delete testSequence;
 
-                    // End test immediately if there is an error
                     if (testResult == false)
                         return false;
                 }

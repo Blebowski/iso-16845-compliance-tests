@@ -42,6 +42,8 @@
  *  The IUT shall acknowledge the test frame.
  *  The data received by the IUT during the test state shall match the data
  *  sent in the test frame.
+ * 
+ * @todo: Classical CAN version not supported!
  *****************************************************************************/
 
 #include <iostream>
@@ -68,135 +70,53 @@ using namespace can;
 class TestIso_7_1_4 : public test_lib::TestBase
 {
     public:
-
-        FrameFlags frameFlags_2_0 = FrameFlags(CAN_2_0, BASE_IDENTIFIER,
-            DATA_FRAME, BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
-        FrameFlags frameFlags_fd = FrameFlags(CAN_FD, BASE_IDENTIFIER,
-            DATA_FRAME, BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
-
-        uint8_t data[64];
-        int id;
-        uint8_t dlc;
-
         Frame *goldenFrame;
         BitFrame *driverBitFrame;
         BitFrame *monitorBitFrame;
-        test_lib::TestSequence *testSequence;
 
-        /**
-         * Test constructor.
-         */
-        TestIso_7_1_4() : TestBase()
-        {
-            id = rand() % (2 ^ 11);
-            dlc = (rand() % 9);
-            testResult = true;
+        TestIso_7_1_4() : TestBase(){};
 
-            // Generate random data
-            for (int k = 0; k < 64; k++)
-                data[k] = rand() % (2 ^ 8);
-        }
-
-        /**
-         * 
-         */
+        /*****************************************************************
+         * Test sequence
+         ****************************************************************/
         int run()
         {
-            // Run Base test to setup TB
             TestBase::run();
-
-            /*****************************************************************
-             * Test sequence start
-             ****************************************************************/
-
             testMessage("Test %s : Run Entered", testName);
-
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_DRIVER_START);
 
             /*****************************************************************
              * Classical CAN part
              ****************************************************************/
-
             if (canVersion == CAN_2_0_VERSION)
             {
-                testMessage("Classical CAN part of test!");
-
-                // Create frames
-                goldenFrame = new Frame(frameFlags_2_0, dlc, id, data);
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-
-                // TODO: Here protocol exception event should be turned ON!
-
-                testMessage(std::string(80, '*'));
-                testMessage("Test frame:");
-                testMessage(std::string(80, '*'));
-                goldenFrame->print();
-
-                // Monitor frame as if received, driver frame must have ACK too!
-                monitorBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
-
-                // Force r0/EDL bit to Recessive!
-                driverBitFrame->getBit(14)->setBitValue(RECESSIVE);
-
-                // Convert to test sequences and push to simulation
-                testSequence = new test_lib::TestSequence(this->dutClockPeriod,
-                    *driverBitFrame, *monitorBitFrame);
-                testSequence->pushDriverValuesToSimulator();
-                testSequence->pushMonitorValuesToSimulator();
-
-                // Execute test
-                canAgentMonitorStart();
-                canAgentDriverStart();
-                canAgentDriverWaitFinish();
-                testMessage("Driver ended!");
-
-                // Check and Cleanup
-                canAgentCheckResult();
-                canAgentMonitorStop();
-                canAgentDriverStop();
-                canAgentMonitorFlush();
-                canAgentDriverFlush();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
-                {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
-                }
-
-                delete goldenFrame;
-                delete driverBitFrame;
-                delete monitorBitFrame;
-                delete testSequence;
+                testMessage("Classical CAN part of test not supporetd!");
+                testControllerAgentEndTest(testResult);
+                return false;
             }
 
             /*****************************************************************
              * CAN FD Enabled part
              ****************************************************************/
-
             if (canVersion == CAN_FD_ENABLED_VERSION)
             {
-                testMessage("Classical FD ENABLED part of test");
+                testMessage("CAN FD ENABLED part of test");
 
-                // Create frames
-                goldenFrame = new Frame(frameFlags_fd, dlc, id, data);
+                // Generate frame (Set Base ID, Data frame, randomize others)
+                FrameFlags frameFlagsFd = FrameFlags(CAN_FD, BASE_IDENTIFIER,
+                                                     DATA_FRAME);
+                goldenFrame = new Frame(frameFlagsFd);
+                goldenFrame->randomize();
+                testBigMessage("Test frame:");
+                goldenFrame->print();
+
+                // Convert to bit frames
                 driverBitFrame = new BitFrame(*goldenFrame,
                     &this->nominalBitTiming, &this->dataBitTiming);
                 monitorBitFrame = new BitFrame(*goldenFrame,
                     &this->nominalBitTiming, &this->dataBitTiming);
 
-                testMessage(std::string(80, '*'));
-                testMessage("Test frame:");
-                testMessage(std::string(80, '*'));
-                goldenFrame->print();
-
-                // Force RRS bit to recessive, update frames (Stuff bits and CRC)
-                // might change!
+                // Force RRS bit to recessive, update frames (Stuff bits and CRC
+                // might change)!
                 driverBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
                 monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
 
@@ -208,24 +128,10 @@ class TestIso_7_1_4 : public test_lib::TestBase
                 monitorBitFrame->turnReceivedFrame();
                 driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
 
-                // Convert to test sequences and push to simulation
-                testSequence = new test_lib::TestSequence(this->dutClockPeriod,
-                    *driverBitFrame, *monitorBitFrame);
-                testSequence->pushDriverValuesToSimulator();
-                testSequence->pushMonitorValuesToSimulator();
-
-                // Execute test
-                canAgentMonitorStart();
-                canAgentDriverStart();
-                canAgentDriverWaitFinish();
-                testMessage("Driver ended!");
-
-                // Check and Cleanup
-                canAgentCheckResult();
-                canAgentMonitorStop();
-                canAgentDriverStop();
-                canAgentMonitorFlush();
-                canAgentDriverFlush();
+                // Push frames to Lower tester, run and check!
+                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
+                runLowerTester(true, true);
+                checkLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
                 Frame readFrame = this->dutIfc->readFrame();
@@ -238,11 +144,11 @@ class TestIso_7_1_4 : public test_lib::TestBase
                 delete goldenFrame;
                 delete driverBitFrame;
                 delete monitorBitFrame;
-                delete testSequence;
             }
 
             testControllerAgentEndTest(testResult);
             testMessage("Test %s : Run Exiting", testName);
+
             return testResult;
 
             /*****************************************************************
