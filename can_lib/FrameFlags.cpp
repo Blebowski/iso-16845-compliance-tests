@@ -151,7 +151,7 @@ void can::FrameFlags::randomize()
     {
         if (isFdf_ == FlexibleDataRate::CAN_FD)
             isRtr_ = RemoteTransmissionRequest::DATA_FRAME;
-        else if (rand() % 2 == 1)
+        else if (rand() % 4 == 1)
             isRtr_ = RemoteTransmissionRequest::RTR_FRAME;
         else
             isRtr_ = RemoteTransmissionRequest::DATA_FRAME;
