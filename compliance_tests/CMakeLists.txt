@@ -21,6 +21,8 @@ add_library(
     TestIso_7_1_8.cpp
     TestIso_7_1_9.cpp
     TestIso_7_1_12.cpp
+
+    TestIso_7_2_1.cpp
 )
 
 add_compile_options(COMPLIANCE_TESTS -g -fPIC -Wall -O0)
