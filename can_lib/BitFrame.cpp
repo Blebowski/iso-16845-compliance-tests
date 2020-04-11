@@ -665,7 +665,7 @@ bool can::BitFrame::insertBit(Bit bit, int index)
     if (index >= bits_.size())
         return false;
 
-    std::list<Bit>::iterator bitIt;
+    std::list<Bit>::iterator bitIt = bits_.begin();
     std::advance(bitIt, index);
     bits_.insert(bitIt, bit);
 
