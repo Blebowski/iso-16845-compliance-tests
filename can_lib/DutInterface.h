@@ -65,6 +65,11 @@ class can::DutInterface
         /**
          * 
          */
+        virtual bool hasRxFrame() = 0;
+
+        /**
+         * 
+         */
         virtual int getRec() = 0;
         
         /**

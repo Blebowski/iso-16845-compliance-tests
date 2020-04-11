@@ -294,6 +294,18 @@ can::Frame can::CtuCanFdInterface::readFrame()
 }
 
 
+bool can::CtuCanFdInterface::hasRxFrame()
+{
+    union ctu_can_fd_rx_status_rx_settings rxStatus;
+    rxStatus.u32 = memBusAgentRead32(CTU_CAN_FD_RX_STATUS);
+
+    assert(!(rxStatus.s.rxe == 1 && rxStatus.s.rxfrc > 0));
+
+    if (rxStatus.s.rxe == 1)
+        return false;
+    return true;
+}
+
 int can::CtuCanFdInterface::getRec()
 {
     union ctu_can_fd_rec_tec data;

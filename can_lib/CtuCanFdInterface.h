@@ -35,6 +35,7 @@ class can::CtuCanFdInterface : public can::DutInterface
                                 can::BitTiming dataBitTiming);
         void sendFrame(can::Frame frame);
         can::Frame readFrame();
+        bool hasRxFrame();
         int getRec();
         int getTec();
         void setErrorState(can::ErrorState errorState);
