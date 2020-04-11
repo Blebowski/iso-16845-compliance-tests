@@ -601,6 +601,32 @@ can::Bit* can::BitFrame::getBitOf(int index, BitType bitType)
 }
 
 
+can::Bit* can::BitFrame::getBitOfNoStuffBits(int index, BitType bitType)
+{
+    std::list<Bit>::iterator bitIt = bits_.begin();
+    int i = 0;
+
+    while (bitIt != bits_.end())
+    {
+        if (bitIt->getBitType() == bitType &&
+            bitIt->getStuffBitType() == STUFF_NO)
+            if (i == index) {
+                break;
+            } else {
+                i++;
+                bitIt++;
+            }
+        else
+            bitIt++;
+    }
+
+    if (bitIt == bits_.end())
+        return nullptr;
+
+    return &(*bitIt);
+}
+
+
 std::list<can::Bit>::iterator can::BitFrame::getBitOfIterator(int index, BitType bitType)
 {
     std::list<Bit>::iterator bitIt = bits_.begin();

@@ -50,6 +50,11 @@ class can::BitFrame : public Frame {
         /**
          * 
          */
+        Bit* getBitOfNoStuffBits(int index, BitType bitType);
+
+        /**
+         * 
+         */
         std::list<Bit>::iterator getBitOfIterator(int index, BitType bitType);
 
         /**
