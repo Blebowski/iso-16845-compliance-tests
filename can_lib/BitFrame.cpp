@@ -324,6 +324,18 @@ int can::BitFrame::insertNormalStuffBits()
 
         if (sameBits == 5)
         {
+            // This is exception for stuff bit inserted just before Stuff count!
+            // There shall be no regular stuff bit inserted before stuff count
+            // even if there are 5 consecutive bits of equal value. This bit shall
+            // not be taken into number of stuffed bits!
+            auto bitItNxt = bitIt;
+            bitItNxt++;
+            if (bitItNxt->getBitType() == BitType::BIT_TYPE_STUFF_COUNT)
+            {
+                prevValue = bitIt->getBitValue();
+                continue;
+            }
+
             Bit bit = Bit(bitIt->getBitType(), bitIt->getOppositeValue(),
                           &frameFlags_, nominalBitTiming, dataBitTiming,
                           STUFF_NORMAL);
