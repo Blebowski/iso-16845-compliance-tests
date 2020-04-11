@@ -478,15 +478,10 @@ void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration,
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
-    std::string vpiMsg = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
-
-    // TODO: Do we have correct order of characters??
-    for (int i = 0; i < strLen; i++)
-        vpiMsg.append(std::bitset<8>(int(msg.c_str()[i])).to_string());
 
     vpiDataIn.append(1, drivenValue); // Driven value
     vpiDataIn.append("1");   // Message included
@@ -496,7 +491,7 @@ void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration,
     simulatorChannel.useMsgData = true;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
-    simulatorChannel.vpiMessageData = vpiMsg;
+    simulatorChannel.vpiMessageData = msg;
     simulatorChannel.vpiDataIn = vpiDataIn;
     
     simulatorChannelProcessRequest();
@@ -532,15 +527,10 @@ void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
-    std::string vpiMsg = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
-
-    // TODO: Do we have correct order of characters??
-    for (int i = 0; i < strLen; i++)
-        vpiMsg.append(std::bitset<8>(int(msg.c_str()[i])).to_string());
 
     vpiDataIn.append(1, drivenValue); // Driven value
     vpiDataIn.append("1");   // Message included
@@ -550,7 +540,7 @@ void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration
     simulatorChannel.useMsgData = true;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
-    simulatorChannel.vpiMessageData = vpiMsg;
+    simulatorChannel.vpiMessageData = msg;
     simulatorChannel.vpiDataIn = vpiDataIn;
     
     simulatorChannelProcessRequest();
@@ -686,15 +676,10 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
-    std::string vpiMsg = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
-
-    // TODO: Do we have correct order of characters??
-    for (int i = 0; i < strLen; i++)
-        vpiMsg.append(std::bitset<8>(int(msg.c_str()[i])).to_string());
 
     vpiDataIn.append(1, monitorValue); // Driven value
     vpiDataIn.append("1");   // Message included
@@ -705,10 +690,11 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
     vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
 
     simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
+    simulatorChannel.useMsgData = true;
     simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
+    simulatorChannel.vpiMessageData = msg;
     simulatorChannel.vpiDataIn2 = vpiDataIn2;
 
     simulatorChannelProcessRequest();
@@ -770,15 +756,10 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
 {
     unsigned long long timeVal = duration.count() * 1000000;
     std::string vpiDataIn = "";
-    std::string vpiMsg = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
-
-    // TODO: Do we have correct order of characters??
-    for (int i = 0; i < strLen; i++)
-        vpiMsg.append(std::bitset<8>(int(msg.c_str()[i])).to_string());
 
     vpiDataIn.append(1, monitorValue); // Driven value
     vpiDataIn.append("1");   // Message included
@@ -794,7 +775,7 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
     simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
     simulatorChannel.vpiDataIn = vpiDataIn;
     simulatorChannel.vpiDataIn2 = vpiDataIn2;
-    simulatorChannel.vpiMessageData = vpiMsg;
+    simulatorChannel.vpiMessageData = msg;
 
     simulatorChannelProcessRequest();
 }

@@ -166,10 +166,12 @@ class test_lib::TestSequence
 
         //TODO
         void pushDriverValue(std::chrono::nanoseconds duration,
-                             can::BitValue bitValue);
+                             can::BitValue bitValue,
+                             std::string message);
         void pushMonitorValue(std::chrono::nanoseconds duration,
                               std::chrono::nanoseconds sampleRate,
-                              can::BitValue bitValue);
+                              can::BitValue bitValue,
+                              std::string message);
 };
 
 #endif
