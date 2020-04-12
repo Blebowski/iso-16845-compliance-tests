@@ -150,7 +150,6 @@ void can::BitFrame::appendBit(BitType bitType, BitValue bitValue)
                         dataBitTiming));
 }
 
-
 void can::BitFrame::clearFrameBits()
 {
     bits_.clear();
@@ -752,15 +751,26 @@ bool can::BitFrame::setAckDominant()
 }
 
 
+
+
 bool can::BitFrame::insertActiveErrorFrame(int index)
 {
     Bit *bit = getBit(index);
+
+    /* We should not insert Error frame oinstead of SOF right away as real DUT
+     *will never start transmitting errro frame right from SOF! */
+    assert(index > 0);
 
     if (bit == nullptr)
         return false;
 
     // Discard all bits from this bit further
     clearFrameBits(index);
+
+    // If bit frame is inserted on bit in Data bit rate, correct PH2 of
+    // previous bit so that it already counts in Nominal bit-rate!
+    Bit *prevBit = getBit(index - 1);
+    prevBit->correctPh2LenToNominal();
 
     // Insert Active Error flag and Error delimiter
     for (int i = 0; i < 6; i++)
@@ -785,8 +795,17 @@ bool can::BitFrame::insertPassiveErrorFrame(int index)
     if (bit == nullptr)
         return false;
 
+    /* We should not insert Error frame oinstead of SOF right away as real DUT
+     * will never start transmitting errro frame right from SOF! */
+    assert(index > 0);
+
     // Discard all bits from this bit further
     clearFrameBits(index);
+
+    // If bit frame is inserted on bit in Data bit rate, correct PH2 of
+    // previous bit so that it already counts in Nominal bit-rate!
+    Bit *prevBit = getBit(index - 1);
+    prevBit->correctPh2LenToNominal();
 
     for (int i = 0; i < 6; i++)
         appendBit(BIT_TYPE_PASSIVE_ERROR_FLAG, RECESSIVE);

@@ -162,6 +162,10 @@ class can::Bit {
         bool forceTimeQuanta(int fromIndex, int toIndex, BitPhase bitPhase,
                              BitValue bitValue);
 
+        /**
+         * 
+         */
+        void correctPh2LenToNominal();
 
     protected:
         
