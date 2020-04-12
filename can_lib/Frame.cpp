@@ -81,6 +81,17 @@ can::Frame::Frame(FrameFlags frameFlags)
 }
 
 
+can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data)
+{
+    frameFlags_ = frameFlags;
+    setDlc(dlc);
+    copyData(data, dataLenght_);
+
+    randomizeDlc = false;
+    randomizeIdentifier = true;
+    randomizeData = false;
+}
+
 void can::Frame::randomize()
 {
     // First randomize flags, this gives cosntraints for further randomization

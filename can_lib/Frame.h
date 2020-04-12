@@ -41,6 +41,8 @@ class can::Frame {
 
         Frame(FrameFlags frameFlags);
 
+        Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data);
+
         void Copy(Frame frame);
 
         FrameFlags getFrameFlags();
