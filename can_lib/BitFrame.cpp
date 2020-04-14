@@ -778,6 +778,10 @@ bool can::BitFrame::insertActiveErrorFrame(int index)
     for (int i = 0; i < 8; i++)
         appendBit(BIT_TYPE_ERROR_DELIMITER, RECESSIVE);
 
+    // Insert intermission
+    for (int i = 0; i < 3; i++)
+        appendBit(BIT_TYPE_INTERMISSION, RECESSIVE);
+
     return true;
 }
 
@@ -811,6 +815,9 @@ bool can::BitFrame::insertPassiveErrorFrame(int index)
         appendBit(BIT_TYPE_PASSIVE_ERROR_FLAG, RECESSIVE);
     for (int i = 0; i < 8; i++)
         appendBit(BIT_TYPE_ERROR_DELIMITER, RECESSIVE);
+
+    for (int i = 0; i < 3; i++)
+        appendBit(BIT_TYPE_INTERMISSION, RECESSIVE);
 
     return true;
 }
