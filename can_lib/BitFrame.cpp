@@ -852,6 +852,9 @@ bool can::BitFrame::insertOverloadFrame(int index)
     for (int i = 0; i < 8; i++)
         appendBit(BIT_TYPE_OVERLOAD_DELIMITER, RECESSIVE);
 
+    for (int i = 0; i < 3; i++)
+        appendBit(BIT_TYPE_INTERMISSION, RECESSIVE);
+
     return true;
 }
 
