@@ -73,16 +73,6 @@ class TestIso_7_1_8 : public test_lib::TestBase
 
         uint8_t dlcs[7] = {0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF};
 
-        Frame *goldenFrame;
-        BitFrame *driverBitFrame;
-        BitFrame *monitorBitFrame;
-
-        TestIso_7_1_8() : TestBase()
-        {}
-
-        /*****************************************************************
-         * Test sequence
-         ****************************************************************/
         int run()
         {
             // Run Base test to setup TB
@@ -128,9 +118,7 @@ class TestIso_7_1_8 : public test_lib::TestBase
                     testControllerAgentEndTest(testResult);
                 }
 
-                delete goldenFrame;
-                delete driverBitFrame;
-                delete monitorBitFrame;
+                deleteCommonObjects();
 
                 if (testResult == false)
                     return false;

@@ -195,3 +195,10 @@ void test_lib::TestBase::checkLowerTesterResult()
     canAgentMonitorFlush();
     canAgentDriverFlush();
 }
+
+void test_lib::TestBase::deleteCommonObjects()
+{
+    delete goldenFrame;
+    delete driverBitFrame;
+    delete monitorBitFrame;
+}

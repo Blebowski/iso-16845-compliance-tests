@@ -86,10 +86,6 @@ class TestIso_7_1_1 : public test_lib::TestBase
         int idList[5];
         uint8_t data[64];
 
-        Frame *goldenFrame;
-        BitFrame *driverBitFrame;
-        BitFrame *monitorBitFrame;
-
         /**
          * Test constructor.
          */
@@ -152,9 +148,7 @@ class TestIso_7_1_1 : public test_lib::TestBase
                         testControllerAgentEndTest(testResult);
                     }
 
-                    delete goldenFrame;
-                    delete driverBitFrame;
-                    delete monitorBitFrame;
+                    deleteCommonObjects();
 
                     if (testResult == false)
                         return false;

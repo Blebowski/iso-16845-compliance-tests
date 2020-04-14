@@ -70,15 +70,7 @@ using namespace can;
 class TestIso_7_1_4 : public test_lib::TestBase
 {
     public:
-        Frame *goldenFrame;
-        BitFrame *driverBitFrame;
-        BitFrame *monitorBitFrame;
 
-        TestIso_7_1_4() : TestBase(){};
-
-        /*****************************************************************
-         * Test sequence
-         ****************************************************************/
         int run()
         {
             TestBase::run();
@@ -141,9 +133,7 @@ class TestIso_7_1_4 : public test_lib::TestBase
                     testControllerAgentEndTest(testResult);
                 }
 
-                delete goldenFrame;
-                delete driverBitFrame;
-                delete monitorBitFrame;
+                deleteCommonObjects();
             }
 
             testControllerAgentEndTest(testResult);

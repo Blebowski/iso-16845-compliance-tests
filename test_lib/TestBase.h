@@ -90,6 +90,21 @@ class test_lib::TestBase
         int seed;
 
         /**
+         * TODO!
+         */
+        can::Frame *goldenFrame;
+
+        /**
+         * TODO!
+         */
+        can::BitFrame *driverBitFrame;
+
+        /**
+         * TODO!
+         */
+        can::BitFrame *monitorBitFrame;
+
+        /**
          * Pointer to DUT Interface object. Object created when TestBase object
          * is created. Used to access DUT by tests.
          */
@@ -116,6 +131,11 @@ class test_lib::TestBase
          * 
          */
         void checkLowerTesterResult();
+
+        /**
+         * 
+         */
+        void deleteCommonObjects();
 };
 
 #endif

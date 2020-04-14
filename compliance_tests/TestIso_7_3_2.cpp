@@ -67,20 +67,10 @@ class TestIso_7_3_2 : public test_lib::TestBase
 {
     public:
 
-        Frame *goldenFrame;
-        BitFrame *driverBitFrame;
-        BitFrame *monitorBitFrame;
-        
         Frame *goldenFrame2;
         BitFrame *driverBitFrame2;
         BitFrame *monitorBitFrame2;
 
-        TestIso_7_3_2() : TestBase()
-        {}
-
-        /*****************************************************************
-         * Test sequence
-         ****************************************************************/
         int run()
         {
             // Run Base test to setup TB
@@ -176,9 +166,7 @@ class TestIso_7_3_2 : public test_lib::TestBase
                     testControllerAgentEndTest(testResult);
                 }
 
-                delete goldenFrame;
-                delete driverBitFrame;
-                delete monitorBitFrame;
+                deleteCommonObjects();
 
                 delete goldenFrame2;
                 delete driverBitFrame2;
