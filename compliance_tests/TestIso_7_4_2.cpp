@@ -12,31 +12,28 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 7.4.1
+ * @test ISO16845 7.4.2
  * 
  * @brief This test verifies that the IUT generates an overload frame when
- *        detecting a dominant bit on one of the 2 first recessive bits of the
- *        intermission field.
+ *        detecting a dominant state on the last bit of EOF.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
- *      FDF = 0
+ *      EOF, FDF = 0
  * 
  *  CAN FD Enabled
- *      FDF = 1
+ *      EOF, FDF = 1
  * 
  * Elementary test cases:
- *      #1 first bit of intermission;
- *      #2 second bit of intermission.
+ *      #1 Last bit of the EOF.
  *
  * Setup:
  *  The IUT is left in the default state.
  * 
  * Execution:
- *  One test frame is used for each of the two elementary tests.
- *  The LT forces one of the 2 first bits of the intermission field of the test
- *  frame to dominant state according to elementary test cases.
+ *  The LT forces 1 bit of the EOF to a dominant state according to elementary
+ *  test cases.
  * 
  * Response:
  *  The IUT generates an overload frame at the bit position following the
@@ -64,7 +61,7 @@
 
 using namespace can;
 
-class TestIso_7_4_1 : public test_lib::TestBase
+class TestIso_7_4_2 : public test_lib::TestBase
 {
     public:
 
@@ -104,7 +101,7 @@ class TestIso_7_4_1 : public test_lib::TestBase
                 testBigMessage("Test frame:");
                 goldenFrame->print();
 
-                testMessage("Forcing bits 1 and 2 of Intermission to dominant");
+                testMessage("Forcing last bit of EOF to dominant!");
 
                 // Convert to Bit frames
                 driverBitFrame = new BitFrame(*goldenFrame,
@@ -115,25 +112,16 @@ class TestIso_7_4_1 : public test_lib::TestBase
                 /**
                  * Modify test frames:
                  *   1. Monitor frame as if received, insert ACK to driven frame.
-                 *   2. Force 1st bit of Intermission to DOMINANT.
-                 *   3. Insert expected overload frame.
-                 *   4. Force 2nd bit of Intermission to DOMINANT.
-                 *   5. Insert expected overload frame.
+                 *   2. Force last bit of EOF to DOMINANT.
+                 *   3. Insert expected overload frame from first bit of Intermission.
                  */
                 monitorBitFrame->turnReceivedFrame();
                 driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
-                driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION)->setBitValue(DOMINANT);
+                driverBitFrame->getBitOf(6, BIT_TYPE_EOF)->setBitValue(DOMINANT);
 
-                monitorBitFrame->insertOverloadFrame(monitorBitFrame->getBitOf(1, BIT_TYPE_INTERMISSION));
-                driverBitFrame->insertOverloadFrame(driverBitFrame->getBitOf(1, BIT_TYPE_INTERMISSION));
-                
-                // Now bit on index 2 is actually 2nd bit of intermission after first
-                // overload frame (because there remained 1 bit in first intermission)!
-                driverBitFrame->getBitOf(2, BIT_TYPE_INTERMISSION)->setBitValue(DOMINANT);
-                
-                monitorBitFrame->insertOverloadFrame(monitorBitFrame->getBitOf(3, BIT_TYPE_INTERMISSION));
-                driverBitFrame->insertOverloadFrame(driverBitFrame->getBitOf(3, BIT_TYPE_INTERMISSION));
-                
+                monitorBitFrame->insertOverloadFrame(monitorBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+                driverBitFrame->insertOverloadFrame(driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
 
