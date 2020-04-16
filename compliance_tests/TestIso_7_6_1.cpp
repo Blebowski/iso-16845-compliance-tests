@@ -12,7 +12,7 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 7.3.3
+ * @test ISO16845 7.6.1
  * 
  * @brief This test verifies that the IUT increases its REC by 8 when detecting
  *        a bit error during the transmission of an active error flag.
