@@ -114,7 +114,7 @@ class TestIso_7_6_6 : public test_lib::TestBase
                 /**
                  * Modify test frames:
                  *   1. Monitor frame as if received.
-                 *   2. Flip ACK delimiter in driven frame (on can_tx) to
+                 *   2. Flip CRC delimiter in driven frame (on can_tx) to
                  *      DOMINANT!
                  *   3. Insert expected Active error frame from ACK further
                  */
