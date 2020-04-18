@@ -185,6 +185,9 @@ class TestIso_7_6_8 : public test_lib::TestBase
                     else
                         bitToCorrupt = 5;
 
+                    testMessage("Forcing EOF bit %d to Dominant",
+                                    bitToCorrupt);
+
                     // Convert to Bit frames
                     driverBitFrame = new BitFrame(*goldenFrame,
                         &this->nominalBitTiming, &this->dataBitTiming);
