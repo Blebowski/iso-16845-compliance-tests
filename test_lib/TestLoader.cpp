@@ -61,6 +61,7 @@
 #include "../compliance_tests/TestIso_7_6_13.cpp"
 #include "../compliance_tests/TestIso_7_6_14.cpp"
 #include "../compliance_tests/TestIso_7_6_15.cpp"
+#include "../compliance_tests/TestIso_7_6_16.cpp"
 
 
 /******************************************************************************
@@ -153,6 +154,8 @@ test_lib::TestBase* constructTestObject(std::string name)
         testPtr = new TestIso_7_6_14();
     } else if (name == "iso_7_6_15") {
         testPtr = new TestIso_7_6_15();
+    } else if (name == "iso_7_6_16") {
+        testPtr = new TestIso_7_6_16();
 
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
