@@ -80,6 +80,16 @@ class can::DutInterface
         /**
          * 
          */
+        virtual void setRec(int rec) = 0;
+        
+        /**
+         * 
+         */
+        virtual void setTec(int tec) = 0;
+
+        /**
+         * 
+         */
         virtual void setErrorState(ErrorState errorState) = 0;
 
         /**

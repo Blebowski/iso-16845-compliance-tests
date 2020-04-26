@@ -321,6 +321,40 @@ int can::CtuCanFdInterface::getTec()
     return data.s.tec_val;
 }
 
+        
+void can::CtuCanFdInterface::setRec(int rec)
+{
+    // Enable test-mode otherwise we will not be able to change REC or TEC!
+    union ctu_can_fd_ctr_pres ctrPres;
+    union ctu_can_fd_mode_settings data;
+    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.s.tstm = 1;
+    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+
+    ctrPres.u32 = 0;
+    ctrPres.s.prx = 1;
+    ctrPres.s.ctpv = rec;
+
+    memBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctrPres.u32);
+}
+        
+    
+void can::CtuCanFdInterface::setTec(int tec)
+{
+    // Enable test-mode otherwise we will not be able to change REC or TEC!
+    union ctu_can_fd_ctr_pres ctrPres;
+    union ctu_can_fd_mode_settings data;
+    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.s.tstm = 1;
+    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+
+    ctrPres.u32 = 0;
+    ctrPres.s.ptx = 1;
+    ctrPres.s.ctpv = tec;
+
+    memBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctrPres.u32);
+}
+
 
 void can::CtuCanFdInterface::setErrorState(ErrorState errorState)
 {

@@ -38,6 +38,8 @@ class can::CtuCanFdInterface : public can::DutInterface
         bool hasRxFrame();
         int getRec();
         int getTec();
+        void setRec(int rec);
+        void setTec(int tec);
         void setErrorState(can::ErrorState errorState);
         can::ErrorState getErrorState();
 };
