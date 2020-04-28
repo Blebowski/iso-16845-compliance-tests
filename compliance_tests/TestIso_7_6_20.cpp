@@ -12,11 +12,11 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 7.6.16
+ * @test ISO16845 7.6.20
  * 
  * @brief This test verifies that the IUT does not change the value of its REC
- *        when detecting a dominant bit at the last bit of the EOF it is
- *        receiving.
+ *        when detecting a dominant bit at the last bit of an overload delimiter
+ *        it is transmitting.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
  * Test variables:
@@ -27,17 +27,17 @@
  *      REC, FDF = 1
  * 
  * Elementary test cases:
- *      #1 Last bit of the EOF.
+ *      #1 It corrupts the last bit of the overload delimiter.
  *
  * Setup:
- *  The IUT is left in the default state.
+ *  No action required, the IUT is left in the default state.
  * 
  * Execution:
- *  The test system causes a receive error to initialize the REC value to 9.
- *  The LT sends one valid test frame according to elementary test cases.
+ *  The LT causes the IUT to generate an overload frame after a data frame.
+ *  Then LT applies an error according to elementary test cases.
  * 
  * Response:
- *  The IUT’s REC value shall be 8.
+ *  The IUT’s REC value shall be zero.
  *****************************************************************************/
 
 #include <iostream>
@@ -61,7 +61,7 @@
 
 using namespace can;
 
-class TestIso_7_6_16 : public test_lib::TestBase
+class TestIso_7_6_20 : public test_lib::TestBase
 {
     public:
 
@@ -95,14 +95,6 @@ class TestIso_7_6_16 : public test_lib::TestBase
                     dataRate = CAN_FD;
                 }
 
-                dutIfc->setRec(9);
-                rec = dutIfc->getRec();
-                if (rec != 9)
-                {
-                    testBigMessage("REC not set properly to 9!");
-                    testResult = false;
-                }
-
                 // CAN 2.0 / CAN FD, randomize others
                 FrameFlags frameFlags = FrameFlags(dataRate);
                 goldenFrame = new Frame(frameFlags);
@@ -123,13 +115,25 @@ class TestIso_7_6_16 : public test_lib::TestBase
                  *   1. Monitor frame as if received, insert ACK to driven frame.
                  *   2. Force last bit of EOF to DOMINANT.
                  *   3. Insert expected overload frame from first bit of Intermission.
+                 *   4. Force 8-th bit of overload delimiter to dominant!
+                 *   5. Insert next expected overload frame from first bit of
+                 *      Intermission
                  */
                 monitorBitFrame->turnReceivedFrame();
                 driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
                 driverBitFrame->getBitOf(6, BIT_TYPE_EOF)->setBitValue(DOMINANT);
 
-                monitorBitFrame->insertOverloadFrame(monitorBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
-                driverBitFrame->insertOverloadFrame(driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+                monitorBitFrame->insertOverloadFrame(
+                    monitorBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+                driverBitFrame->insertOverloadFrame(
+                    driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+
+                driverBitFrame->getBitOf(7, BIT_TYPE_OVERLOAD_DELIMITER)->setBitValue(DOMINANT);
+
+                monitorBitFrame->insertOverloadFrame(
+                    monitorBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+                driverBitFrame->insertOverloadFrame(
+                    driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
@@ -147,12 +151,12 @@ class TestIso_7_6_16 : public test_lib::TestBase
                     testControllerAgentEndTest(testResult);
                 }
 
-                // Check that REC was only decremented by 1!
+                // Check that REC was not incremented
                 recNew = dutIfc->getRec();
-                if (recNew != 8)
+                if (recNew != 0)
                 {
                     testMessage("DUT REC not as expected. Expected %d, Real %d",
-                                    8, recNew);
+                                    0, recNew);
                     testResult = false;
                     testControllerAgentEndTest(testResult);
                     return testResult;
