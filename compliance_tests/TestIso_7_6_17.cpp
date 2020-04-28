@@ -12,11 +12,10 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 7.6.16
+ * @test ISO16845 7.6.17
  * 
  * @brief This test verifies that the IUT does not change the value of its REC
- *        when detecting a dominant bit at the last bit of the EOF it is
- *        receiving.
+ *        when receiving a 13-bit length overload flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
  * Test variables:
@@ -27,16 +26,21 @@
  *      REC, FDF = 1
  * 
  * Elementary test cases:
- *      #1 Last bit of the EOF.
+ *      #1 7 dominant bits.
  *
  * Setup:
  *  The IUT is left in the default state.
  * 
  * Execution:
- *  The test system causes a receive error to initialize the REC value to 9.
- *  The LT sends one valid test frame according to elementary test cases.
- * 
+ *  a) The test system causes a receive error to initialize the REC value to 9.
+ *  b) The LT causes the IUT to generate an overload frame after a valid frame
+ *     reception (REC-1).
+ *     After the overload flag sent by the IUT, the LT sends a sequence
+ *     according to elementary test cases.
+ *
  * Response:
+ *  The correct frame up to the EOF will decrement REC and the overload
+ *  enlargement will not increase REC.
  *  The IUT’s REC value shall be 8.
  *****************************************************************************/
 
@@ -61,7 +65,7 @@
 
 using namespace can;
 
-class TestIso_7_6_16 : public test_lib::TestBase
+class TestIso_7_6_17 : public test_lib::TestBase
 {
     public:
 
@@ -123,6 +127,9 @@ class TestIso_7_6_16 : public test_lib::TestBase
                  *   1. Monitor frame as if received, insert ACK to driven frame.
                  *   2. Force last bit of EOF to DOMINANT.
                  *   3. Insert expected overload frame from first bit of Intermission.
+                 *   4. Insert 7 Dominant bits to driver on can_tx and 7
+                 *      Recessive bits to monitor on can_rx from first bit
+                 *      of overload delimiter.
                  */
                 monitorBitFrame->turnReceivedFrame();
                 driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
@@ -130,6 +137,17 @@ class TestIso_7_6_16 : public test_lib::TestBase
 
                 monitorBitFrame->insertOverloadFrame(monitorBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
                 driverBitFrame->insertOverloadFrame(driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+
+                Bit *overloadDelim = driverBitFrame->getBitOf(0, BIT_TYPE_OVERLOAD_DELIMITER);
+                int bitIndex = driverBitFrame->getBitIndex(overloadDelim);
+
+                for (int i = 0; i < 7; i++)
+                {
+                    driverBitFrame->insertBit(Bit(BIT_TYPE_OVERLOAD_FLAG, DOMINANT,
+                        &frameFlags, &nominalBitTiming, &dataBitTiming), bitIndex);
+                    monitorBitFrame->insertBit(Bit(BIT_TYPE_OVERLOAD_FLAG, RECESSIVE,
+                        &frameFlags, &nominalBitTiming, &dataBitTiming), bitIndex);
+                }
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
@@ -145,7 +163,7 @@ class TestIso_7_6_16 : public test_lib::TestBase
                 {
                     testResult = false;
                     testControllerAgentEndTest(testResult);
-                }
+                }                
 
                 // Check that REC was not incremented
                 recNew = dutIfc->getRec();
