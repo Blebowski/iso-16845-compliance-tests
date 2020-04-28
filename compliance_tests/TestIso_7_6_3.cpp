@@ -170,7 +170,7 @@ class TestIso_7_6_3 : public test_lib::TestBase
                 if (recNew != (rec + 25))
                 {
                     testMessage("DUT REC not as expected. Expected %d, Real %d",
-                                    rec + 17, recNew);
+                                    rec + 25, recNew);
                     testResult = false;
                     testControllerAgentEndTest(testResult);
                     return testResult;
