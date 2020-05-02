@@ -666,11 +666,13 @@ can::Bit* can::BitFrame::getStuffBit(int index)
     std::list<Bit>::iterator bitIt = bits_.begin();
     int i = 0;
 
-    while (i < index || bitIt != bits_.end())
-        if (bitIt->getStuffBitType() == STUFF_NORMAL){
+    while (i <= index && bitIt != bits_.end())
+    {
+        bitIt++;
+        if (bitIt->getStuffBitType() == STUFF_NORMAL ||
+            bitIt->getStuffBitType() == STUFF_FIXED)
             i++;
-            bitIt++;
-        }
+    }
 
     if (bitIt == bits_.end())
         return nullptr;
