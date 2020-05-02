@@ -167,6 +167,36 @@ class can::Bit {
          */
         void correctPh2LenToNominal();
 
+        /**
+         * 
+         */
+        BitPhase prevBitPhase(BitPhase bitPhase);
+
+        /**
+         * 
+         */
+        BitPhase nextBitPhase(BitPhase bitPhase);
+
+        /**
+         * 
+         */
+        BitRate getPhaseBitRate(BitPhase bitPhase);
+
+        /**
+         * 
+         */
+        BitTiming* getPhaseBitTiming(BitPhase bitPhase);
+
+        /**
+         * 
+         */
+        std::list<TimeQuanta>::iterator getFirstTimeQuantaIterator(BitPhase bitPhase);
+
+        /**
+         * 
+         */
+        std::list<TimeQuanta>::iterator getLastTimeQuantaIterator(BitPhase bitPhase);
+
     protected:
         
         BitType bitType;
@@ -225,15 +255,6 @@ class can::Bit {
          * 
          */
         void constructTimeQuantas(BitTiming *nominalBitTiming, BitTiming *dataBitTiming);
-
-        BitPhase prevBitPhase(BitPhase bitPhase);
-        BitPhase nextBitPhase(BitPhase bitPhase);
-
-        BitRate getPhaseBitRate(BitPhase bitPhase);
-        BitTiming* getPhaseBitTiming(BitPhase bitPhase);
-
-        std::list<TimeQuanta>::iterator getFirstTimeQuantaIterator(BitPhase bitPhase);
-        std::list<TimeQuanta>::iterator getLastTimeQuantaIterator(BitPhase bitPhase);
 };
 
 #endif
