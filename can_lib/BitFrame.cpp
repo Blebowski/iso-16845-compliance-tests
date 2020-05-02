@@ -701,7 +701,7 @@ can::Bit* can::BitFrame::getFixedStuffBit(int index)
 
 bool can::BitFrame::insertBit(Bit bit, int index)
 {
-    if (index >= bits_.size())
+    if (index > bits_.size())
         return false;
 
     std::list<Bit>::iterator bitIt = bits_.begin();
@@ -727,7 +727,7 @@ bool can::BitFrame::removeBit(Bit *bit)
 
 bool can::BitFrame::removeBit(int index)
 {
-    std::list<Bit>::iterator bitIt;
+    std::list<Bit>::iterator bitIt = bits_.begin();
 
     if (bits_.size() <= index)
         return false;
@@ -735,6 +735,20 @@ bool can::BitFrame::removeBit(int index)
     std::advance(bitIt, index);
     bits_.erase(bitIt);
 
+    return true;
+}
+
+
+bool can::BitFrame::clearBitsFrom(int index)
+{
+    auto bitIt = bits_.begin();
+    auto bitEnd = bits_.end();
+
+    if (bits_.size() <= index)
+        return false;
+
+    std::advance(bitIt, index);
+    bits_.erase(bitIt, bitEnd);
     return true;
 }
 

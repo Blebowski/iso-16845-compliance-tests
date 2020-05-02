@@ -88,6 +88,11 @@ class can::BitFrame : public Frame {
         bool removeBit(int index);
 
         /**
+         * 
+         */
+        bool clearBitsFrom(int index);
+
+        /**
          *
          */
         bool setAckDominant();
