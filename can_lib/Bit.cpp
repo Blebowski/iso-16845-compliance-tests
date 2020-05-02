@@ -223,14 +223,19 @@ int can::Bit::shortenPhase(BitPhase bitPhase, int numTimeQuanta)
     int phaseLen = getPhaseLenTimeQuanta(bitPhase);
     int shortenBy = numTimeQuanta;
 
-    if (phaseLen = 0)
+    printf("Phase lenght: %d\n", phaseLen);
+    printf("Shorten by: %d\n", shortenBy);
+
+    if (phaseLen == 0)
         return 0;
     if (phaseLen < numTimeQuanta)
         shortenBy = phaseLen;
 
     auto timeQuantaIterator = getLastTimeQuantaIterator(bitPhase);
-    for (int i = 0; i < numTimeQuanta; i++)
-        timeQuantaIterator = timeQuantas_.erase(timeQuantaIterator)--;
+    for (int i = 0; i < shortenBy; i++){
+        timeQuantaIterator = timeQuantas_.erase(timeQuantaIterator);
+        timeQuantaIterator--;
+    }
 
     return shortenBy;
 }
@@ -509,7 +514,7 @@ std::list<can::TimeQuanta>::iterator
         auto iterator = getFirstTimeQuantaIterator(bitPhase);
         while (iterator->bitPhase == bitPhase)
             iterator++;
-        return iterator--;
+        return --iterator;
     }
     return getFirstTimeQuantaIterator(nextBitPhase(bitPhase));
 }
