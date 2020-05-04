@@ -99,7 +99,7 @@ void test_lib::TestSequence::appendDriverBit(can::Bit* bit)
         {
             cycleBitValue = timeQuanta->getCycleBitValue(j);
 
-            if (cycleBitValue->hasDefaultValue == true)
+            if (cycleBitValue->hasDefaultValue)
                 currentValue = bitValue;
             else
                 currentValue = cycleBitValue->bitValue;
@@ -115,12 +115,13 @@ void test_lib::TestSequence::appendDriverBit(can::Bit* bit)
 
             // We detected value change or are at the end of bit, add item.
             if (currentValue != lastValue ||
-                ((i == timeQuantas - 1) && (j == cycles - 1))) {
+                ((i == timeQuantas - 1) && (j == cycles - 1))) 
+            {
                 // TODO: Push with message on first Item of bit
                 // TODO: Push with message on each next item signalling glitch!
                 
                 if (duration.count() > 0)
-                    pushDriverValue(duration, currentValue, bit->getBitTypeName());
+                    pushDriverValue(duration, lastValue, bit->getBitTypeName());
                 duration = clockPeriod;
                 lastValue = currentValue;
             }
