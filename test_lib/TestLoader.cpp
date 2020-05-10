@@ -71,6 +71,7 @@
 #include "../compliance_tests/TestIso_7_7_3.cpp"
 #include "../compliance_tests/TestIso_7_7_4.cpp"
 #include "../compliance_tests/TestIso_7_7_5.cpp"
+#include "../compliance_tests/TestIso_7_7_6.cpp"
 #include "../compliance_tests/TestIso_7_7_9_1.cpp"
 #include "../compliance_tests/TestIso_7_7_9_2.cpp"
 
@@ -184,6 +185,8 @@ test_lib::TestBase* constructTestObject(std::string name)
         testPtr = new TestIso_7_7_4();
     } else if (name == "iso_7_7_5") {
         testPtr = new TestIso_7_7_5();
+    } else if (name == "iso_7_7_6") {
+        testPtr = new TestIso_7_7_6();
     } else if (name == "iso_7_7_9_1") {
         testPtr = new TestIso_7_7_9_1();
     } else if (name == "iso_7_7_9_2") {
