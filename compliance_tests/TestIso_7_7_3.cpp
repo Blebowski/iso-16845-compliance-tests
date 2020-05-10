@@ -113,9 +113,9 @@ class TestIso_7_7_3 : public test_lib::TestBase
                  *      frame from next bit!
                  */
                 monitorBitFrame->turnReceivedFrame();
-                Bit *beforeStuffBit = driverBitFrame->getBitOf(3, BIT_TYPE_BASE_ID);
+                Bit *beforeStuffBit = driverBitFrame->getBitOf(4, BIT_TYPE_BASE_ID);
                 beforeStuffBit->lengthenPhase(PH2_PHASE, i + 1);
-                beforeStuffBit = monitorBitFrame->getBitOf(3, BIT_TYPE_BASE_ID);
+                beforeStuffBit = monitorBitFrame->getBitOf(4, BIT_TYPE_BASE_ID);
                 beforeStuffBit->lengthenPhase(PH2_PHASE, i + 1);
 
                 Bit *stuffBit = driverBitFrame->getStuffBit(0);
