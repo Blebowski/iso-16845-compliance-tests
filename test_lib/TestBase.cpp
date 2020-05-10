@@ -86,7 +86,7 @@ int test_lib::TestBase::run()
     canAgentMonitorFlush();
     canAgentDriverStop();
     canAgentMonitorStop();
-    canAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
+    canAgentSetMonitorInputDelay(std::chrono::nanoseconds(20));
 
     // Most of TCs use driver and monitor simultaneously, therefore there is no
     // need to configure Trigger in each of them!
