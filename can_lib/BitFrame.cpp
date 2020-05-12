@@ -767,15 +767,16 @@ bool can::BitFrame::setAckDominant()
 }
 
 
-
-
-bool can::BitFrame::insertActiveErrorFrame(int index)
+bool can::BitFrame::insertErrorFlag(int index, BitType errorFlagType)
 {
     Bit *bit = getBit(index);
 
     /* We should not insert Error frame oinstead of SOF right away as real DUT
-     *will never start transmitting errro frame right from SOF! */
+     * will never start transmitting errro frame right from SOF! */
     assert(index > 0);
+
+    assert(errorFlagType == BIT_TYPE_ACTIVE_ERROR_FLAG ||
+           errorFlagType == BIT_TYPE_PASSIVE_ERROR_FLAG);
 
     if (bit == nullptr)
         return false;
@@ -788,9 +789,25 @@ bool can::BitFrame::insertActiveErrorFrame(int index)
     Bit *prevBit = getBit(index - 1);
     prevBit->correctPh2LenToNominal();
 
-    // Insert Active Error flag and Error delimiter
+    // Insert Error flag of according value
+    BitValue value;
+    if (errorFlagType == BIT_TYPE_ACTIVE_ERROR_FLAG)
+        value = DOMINANT;
+    else
+        value = RECESSIVE;
+
     for (int i = 0; i < 6; i++)
-        appendBit(BIT_TYPE_ACTIVE_ERROR_FLAG, DOMINANT);
+        appendBit(errorFlagType, value);
+
+    return true;
+}
+
+
+bool can::BitFrame::insertActiveErrorFrame(int index)
+{
+    if (insertErrorFlag(index, BIT_TYPE_ACTIVE_ERROR_FLAG) == false)
+        return false;
+
     for (int i = 0; i < 8; i++)
         appendBit(BIT_TYPE_ERROR_DELIMITER, RECESSIVE);
 
@@ -810,25 +827,9 @@ bool can::BitFrame::insertActiveErrorFrame(Bit *bit)
 
 bool can::BitFrame::insertPassiveErrorFrame(int index)
 {
-    Bit *bit = getBit(index);
-
-    if (bit == nullptr)
+    if (insertErrorFlag(index, BIT_TYPE_PASSIVE_ERROR_FLAG) == false)
         return false;
 
-    /* We should not insert Error frame oinstead of SOF right away as real DUT
-     * will never start transmitting errro frame right from SOF! */
-    assert(index > 0);
-
-    // Discard all bits from this bit further
-    clearFrameBits(index);
-
-    // If bit frame is inserted on bit in Data bit rate, correct PH2 of
-    // previous bit so that it already counts in Nominal bit-rate!
-    Bit *prevBit = getBit(index - 1);
-    prevBit->correctPh2LenToNominal();
-
-    for (int i = 0; i < 6; i++)
-        appendBit(BIT_TYPE_PASSIVE_ERROR_FLAG, RECESSIVE);
     for (int i = 0; i < 8; i++)
         appendBit(BIT_TYPE_ERROR_DELIMITER, RECESSIVE);
 

@@ -98,6 +98,11 @@ class can::BitFrame : public Frame {
         bool setAckDominant();
 
         /**
+         * 
+         */
+        bool insertErrorFlag(int index, BitType errorFlagType);
+
+        /**
          *
          */
         bool insertActiveErrorFrame(int index);
