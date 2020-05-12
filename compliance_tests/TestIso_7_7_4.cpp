@@ -86,6 +86,9 @@ class TestIso_7_7_4 : public test_lib::TestBase
                  e <= nominalBitTiming.prop + nominalBitTiming.ph1;
                  e++)
             {
+                // Clean REC so that errors don't accumulate over testing!
+                dutIfc->setRec(0);
+
                 // CAN 2.0 frame, Base identifier, randomize others
                 FrameFlags frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER);
 
@@ -113,8 +116,15 @@ class TestIso_7_7_4 : public test_lib::TestBase
                  *   2. Force whole TSEG2 and last time quanta of TSEG1 to
                  *      Recessive. This corresponds to shortening the bit by
                  *      TSEG2 + 1.
-                 *   3. Insert Active Error frame to both driven and monitored
-                 *      frame from next bit!
+                 *   3. Insert Active Error frame to monitored frame from next
+                 *      bit. Since monitored stuff bit was prolonged by SJW this
+                 *      corresponds to expected positive resynchronisation and
+                 *      thus error frame will be monitored at exact expected
+                 *      position.
+                 *   4. Insert error frame on driver one bit later to be sure
+                 *      additional resynchronisation did not cover bug! Insert
+                 *      next error frame on monitored frame since DUT detected
+                 *      bit error during first bit of Error flag it sent!
                  */
                 monitorBitFrame->turnReceivedFrame();
                 Bit *beforeStuffBit = driverBitFrame->getBitOf(3, BIT_TYPE_BASE_ID);
@@ -140,8 +150,10 @@ class TestIso_7_7_4 : public test_lib::TestBase
                 }
 
                 int index = driverBitFrame->getBitIndex(driverStuffBit);
-                driverBitFrame->insertActiveErrorFrame(index + 1);
                 monitorBitFrame->insertActiveErrorFrame(index + 1);
+
+                driverBitFrame->insertActiveErrorFrame(index + 2);
+                monitorBitFrame->insertActiveErrorFrame(index + 2);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
