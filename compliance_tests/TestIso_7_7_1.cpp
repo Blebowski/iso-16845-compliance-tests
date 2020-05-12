@@ -105,9 +105,6 @@ class TestIso_7_7_1 : public test_lib::TestBase
              *      to monitored frame. Don't insert this as driven frame as this
              *      would cause dominant bit to be received by DUT just after
              *      PH2 of Second stuff bit was shortened!
-             *   6. Insert driven error frame from one bit further. Correct
-             *      previous bit so that it would last the same lenght
-             *      and Error frame is driven at the same time as is monitored!
              */
             monitorBitFrame->turnReceivedFrame();
 
@@ -132,45 +129,18 @@ class TestIso_7_7_1 : public test_lib::TestBase
             int bitIndex = driverBitFrame->getBitIndex(
                             driverBitFrame->getBitOf(12, BIT_TYPE_BASE_ID));
 
-            // First error frame (monitored only!)
+            // Expected error frame on monitor (from start of bit after stuff bit)
             monitorBitFrame->insertActiveErrorFrame(bitIndex);
-            
-            // Second error frame (driven only, one bit further!)
-            driverBitFrame->insertActiveErrorFrame(bitIndex + 1);
 
-            /*
-             * The scenario is like so (on can_rx):
-             *    _______             ____________
-             *          |_____________|          |______________
-             * SP     |                 |
-             *        |                 |        
-             *  TSEG1 | TSEG2 | TSEG1   | TSEG2  
-             *        v                 v
-             *       OK            Stuff Error
-             * 
-             * Bit:
-             *   ID 10  |  2nd stuff  bit        | Error frame!
-             * 
-             * On driven frame, stuff bit has length:
-             *    PROP + SYNC + PH1 - 1
-             * 
-             * Since 2nd stuff bit starts right after TSEG1 of
-             * DUT, since then till transition of Error frame by
-             * DUT it will be:
-             *  PH2 (resynced) + SYNC + PROP + PH1 + PH2
-             * 
-             * For driver to start error frame at the same time,
-             * the one extra bit before error frame must compensate
-             * for the difference. If we shorten the phases, this
-             * gives us that the extra bit must last:
-             *  PH2 + PH2 post negative resync with: e = PH2!
-             */       
-            driverBitFrame->getBitOf(12, BIT_TYPE_BASE_ID)->shortenPhase(
-                PROP_PHASE, nominalBitTiming.prop);
-            driverBitFrame->getBitOf(12, BIT_TYPE_BASE_ID)->shortenPhase(
-                PH1_PHASE, nominalBitTiming.ph1);
-            driverBitFrame->getBitOf(12, BIT_TYPE_BASE_ID)->lengthenPhase(
-                PH2_PHASE, nominalBitTiming.ph2 - resyncAmount - 1);
+            /* 
+             * For DUT to succesfully transmitt error frame, also driver must
+             * transmit it! But we don't want to transmitt it right away to
+             * avoid wrong synchronisation of DUT due to received start of
+             * error frame! So we insert it one bit later! Since driven frame
+             * is shortened, DUT will still catch it as first bit during
+             * monitored frame!
+             */
+            driverBitFrame->insertActiveErrorFrame(bitIndex + 1);
 
             driverBitFrame->print(true);
             monitorBitFrame->print(true);
