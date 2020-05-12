@@ -110,8 +110,14 @@ class TestIso_7_7_5 : public test_lib::TestBase
                  *   2. Set bit value of Dominant stuff bit to Recessive
                  *      apart from 1 TQ in the beginning of the bit for
                  *      driven frame!
-                 *   3. Insert expected error frame one bit after first
+                 *   3. Shorten stuff bit of monitored frame by 1 TQ
+                 *      (since due to resynchronisation dominant TQ is
+                 *       forced to lie in SYNC segment!)
+                 *   4. Insert expected error frame one bit after first
                  *      stuff bit!
+                 *   5. Insert error frame on driver, and next error frame
+                 *      on monitor one bit later since DUT has sampled
+                 *      recessive value during first bit of its Error flag.
                  */
                 monitorBitFrame->turnReceivedFrame();
 
@@ -122,9 +128,14 @@ class TestIso_7_7_5 : public test_lib::TestBase
                 stuffBit->setBitValue(RECESSIVE);
                 stuffBit->getTimeQuanta(0)->forceValue(DOMINANT);
 
+                Bit *monitorStuffBit = monitorBitFrame->getStuffBit(0);
+                monitorStuffBit->shortenPhase(SYNC_PHASE, 1);
+
                 int index = driverBitFrame->getBitIndex(stuffBit);
-                driverBitFrame->insertActiveErrorFrame(index + 1);
                 monitorBitFrame->insertActiveErrorFrame(index + 1);
+
+                driverBitFrame->insertActiveErrorFrame(index + 2);
+                monitorBitFrame->insertActiveErrorFrame(index + 2);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
