@@ -105,14 +105,23 @@ class TestIso_7_7_3 : public test_lib::TestBase
                 /**
                  * Modify test frames:
                  *   1. Prolong TSEG2 of bit before the stuff bit on 5th
-                 *      bit of identifier (delay stuff bit) by e.
+                 *      bit of identifier (delay stuff bit) by e in both
+                 *      driven and monitored frames.
                  *   2. Force whole TSEG2 and last time quanta of TSEG1 to
                  *      Recessive. This corresponds to shortening the bit by
                  *      TSEG2 + 1.
-                 *   3. Insert Active Error frame to both driven and monitored
-                 *      frame from next bit!
+                 *   3. Insert Expected active error frame to be monitored
+                 *      on bit after stuff bit. Since also monitored bit
+                 *      before stuff bit was prolonged, error frame will be
+                 *      exactly at expected position!
+                 *   4. Insert Error frame to driven frame but one bit later.
+                 *      Insert Next Error frame also to monitored frame since
+                 *      DUT did not monitor dominant bit during first bit of
+                 *      error frame and will therefore transmitt next dominant
+                 *      frame!
                  */
                 monitorBitFrame->turnReceivedFrame();
+
                 Bit *beforeStuffBit = driverBitFrame->getBitOf(4, BIT_TYPE_BASE_ID);
                 beforeStuffBit->lengthenPhase(PH2_PHASE, i + 1);
                 beforeStuffBit = monitorBitFrame->getBitOf(4, BIT_TYPE_BASE_ID);
@@ -125,8 +134,10 @@ class TestIso_7_7_3 : public test_lib::TestBase
                 stuffBit->getLastTimeQuantaIterator(prevPhase)->forceValue(RECESSIVE);
 
                 int index = driverBitFrame->getBitIndex(stuffBit);
-                driverBitFrame->insertActiveErrorFrame(index + 1);
                 monitorBitFrame->insertActiveErrorFrame(index + 1);
+
+                driverBitFrame->insertActiveErrorFrame(index + 2);
+                monitorBitFrame->insertActiveErrorFrame(index + 2);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
