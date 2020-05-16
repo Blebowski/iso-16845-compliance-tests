@@ -887,6 +887,19 @@ void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay)
 }
 
 
+void canAgentConfigureTxToRxFeedback(bool enable)
+{
+    simulatorChannel.readAccess = false;
+    simulatorChannel.useMsgData = false;
+    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
+    if (enable)
+        simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE);
+    else
+        simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE);
+
+    simulatorChannelProcessRequest();
+}
+
 void testControllerAgentEndTest(bool success)
 {
     simulatorChannel.readAccess = false;

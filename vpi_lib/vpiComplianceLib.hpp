@@ -103,6 +103,9 @@ extern "C" {
 
 #define VPI_CAN_AGNT_MONITOR_SET_INPUT_DELAY       (char*)"00011010"
 
+#define VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE         (char*)"00011011"
+#define VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE        (char*)"00011100"
+
 /**
  * @subsection Test controller bus agent
  */
@@ -750,6 +753,23 @@ void canAgentCheckResult();
  * @param inputDelay Input delay to set
  */
 void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay);
+
+
+/**
+ * @ingroup canAgent
+ * 
+ * @brief Enable/Disable feedback from can_tx to can_rx in CAN agent. This
+ *        allows DUT to see its own transmitted frames without need to
+ *        insert error frame to driver sequence.
+ * @param enable Whether 
+ */
+void canAgentConfigureTxToRxFeedback(bool enable);
+
+
+
+#define VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE         (char*)"00011011"
+#define VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE        (char*)"00011100"
+
 
 
 /******************************************************************************
