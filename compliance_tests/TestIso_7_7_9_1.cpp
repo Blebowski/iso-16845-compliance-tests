@@ -127,7 +127,7 @@ class TestIso_7_7_9_1 : public test_lib::TestBase
 
             deleteCommonObjects();
 
-            testControllerAgentEndTest(false);
+            testControllerAgentEndTest(testResult);
             testMessage("Test %s : Run Exiting", testName);
             return testResult;
 

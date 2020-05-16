@@ -148,9 +148,10 @@ class TestIso_7_7_9_2 : public test_lib::TestBase
             driverBitFrame->getBit(4)->lengthenPhase(SYNC_PHASE,
                 nominalBitTiming.prop + nominalBitTiming.ph1 - 3);
 
-            for (int i = 0; i < 9; i++)
-                monitorBitFrame->insertBit(Bit(BIT_TYPE_SOF, RECESSIVE,
-                    &frameFlags, &nominalBitTiming, &dataBitTiming), 1);
+            // Passive error frame consists of all recessive so this monitors unit
+            // will not start transmitting active error frame!
+            monitorBitFrame->getBit(0)->setBitValue(RECESSIVE);
+            monitorBitFrame->insertPassiveErrorFrame(monitorBitFrame->getBit(1));
 
             driverBitFrame->print(true);
             monitorBitFrame->print(true);
@@ -162,7 +163,7 @@ class TestIso_7_7_9_2 : public test_lib::TestBase
 
             deleteCommonObjects();
 
-            testControllerAgentEndTest(false);
+            testControllerAgentEndTest(testResult);
             testMessage("Test %s : Run Exiting", testName);
             return testResult;
 
