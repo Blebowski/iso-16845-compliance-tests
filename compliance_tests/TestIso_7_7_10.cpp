@@ -77,7 +77,10 @@ class TestIso_7_7_10 : public test_lib::TestBase
             // Run Base test to setup TB
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
-
+            
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+            
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
@@ -107,6 +110,8 @@ class TestIso_7_7_10 : public test_lib::TestBase
              *   2. Flip NTQ - Ph2 + 1 time quanta of first stuff bit to recessive.
              *   3. Flip second stuff bit to dominant!
              *   4. Insert Active Error flag one bit after 2nd stuff bit!
+             *      Insert Passive Error flag to driver so that it transmitts all
+             *      recessive!
              */
             monitorBitFrame->turnReceivedFrame();
 
@@ -119,17 +124,8 @@ class TestIso_7_7_10 : public test_lib::TestBase
             secondStuffBit->setBitValue(DOMINANT);
             int index = driverBitFrame->getBitIndex(secondStuffBit);
 
-            driverBitFrame->insertActiveErrorFrame(index + 1);
             monitorBitFrame->insertActiveErrorFrame(index + 1);
-
-            /*
-             * Lengthen last bit of driven frame so that we are sure node will
-             * not synchronize on edge from driver and therefore transmitt
-             * error frame in correct time even when it has synchronised twice
-             * incorrectly!
-             * This is not DUT error!
-             */
-            driverBitFrame->getBit(index)->lengthenPhase(PH2_PHASE, 5);
+            driverBitFrame->insertPassiveErrorFrame(index + 1);
 
             driverBitFrame->print(true);
             monitorBitFrame->print(true);

@@ -71,6 +71,9 @@ class TestIso_7_7_1 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
@@ -101,10 +104,6 @@ class TestIso_7_7_1 : public test_lib::TestBase
              *      in Base ID by PhaseSeg2 + 1.
              *   4. Correct lenght of one of the monitored bits since second
              *      stuff bit causes negative re-synchronization.
-             *   5. Insert expected Error frame from next bit (11-th bit of Base ID)
-             *      to monitored frame. Don't insert this as driven frame as this
-             *      would cause dominant bit to be received by DUT just after
-             *      PH2 of Second stuff bit was shortened!
              */
             monitorBitFrame->turnReceivedFrame();
 
@@ -129,18 +128,10 @@ class TestIso_7_7_1 : public test_lib::TestBase
             int bitIndex = driverBitFrame->getBitIndex(
                             driverBitFrame->getBitOf(12, BIT_TYPE_BASE_ID));
 
-            // Expected error frame on monitor (from start of bit after stuff bit)
+            /* Expected error frame on monitor (from start of bit after stuff bit)
+             * Driver will have passive error frame -> transmitt all recessive */
             monitorBitFrame->insertActiveErrorFrame(bitIndex);
-
-            /* 
-             * For DUT to succesfully transmitt error frame, also driver must
-             * transmit it! But we don't want to transmitt it right away to
-             * avoid wrong synchronisation of DUT due to received start of
-             * error frame! So we insert it one bit later! Since driven frame
-             * is shortened, DUT will still catch it as first bit during
-             * monitored frame!
-             */
-            driverBitFrame->insertActiveErrorFrame(bitIndex + 1);
+            driverBitFrame->insertPassiveErrorFrame(bitIndex);
 
             driverBitFrame->print(true);
             monitorBitFrame->print(true);

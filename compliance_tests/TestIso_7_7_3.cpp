@@ -78,6 +78,9 @@ class TestIso_7_7_3 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
@@ -114,11 +117,8 @@ class TestIso_7_7_3 : public test_lib::TestBase
                  *      on bit after stuff bit. Since also monitored bit
                  *      before stuff bit was prolonged, error frame will be
                  *      exactly at expected position!
-                 *   4. Insert Error frame to driven frame but one bit later.
-                 *      Insert Next Error frame also to monitored frame since
-                 *      DUT did not monitor dominant bit during first bit of
-                 *      error frame and will therefore transmitt next dominant
-                 *      frame!
+                 *      On driver, passive error frame so that it transmitts
+                 *      all recessive!
                  */
                 monitorBitFrame->turnReceivedFrame();
 
@@ -135,9 +135,7 @@ class TestIso_7_7_3 : public test_lib::TestBase
 
                 int index = driverBitFrame->getBitIndex(stuffBit);
                 monitorBitFrame->insertActiveErrorFrame(index + 1);
-
-                driverBitFrame->insertActiveErrorFrame(index + 2);
-                monitorBitFrame->insertActiveErrorFrame(index + 2);
+                driverBitFrame->insertPassiveErrorFrame(index + 1);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);

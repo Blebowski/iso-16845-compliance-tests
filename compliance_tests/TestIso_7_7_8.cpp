@@ -81,6 +81,9 @@ class TestIso_7_7_8 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
@@ -115,7 +118,8 @@ class TestIso_7_7_8 : public test_lib::TestBase
              *      bits, flip next stuff bit (2nd)
              *   5. Insert expected Error frame exactly after 6 bits after the
              *      end of first stuff bit (bit after 2nd stuff bit which had
-             *      flipped value!)
+             *      flipped value!). Insert Passive Error frame on driven frame
+             *      so driver transmitts all recessive!
              */
             monitorBitFrame->turnReceivedFrame();
 
@@ -131,15 +135,6 @@ class TestIso_7_7_8 : public test_lib::TestBase
             int index = driverBitFrame->getBitIndex(secondStuffBit);
             driverBitFrame->insertActiveErrorFrame(index + 1);
             monitorBitFrame->insertActiveErrorFrame(index + 1);
-
-            /*
-             * Lengthen last bit of driven frame so that we are sure node will
-             * not synchronize on edge from driver and therefore transmitt
-             * error frame in correct time even when it has synchronised twice
-             * incorrectly!
-             * This is not DUT error!
-             */
-            driverBitFrame->getBit(index)->lengthenPhase(PH2_PHASE, 5);
 
             driverBitFrame->print(true);
             monitorBitFrame->print(true);

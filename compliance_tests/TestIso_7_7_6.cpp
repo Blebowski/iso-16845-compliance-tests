@@ -79,6 +79,9 @@ class TestIso_7_7_6 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
@@ -113,7 +116,11 @@ class TestIso_7_7_6 : public test_lib::TestBase
                  *      apart from 1 TQ in the beginning of the bit for
                  *      driven frame!
                  *   3. Insert expected error frame one bit after first
-                 *      stuff bit!
+                 *      stuff bit! Since bit before stuff bit was shortened
+                 *      by SJW, start of error frame in monitored frame
+                 *      should be at exact position as DUT should transmit
+                 *      it! Insert Passive Error frame to driver so that
+                 *      it sends all recessive values!
                  */
                 monitorBitFrame->turnReceivedFrame();
 
@@ -127,22 +134,8 @@ class TestIso_7_7_6 : public test_lib::TestBase
                 stuffBit->getTimeQuanta(0)->forceValue(DOMINANT);
 
                 int index = driverBitFrame->getBitIndex(stuffBit);
-                driverBitFrame->insertActiveErrorFrame(index + 1);
                 monitorBitFrame->insertActiveErrorFrame(index + 1);
-
-                /*
-                 * Stuff bit on driven frame MUST be prolonged since previous
-                 * driven bit was shortened more than DUT has re-synchronised.
-                 * If this is not done, then LT will start transmitting error
-                 * frame sooner than DUT itself causing next re-synchronisation
-                 * of DUT! This is to compensate effect of inserted error frame
-                 * on driven frame, it is NOT DUT error!!
-                 * When this is done, edge on driven frame will appear at the
-                 * same time as is expected from DUT and as is in monitored
-                 * frame!
-                 */
-                driverBitFrame->getBit(index)->lengthenPhase(
-                    PH2_PHASE, i - nominalBitTiming.sjw);
+                driverBitFrame->insertPassiveErrorFrame(index + 1);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);

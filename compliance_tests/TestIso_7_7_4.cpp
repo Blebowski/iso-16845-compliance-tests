@@ -78,6 +78,9 @@ class TestIso_7_7_4 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
@@ -117,14 +120,11 @@ class TestIso_7_7_4 : public test_lib::TestBase
                  *      Recessive. This corresponds to shortening the bit by
                  *      TSEG2 + 1.
                  *   3. Insert Active Error frame to monitored frame from next
-                 *      bit. Since monitored stuff bit was prolonged by SJW this
+                 *      bit. Since monitored stuff bit was prolonged by SJW, this
                  *      corresponds to expected positive resynchronisation and
                  *      thus error frame will be monitored at exact expected
-                 *      position.
-                 *   4. Insert error frame on driver one bit later to be sure
-                 *      additional resynchronisation did not cover bug! Insert
-                 *      next error frame on monitored frame since DUT detected
-                 *      bit error during first bit of Error flag it sent!
+                 *      position. Insert passive error frame to driven bit so that
+                 *      it will transmitt all recessive!
                  */
                 monitorBitFrame->turnReceivedFrame();
                 Bit *beforeStuffBit = driverBitFrame->getBitOf(3, BIT_TYPE_BASE_ID);
@@ -151,10 +151,8 @@ class TestIso_7_7_4 : public test_lib::TestBase
 
                 int index = driverBitFrame->getBitIndex(driverStuffBit);
                 monitorBitFrame->insertActiveErrorFrame(index + 1);
-
-                driverBitFrame->insertActiveErrorFrame(index + 2);
-                monitorBitFrame->insertActiveErrorFrame(index + 2);
-
+                driverBitFrame->insertPassiveErrorFrame(index + 1);
+                
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
 
