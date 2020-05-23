@@ -43,6 +43,7 @@ class can::FrameFlags
         FrameFlags(FlexibleDataRate isFdf, RemoteTransmissionRequest isRtr);
         FrameFlags(FlexibleDataRate isFdf);
         FrameFlags(ExtendedIdentifier isIde);
+        FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs);
 
         void randomize();
         void randomizeEnableAll();
