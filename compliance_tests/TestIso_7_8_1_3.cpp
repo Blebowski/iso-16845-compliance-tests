@@ -12,17 +12,17 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 7.8.1.2
+ * @test ISO16845 7.8.1.3
  * 
- * @brief The purpose of this test is to verify the position of the sample
- *        point of an IUT on bit position DATA field.
- * 
+ * @brief The purpose of this test is to verify the position of the sample point
+ *        of an IUT on bit position CRC delimiter.
+ *
  * @version CAN FD Enabled
  * 
  * Test variables:
  *      Sampling_Point(D) configuration as available by IUT.
- *      DATA field
- *      FDF = 1
+ *          CRC Delimiter
+ *          FDF = 1
  * 
  * Elementary test cases:
  *      There are two elementary tests to perform for at least 1 bit rate
@@ -31,7 +31,7 @@
  *             before sampling point;
  *          #2 test for late sampling point: bit level change to recessive
  *             after sampling point.
- *          
+ *
  *      Refer to 6.2.3.
  *
  * Setup:
@@ -40,21 +40,22 @@
  * Execution:
  *  The LT sends a frame according to elementary test cases.
  * 
- *  Test Data #1:
- *      The LT forces a recessive bit to dominant from beginning up to one TQ(D)
- *      before the sampling point.
+ *  Test CRC delimiter #1:
+ *      The LT forces a recessive CRC delimiter bit to dominant from beginning
+ *      up to one TQ(D) before the Sampling point.
  * 
- *  Test DATA #2:
- *      The LT forces a dominant bit to recessive for Phase_Seg2(D).
+ *  Test CRC delimiter #2:
+ *      The LT forces a recessive CRC delimiter bit to dominant from beginning
+ *      up to the sampling point.
  * 
  * Response:
- *  Test DATA #1:
- *      The modified data bit shall be sampled as recessive.
+ *  Test CRC delimiter #1:
+ *      The modified CRC delimiter bit shall be sampled as recessive.
  *      The frame is valid. No error flag shall occur.
  * 
- *  Test DATA #2:
- *      The modified data bit shall be sampled as dominant.
- *      The frame is valid. No error flag shall occur.
+ *  Test CRC delimiter #2:
+ *      The modified CRC delimiter bit shall be sampled as dominant.
+ *      The frame is invalid. An error frame shall follow.
  *****************************************************************************/
 
 #include <iostream>
@@ -79,7 +80,7 @@
 
 using namespace can;
 
-class TestIso_7_8_1_2 : public test_lib::TestBase
+class TestIso_7_8_1_3 : public test_lib::TestBase
 {
     public:
 
@@ -89,6 +90,9 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
+            // Enable TX to RX feedback
+            canAgentConfigureTxToRxFeedback(true);
+
             // CAN FD enabled only!
             if (canVersion == CAN_2_0_VERSION ||
                 canVersion == CAN_FD_TOLERANT_VERSION)
@@ -97,35 +101,23 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
                 return false;
             }
 
-            // To avoid stuff bits in data field.
-            uint8_t dataByteRecessiveSampled = 0x55;
-            uint8_t dataByteDominantSampled = 0x15;
-
             /*****************************************************************
-             * BRS sampled Recessive (Shift) / BRS sample dominant (no shift)
+             * CRC Delimiter sampled Recessive (OK) /
+             * CRC Delimiter sampled Dominant (Error frame)
              ****************************************************************/
-
             for (int i = 0; i < 2; i++)
             {
-                // CAN FD frame, shift bit rate
+                // CAN FD frame
                 FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
-
-                // In 2nd iteration dominant bit will be sampled at second bit
-                // position of data field! We must expect this in golden frame
-                // so that it will be compared correctly with received frame!
-                if (i == 0)
-                    goldenFrame = new Frame(frameFlags, 1, &dataByteRecessiveSampled);
-                else
-                    goldenFrame = new Frame(frameFlags, 1, &dataByteDominantSampled);
-
+                goldenFrame = new Frame(frameFlags);
                 goldenFrame->randomize();
                 testBigMessage("Test frame:");
                 goldenFrame->print();
 
                 if (i == 0)
-                    testMessage("Testing Data bit sampled Recessive");
+                    testMessage("Testing CRC delimiter bit sampled Recessive");
                 else
-                    testMessage("Testing Data bit sampled Dominant");
+                    testMessage("Testing CRC delimiter bit sampled Dominant");
 
                 // Convert to Bit frames
                 driverBitFrame = new BitFrame(*goldenFrame,
@@ -136,24 +128,31 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
                 /**
                  * Modify test frames:
                  *   1. Turn monitor frame as if received!
-                 *   2. Modify 2nd bit of data field. Since data is 0x55
-                 *      this bit is recessive. Flip its TSEG - 1 (i == 0)
-                 *      or TSEG1 (i == 1) to dominant.
+                 *   2. Modify CRC Delimiter, flip TSEG1 - 1 (i == 0) or TSEG1
+                 *      (i == 1) to dominant!
+                 *   3. For i == 1, insert active error frame right after CRC
+                 *      delimiter! Insert passive error frame to driver to send
+                 *      all recessive (TX to RX feedback is turned ON)!
                  */
                 monitorBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
 
-                Bit *dataBit = driverBitFrame->getBitOf(1, BIT_TYPE_DATA);
-                dataBit->setBitValue(RECESSIVE);
-
+                Bit *crcDelim = driverBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
+                int bitIndex = driverBitFrame->getBitIndex(crcDelim);
                 int domPulseLength;
+
                 if (i == 0)
                     domPulseLength = dataBitTiming.prop + dataBitTiming.ph1;
                 else
                     domPulseLength = dataBitTiming.prop + dataBitTiming.ph1 + 1;
 
                 for (int j = 0; j < domPulseLength; j++)
-                    dataBit->forceTimeQuanta(j, DOMINANT);    
+                    crcDelim->forceTimeQuanta(j, DOMINANT);    
+
+                if (i == 1)
+                {
+                    driverBitFrame->insertPassiveErrorFrame(bitIndex + 1);
+                    monitorBitFrame->insertActiveErrorFrame(bitIndex + 1);
+                }
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
@@ -164,8 +163,9 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
                 checkLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
+                // (for i==0 only, i==1 ends with error frame)
                 Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                if ((i == 0) && (compareFrames(*goldenFrame, readFrame) == false))
                 {
                     testResult = false;
                     testControllerAgentEndTest(testResult);

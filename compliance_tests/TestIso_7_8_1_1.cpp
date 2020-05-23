@@ -17,7 +17,7 @@
  * @brief The purpose of this test is to verify the position of the sample
  *        point of an IUT on bit position BRS.
  * 
- * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
+ * @version CAN FD Enabled
  * 
  * Test variables:
  *   Sampling_Point(N) and SJW(N) configuration as available by IUT.
@@ -87,6 +87,14 @@ class TestIso_7_8_1_1 : public test_lib::TestBase
             // Run Base test to setup TB
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
+
+            // CAN FD enabled only!
+            if (canVersion == CAN_2_0_VERSION ||
+                canVersion == CAN_FD_TOLERANT_VERSION)
+            {
+                testResult = false;
+                return false;
+            }
 
             /*****************************************************************
              * BRS sampled Recessive (Shift) / BRS sample dominant (no shift)
