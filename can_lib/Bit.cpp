@@ -280,7 +280,7 @@ can::TimeQuanta* can::Bit::getTimeQuanta(BitPhase bitPhase, int index)
     auto timeQuantaIterator = getFirstTimeQuantaIterator(bitPhase);
 
     // Saturate
-    if (phaseLen >= index)
+    if (index >= phaseLen)
         realIndex = phaseLen - 1;
     std::advance(timeQuantaIterator, realIndex);
 
