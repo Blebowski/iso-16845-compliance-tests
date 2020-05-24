@@ -123,6 +123,20 @@ can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs)
     randomizeBrs = false;
 }
 
+
+can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs,
+                            ErrorStateIndicator isEsi)
+{
+    isFdf_ = isFdf;
+    isBrs_ = isBrs;
+    isEsi_ = isEsi;
+
+    randomizeEnableAll();
+    randomizeFdf = false;
+    randomizeBrs = false;
+    randomizeEsi = false;
+}
+
 bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
 {
     if (lhs.isBrs_ != rhs.isBrs_)
