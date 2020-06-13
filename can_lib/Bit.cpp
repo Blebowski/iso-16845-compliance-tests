@@ -331,12 +331,12 @@ int can::Bit::forceTimeQuanta(int fromIndex, int toIndex, BitValue bitValue)
 bool can::Bit::forceTimeQuanta(int index, BitPhase bitPhase, BitValue bitValue)
 {
     int phaseLen = getPhaseLenTimeQuanta(bitPhase);
-    if (phaseLen = 0 || phaseLen <= index)
+
+    if ((phaseLen == 0) || (phaseLen <= index))
         return false;
 
-    auto timeQuantaIterator = getFirstTimeQuantaIterator(bitPhase);
-    std::advance(timeQuantaIterator, index);
-    timeQuantaIterator->forceValue(bitValue);
+    TimeQuanta *timeQuanta = getTimeQuanta(bitPhase, index);
+    timeQuanta->forceValue(bitValue);
 
     return true;
 }
