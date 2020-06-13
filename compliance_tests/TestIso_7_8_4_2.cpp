@@ -12,11 +12,11 @@
 
 /******************************************************************************
  *
- * @test ISO16845 7.8.4.1
+ * @test ISO16845 7.8.4.2
  *
  * @brief The purpose of this test is to verify the behaviour of an IUT dete-
  *        cting a positive phase error e on a recessive to dominant edge with
- *        e > SJW(D) on bit position ESI.
+ *        e > SJW(D) on bit position DATA.
  *
  * @version CAN FD Enabled
  *
@@ -38,19 +38,21 @@
  *  The IUT is left in the default state.
  *
  * Execution:
- *  The LT sends a frame with recessive ESI bit.
- *  The LT invert the value of ESI bit to dominant value.
- *  Then, the recessive to dominant edge between BRS and ESI shall be delayed
- *  by additional e TQ(D)’s of recessive value at the beginning of ESI bit
- *  according to elementary test cases.
+ *  The LT sends a frame containing a dominant stuff bit in DATA field.
+ *  Then, the recessive to dominant edge before this dominant stuff bit shall
+ *  be delayed by additional e TQ(D)’s of recessive value at the beginning of
+ *  this stuff bit according to elementary test cases.
+ *  The LT forces a part of Phase_Seg2(D) of the delayed stuff bit to rece-
+ *  ssive. This recessive part of Phase_seg2 start at SJW(D) − 1 TQ(D) after
+ *  sampling point.
  *
  *  The LT forces a part of Phase_Seg2(D) of the delayed ESI bit to recessive.
  *  This recessive part of Phase_seg2 start at SJW(D) − 1 TQ(D) after sampling
  *  point.
  *
  * Response:
- *  The modified ESI bit shall be sampled as recessive.
- *  The frame is valid. No error flag shall occur.
+ *  The modified data bit shall be sampled as recessive.
+ *  The wrong value of stuff bit shall cause an error flag.
  *****************************************************************************/
 
 #include <iostream>
@@ -75,7 +77,7 @@
 
 using namespace can;
 
-class TestIso_7_8_4_1 : public test_lib::TestBase
+class TestIso_7_8_4_2 : public test_lib::TestBase
 {
     public:
 
@@ -100,14 +102,15 @@ class TestIso_7_8_4_1 : public test_lib::TestBase
 
             for (int i = dataBitTiming.sjw + 1; i < upperTh; i++)
             {
-                // CAN FD frame with bit rate shift, ESI = Recessive
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT, ESI_ERROR_PASSIVE);
-                goldenFrame = new Frame(frameFlags);
+                // CAN FD frame with bit rate shift
+                uint8_t dataByte = 0x7F;
+                FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
+                goldenFrame = new Frame(frameFlags, 0x1, &dataByte);
                 goldenFrame->randomize();
                 testBigMessage("Test frame:");
                 goldenFrame->print();
 
-                testMessage("Testing ESI positive resynchronisation with phase error: %d", i + 1);
+                testMessage("Testing data byte positive resynchronisation with phase error: %d", i + 1);
 
                 // Convert to Bit frames
                 driverBitFrame = new BitFrame(*goldenFrame,
@@ -118,21 +121,35 @@ class TestIso_7_8_4_1 : public test_lib::TestBase
                 /**
                  * Modify test frames:
                  *   1. Turn monitor frame as if received!
-                 *   2. Force ESI value to dominant.
-                 *   3. Force first e time quantas of ESI bit to Recessive
-                 *   4. Force ESI from SJW - 1 after sample point till the end to
+                 *   2. Force first e time quantas of 7-th data bit to Recessive.
+                 *      This bit should be dominant stuff bit.
+                 *   3. Force 7-th data bit from SJW - 1 after sample point till the end to
                  *      Recessive.
+                 *   4. Lengthen monitored 7-th data bit by SJW (this correspond to
+                 *      DUTs resync. by SJW).
+                 *   5. Insert active error frame from 8-th data bit further to monitored
+                 *      frame. Insert passive error frame to driven frame!
                  */
                 monitorBitFrame->turnReceivedFrame();
 
-                Bit *esiBit = driverBitFrame->getBitOf(0, BIT_TYPE_ESI);
-                esiBit->setBitValue(DOMINANT);
+                Bit *driverStuffBit = driverBitFrame->getBitOf(6, BIT_TYPE_DATA);
+                Bit *monitorStuffBit = monitorBitFrame->getBitOf(6, BIT_TYPE_DATA);
+
+                // One bit after stuff bit will be recessive due to data byte. Insert
+                // passive error frame from one bit further so that model does not modify
+                // the stuff bit due to insertion of error frame after bit in data bit rate!
+                Bit *driverNextBit = driverBitFrame->getBitOf(8, BIT_TYPE_DATA);
+                Bit *monitorNextBit = monitorBitFrame->getBitOf(7, BIT_TYPE_DATA);
 
                 for (int j = 0; j < i; j++)
-                    esiBit->forceTimeQuanta(j, RECESSIVE);
-
+                    driverStuffBit->forceTimeQuanta(j, RECESSIVE);
                 for (int j = dataBitTiming.sjw - 1; j < dataBitTiming.ph2; j++)
-                    esiBit->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
+                    driverStuffBit->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
+
+                monitorStuffBit->lengthenPhase(SYNC_PHASE, dataBitTiming.sjw);
+
+                driverBitFrame->insertPassiveErrorFrame(driverNextBit);
+                monitorBitFrame->insertActiveErrorFrame(monitorNextBit);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
@@ -141,14 +158,6 @@ class TestIso_7_8_4_1 : public test_lib::TestBase
                 pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
                 runLowerTester(true, true);
                 checkLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
-                {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
-                }
 
                 deleteCommonObjects();
             }
