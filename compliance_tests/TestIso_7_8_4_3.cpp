@@ -39,15 +39,16 @@
  *  The IUT is left in the default state.
  *
  * Execution:
- *  The LT sends a frame with recessive ESI bit.
- *  The LT invert the value of ESI bit to dominant value.
- *  Then, the recessive to dominant edge between BRS and ESI shall be delayed
- *  by additional e TQ(D)’s of recessive value at the beginning of ESI bit
- *  according to elementary test cases.
- *
- *  The LT forces a part of Phase_Seg2(D) of the delayed ESI bit to recessive.
- *  This recessive part of Phase_seg2 start at SJW(D) − 1 TQ(D) after sampling
- *  point.
+ *  The LT sends a test frame with a recessive bit value at last bit of CRC.
+ *  The LT forces the CRC delimiter to dominant bit value.
+ * 
+ *  Then, the recessive to dominant edge between LSB of CRC and CRC delimiter
+ *  shall be delayed by additional e TQ(D)’s of recessive value at the begi-
+ *  nning of CRC delimiter bit according to elementary test cases.
+ *  
+ *  The LT forces a part of Phase_Seg2(D) of the delayed CRC delimiter bit to
+ *  recessive. This recessive part of Phase_seg2 start at SJW(D) − 1 TQ(D)
+ *  after sampling point.
  *
  * Response:
  *  The modified ESI bit shall be sampled as recessive.

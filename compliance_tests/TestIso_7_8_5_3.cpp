@@ -12,17 +12,18 @@
 
 /******************************************************************************
  *
- * @test ISO16845 7.8.5.2
+ * @test ISO16845 7.8.5.3
  *
  * @brief The purpose of this test is to verify the behaviour of an IUT dete-
  *        cting a negative phase error e on a recessive to dominant edge with
- *        |e| ≤ SJW(D) on bit position DATA.
+ *        |e| ≤ SJW on bit position ACK.
  *
  * @version CAN FD Enabled
  *
  * Test variables:
- *      Sampling_Point(D) and SJW(D) configuration as available by IUT.
- *          DATA field
+ *      Sampling_Point(N) and SJW(N) configuration as available by IUT.
+ *          Phase error e
+ *          ACK
  *          FDF = 1
  *
  * Elementary test cases:
@@ -30,7 +31,7 @@
  *      for at least 1 bit rate configuration.
  *
  *          #1 The values tested for e are measured in time quanta where:
- *              |e| ∈ [1, SJW(D)]
+ *              |e| ∈ [1, SJW(N)].
  *
  *      Refer to 6.2.3.
  *
@@ -38,14 +39,14 @@
  *  The IUT is left in the default state.
  *
  * Execution:
- *  The LT sends a frame containing a dominant stuff bit in DATA field.
- *  The LT shortened the DATA bit before the dominant stuff bit by an amount
- *  of |e| TQ according to elementary test cases.
- *  Additionally, the Phase_Seg2(D) of the dominant stuff bit shall be forced
+ *  The LT sends a frame.
+ *  The LT shortened the CRC delimiter by an amount of |e| TQ according to
+ *  elementary test cases.
+ *  Additionally, the Phase_Seg2(N) of this dominant ACK bit shall be forced
  *  to recessive.
  *
  * Response:
- *  The modified stuff bit shall be sampled as dominant.
+ *  The modified ACK bit shall be sampled as dominant.
  *  The frame is valid, no error flag shall occur.
  *****************************************************************************/
 
@@ -71,7 +72,7 @@
 
 using namespace can;
 
-class TestIso_7_8_5_2 : public test_lib::TestBase
+class TestIso_7_8_5_3 : public test_lib::TestBase
 {
     public:
 
@@ -81,8 +82,8 @@ class TestIso_7_8_5_2 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
-            // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            // Note: We cant enable TX to RX feedback here since DUT would
+            //       screw us modified bits by transmitting dominant ACK!
 
             // CAN FD enabled only!
             if (canVersion == CAN_2_0_VERSION ||
@@ -92,19 +93,16 @@ class TestIso_7_8_5_2 : public test_lib::TestBase
                 return false;
             }
 
-            int upperTh = dataBitTiming.ph1 + dataBitTiming.prop + 1;
-
-            for (int i = 1; i <= dataBitTiming.sjw; i++)
+            for (int i = 1; i <= nominalBitTiming.sjw; i++)
             {
                 // CAN FD frame with bit rate shift
-                uint8_t dataByte = 0x7F;
                 FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
-                goldenFrame = new Frame(frameFlags, 0x1, &dataByte);
+                goldenFrame = new Frame(frameFlags);
                 goldenFrame->randomize();
                 testBigMessage("Test frame:");
                 goldenFrame->print();
 
-                testMessage("Testing data byte negative resynchronisation with phase error: %d", i + 1);
+                testMessage("Testing ACK negative resynchronisation with phase error: %d", i + 1);
 
                 // Convert to Bit frames
                 driverBitFrame = new BitFrame(*goldenFrame,
@@ -115,23 +113,22 @@ class TestIso_7_8_5_2 : public test_lib::TestBase
                 /**
                  * Modify test frames:
                  *   1. Turn monitor frame as if received!
-                 *   2. Shorten 6-th bit of data field by e TQ. This should be
-                 *      a bit before stuff bit. Shorten both in driver and
-                 *      monitor.
-                 *   3. Force PH2 of 7-th bit of data field to Recessive. This
-                 *      should be a stuff bit. Do it on driven frame only.
+                 *   2. Force driven ACK bit to Dominant.
+                 *   3. Shorten CRC delimiter of driven and monitored bits by e.
+                 *   4. Force Phase 2 of ACK to Recessive on driven bit!
                  */
                 monitorBitFrame->turnReceivedFrame();
+                driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
 
-                Bit *driverBeforeStuffBit = driverBitFrame->getBitOf(5, BIT_TYPE_DATA);
-                Bit *monitorBeforeStuffBit = monitorBitFrame->getBitOf(5, BIT_TYPE_DATA);
-                Bit *driverStuffBit = driverBitFrame->getBitOf(6, BIT_TYPE_DATA);
+                Bit *crcDelimiterDriver = driverBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
+                Bit *crcDelimiterMonitor = monitorBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
+                Bit *ackDriver = driverBitFrame->getBitOf(0, BIT_TYPE_ACK);
 
-                driverBeforeStuffBit->shortenPhase(PH2_PHASE, i);
-                monitorBeforeStuffBit->shortenPhase(PH2_PHASE, i);
+                crcDelimiterDriver->shortenPhase(PH2_PHASE, i);
+                crcDelimiterMonitor->shortenPhase(PH2_PHASE, i);
 
-                for (int j = 0; j < dataBitTiming.ph2; j++)
-                    driverStuffBit->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
+                for (int j = 0; j < nominalBitTiming.ph2; j++)
+                    ackDriver->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
 
                 driverBitFrame->print(true);
                 monitorBitFrame->print(true);
