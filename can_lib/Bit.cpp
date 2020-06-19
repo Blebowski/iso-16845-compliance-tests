@@ -346,22 +346,16 @@ bool can::Bit::forceTimeQuanta(int fromIndex, int toIndex, BitPhase bitPhase,
                                BitValue bitValue)
 {
     int phaseLen = getPhaseLenTimeQuanta(bitPhase);
-    if (phaseLen = 0 || phaseLen <= fromIndex)
+    if ((phaseLen == 0) || (phaseLen <= fromIndex))
         return false;
 
     int toIndexReal = toIndex;
-    if (phaseLen >= toIndex)
+    if (toIndex >= phaseLen)
         toIndexReal = phaseLen - 1;
 
-    auto timeQuantaIterator = getFirstTimeQuantaIterator(bitPhase);
-    std::advance(timeQuantaIterator, fromIndex);
-
-    int i = 0;
-    for (; i < toIndexReal - fromIndex + 1; i++)
-    {
-        timeQuantaIterator->forceValue(bitValue);
-        timeQuantaIterator++;
-    }
+    int i;
+    for (i = fromIndex; i <= toIndexReal; i++)
+        forceTimeQuanta(i, bitPhase, bitValue);
 
     return i;
 }
