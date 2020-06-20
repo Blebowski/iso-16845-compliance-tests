@@ -124,7 +124,7 @@ class TestIso_7_8_9_2 : public test_lib::TestBase
             Bit *stuffBit = driverBitFrame->getBitOf(6, BIT_TYPE_DATA);
             stuffBit->forceTimeQuanta(1, dataBitTiming.prop + dataBitTiming.ph1, DOMINANT);
 
-            driverBitFrame->insertActiveErrorFrame(driverBitFrame->getBitOf(7, BIT_TYPE_DATA));
+            driverBitFrame->insertPassiveErrorFrame(driverBitFrame->getBitOf(7, BIT_TYPE_DATA));
             monitorBitFrame->insertActiveErrorFrame(monitorBitFrame->getBitOf(7, BIT_TYPE_DATA));
 
             driverBitFrame->print(true);
