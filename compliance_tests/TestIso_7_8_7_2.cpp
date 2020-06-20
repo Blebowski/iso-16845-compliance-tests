@@ -111,10 +111,9 @@ class TestIso_7_8_7_2 : public test_lib::TestBase
             /**
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Force last e TQ of 6-th bit of data field by e TQ to
-             *      dominant. This should be a bit before stuff bit.
-             *   3. Force PH2 of 7-th bit of data field to Recessive. This
-             *      should be a stuff bit.
+             *   2. Force 2nd time quanta of 7-th data bit to Recessive.
+             *      This should be a stuff bit.
+             *   3. Force PH2 of 7-th bit of data field to Recessive. 
              */
             monitorBitFrame->turnReceivedFrame();
 

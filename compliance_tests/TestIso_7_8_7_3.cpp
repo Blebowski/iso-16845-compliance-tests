@@ -6,30 +6,31 @@
  * previously aggreed with author of this text.
  * 
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 19.6.2020
+ * @date 20.6.2020
  * 
  *****************************************************************************/
 
 /******************************************************************************
  *
- * @test ISO16845 7.8.7.1
+ * @test ISO16845 7.8.7.3
  *
  * @brief The purpose of this test is to verify that there is only one
- *        synchronization within 1 bit time if there are additional recessive
- *        to dominant edges between synchronization segment and sample point
- *        on bit position “res” bit.
+ *        synchronization within 1 bit time if there is an additional recessive
+ *        to dominant edge between synchronization segment and sample point on
+ *        bit position ACK.
  *
  * @version CAN FD Enabled
  *
  * Test variables:
  *      Sampling_Point(N) and SJW(N) configuration as available by IUT.
  *          Glitch between synchronization segment and sample point.
+ *          ACK
  *          FDF = 1
  *
  * Elementary test cases:
  *      There is one elementary test to perform for at least 1 bit rate
  *      configuration.
- *          #1 The LT forces the second TQ of “res” bit to recessive.
+ *          #1 The LT forces the second TQ of ACK bit to recessive.
  *
  *      Refer to 6.2.3.
  *
@@ -38,11 +39,11 @@
  *
  * Execution:
  *  The LT sends a frame according to elementary test cases.
- * 
- *  Additionally, the Phase_Seg2(N) of “res” bit shall be forced to recessive.
+ *
+ *  Additionally, the Phase_Seg2(N) of this ACK bit shall be forced to recessive.
  *
  * Response:
- *  The modified “res” bit shall be sampled as dominant.
+ *  The modified ACK bit shall be sampled as dominant.
  *  The frame is valid, no error flag shall occur.
  *****************************************************************************/
 
@@ -68,7 +69,7 @@
 
 using namespace can;
 
-class TestIso_7_8_7_1 : public test_lib::TestBase
+class TestIso_7_8_7_3 : public test_lib::TestBase
 {
     public:
 
@@ -78,8 +79,8 @@ class TestIso_7_8_7_1 : public test_lib::TestBase
             TestBase::run();
             testMessage("Test %s : Run Entered", testName);
 
-            // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            //Note: TX to RX feedback cant be enabled here, because dominant ACK
+            //      sent by DUT would destroy glitches inserted by LT!
 
             // CAN FD enabled only!
             if (canVersion == CAN_2_0_VERSION ||
@@ -96,7 +97,7 @@ class TestIso_7_8_7_1 : public test_lib::TestBase
             testBigMessage("Test frame:");
             goldenFrame->print();
 
-            testMessage("Glitch filtering test for positive phase error on res bit");
+            testMessage("Glitch filtering test for positive phase error on ACK bit");
 
             // Convert to Bit frames
             driverBitFrame = new BitFrame(*goldenFrame,
@@ -107,15 +108,15 @@ class TestIso_7_8_7_1 : public test_lib::TestBase
             /**
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Force second TQ of res bit to recessive.
-             *   3. Force Phase2 of res bit to recessive.
+             *   2. Force second TQ of ACK bit to Recessive.
+             *   3. Force Phase2 of ACK bit to Recessive.
              */
             monitorBitFrame->turnReceivedFrame();
 
-            // Res post EDL in model we mark r0 as in original CAN FD 1.0 by Bosch.
-            Bit *resBit = driverBitFrame->getBitOf(0, BIT_TYPE_R0);
-            resBit->forceTimeQuanta(1, RECESSIVE);
-            resBit->forceTimeQuanta(0, nominalBitTiming.ph2 - 1, PH2_PHASE, RECESSIVE);
+            Bit *ackBit = driverBitFrame->getBitOf(0, BIT_TYPE_ACK);
+            ackBit->setBitValue(DOMINANT);
+            ackBit->forceTimeQuanta(1, RECESSIVE);
+            ackBit->forceTimeQuanta(0, nominalBitTiming.ph2 - 1, PH2_PHASE, RECESSIVE);
 
             driverBitFrame->print(true);
             monitorBitFrame->print(true);
