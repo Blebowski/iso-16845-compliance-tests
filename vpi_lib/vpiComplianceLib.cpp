@@ -576,6 +576,25 @@ void canAgentDriveAllItems()
 }
 
 
+void canAgentSetWaitForMonitor(bool waitForMonitor)
+{
+    std::string vpiDataIn = "";
+    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-1>(0).to_string());
+    if (waitForMonitor)
+        vpiDataIn.append("1");
+    else
+        vpiDataIn.append("0");
+
+    simulatorChannel.readAccess = false;
+    simulatorChannel.useMsgData = false;
+    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
+    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_CMD_SET_WAIT_FOR_MONITOR);
+    simulatorChannel.vpiDataIn = vpiDataIn;
+
+    simulatorChannelProcessRequest();
+}
+
+
 void canAgentMonitorStart()
 {
     simulatorChannel.readAccess = false;

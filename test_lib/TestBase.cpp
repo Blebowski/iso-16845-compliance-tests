@@ -178,12 +178,26 @@ void test_lib::TestBase::runLowerTester(bool startDriver, bool startMonitor)
     if (startDriver)
         canAgentDriverStart();
 
-    if (startDriver)
-        canAgentDriverWaitFinish();
     if (startMonitor)
         canAgentMonitorWaitFinish();
+    if (startDriver)
+        canAgentDriverWaitFinish();
 
     testMessage("Lower tester (CAN agent) ended!");
+}
+
+
+void test_lib::TestBase::startDriverAndMonitor()
+{
+    canAgentMonitorStart();
+    canAgentDriverStart();
+}
+
+
+void test_lib::TestBase::waitForDriverAndMonitor()
+{
+    canAgentMonitorWaitFinish();
+    canAgentDriverWaitFinish();
 }
 
 

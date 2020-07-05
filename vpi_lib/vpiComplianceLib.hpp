@@ -106,6 +106,8 @@ extern "C" {
 #define VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE         (char*)"00011011"
 #define VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE        (char*)"00011100"
 
+#define VPI_CAN_AGNT_CMD_SET_WAIT_FOR_MONITOR      (char*)"00011101"
+
 /**
  * @subsection Test controller bus agent
  */
@@ -587,6 +589,13 @@ void canAgentDriveSingleItem(char vdrivenValuealue, std::chrono::nanoseconds dur
  */
 void canAgentDriveAllItems();
 
+
+/**
+ * @ingroup canAgent
+ * 
+ * @brief Configure waiting of driver for start of monitor
+ */
+void canAgentSetWaitForMonitor(bool waitForMonitor);
 
 /**
  * @ingroup canAgent

@@ -130,6 +130,16 @@ class test_lib::TestBase
         /**
          * 
          */
+        void startDriverAndMonitor(void);
+
+        /*
+         *
+         */
+        void waitForDriverAndMonitor(void);
+
+        /**
+         * 
+         */
         void checkLowerTesterResult();
 
         /**
