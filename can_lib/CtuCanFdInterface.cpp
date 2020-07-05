@@ -123,24 +123,17 @@ void can::CtuCanFdInterface::configureBitTiming(can::BitTiming nominalBitTiming,
 }
 
 
-void can::CtuCanFdInterface::sendFrame(can::Frame frame)
+void can::CtuCanFdInterface::sendFrame(can::Frame *frame)
 {
     union ctu_can_fd_frame_form_w frameFormatWord;
     union ctu_can_fd_identifier_w identifierWord;
 
-    // Do TXT Buffer rotation! Each time frame is sent, TXT Buffer is
-    // incremented by 1!
-    // We don't intend this to be thread safe, so we have no trouble in
-    // having statis variable here!
-    static int txt_buf_nr;
-    if (txt_buf_nr > 4 || txt_buf_nr < 1)
-        txt_buf_nr = 1;
-    else
-        txt_buf_nr++;
+    // Choose random TXT Buffer
+    int txtBufNr = (rand() % 4) + 1;
 
     // TXT Buffer address
     int txtBufferAddress;
-    switch (txt_buf_nr)
+    switch (txtBufNr)
     {
     case 1:
         txtBufferAddress = CTU_CAN_FD_TXTB1_DATA_1;
@@ -160,61 +153,69 @@ void can::CtuCanFdInterface::sendFrame(can::Frame frame)
 
     // Frame format word
     frameFormatWord.u32 = 0;    
-    if (frame.getFrameFlags().isFdf_ == can::CAN_FD)
+    if (frame->getFrameFlags().isFdf_ == can::CAN_FD)
         frameFormatWord.s.fdf = ctu_can_fd_frame_form_w_fdf::FD_CAN;
     else
         frameFormatWord.s.fdf = ctu_can_fd_frame_form_w_fdf::NORMAL_CAN;
 
-    if (frame.getFrameFlags().isIde_ == can::EXTENDED_IDENTIFIER)
+    if (frame->getFrameFlags().isIde_ == can::EXTENDED_IDENTIFIER)
         frameFormatWord.s.ide = ctu_can_fd_frame_form_w_ide::EXTENDED;
     else
         frameFormatWord.s.ide = ctu_can_fd_frame_form_w_ide::BASE;
 
-    if (frame.getFrameFlags().isRtr_ == can::RTR_FRAME)
+    if (frame->getFrameFlags().isRtr_ == can::RTR_FRAME)
         frameFormatWord.s.rtr = ctu_can_fd_frame_form_w_rtr::RTR_FRAME;
     else
         frameFormatWord.s.rtr = ctu_can_fd_frame_form_w_rtr::NO_RTR_FRAME;
 
-    if (frame.getFrameFlags().isBrs_ == can::BIT_RATE_SHIFT)
+    if (frame->getFrameFlags().isBrs_ == can::BIT_RATE_SHIFT)
         frameFormatWord.s.brs = ctu_can_fd_frame_form_w_brs::BR_SHIFT;
     else
         frameFormatWord.s.brs = ctu_can_fd_frame_form_w_brs::BR_NO_SHIFT;
 
-    if (frame.getFrameFlags().isEsi_ == can::ESI_ERROR_ACTIVE)
+    if (frame->getFrameFlags().isEsi_ == can::ESI_ERROR_ACTIVE)
         frameFormatWord.s.esi_rsv = ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_ACTIVE;
     else
         frameFormatWord.s.esi_rsv = ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_PASIVE;
 
-    frameFormatWord.s.dlc = frame.getDlc();
+    frameFormatWord.s.dlc = frame->getDlc();
 
     // Identifier word
     identifierWord.u32 = 0;
 
-    if (frame.getFrameFlags().isIde_ == can::EXTENDED_IDENTIFIER)
+    if (frame->getFrameFlags().isIde_ == can::EXTENDED_IDENTIFIER)
     {
         identifierWord.s.identifier_base =
-            (((uint32_t)frame.getIdentifier()) >> 18) & 0x7FF;
+            (((uint32_t)frame->getIdentifier()) >> 18) & 0x7FF;
         identifierWord.s.identifier_ext =
-            ((uint32_t)frame.getIdentifier()) & 0x3FFFF;
+            ((uint32_t)frame->getIdentifier()) & 0x3FFFF;
     } else {
         identifierWord.s.identifier_base =
-            ((uint32_t)frame.getIdentifier() & 0x7FF);
+            ((uint32_t)frame->getIdentifier() & 0x7FF);
         identifierWord.s.identifier_ext = 0;
     }
 
     // Write first 4 words to TXT Buffer. Timestamp 0 -> send immediately!
-    memBusAgentWrite32(txtBufferAddress++, frameFormatWord.u32);
-    memBusAgentWrite32(txtBufferAddress++, identifierWord.u32);
-    memBusAgentWrite32(txtBufferAddress++, 0);
-    memBusAgentWrite32(txtBufferAddress++, 0);
+    memBusAgentWrite32(txtBufferAddress, frameFormatWord.u32);
+    memBusAgentWrite32(txtBufferAddress + 0x4, identifierWord.u32);
+    memBusAgentWrite32(txtBufferAddress + 0x8, 0);
+    memBusAgentWrite32(txtBufferAddress + 0xC, 0);
+    txtBufferAddress += 0x10;
 
-    for (int i = 0; i < frame.getDataLenght() / 4; i++)
+    int numDataWords = (frame->getDataLenght() - 1) / 4 + 1;
+    std::cout << "FRAME DATA LENGTH: " << frame->getDataLenght();
+
+    for (int i = 0; i < numDataWords; i++)
     {
         uint32_t dataWrd = 0;
         for (int j = 0; j < 4; j++)
-            dataWrd |= (frame.getData(i * 4 + j)) << (j * 8);
-        memBusAgentWrite32(txtBufferAddress++, dataWrd);
+            dataWrd |= (frame->getData(i * 4 + j)) << (j * 8);
+        memBusAgentWrite32(txtBufferAddress, dataWrd);
+        txtBufferAddress += 0x4;
     }
+
+    // Give command to chosen buffer
+    memBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txtBufNr + 7)));
 }
 
 

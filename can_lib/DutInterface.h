@@ -55,7 +55,7 @@ class can::DutInterface
         /**
          * 
          */
-        virtual void sendFrame(Frame frame) = 0;
+        virtual void sendFrame(Frame *frame) = 0;
 
         /**
          * 
