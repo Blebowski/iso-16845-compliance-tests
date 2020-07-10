@@ -150,6 +150,14 @@ void can::BitFrame::appendBit(BitType bitType, BitValue bitValue)
                         dataBitTiming));
 }
 
+
+void can::BitFrame::appendBitFrame(can::BitFrame *bitFrame)
+{
+    for (int i = 0; i < bitFrame->getBitCount(); i++)
+        bits_.push_back(*bitFrame->getBit(i));
+}
+
+
 void can::BitFrame::clearFrameBits()
 {
     bits_.clear();

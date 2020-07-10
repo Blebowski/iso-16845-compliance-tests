@@ -170,6 +170,11 @@ class can::BitFrame : public Frame {
         /**
          * 
          */
+        void appendBitFrame(can::BitFrame *bitFrame);
+
+        /**
+         * 
+         */
         void print(bool printStuffBits);
 
         /**
