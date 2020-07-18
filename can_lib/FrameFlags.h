@@ -45,6 +45,7 @@ class can::FrameFlags
         FrameFlags(ExtendedIdentifier isIde);
         FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs);
         FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs, ErrorStateIndicator isEsi);
+        FrameFlags(FlexibleDataRate isFdf, ErrorStateIndicator isEsi);
 
         void randomize();
         void randomizeEnableAll();

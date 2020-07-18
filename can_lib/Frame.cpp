@@ -273,6 +273,7 @@ void can::Frame::print()
     else
         std::cout << "RTR: " << frameFlags_.isRtr_ << std::endl;
     printf("DLC: 0x%x\n", dlc_);
+    printf("ESI: 0x%x\n", frameFlags_.isEsi_);
     std::cout << "Data field length: " << dataLenght_ << std::endl;
     printf("Identifier: 0x%x\n", identifier_);
 
