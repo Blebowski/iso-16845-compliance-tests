@@ -160,27 +160,34 @@ class TestIso_8_1_6 : public test_lib::TestBase
                             0x78, 0x41F, 0x47F, 0x758, 0x777, 0x7EF
                         };
 
-                        goldenFrame = new Frame(frameFlags, dlcs[j], ids[i], data[i]);
+                        goldenFrame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
 
                     // CAN FD enabled part
                     } else {
                         
                         // Flags based on elementary test
-                        if (i == 0 || i == 1 || i == 6 || i == 7 || i == 8) {
+                        if (j == 0 || j == 1 || j == 6 || j == 7 || j == 8) {
                             frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME,
                                                     BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
-                        } else if (i == 2) {
+                        } else if (j == 2) {
                             frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME,
                                                     BIT_RATE_SHIFT, ESI_ERROR_PASSIVE);
-                        } else if (i == 3) {
+                        } else if (j == 3) {
                             frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME,
                                                     BIT_RATE_DONT_SHIFT, ESI_ERROR_PASSIVE);
-                        } else if (i == 4 || i == 5) {
+                        } else if (j == 4 || j == 5) {
                             frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME,
                                                     BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
                         } else { // last is random
                             frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME);
                         }
+
+                        // DUT must be set to error passive state when ESI_ERROR_PASSIVE
+                        // is expected! Otherwise, it would transmitt ESI_ERROR_ACTIVE
+                        if (j == 2 || j == 3)
+                            dutIfc->setErrorState(ERROR_PASSIVE);
+                        else
+                            dutIfc->setErrorState(ERROR_ACTIVE);
 
                         int ids[] = {
                             0x78, 0x47C, 0x41E, 0x20F, 0x107,
@@ -284,7 +291,7 @@ class TestIso_8_1_6 : public test_lib::TestBase
                         uint8_t dlcs[] = {
                             0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, (uint8_t)(rand() % 0xF)
                         };
-                        goldenFrame = new Frame(frameFlags, dlcs[j], ids[i], data[i]);
+                        goldenFrame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
                     }
 
                     testBigMessage("Test frame:");
