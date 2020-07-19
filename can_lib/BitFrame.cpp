@@ -104,7 +104,7 @@ uint32_t can::BitFrame::getBaseIdentifier()
 uint32_t can::BitFrame::getIdentifierExtension()
 {
     if (frameFlags_.isIde_ == EXTENDED_IDENTIFIER)
-        return (uint32_t)(getIdentifier()) & 0x3FFF;
+        return (uint32_t)(getIdentifier()) & 0x3FFFF;
     else
         return 0;
 }
