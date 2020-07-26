@@ -149,6 +149,19 @@ can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ErrorStateIndicator isEsi)
 }
 
 
+can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
+                            ErrorStateIndicator isEsi)
+{
+    isFdf_ = isFdf;
+    isEsi_ = isEsi;
+    isIde_ = isIde;
+
+    randomizeEnableAll();
+    randomizeFdf = false;
+    randomizeEsi = false;
+    randomizeIde = false;
+}
+
 bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
 {
     if (lhs.isBrs_ != rhs.isBrs_)
