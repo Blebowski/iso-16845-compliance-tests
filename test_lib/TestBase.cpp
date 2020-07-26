@@ -95,6 +95,7 @@ int test_lib::TestBase::run()
     testMessage("Configuring DUT");
     this->dutIfc->reset();
     this->dutIfc->configureBitTiming(this->nominalBitTiming, this->dataBitTiming);
+    this->dutIfc->configureSsp(can::SSP_DISABLED, 0);
     this->dutIfc->setCanVersion(this->canVersion);
 
     testMessage("Enabling DUT");
