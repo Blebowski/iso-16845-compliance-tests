@@ -123,6 +123,23 @@ void can::CtuCanFdInterface::configureBitTiming(can::BitTiming nominalBitTiming,
 }
 
 
+void can::CtuCanFdInterface::configureSsp(SspType sspType, int sspOffset)
+{
+    union ctu_can_fd_trv_delay_ssp_cfg sspCfg;
+    sspCfg.u32 = 0;
+
+    if (sspType == SspType::SSP_DISABLED)
+        sspCfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_NO_SSP;
+    else if (sspType == SspType::SSP_MEAS_AND_OFFSET)
+        sspCfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_MEAS_N_OFFSET;
+    else if (sspType == SspType::SSP_OFFSET)
+        sspCfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_OFFSET;
+
+    sspCfg.s.ssp_offset = sspOffset;
+    memBusAgentWrite32(CTU_CAN_FD_TRV_DELAY, sspCfg.u32);
+}
+
+
 void can::CtuCanFdInterface::sendFrame(can::Frame *frame)
 {
     union ctu_can_fd_frame_form_w frameFormatWord;

@@ -52,6 +52,11 @@ class can::DutInterface
         virtual void configureBitTiming(BitTiming nominalBitTiming,
                                         BitTiming dataBitTiming) = 0;
 
+        /*
+         *
+         */
+        virtual void configureSsp(SspType sspType, int sspOffset) = 0;
+
         /**
          * 
          */

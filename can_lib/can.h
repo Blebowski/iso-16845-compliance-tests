@@ -118,6 +118,12 @@ namespace can {
         BUS_OFF
     };
 
+    enum SspType {
+        SSP_DISABLED,           // Secondary sample point disabled
+        SSP_OFFSET,             // Offset only
+        SSP_MEAS_AND_OFFSET     // Measured value + offset
+    };
+
     enum CanVersion
     {
         CAN_2_0_VERSION,

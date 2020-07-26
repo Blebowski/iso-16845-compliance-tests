@@ -33,6 +33,7 @@ class can::CtuCanFdInterface : public can::DutInterface
         bool setCanVersion(CanVersion canVersion);
         void configureBitTiming(can::BitTiming nominalBitTiming,
                                 can::BitTiming dataBitTiming);
+        void configureSsp(SspType sspType, int sspOffset);
         void sendFrame(can::Frame *frame);
         can::Frame readFrame();
         bool hasRxFrame();
