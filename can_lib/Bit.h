@@ -234,7 +234,7 @@ class can::Bit {
             {BIT_TYPE_IDLE, "Idle"},
             {BIT_TYPE_SUSPEND, "Suspend"},
             {BIT_TYPE_ACTIVE_ERROR_FLAG, "Active Error flag"},
-            {BIT_TYPE_PASSIVE_ERROR_FLAG, "Passive Error flas"},
+            {BIT_TYPE_PASSIVE_ERROR_FLAG, "Passive Error flag"},
             {BIT_TYPE_ERROR_DELIMITER, "Error delimiter"},
             {BIT_TYPE_OVERLOAD_FLAG, "Overload flag"},
             {BIT_TYPE_OVERLOAD_DELIMITER, "Overload delimiter"}
