@@ -123,6 +123,7 @@
 
 #include "../compliance_tests/TestIso_8_4_1.cpp"
 #include "../compliance_tests/TestIso_8_4_2.cpp"
+#include "../compliance_tests/TestIso_8_4_3.cpp"
 
 /******************************************************************************
  *****************************************************************************/
@@ -331,7 +332,9 @@ test_lib::TestBase* constructTestObject(std::string name)
         testPtr = new TestIso_8_4_1();
     } else if (name == "iso_8_4_2") {
         testPtr = new TestIso_8_4_2();
-        
+    } else if (name == "iso_8_4_3") {
+        testPtr = new TestIso_8_4_3();
+
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
     }
