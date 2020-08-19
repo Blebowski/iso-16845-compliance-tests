@@ -17,7 +17,6 @@
 #include "TimeQuanta.h"
 #include "Bit.h"
 
-
 can::Bit::Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
               BitTiming* nominalBitTiming, BitTiming* dataBitTiming)
 {

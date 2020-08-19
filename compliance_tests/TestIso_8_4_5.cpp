@@ -6,17 +6,16 @@
  * previously aggreed with author of this text.
  * 
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 15.8.2020
+ * @date 19.8.2020
  * 
  *****************************************************************************/
 
 /******************************************************************************
  *
- * @test ISO16845 8.4.4
+ * @test ISO16845 8.4.5
  *
- * @brief This test verifies that an IUT acting as a transmitter detects a bit
- *        error when one of the 6 dominant bits of the overload flag it
- *        transmits is forced to recessive state by LT.
+ * @brief This test verifies that an IUT acting as a transmitter detects a
+ *        form error when it receives an invalid overload delimiter.
  *
  * @version Classical CAN, CAN FD tolerant, CAN FD enabled
  *
@@ -27,14 +26,11 @@
  *          FDF = 1
  *
  * Elementary test cases:
- *      For OPEN devices, the identifier shall start with 4 dominant bits.
- *      For a SPECIFIC device which cannot send such an identifier, any other
- *      value may be used.
  * 
  *      Elementary tests to perform:
- *          #1 corrupting the first bit of the overload flag;
- *          #2 corrupting the second bit of the overload flag;
- *          #3 corrupting the sixth bit of the overload flag.
+ *          #1 corrupting the second bit of the overload delimiter.
+ *          #2 corrupting the fourth bit of the overload delimiter.
+ *          #3 corrupting the seventh bit of the overload delimiter.
  * 
  * Setup:
  *  The IUT is left in the default state.
@@ -42,8 +38,7 @@
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  Then, the LT causes the IUT to generate an overload frame.
- *  Then, the LT corrupts one of the 6 dominant bits of the overload flag to
- *  the recessive state according to elementary test cases.
+ *  The LT corrupts the overload delimiter according to elementary test cases.
  * 
  * Response:
  *  The IUT shall generate an error frame starting at the bit position after
@@ -72,7 +67,7 @@
 
 using namespace can;
 
-class TestIso_8_4_4 : public test_lib::TestBase
+class TestIso_8_4_5 : public test_lib::TestBase
 {
     public:
 
@@ -89,9 +84,7 @@ class TestIso_8_4_4 : public test_lib::TestBase
             // Configure driver to wait for monitor so that LT sends ACK in right moment.
             canAgentSetWaitForMonitor(true);
 
-            /* Dont enable TX to RX feedback beacuse we need to force Dominant
-             * overload flag to be received as Recessive!
-             */
+            canAgentConfigureTxToRxFeedback(true);
 
             int iterCnt;
 
@@ -130,15 +123,20 @@ class TestIso_8_4_4 : public test_lib::TestBase
                     monitorBitFrame = new BitFrame(*goldenFrame,
                         &this->nominalBitTiming, &this->dataBitTiming);
 
+                    BitFrame *secondDriverBitFrame = new BitFrame(*goldenFrame,
+                        &this->nominalBitTiming, &this->dataBitTiming);
+                    BitFrame *secondMonitorBitFrame = new BitFrame(*goldenFrame,
+                        &this->nominalBitTiming, &this->dataBitTiming);
+
                     /**
                      * Modify test frames:
-                     *  1. Force ACK low in driven frame (TX/RX feedback not enabled!)
+                     *  1. Turn driven frame as received.
                      *  2. Force first bit of Intermission to Dominant.
                      *     (Overload condition)
                      *  3. Insert Overload frame from second bit of Intermission to
                      *     monitored frame.
-                     *  4. Force 1, 2, 6-th bit of Overload flag to Recessive.
-                     *  5. Insert Active Error frame from next bit to driven frame.
+                     *  4. Force 2, 4, 7-th bit of Overload delimiter to Dominant.
+                     *  5. Insert Passive Error frame from next bit to driven frame.
                      *     Insert Active Error frame to monitored frame.
                      *
                      *  Note: Don't insert retransmitted frame after first frame, since
@@ -148,7 +146,7 @@ class TestIso_8_4_4 : public test_lib::TestBase
                      *        valid according to spec. since for transmitter frame
                      *        vaidation shall occur at the end of EOF!
                      */
-                    driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
+                    driverBitFrame->turnReceivedFrame();
 
                     Bit *firstIntermissionBit = driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION);
                     firstIntermissionBit->setBitValue(DOMINANT);
@@ -160,17 +158,17 @@ class TestIso_8_4_4 : public test_lib::TestBase
 
                     Bit *bitToCorrupt;
                     if (j == 0){
-                        bitToCorrupt = driverBitFrame->getBitOf(0, BIT_TYPE_OVERLOAD_FLAG);
+                        bitToCorrupt = driverBitFrame->getBitOf(1, BIT_TYPE_OVERLOAD_DELIMITER);
                     } else if (j == 1){
-                        bitToCorrupt = driverBitFrame->getBitOf(1, BIT_TYPE_OVERLOAD_FLAG);
+                        bitToCorrupt = driverBitFrame->getBitOf(3, BIT_TYPE_OVERLOAD_DELIMITER);
                     } else {
-                        bitToCorrupt = driverBitFrame->getBitOf(5, BIT_TYPE_OVERLOAD_FLAG);
+                        bitToCorrupt = driverBitFrame->getBitOf(6, BIT_TYPE_OVERLOAD_DELIMITER);
                     }
 
                     int bitIndex = driverBitFrame->getBitIndex(bitToCorrupt);
-                    bitToCorrupt->setBitValue(RECESSIVE);
+                    bitToCorrupt->setBitValue(DOMINANT);
 
-                    driverBitFrame->insertActiveErrorFrame(bitIndex + 1);
+                    driverBitFrame->insertPassiveErrorFrame(bitIndex + 1);
                     monitorBitFrame->insertActiveErrorFrame(bitIndex + 1);
 
                     driverBitFrame->print(true);
@@ -188,6 +186,8 @@ class TestIso_8_4_4 : public test_lib::TestBase
                     checkLowerTesterResult();
 
                     deleteCommonObjects();
+                    delete secondDriverBitFrame;
+                    delete secondMonitorBitFrame;
                 }
             }
 
