@@ -18,52 +18,26 @@
 
 
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sampleRate)
+                                   std::chrono::nanoseconds sample_rate)
 {
     this->duration = duration;
-    this->sampleRate = sampleRate;
+    this->sample_rate = sample_rate;
     this->value = value;
     this->message = std::string();
-    this->loggerSeverity = LoggerSeverity::WARNING;
 }
 
 
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sampleRate, std::string message)
+                                   std::chrono::nanoseconds sample_rate, std::string message)
 {
     this->duration = duration;
-    this->sampleRate = sampleRate;
+    this->sample_rate = sample_rate;
     this->value = value;
     this->message = message;
-    this->loggerSeverity = LoggerSeverity::WARNING;
 }
 
 
-test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sampleRate,
-                                   LoggerSeverity loggerSeverity)
-{
-    this->duration = duration;
-    this->sampleRate = sampleRate;
-    this->value = value;
-    this->message = std::string();
-    this->loggerSeverity = loggerSeverity;
-}
-
-
-test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sampleRate, std::string message,
-                                   LoggerSeverity loggerSeverity)
-{
-    this->duration = duration;
-    this->sampleRate = sampleRate;
-    this->value = value;
-    this->message = message;
-    this->loggerSeverity = loggerSeverity;
-}
-
-
-bool test_lib::MonitorItem::hasMessage()
+bool test_lib::MonitorItem::HasMessage()
 {
     if (message.size() > 0)
         return true;
@@ -71,10 +45,10 @@ bool test_lib::MonitorItem::hasMessage()
 }
 
 
-void test_lib::MonitorItem::print()
+void test_lib::MonitorItem::Print()
 {
-    if (hasMessage() == true)
+    if (HasMessage())
         std::cout << message << std::endl;
-    std::cout << "Value:    " << value << std::endl;
+    std::cout << "Value:    " << (char)value << std::endl;
     std::cout << "Duration: " << duration.count() << " ns" << std::endl;
 }

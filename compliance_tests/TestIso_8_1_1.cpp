@@ -78,20 +78,20 @@ class TestIso_8_1_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Start monitoring when DUT starts transmitting!
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_TX_FALLING);
+            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
 
             // Configure driver to wait for monitor so that LT sends ACK in right moment.
-            canAgentSetWaitForMonitor(true);
+            CanAgentSetWaitForMonitor(true);
 
             // Enable TX/RX feedback so that DUT will see its own transmitted frame!
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             int identifiers[5] = {
                 0x555,
@@ -106,45 +106,46 @@ class TestIso_8_1_1 : public test_lib::TestBase
                 for (int id = 0; id < 5; id++)
                 {
                     // CAN 2.0 Frame, Base ID only, Data frame
-                    FrameFlags frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER, DATA_FRAME);
-                    goldenFrame = new Frame(frameFlags, dlc, identifiers[id]);
-                    goldenFrame->randomize();
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
+                    FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base,
+                                                       RtrFlag::DataFrame);
+                    golden_frame = new Frame(frameFlags, dlc, identifiers[id]);
+                    golden_frame->Randomize();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
 
                     // Convert to Bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driver_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
 
                     /**
                      * Modify test frames:
                      *   1. Turn driven frame as if received (insert ACK).
                      */
-                    driverBitFrame->turnReceivedFrame();
+                    driver_bit_frame->TurnReceivedFrame();
                     
-                    driverBitFrame->print(true);
-                    monitorBitFrame->print(true);
+                    driver_bit_frame->Print(true);
+                    monitor_bit_frame->Print(true);
 
                     // Push frames to Lower tester, insert to DUT, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    startDriverAndMonitor();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    StartDriverAndMonitor();
 
-                    testMessage("Sending frame via DUT!");
-                    this->dutIfc->sendFrame(goldenFrame);
-                    testMessage("Sent frame via DUT!");
+                    TestMessage("Sending frame via DUT!");
+                    this->dut_ifc->SendFrame(golden_frame);
+                    TestMessage("Sent frame via DUT!");
                     
-                    waitForDriverAndMonitor();
-                    checkLowerTesterResult();
+                    WaitForDriverAndMonitor();
+                    CheckLowerTesterResult();
 
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

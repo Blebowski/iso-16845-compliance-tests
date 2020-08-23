@@ -23,126 +23,126 @@ extern "C" {
 }
 
 
-SimulatorChannel simulatorChannel =
+SimulatorChannel simulator_channel =
 {
     .fsm = ATOMIC_VAR_INIT(SIM_CHANNEL_FREE),
 
-    .vpiDest = "",
-    .vpiCmd = "",
-    .vpiDataIn = "",
-    .vpiDataIn2 = "",
-    .vpiDataOut = "",
-    .vpiMessageData = "",
+    .vpi_dest = "",
+    .vpi_cmd = "",
+    .vpi_data_in = "",
+    .vpi_data_in_2 = "",
+    .vpi_data_out = "",
+    .vpi_message_data = "",
 
-    .readAccess = ATOMIC_VAR_INIT(false),
-    .useMsgData = ATOMIC_VAR_INIT(false),
+    .read_access = ATOMIC_VAR_INIT(false),
+    .use_msg_data = ATOMIC_VAR_INIT(false),
 
     .req = ATOMIC_VAR_INIT(false),
 };
 
 
-void simulatorChannelStartRequest()
+void SimulatorChannelStartRequest()
 {
     std::atomic_thread_fence(std::memory_order_seq_cst);
-    simulatorChannel.req.store(true);
+    simulator_channel.req.store(true);
 }
 
 
-void simulatorChannelWaitRequestDone()
+void SimulatorChannelWaitRequestDone()
 {
     std::atomic_thread_fence(std::memory_order_seq_cst);
-    while(simulatorChannel.req.load())
+    while(simulator_channel.req.load())
         usleep(100);
 }
 
 
-void simulatorChannelProcessRequest()
+void SimulatorChannelProcessRequest()
 {
-    simulatorChannelStartRequest();
-    simulatorChannelWaitRequestDone();
+    SimulatorChannelStartRequest();
+    SimulatorChannelWaitRequestDone();
 }
 
 
-bool simulatorChannelIsRequestPending()
+bool SimulatorChannelIsRequestPending()
 {
-    return simulatorChannel.req.load();
+    return simulator_channel.req.load();
 }
 
 
-void simulatorChannelClearRequest()
+void SimulatorChannelClearRequest()
 {
-    simulatorChannel.req.store(false);
+    simulator_channel.req.store(false);
 }
 
 
-void processVpiClkCallback()
+void ProcessVpiClkCallback()
 {
     std::atomic<bool> req;
-    char vpiReadData[VPI_DBUF_SIZE];
-    char vpiAck[128];
+    char vpi_read_data[VPI_DBUF_SIZE];
+    char vpi_ack[128];
 
     // Check if there is hanging request on SimulatorChannel!
     std::atomic_thread_fence(std::memory_order_seq_cst);
-    req.store(simulatorChannelIsRequestPending());
+    req.store(SimulatorChannelIsRequestPending());
     std::atomic_thread_fence(std::memory_order_seq_cst);
 
     //
     // Callback cannot poll on VPI hanshake since it is blocking for digital
     // simulator! Therefore Callback is processed as automata!
     //
-    switch (simulatorChannel.fsm.load())
+    switch (simulator_channel.fsm.load())
     {
         case SIM_CHANNEL_FREE:
             if (req.load())
             {
-                vpi_drive_str_value(VPI_SIGNAL_DEST, (char*)simulatorChannel.vpiDest.c_str());
-                vpi_drive_str_value(VPI_SIGNAL_CMD, (char*)simulatorChannel.vpiCmd.c_str());
-                vpi_drive_str_value(VPI_SIGNAL_DATA_IN, (char*)simulatorChannel.vpiDataIn.c_str());
-                vpi_drive_str_value(VPI_SIGNAL_DATA_IN_2, (char *)simulatorChannel.vpiDataIn2.c_str());
-                if (simulatorChannel.useMsgData)
+                vpi_drive_str_value(VPI_SIGNAL_DEST, (char*)simulator_channel.vpi_dest.c_str());
+                vpi_drive_str_value(VPI_SIGNAL_CMD, (char*)simulator_channel.vpi_cmd.c_str());
+                vpi_drive_str_value(VPI_SIGNAL_DATA_IN, (char*)simulator_channel.vpi_data_in.c_str());
+                vpi_drive_str_value(VPI_SIGNAL_DATA_IN_2, (char *)simulator_channel.vpi_data_in_2.c_str());
+                if (simulator_channel.use_msg_data)
                 {
                     std::string vector = "";
-                    for (int i = 0; i < simulatorChannel.vpiMessageData.length(); i++)
-                        vector.append(std::bitset<8>(simulatorChannel.vpiMessageData.at(i)).to_string());
+                    for (int i = 0; i < simulator_channel.vpi_message_data.length(); i++)
+                        vector.append(std::bitset<8>(simulator_channel.vpi_message_data.at(i)).to_string());
 
                     vpi_drive_str_value(VPI_STR_BUF_IN, (char *)vector.c_str());
                 }
 
                 std::atomic_thread_fence(std::memory_order_acquire);
                 vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "1");
-                simulatorChannel.fsm.store(SIM_CHANNEL_REQ_UP);
+                simulator_channel.fsm.store(SIM_CHANNEL_REQ_UP);
                 std::atomic_thread_fence(std::memory_order_acquire);
             }
             break;
 
         case SIM_CHANNEL_REQ_UP:
-            memset(vpiAck, 0, sizeof(vpiAck));
-            vpi_read_str_value(VPI_SIGNAL_ACK, vpiAck);
+            memset(vpi_ack, 0, sizeof(vpi_ack));
+            vpi_read_str_value(VPI_SIGNAL_ACK, vpi_ack);
             
-            if (strcmp(vpiAck, "1"))
+            if (strcmp(vpi_ack, "1"))
                 return;
             
             // Copy back read data for read access
-            if (simulatorChannel.readAccess)
+            if (simulator_channel.read_access)
             {
-                vpi_read_str_value(VPI_SIGNAL_DATA_OUT, vpiReadData);
-                simulatorChannel.vpiDataOut = std::string(vpiReadData);
+                vpi_read_str_value(VPI_SIGNAL_DATA_OUT, vpi_read_data);
+                simulator_channel.vpi_data_out = std::string(vpi_read_data);
             }
             vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "0");
-            simulatorChannel.fsm.store(SIM_CHANNEL_ACK_UP);
+            simulator_channel.fsm.store(SIM_CHANNEL_ACK_UP);
             std::atomic_thread_fence(std::memory_order_acquire);
             break;
 
         case SIM_CHANNEL_ACK_UP:
-            memset(vpiAck, 0, sizeof(vpiAck));
+            memset(vpi_ack, 0, sizeof(vpi_ack));
 
-            vpi_read_str_value(VPI_SIGNAL_ACK, vpiAck);
-            if (strcmp(vpiAck, (char*) "0"))
+            vpi_read_str_value(VPI_SIGNAL_ACK, vpi_ack);
+            if (strcmp(vpi_ack, (char*) "0"))
                 return;
             vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "0");
-            simulatorChannel.fsm.store(SIM_CHANNEL_FREE);
+            simulator_channel.fsm.store(SIM_CHANNEL_FREE);
             std::atomic_thread_fence(std::memory_order_acquire);
-            simulatorChannelClearRequest();
+            SimulatorChannelClearRequest();
             std::atomic_thread_fence(std::memory_order_acquire);
             break;
 

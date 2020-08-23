@@ -75,37 +75,38 @@ class TestIso_7_8_8_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
             // CAN FD frame with bit rate shift, ESI = 0
-            FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
-            goldenFrame = new Frame(frameFlags);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
+                                                EsiFlag::ErrorActive);
+            golden_frame = new Frame(frameFlags);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
-            testMessage("Glitch filtering test for negative phase error on ESI bit");
+            TestMessage("Glitch filtering test for negative phase error on ESI bit");
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -114,39 +115,40 @@ class TestIso_7_8_8_1 : public test_lib::TestBase
              *   3. Force 2nd TQ of ESI to Recessive.
              *   4. Force Phase 2 of ESI to Recessive.
              */
-            monitorBitFrame->turnReceivedFrame();
+            monitor_bit_frame->TurnReceivedFrame();
 
-            Bit *brsBit = driverBitFrame->getBitOf(0, BIT_TYPE_BRS);
-            Bit *brsBitMonitor = monitorBitFrame->getBitOf(0, BIT_TYPE_BRS);
-            Bit *esiBit = driverBitFrame->getBitOf(0, BIT_TYPE_ESI);
+            Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
+            Bit *brsBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Brs);
+            Bit *esiBit = driver_bit_frame->GetBitOf(0, BitType::Esi);
             
-            brsBit->shortenPhase(PH2_PHASE, 1);
-            brsBitMonitor->shortenPhase(PH2_PHASE, 1);
+            brsBit->ShortenPhase(BitPhase::Ph2, 1);
+            brsBitMonitor->ShortenPhase(BitPhase::Ph2, 1);
 
-            esiBit->forceTimeQuanta(1, RECESSIVE);
-            esiBit->forceTimeQuanta(0, dataBitTiming.ph2 - 1, PH2_PHASE, RECESSIVE);
+            esiBit->ForceTimeQuanta(1, BitValue::Recessive);
+            esiBit->ForceTimeQuanta(0, data_bit_timing.ph2_ - 1, BitPhase::Ph2,
+                                    BitValue::Recessive);
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            runLowerTester(true, true);
-            checkLowerTesterResult();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
             // Read received frame from DUT and compare with sent frame
-            Frame readFrame = this->dutIfc->readFrame();
-            if (compareFrames(*goldenFrame, readFrame) == false)
+            Frame readFrame = this->dut_ifc->ReadFrame();
+            if (CompareFrames(*golden_frame, readFrame) == false)
             {
-                testResult = false;
-                testControllerAgentEndTest(testResult);
+                test_result = false;
+                TestControllerAgentEndTest(test_result);
             }
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

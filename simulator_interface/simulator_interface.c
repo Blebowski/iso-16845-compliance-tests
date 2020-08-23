@@ -17,14 +17,14 @@
 #include "../vpi_lib/vpi_user.h"
 #include "../vpi_lib/vpi_utils.h"
 
-// Test information shared with test thread
-char testName[128];
+/* Test information shared with test thread */
+char test_name[128];
 
 /**
  * Function imported from C++
  */
-void runCppTest(char* testName);
-void processVpiClkCallback();
+void RunCppTest(char* test_name);
+void ProcessVpiClkCallback();
 
 
 /**
@@ -37,7 +37,6 @@ s_cb_data vpi_clk_cb_struct;
 
 /**
  * Register hook on signal which gives away control to SW part of TB!
- * TODO: Describe more!!
  */
 void sw_control_req_callback(struct t_cb_data*cb)
 {
@@ -50,7 +49,7 @@ void sw_control_req_callback(struct t_cb_data*cb)
      * converting each character to ASCII bit vector */
     char testNameBinary[1024];
     memset(testNameBinary, 0, sizeof(testNameBinary));
-    memset(testName, 0, sizeof(testName));
+    memset(test_name, 0, sizeof(test_name));
     vpi_read_str_value(VPI_SIGNAL_TEST_NAME_ARRAY, &(testNameBinary[0]));
     for (int i = 0; i < strlen(testNameBinary); i += 8)
     {
@@ -58,25 +57,26 @@ void sw_control_req_callback(struct t_cb_data*cb)
         for (int j = 0; j < 8; j++)
             if (testNameBinary[i + j] == '1')
                 letter |= 0x1 << (7 - j);
-        testName[i / 8] = letter;
+        test_name[i / 8] = letter;
     }
-    vpi_printf("%s Test name fetched from TB: \033[1;31m%s\n\033[0m", VPI_TAG, testName);
+    vpi_printf("%s Test name fetched from TB: \033[1;31m%s\n\033[0m", VPI_TAG, test_name);
 
-    runCppTest(testName);
+    RunCppTest(test_name);
 }
 
 
 /**
- * 
+ * VPI clock callback. Called regularly from TB upon VPI clock which is internally
+ * generated. Processes request from Test thread. Called in simulator context.
  */
 void vpi_clk_callback(struct t_cb_data*cb)
 {
-    processVpiClkCallback();
+    ProcessVpiClkCallback();
 }
 
 
 /**
- * 
+ * Registers callback for control transfer to SW test.
  */
 int register_start_of_sim_cb()
 {
@@ -90,8 +90,11 @@ int register_start_of_sim_cb()
         return -1;
     }
 
-    // This function should be called only once, it should not matter we make
-    // the callback declarations static here!
+    /* 
+     * This function should be called only once, it should not matter we make
+     * the callback declarations static here!
+     * TODO: Why is it static?
+     */
     static s_vpi_time timeStruct = {vpiSimTime};
     static s_vpi_value valueStruct = {vpiBinStrVal};
     static s_cb_data cbDataStruct;
@@ -112,7 +115,9 @@ int register_start_of_sim_cb()
     return 0;
 }
 
-
+/**
+ * Registers VPI clock callback.
+ */
 int register_vpi_clk_cb()
 {
     vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
@@ -153,8 +158,7 @@ int register_vpi_clk_cb()
 
 
 /**
- * Register hook on signal which gives away control to SW part of TB!
- * TODO: Describe more!!
+ * Callback upon start of simulation.
  */
 void vpi_start_of_sim(){
 
@@ -175,8 +179,7 @@ void vpi_start_of_sim(){
 
 
 /**
- * Initial callback registration
- * TODO: Describe more!!
+ * Called by simulator upon entrance to simulation (registers all handles)
  */
 void handleRegister()
 {

@@ -67,21 +67,21 @@ class TestIso_7_3_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
              ****************************************************************/
 
             int iterCnt;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
             uint8_t dataByte = 0x80;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -90,29 +90,29 @@ class TestIso_7_3_1 : public test_lib::TestBase
             {
                 if (i == 0)
                 {
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                 } else {
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                 }
 
                 for (int j = 0; j < 3; j++)
                 {
                     // CAN 2.0 / CAN FD, DLC = 1, DATA Frame, Data byte = 0x01
                     // randomize Identifier 
-                    FrameFlags frameFlags = FrameFlags(dataRate, DATA_FRAME);
-                    goldenFrame = new Frame(frameFlags, 1, &dataByte);
-                    goldenFrame->randomize();
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
-                    testMessage("Prolonging Active Error flag by: %d", (3 * j) + 1);
+                    FrameFlags frameFlags = FrameFlags(dataRate, RtrFlag::DataFrame);
+                    golden_frame = new Frame(frameFlags, 1, &dataByte);
+                    golden_frame->Randomize();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
+                    TestMessage("Prolonging Active Error flag by: %d", (3 * j) + 1);
 
                     // Convert to Bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driver_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
 
                     /**
                      * Modify test frames:
@@ -123,13 +123,13 @@ class TestIso_7_3_1 : public test_lib::TestBase
                      *   4. Prolong Active error flag by 1,4,7 bits respectively.
                      *      Prolong Monitored error delimier by 1,4,7 Recessive bits!
                      */
-                    monitorBitFrame->turnReceivedFrame();
-                    driverBitFrame->getBitOf(6, BitType::BIT_TYPE_DATA)->flipBitValue();
+                    monitor_bit_frame->TurnReceivedFrame();
+                    driver_bit_frame->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitorBitFrame->insertActiveErrorFrame(
-                        monitorBitFrame->getBitOf(7, BitType::BIT_TYPE_DATA));
-                    driverBitFrame->insertActiveErrorFrame(
-                        driverBitFrame->getBitOf(7, BitType::BIT_TYPE_DATA));
+                    monitor_bit_frame->InsertActiveErrorFrame(
+                        monitor_bit_frame->GetBitOf(7, BitType::Data));
+                    driver_bit_frame->InsertActiveErrorFrame(
+                        driver_bit_frame->GetBitOf(7, BitType::Data));
 
                     int numBitsToInsert;
                     if (j == 0)
@@ -140,42 +140,42 @@ class TestIso_7_3_1 : public test_lib::TestBase
                         numBitsToInsert = 7;
 
                     // Prolong driven frame by 1,4,7 DOMINANT bits
-                    int drvLastErrFlgIndex = driverBitFrame->getBitIndex(
-                        driverBitFrame->getBitOf(5, BitType::BIT_TYPE_ACTIVE_ERROR_FLAG));
+                    int drvLastErrFlgIndex = driver_bit_frame->GetBitIndex(
+                        driver_bit_frame->GetBitOf(5, BitType::ActiveErrorFlag));
                     for (int k = 0; k < numBitsToInsert; k++)
-                        driverBitFrame->insertBit(
-                            Bit(BIT_TYPE_ACTIVE_ERROR_FLAG, DOMINANT, &frameFlags,
-                                &nominalBitTiming, &dataBitTiming),
+                        driver_bit_frame->InsertBit(
+                            Bit(BitType::ActiveErrorFlag, BitValue::Dominant, &frameFlags,
+                                &nominal_bit_timing, &data_bit_timing),
                             drvLastErrFlgIndex);
 
                     // Prolong monitored frame by 1,4,7 RECESSIVE bits
-                    int monLastErrFlgIndex = monitorBitFrame->getBitIndex(
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_ERROR_DELIMITER));
+                    int monLastErrFlgIndex = monitor_bit_frame->GetBitIndex(
+                        monitor_bit_frame->GetBitOf(0, BitType::ErrorDelimiter));
                     for (int k = 0; k < numBitsToInsert; k++)
-                        monitorBitFrame->insertBit(
-                            Bit(BIT_TYPE_ERROR_DELIMITER, RECESSIVE, &frameFlags,
-                                &nominalBitTiming, &dataBitTiming),
+                        monitor_bit_frame->InsertBit(
+                            Bit(BitType::ErrorDelimiter, BitValue::Recessive, &frameFlags,
+                                &nominal_bit_timing, &data_bit_timing),
                             monLastErrFlgIndex);
 
-                    driverBitFrame->print(true);
-                    monitorBitFrame->print(true);
+                    driver_bit_frame->Print(true);
+                    monitor_bit_frame->Print(true);
 
                     // Push frames to Lower tester, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    runLowerTester(true, true);
-                    checkLowerTesterResult();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
 
                     // Check no frame is received by DUT
-                    if (dutIfc->hasRxFrame())
-                        testResult = false;
+                    if (dut_ifc->HasRxFrame())
+                        test_result = false;
 
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

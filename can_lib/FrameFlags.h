@@ -15,42 +15,111 @@
 #ifndef FRAME_FLAGS
 #define FRAME_FLAGS
 
+
+/**
+ * @class FrameFlags
+ * @namespace can
+ * 
+ * Represents flags of CAN frame (IDE, RTR, BRS, ESI, FDF(EDL))
+ */
 class can::FrameFlags
 {
     public:
 
-        // CAN frame flags
-        FlexibleDataRate isFdf_;
-        ExtendedIdentifier isIde_;
-        RemoteTransmissionRequest isRtr_;
-        BitRateShift isBrs_;
-        ErrorStateIndicator isEsi_;
+        /* CAN frame flags */
+        FrameType is_fdf_;
+        IdentifierType is_ide_;
+        RtrFlag is_rtr_;
+        BrsFlag is_brs_;
+        EsiFlag is_esi_;
 
-        // Randomization attributes
-        bool randomizeFdf;
-        bool randomizeIde;
-        bool randomizeRtr;
-        bool randomizeBrs;
-        bool randomizeEsi;
+        /* Randomization attributes */
+        bool randomize_fdf;
+        bool randomize_ide;
+        bool randomize_rtr;
+        bool randomize_brs;
+        bool randomize_esi;
 
+        /* 
+         * A constructor which does not specify all attributes, leaves these arguments enabled
+         * for randomization. Attributes will be randomized upon call of 'randomize'.
+         * 
+         * All values are randomized in valid ranges. There can never be e.g. CAN FD frame with
+         * RTR flag or CAN 2.0 frame with BRS flag.
+         */
+
+        /**
+         * Everything is randomized.
+         */
         FrameFlags();
-        FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                   RemoteTransmissionRequest isRtr, BitRateShift isBrs,
-                   ErrorStateIndicator isEsi);
-        FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                   RemoteTransmissionRequest isRtr);
-        FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde);
-        FrameFlags(FlexibleDataRate isFdf, RemoteTransmissionRequest isRtr);
-        FrameFlags(FlexibleDataRate isFdf);
-        FrameFlags(ExtendedIdentifier isIde);
-        FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs);
-        FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs, ErrorStateIndicator isEsi);
-        FrameFlags(FlexibleDataRate isFdf, ErrorStateIndicator isEsi);
-        FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde, ErrorStateIndicator isEsi);
 
-        void randomize();
-        void randomizeEnableAll();
-        void randomizeDisableAll();
+        /**
+         * Nothing is randomized
+         */
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide,
+                   RtrFlag is_rtr, BrsFlag is_brs,
+                   EsiFlag is_esi);
+
+        /**
+         *  BRS and ESI are randomized (if frame is CAN FD frame)
+         */
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide,
+                   RtrFlag is_rtr);
+
+        /**
+         * Randomizes RTR flag, BRS and ESI
+         */
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide);
+
+        /**
+         * Randomizes IDE, BRS, ESI
+         */
+        FrameFlags(FrameType is_fdf, RtrFlag is_rtr);
+
+        /**
+         * Randomizes IDE, BRS, ESI, RTR.
+         */
+        FrameFlags(FrameType is_fdf);
+
+        /**
+         * Randomizes FDF, BRS, ESI, RTR
+         */
+        FrameFlags(IdentifierType is_ide);
+
+        /**
+         * Randomizes ESI, BRS, RTR
+         */
+        FrameFlags(FrameType is_fdf, BrsFlag is_brs);
+
+        /**
+         * Randomizes RTR and IDE
+         */
+        FrameFlags(FrameType is_fdf, BrsFlag is_brs, EsiFlag is_esi);
+
+        /**
+         * Randomizes BRS, RTR, IDE
+         */
+        FrameFlags(FrameType is_fdf, EsiFlag is_esi);
+
+        /**
+         * Randomizes RTR, BRS
+         */
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide, EsiFlag is_esi);
+
+        /**
+         * Randomizes frame flags.
+         */
+        void Randomize();
+
+        /**
+         * Enables all atributes/flags for randomization.
+         */
+        void RandomizeEnableAll();
+
+        /**
+         * Disables all atributes/flags for randomization.
+         */
+        void RandomizeDisableAll();
 
         friend bool operator==(const FrameFlags &lhs, const FrameFlags rhs);
 };

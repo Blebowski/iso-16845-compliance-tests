@@ -18,91 +18,91 @@
 
 #include "../vpi_lib/vpiComplianceLib.hpp"
 
-test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clockPeriod)
+test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period)
 {
-    this->clockPeriod = clockPeriod;
+    this->clock_period = clock_period;
 };
 
 
-test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clockPeriod,
+test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
                                      can::BitFrame& frame,
-                                     SequenceType sequenceType)
+                                     SequenceType sequence_type)
 {
-    this->clockPeriod = clockPeriod;
+    this->clock_period = clock_period;
 
-    if (sequenceType == DRIVER_SEQUENCE) {
-        drivenValues.clear();
-        appendDriverFrame(frame);
+    if (sequence_type == SequenceType::DRIVER_SEQUENCE) {
+        driven_values.clear();
+        AppendDriverFrame(frame);
     } else {
-        monitoredValues.clear();
-        appendMonitorFrame(frame);
+        monitored_values.clear();
+        AppendMonitorFrame(frame);
     }
 };
 
 
-test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clockPeriod,
-                                     can::BitFrame& driveFrame,
-                                     can::BitFrame& monitorFrame)
+test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
+                                     can::BitFrame& driver_frame,
+                                     can::BitFrame& monitor_frame)
 {
-    this->clockPeriod = clockPeriod;
-    monitoredValues.clear();
-    drivenValues.clear();
+    this->clock_period = clock_period;
+    monitored_values.clear();
+    driven_values.clear();
 
-    appendMonitorFrame(monitorFrame);
-    appendDriverFrame(driveFrame);
+    AppendMonitorFrame(monitor_frame);
+    AppendDriverFrame(driver_frame);
 }
 
 
-void test_lib::TestSequence::appendDriverFrame(can::BitFrame& driveFrame)
+void test_lib::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 {
-    int bitCount = driveFrame.getBitCount();
+    int bit_count = driver_frame.GetBitCount();
     can::Bit *bit;
 
-    for (int i = 0; i < bitCount; i++)
+    for (int i = 0; i < bit_count; i++)
     {
-        bit = driveFrame.getBit(i);
-        appendDriverBit(bit);
+        bit = driver_frame.GetBit(i);
+        AppendDriverBit(bit);
     }
 }
 
 
-void test_lib::TestSequence::appendMonitorFrame(can::BitFrame& monitorFrame)
+void test_lib::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 {
-    int bitCount = monitorFrame.getBitCount();
+    int bit_count = monitor_frame.GetBitCount();
     can::Bit *bit;
 
-    for (int i = 0; i < bitCount; i++)
+    for (int i = 0; i < bit_count; i++)
     {
-        bit = monitorFrame.getBit(i);
-        appendMonitorBit(bit);
+        bit = monitor_frame.GetBit(i);
+        AppendMonitorBit(bit);
     }
 }
 
 
-void test_lib::TestSequence::appendDriverBit(can::Bit* bit)
+void test_lib::TestSequence::AppendDriverBit(can::Bit* bit)
 {
-    int timeQuantas = bit->getLenTimeQuanta();
-    can::BitValue bitValue = bit->getBitValue();
-    can::BitValue lastValue = bitValue;
-    can::BitValue currentValue;
-    can::TimeQuanta *timeQuanta;
-    can::CycleBitValue* cycleBitValue;
+    int time_quantas = bit->GetLengthTimeQuanta();
+    can::BitValue bit_value = bit->bit_value_;
+    can::BitValue last_value = bit_value;
+    can::BitValue current_value;
+    can::TimeQuanta *time_quanta;
+    can::CycleBitValue* cycle_bit_value;
     std::chrono::nanoseconds duration (0);
     int cycles;
 
-    for (int i = 0; i < timeQuantas; i++)
+    for (int i = 0; i < time_quantas; i++)
     {
-        timeQuanta = bit->getTimeQuanta(i);
-        cycles = timeQuanta->getLengthCycles();
+        time_quanta = bit->GetTimeQuanta(i);
+        cycles = time_quanta->getLengthCycles();
 
         for (int j = 0; j < cycles; j++)
         {
-            cycleBitValue = timeQuanta->getCycleBitValue(j);
+            cycle_bit_value = time_quanta->getCycleBitValue(j);
 
-            if (cycleBitValue->hasDefaultValue)
-                currentValue = bitValue;
+            if (cycle_bit_value->has_default_value_)
+                current_value = bit_value;
             else
-                currentValue = cycleBitValue->bitValue;
+                current_value = cycle_bit_value->bit_value_;
 
             // Note: This ignores non-default values which are equal to
             //       its default value (as expected) and merges them into
@@ -110,20 +110,20 @@ void test_lib::TestSequence::appendDriverBit(can::Bit* bit)
 
             // If we did not detect bit value change -> it still belongs to the
             // same segment -> legnthen it
-            if (currentValue == lastValue)
-                duration += clockPeriod;
+            if (current_value == last_value)
+                duration += clock_period;
 
             // We detected value change or are at the end of bit, add item.
-            if (currentValue != lastValue ||
-                ((i == timeQuantas - 1) && (j == cycles - 1))) 
+            if (current_value != last_value ||
+                ((i == time_quantas - 1) && (j == cycles - 1))) 
             {
                 // TODO: Push with message on first Item of bit
                 // TODO: Push with message on each next item signalling glitch!
                 
                 if (duration.count() > 0)
-                    pushDriverValue(duration, lastValue, bit->getBitTypeName());
-                duration = clockPeriod;
-                lastValue = currentValue;
+                    pushDriverValue(duration, last_value, bit->GetBitTypeName());
+                duration = clock_period;
+                last_value = current_value;
             }
         }
     }
@@ -131,56 +131,56 @@ void test_lib::TestSequence::appendDriverBit(can::Bit* bit)
 
 void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 {
-    std::chrono::nanoseconds tseg1Duration (0);
-    std::chrono::nanoseconds tseg2Duration (0);
-    int tseg1Len = bit->getPhaseLenTimeQuanta(can::SYNC_PHASE);
-    tseg1Len += bit->getPhaseLenTimeQuanta(can::PROP_PHASE);
-    tseg1Len += bit->getPhaseLenTimeQuanta(can::PH1_PHASE);
-    int tseg2Len = bit->getPhaseLenTimeQuanta(can::PH2_PHASE);
+    std::chrono::nanoseconds tseg_1_duration (0);
+    std::chrono::nanoseconds tseg_2_duration (0);
+    int tseg_1_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Sync);
+    tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Prop);
+    tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph1);
+    int tseg_2_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph2);
 
-    for (int i = 0; i < tseg1Len; i++)
-        for (int j = 0; j < bit->getTimeQuanta(i)->getLengthCycles(); j++)
-            tseg1Duration += clockPeriod;
+    for (int i = 0; i < tseg_1_len; i++)
+        for (int j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
+            tseg_1_duration += clock_period;
 
-    for (int i = 0; i < tseg2Len; i++)
-        for (int j = 0; j < bit->getTimeQuanta(can::PH2_PHASE, i)->getLengthCycles(); j++)
-            tseg2Duration += clockPeriod;
+    for (int i = 0; i < tseg_2_len; i++)
+        for (int j = 0; j < bit->GetTimeQuanta(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
+            tseg_2_duration += clock_period;
 
-    int brp = bit->getTimeQuanta(can::SYNC_PHASE, 0)->getLengthCycles();
-    int brpFd = bit->getTimeQuanta(can::PH2_PHASE, 0)->getLengthCycles();
-    std::chrono::nanoseconds sampleRateNominal = brp * clockPeriod;
-    std::chrono::nanoseconds sampleRateData = brpFd * clockPeriod;
+    int brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
+    int brpFd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
+    std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
+    std::chrono::nanoseconds sampleRateData = brpFd * clock_period;
 
-    pushMonitorValue(tseg1Duration, sampleRateNominal, bit->getBitValue(), bit->getBitTypeName());
-    pushMonitorValue(tseg2Duration, sampleRateData, bit->getBitValue(), bit->getBitTypeName());
+    pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->bit_value_, bit->GetBitTypeName());
+    pushMonitorValue(tseg_2_duration, sampleRateData, bit->bit_value_, bit->GetBitTypeName());
 }
 
 void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
     std::chrono::nanoseconds duration (0);
 
-    for (int i = 0; i < bit->getLenTimeQuanta(); i++)
-        for (int j = 0; j < bit->getTimeQuanta(i)->getLengthCycles(); j++)
-            duration += clockPeriod;
+    for (int i = 0; i < bit->GetLengthTimeQuanta(); i++)
+        for (int j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
+            duration += clock_period;
 
     // Assume first Time quanta length is the same as rest (which is reasonable)!
-    int brp = bit->getTimeQuanta(0)->getLengthCycles();
-    std::chrono::nanoseconds sampleRate = brp * clockPeriod;
+    int brp = bit->GetTimeQuanta(0)->getLengthCycles();
+    std::chrono::nanoseconds sample_rate = brp * clock_period;
 
-    pushMonitorValue(duration, sampleRate, bit->getBitValue(), bit->getBitTypeName());
+    pushMonitorValue(duration, sample_rate, bit->bit_value_, bit->GetBitTypeName());
 }
 
 
-void test_lib::TestSequence::appendMonitorBit(can::Bit* bit)
+void test_lib::TestSequence::AppendMonitorBit(can::Bit* bit)
 {
-    can::BitValue currentValue;
-    can::TimeQuanta *timeQuanta;
-    can::CycleBitValue* cycleBitValue;
+    can::BitValue current_value;
+    can::TimeQuanta *time_quanta;
+    can::CycleBitValue* cycle_bit_value;
     std::chrono::nanoseconds duration (0);
     int cycles;
 
-    if (bit->getBitType() == can::BIT_TYPE_BRS ||
-        bit->getBitType() == can::BIT_TYPE_CRC_DELIMITER)
+    if (bit->bit_type_ == can::BitType::Brs ||
+        bit->bit_type_ == can::BitType::CrcDelimiter)
         appendMonitorBitWithShift(bit);
     else
         appendMonitorNotShift(bit);
@@ -188,74 +188,74 @@ void test_lib::TestSequence::appendMonitorBit(can::Bit* bit)
 
 
 void test_lib::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
-                                             can::BitValue bitValue,
+                                             can::BitValue bit_value,
                                              std::string message)
 {
     // TODO: This conversion should ideally be separated!
-    StdLogic logicVal;
-    if (bitValue == can::DOMINANT)
-        logicVal = LOGIC_0;
+    StdLogic logic_val;
+    if (bit_value == can::BitValue::Dominant)
+        logic_val = StdLogic::LOGIC_0;
     else
-        logicVal = LOGIC_1;
+        logic_val = StdLogic::LOGIC_1;
 
-    drivenValues.push_back(DriverItem(duration, logicVal, message));
+    driven_values.push_back(DriverItem(duration, logic_val, message));
 }
 
 
 void test_lib::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
-                                              std::chrono::nanoseconds sampleRate,
-                                              can::BitValue bitValue,
+                                              std::chrono::nanoseconds sample_rate,
+                                              can::BitValue bit_value,
                                               std::string message)
 {
     // TODO: This conversion should ideally be separated!
-    StdLogic logicVal;
-    if (bitValue == can::DOMINANT)
-        logicVal = LOGIC_0;
+    StdLogic logic_val;
+    if (bit_value == can::BitValue::Dominant)
+        logic_val = StdLogic::LOGIC_0;
     else
-        logicVal = LOGIC_1;
+        logic_val = StdLogic::LOGIC_1;
 
-    monitoredValues.push_back(MonitorItem(duration, logicVal, sampleRate, message));
+    monitored_values.push_back(MonitorItem(duration, logic_val, sample_rate, message));
 }
 
 
-void test_lib::TestSequence::printDrivenValues()
+void test_lib::TestSequence::PrintDrivenValues()
 {
-    for (auto drivenValue : drivenValues)
-        drivenValue.print();
+    for (auto driven_value : driven_values)
+        driven_value.Print();
     std::cout << std::endl;
 }
 
 
-void test_lib::TestSequence::printMonitoredValues()
+void test_lib::TestSequence::PrintMonitoredValues()
 {
-    for (auto monitoredValue : monitoredValues)
-        monitoredValue.print();
+    for (auto monitored_value : monitored_values)
+        monitored_value.Print();
     std::cout << std::endl;
 }
 
 
-void test_lib::TestSequence::pushDriverValuesToSimulator()
+void test_lib::TestSequence::PushDriverValuesToSimulator()
 {
-    for (auto drivenValue : drivenValues)
+    for (auto driven_value : driven_values)
     {
-        if (drivenValue.hasMessage())
-            canAgentDriverPushItem(drivenValue.value, drivenValue.duration,
-                                    drivenValue.message);
+        if (driven_value.HasMessage())
+            CanAgentDriverPushItem((char)driven_value.value, driven_value.duration,
+                                   driven_value.message);
         else
-            canAgentDriverPushItem(drivenValue.value, drivenValue.duration);
+            CanAgentDriverPushItem((char)driven_value.value, driven_value.duration);
     }
 }
 
 
-void test_lib::TestSequence::pushMonitorValuesToSimulator()
+void test_lib::TestSequence::PushMonitorValuesToSimulator()
 {
-    for (auto monitorValue : monitoredValues)
+    for (auto monitorValue : monitored_values)
     {
-        if (monitorValue.hasMessage())
-            canAgentMonitorPushItem(monitorValue.value, monitorValue.duration,
-                                    monitorValue.sampleRate, monitorValue.message);
+        if (monitorValue.HasMessage())
+            CanAgentMonitorPushItem((char)monitorValue.value, monitorValue.duration,
+                                    monitorValue.sample_rate, monitorValue.message);
         else
-            canAgentMonitorPushItem(monitorValue.value, monitorValue.duration,
-                                    monitorValue.sampleRate);
+            CanAgentMonitorPushItem((char)monitorValue.value, monitorValue.duration,
+                                    monitorValue.sample_rate);
     }
 }

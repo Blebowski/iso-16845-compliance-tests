@@ -23,6 +23,7 @@ add_library(
     TestSequence.h
     TestLoader.h
     TestBase.h
+    ElementaryTest.h
     
     # Implementation
     DriverItem.cpp
@@ -30,6 +31,7 @@ add_library(
     TestSequence.cpp
     TestLoader.cpp
     TestBase.cpp
+    ElementaryTest.cpp
 )
 
 add_compile_options(TEST_LIB -g -fPIC -Wall -O0)

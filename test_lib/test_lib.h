@@ -15,45 +15,61 @@
 
 namespace test_lib
 {
-enum StdLogic : char
-{
-    LOGIC_0 = '0',  // Logic 0
-    LOGIC_1 = '1',  // Logic 1
-    LOGIC_H = 'H', // Pull up
-    LOGIC_L = 'L',        // Pull down
-    LOGIC_Z = 'Z',        // High impedance
-    LOGIC_X = 'X',        // Logic X
-    LOGIC_W = 'W',        // Weak signal
-    LOGIC_U = 'U',        // Unknown
-    LOGIC_DC = '-',       // Don't care
-};
+    enum class StdLogic : char
+    {
+        LOGIC_0 = '0',      /* Logic 0 */
+        LOGIC_1 = '1',      /* Logic 1 */
+        LOGIC_H = 'H',      /* Pull up */
+        LOGIC_L = 'L',      /* Pull down */
+        LOGIC_Z = 'Z',      /* High impedance */
+        LOGIC_X = 'X',      /* Logic X */
+        LOGIC_W = 'W',      /* Weak signal */
+        LOGIC_U = 'U',      /* Unknown */
+        LOGIC_DC = '-',     /* Don't care */
+    };
 
-enum LoggerSeverity
-{
-    DEBUG,
-    INFO,
-    WARNING,
-    ERROR,
-    FATAL
-};
+    enum class SequenceType
+    {
+        DRIVER_SEQUENCE,
+        MONITOR_SEQUENCE
+    };
 
-enum MonitorTrigger
-{
-    TODO
-};
+    enum class TestVariant
+    {
+        Common,             /* Common for FD Enabled, Tolerant, 2.0 implementations */
+        Can_2_0,            /* CAN 2.0 only */
+        CanFdTolerant,      /* CAN FD Tolerant */
+        CanFdEnabled        /* CAN FD Enabled */
+    };
 
-enum SequenceType
-{
-    DRIVER_SEQUENCE,
-    MONITOR_SEQUENCE
-};
+    /* 
+     * Mappings of DUT type to test variants. Some tests e.g. require run of CAN FD Enabled variant
+     * for CAN FD Enabled node only. Other tests require run of CAN FD Enabled and CAN 2.0 variants
+     * for CAN FD enabled node.
+     */
+    enum class VariantMatchingType
+    {
+        /* 
+         * CAN 2.0 -> CAN 2.0
+         * CAN FD Tolerant -> CAN FD Tolerant
+         * CAN FD Enabled -> CAN FD Enabled
+         */
+        OneToOne
+    };
 
-class DriverItem;
-class MonitorItem;
-class TestSequence;
+    enum class TestResult : int {
+        Passed  = 0,
+        Failed  = 1,
+        Skipped = 2
+    };
 
-class TestBase;
-class TestDemo;
+    class DriverItem;
+    class MonitorItem;
+    class TestSequence;
+
+    class TestBase;
+    class ElementaryTest;
+    class TestDemo;
 
 } // namespace test_lib
 

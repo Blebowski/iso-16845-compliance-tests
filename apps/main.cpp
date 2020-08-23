@@ -46,18 +46,18 @@ int main()
 
     can::Frame frame = Frame();
     can::BitFrame bitFrame = BitFrame(
-        FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                   BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE),
+        FrameFlags(CanFd, Extended, DataFrame,
+                   DontShift, ErrorActive),
         0, 32, &(data[0]), &nbt, &dbt);
 
-    frame.print();
-    bitFrame.print(true);
-    bitFrame.insertActiveErrorFrame(bitFrame.getBitOf(1, BIT_TYPE_INTERMISSION));
-    bitFrame.print(true);
+    frame.Print();
+    bitFrame.Print(true);
+    bitFrame.InsertActiveErrorFrame(bitFrame.GetBitOf(1, Intermission));
+    bitFrame.Print(true);
 
     std::chrono::nanoseconds clock_period(10);
 
     test_lib::TestSequence testSequence =
         test_lib::TestSequence(clock_period, bitFrame, test_lib::DRIVER_SEQUENCE);
-    testSequence.printDrivenValues();
+    testSequence.PrintDrivenValues();
 }

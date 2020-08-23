@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <list>
+#include <string>
 #include <assert.h>
 
 #include "can.h"
@@ -26,235 +27,293 @@
 #ifndef BIT
 #define BIT
 
+
+/**
+ * @class Bit
+ * @namespace can
+ * 
+ * Class representing single bit on CAN bus.
+ * 
+ */
 class can::Bit {
 
     public:
-        Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
-            BitTiming* nominalBitTiming, BitTiming* dataBitTiming);
+        Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
+            BitTiming* nominal_bit_timing, BitTiming* data_bit_timing);
 
-        Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
-            BitTiming* nominalBitTiming, BitTiming* dataBitTiming,
-            StuffBitType stuffBitType);
+        Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
+            BitTiming* nominal_bit_timing, BitTiming* data_bit_timing,
+            StuffBitType stuff_bit_type);
+
+        /* Type of bit: SOF, Base Identifier, CRC, ACK, etc... */
+        BitType bit_type_;
+
+        /* Type of stuff bit: DontShift stuff bit, fixed, regular */
+        StuffBitType stuff_bit_type;
+        
+        /* Value on CAN bus: Dominant, Recessive */
+        BitValue bit_value_;
 
         /**
-         *
+         * Flips value of bit from CAN bus perspective.
+         * Dominant -> turned to Recessive.
+         * Recessive -> turned to Dominant.
          */
-        bool setBitValue(BitValue bitValue);
+        void FlipBitValue();
 
         /**
-         *
+         * Checks whether bit is stuff bit.
+         * @returns true when bit is stuff bit (regular or fixed), false otherwise.
          */
-        BitValue getBitValue();
+        bool IsStuffBit();
 
         /**
-         *
+         * Checks if bit represents bit field which has single bit on CAN bus
+         * (e.g SOF, IDE, EDL fields have single bit, DATA or CRC not)
+         * @return true if bit field of this bit has single bit, false otherwise.
          */
-        BitType getBitType();
+        bool IsSingleBitField();
 
         /**
+         * Gets string bit value (0,1) coloured.
+         *   @returns stuff bits - green
+         *            error frame bits - red
+         *            overload frame bits - yellow
+         *            others - white
+         */
+        std::string GetColouredValue();
+
+        /**
+         * @returns String representation of Bit type (e.g BitType::SOF) -> "SOF".
+         */
+        std::string GetBitTypeName();
+
+        /**
+         * @returns BitValue::Dominant if Bit is BitValue::Recessive and vice versa.
+         */
+        BitValue GetOppositeValue();
+
+        /**
+         * Checks whether bit contains Bit phase of interest.
+         * @param bit_phase Phase to check.
+         * @returns true if yes, false otherwise
+         */
+        bool HasPhase(BitPhase bit_phase);
+
+        /**
+         * Checks whether in some of bits time quantas contain non-default bit
+         * value (glitch).
+         * @returns true if there are non-default values.
+         *         false, if all Time quantas contain only default values.
+         */
+        bool HasNonDefaultValues();
+
+        /**
+         * Sets all time quantas to have the same value as is value of this bit.
+         */
+        void SetAllDefaultValues();
+
+        /**
+         * Gets length of certain bit phase in Time quantas.
+         * (e.g. for typial bit: getPhaceLenTimeQuanta(BitPhase::Sof) returns 1)
+         * @param bit_phase phase whose length to find out
+         * @returns length of bit in Time Quantas
+         */
+        int GetPhaseLenTimeQuanta(BitPhase bit_phase);
+
+        /**
+         * Gets length of bit phase in clock cycles.
+         * @param bit_phase phase whose length to find out
+         * @returns length of Bit phase in clock cycles
+         */
+        int GetPhaseLenCycles(BitPhase bit_phase);
+
+        /**
+         * @returns Overall bit length in Time quantas.
+         */
+        int GetLengthTimeQuanta();
+
+        /**
+         * @returns Overall bit length in clock cycles.
+         */
+        int GetLengthCycles();
+
+        /**
+         * Shortens bit phase by number of Time quantas. If a phase is shortened
+         * by more or equal to number of bits that it has, phase is effectively
+         * removed.
+         * @param bit_phase phase to be shortened
+         * @param num_time_quantas number of time quantas to shorten by
+         * @returns Number of time quantas by which a phase was shortened.
+         */
+        int ShortenPhase(BitPhase bit_phase, int num_time_quantas);
+
+        /**
+         * Lengthens phase by Number of time quantas. If the phase does not
+         * exist, it is created at expected part of bit (e.g. if bit has no
+         * "Prop" phase, it will be created between Sync and Phase 1).
+         * @param bit_phase phase to lengthen
+         * @param num_time_quantas number of time quantas to lengthen the phase by
+         */
+        void LengthenPhase(BitPhase bit_phase, int num_time_quantas);
+
+        /**
+         * @param index Index of time quanta to return (starting with 0)
+         * @return Pointer to bit's time quanta on 'index' position.
          * 
+         * If there are less time quantas within a bit than 'index', aborts.
          */
-        StuffBitType getStuffBitType();
+        TimeQuanta* GetTimeQuanta(int index);
 
         /**
-         *
-         */
-        void flipBitValue();
-
-        /**
-         *
-         */
-        bool isStuffBit();
-
-        /**
-         *
-         */
-        bool isSingleBitField();
-
-        /**
-         *
-         */
-        std::string getStringValue();
-
-        /**
-         *
-         */
-        std::string getBitTypeName();
-
-        /**
-         *
-         */
-        BitValue getOppositeValue();
-
-        /**
-         *
-         */
-        bool hasPhase(BitPhase bitPhase);
-
-        /*
-         *
-         */
-        bool hasNonDefaultValues();
-
-        /*
-         *
-         */
-        void setAllDefaultValues();
-
-        /*
-         *
-         */
-        int getPhaseLenTimeQuanta(BitPhase bitPhase);
-
-        /*
-         *
-         */
-        int getPhaseLenCycles(BitPhase bitPhase);
-
-        /*
-         *
-         */
-        int getLenTimeQuanta();
-
-        /*
-         *
-         */
-        int getLenCycles();
-
-        /**
-         *
-         */
-        int shortenPhase(BitPhase bitPhase, int numTimeQuanta);
-
-        /**
-         *
-         */
-        void lengthenPhase(BitPhase bitPhase, int numTimeQuanta);
-
-        /**
-         *
-         */
-        TimeQuanta* getTimeQuanta(int index);
-
-        /**
-         *
-         */
-        TimeQuanta* getTimeQuanta(BitPhase bitPhase, int index);
-
-        /*
+         * Gets Time Quanta within a bit phase.
+         * @param bit_phase phase whose Time Quantas shall be returned
+         * @param index Index of time quanta (within bit phase) to return (starting with 0)
+         * @return Pointer to time quanta on 'index' position within 'bit_phase'.
          * 
+         * If phase does not exist within a bit or bit does not have so many Time quanta, aborts.
          */
-        bool forceTimeQuanta(int index, BitValue bitValue);
-
-        /*
-         * 
-         */
-        int forceTimeQuanta(int fromIndex, int toIndex, BitValue bitValue);
-
-        /*
-         * 
-         */
-        bool forceTimeQuanta(int index, BitPhase bitPhase, BitValue bitValue);
-
-        /*
-         * 
-         */
-        bool forceTimeQuanta(int fromIndex, int toIndex, BitPhase bitPhase,
-                             BitValue bitValue);
+        TimeQuanta* GetTimeQuanta(BitPhase bit_phase, int index);
 
         /**
-         * 
+         * Forces a time quanta within a bit to value (Inserts a glitch).
+         * @param index Time quanta to force (within bit)
+         * @param bit_value Value to which Time quanta shall be forced
+         * @return true if successfull, false otherwise
          */
-        void correctPh2LenToNominal();
+        bool ForceTimeQuanta(int index, BitValue bit_value);
 
         /**
-         * 
+         * Forces range of Time Quantas within a bit to value.
+         * @param start_index Starting Time quanta index to force (within bit)
+         * @param end_index Ending Time quanta index to force (within bit)
+         * @param bit_value Value to which Time quantas shall be forced
+         * @return number of Time Quantas that has actually been forced.
          */
-        BitPhase prevBitPhase(BitPhase bitPhase);
+        int ForceTimeQuanta(int start_index, int end_index, BitValue bit_value);
 
         /**
-         * 
+         * Forces Time Quanta within a bit phase of a bit to value.
+         * @param index Time quanta index to force (within bit phase)
+         * @param bit_phase Bit phase to force
+         * @param bit_value Value to which Time quantas shall be forced
+         * @return true is successfull, false otherwise
          */
-        BitPhase nextBitPhase(BitPhase bitPhase);
+        bool ForceTimeQuanta(int index, BitPhase bit_phase, BitValue bit_value);
 
         /**
-         * 
+         * Forces Time Quanta range within a bit phase of a bit to value. 
+         * @param start_index Starting Time quanta index to force (within bit phase)
+         * @param end_index Ending Time quanta index to force (within bit phase)
+         * @param bit_value Value to which Time quantas shall be forced
+         * @return number of Time Quantas that has actually been forced
          */
-        BitRate getPhaseBitRate(BitPhase bitPhase);
+        int ForceTimeQuanta(int start_index, int end_index, BitPhase bit_phase,
+                            BitValue bit_value);
 
         /**
-         * 
+         * Corrects (re-calculates) length of Ph2 segment to Nominal bit rate.
+         * This is applied if error frame is inserted after a bit in data bit rate.
+         * Phase 2 of previous bit must be recomputed as if bit rate shift back
+         * to nominal occured at sample point of previous bit!
          */
-        BitTiming* getPhaseBitTiming(BitPhase bitPhase);
+        void CorrectPh2LenToNominal();
 
         /**
-         * 
+         * @param bit_phase whose previous phase to search for.
+         * @return previous bit phase within a bit.
+         * (e.g. PrevBitPhase(BitPhase::Phase1) returns BitPhase::Prop
+         * If previous bit phase does not exists, it searches further until Sync phase
          */
-        std::list<TimeQuanta>::iterator getFirstTimeQuantaIterator(BitPhase bitPhase);
+        BitPhase PrevBitPhase(BitPhase bit_phase);
 
         /**
-         * 
+         * @param bit_phase whose next phase to search for.
+         * @return next bit phase within a bit.
+         * (e.g. NextBitPhase(BitPhase::Phase1) returns BitPhase:Ph2)
+         * If next bit phase does not exist, it searches next bit phase until the end
+         * of bit. If 'bit_phase' is last phase, returns 'bit_phase'
          */
-        std::list<TimeQuanta>::iterator getLastTimeQuantaIterator(BitPhase bitPhase);
+        BitPhase NextBitPhase(BitPhase bit_phase);
+
+        /**
+         * @param bit_phase Bit phase whose bit rate to search for.
+         * @return gets bit rate of given bit phase.
+         */
+        BitRate GetPhaseBitRate(BitPhase bit_phase);
+
+        /**
+         * @param bit_phase Bit phase whose bit timing structure to search for.
+         * @return gets bit timing of given bit phase.
+         */
+        BitTiming* GetPhaseBitTiming(BitPhase bit_phase);
+
+        /**
+         * @return iterator to first time quanta of a bit phase.
+         */
+        std::list<TimeQuanta>::iterator GetFirstTimeQuantaIterator(BitPhase bit_phase);
+
+        /**
+         * @return iterator to last time quanta of a bit phase.
+         */
+        std::list<TimeQuanta>::iterator GetLastTimeQuantaIterator(BitPhase bit_phase);
 
     protected:
-        
-        BitType bitType;
-        
-        StuffBitType stuffBitType;
-        
-        BitValue bitValue;
 
         /**
-         *
+         * 
          */
-        const BitTypeName bitTypeNames[29] =
+        const BitTypeName bit_type_names_[29] =
         {
-            {BIT_TYPE_SOF, "SOF"},
-            {BIT_TYPE_BASE_ID, "Base identifer"},
-            {BIT_TYPE_EXTENDED_ID, "Extended identifier"},
-            {BIT_TYPE_RTR, "RTR"},
-            {BIT_TYPE_IDE, "IDE"},
-            {BIT_TYPE_SRR, "SRR"},
-            {BIT_TYPE_EDL, "EDL"},
-            {BIT_TYPE_R0, "R0 "},
-            {BIT_TYPE_R1, "R1 "},
-            {BIT_TYPE_BRS, "BRS"},
-            {BIT_TYPE_ESI, "ESI"},
-            {BIT_TYPE_DLC, "DLC"},
-            {BIT_TYPE_DATA, "Data field"},
-            {BIT_TYPE_STUFF_COUNT, "St.Ct."},
-            {BIT_TYPE_STUFF_PARITY, "STP"},
-            {BIT_TYPE_CRC, "CRC"},
-            {BIT_TYPE_CRC_DELIMITER, "CRD"},
-            {BIT_TYPE_ACK, "ACK"},
-            {BIT_TYPE_ACK_DELIMITER, "ACD"},
-            {BIT_TYPE_EOF, "End of Frame"},
-            {BIT_TYPE_INTERMISSION, "Intermission"},
-            {BIT_TYPE_IDLE, "Idle"},
-            {BIT_TYPE_SUSPEND, "Suspend"},
-            {BIT_TYPE_ACTIVE_ERROR_FLAG, "Active Error flag"},
-            {BIT_TYPE_PASSIVE_ERROR_FLAG, "Passive Error flag"},
-            {BIT_TYPE_ERROR_DELIMITER, "Error delimiter"},
-            {BIT_TYPE_OVERLOAD_FLAG, "Overload flag"},
-            {BIT_TYPE_OVERLOAD_DELIMITER, "Overload delimiter"}
+            {BitType::Sof,                  "SOF"},
+            {BitType::BaseIdentifier,       "Base identifer"},
+            {BitType::IdentifierExtension,  "Extended identifier"},
+            {BitType::Rtr,                  "RTR"},
+            {BitType::Ide,                  "IDE"},
+            {BitType::Srr,                  "SRR"},
+            {BitType::Edl,                  "EDL"},
+            {BitType::R0,                   "R0 "},
+            {BitType::R1,                   "R1 "},
+            {BitType::Brs,                  "BRS"},
+            {BitType::Esi,                  "ESI"},
+            {BitType::Dlc,                  "DLC"},
+            {BitType::Data,                 "Data field"},
+            {BitType::StuffCount,           "St.Ct."},
+            {BitType::StuffParity,          "STP"},
+            {BitType::Crc,                  "CRC"},
+            {BitType::CrcDelimiter,         "CRD"},
+            {BitType::Ack,                  "ACK"},
+            {BitType::AckDelimiter,         "ACD"},
+            {BitType::Eof,                  "End of Frame"},
+            {BitType::Intermission,         "Intermission"},
+            {BitType::Idle,                 "Idle"},
+            {BitType::Suspend,              "Suspend"},
+            {BitType::ActiveErrorFlag,      "Active Error flag"},
+            {BitType::PassiveErrorFlag,     "Passive Error flag"},
+            {BitType::ErrorDelimiter,       "Error delimiter"},
+            {BitType::OverloadFlag,         "Overload flag"},
+            {BitType::OverloadDelimiter,    "Overload delimiter"}
         };
 
-        // These hold information about bit timing and fact whether Bit-rate has
-        // shifted so they are important for manipulation of bit cycles!
-        BitTiming* nominalBitTiming;
-        BitTiming* dataBitTiming;
-        FrameFlags* frameFlags;
+        /* 
+         * These hold information about bit timing and fact whether Bit-rate has
+         * shifted so they are important for manipulation of bit cycles!
+         * 
+         * Should be provided during creation of Bit and are not copied internally!
+         */
+        BitTiming* nominal_bit_timing;
+        BitTiming* data_bit_timing;
+        FrameFlags* frame_flags;
 
         /**
-         * 
+         * Time quantas within the bit.
          */
-        std::list<TimeQuanta> timeQuantas_;
+        std::list<TimeQuanta> time_quantas_;
 
         /**
-         * 
+         * Constructs time quantas from timing information. Called upon bit creation.
          */
-        void constructTimeQuantas(BitTiming *nominalBitTiming, BitTiming *dataBitTiming);
+        void ConstructTimeQuantas();
 };
 
 #endif

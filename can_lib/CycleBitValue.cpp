@@ -17,26 +17,26 @@
 
 can::CycleBitValue::CycleBitValue()
 {
-    hasDefaultValue = true;
+    has_default_value_ = true;
     // bitValue is effectively don't care, initialize it just for correctness!
-    bitValue = RECESSIVE;
+    bit_value_ = BitValue::Recessive;
 }
 
 
-can::CycleBitValue::CycleBitValue(BitValue bitValue)
+can::CycleBitValue::CycleBitValue(BitValue bit_value)
 {
-    hasDefaultValue = false;
-    this->bitValue = bitValue;
+    has_default_value_ = false;
+    bit_value_ = bit_value;
 }
 
 
-void can::CycleBitValue::forceValue(BitValue bitValue)
+void can::CycleBitValue::ForceValue(BitValue bit_value)
 {
-    hasDefaultValue = false;
-    this->bitValue = bitValue;
+    has_default_value_ = false;
+    bit_value_ = bit_value;
 }
 
-void can::CycleBitValue::releaseValue()
+void can::CycleBitValue::ReleaseValue()
 {
-    hasDefaultValue = true;
+    has_default_value_ = true;
 }

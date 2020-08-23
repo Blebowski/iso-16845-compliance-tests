@@ -67,21 +67,21 @@ class TestIso_8_1_5 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Start monitoring when DUT starts transmitting!
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_TX_FALLING);
-            canAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
 
             // Configure driver to wait for monitor so that LT sends ACK in right moment.
-            canAgentSetWaitForMonitor(true);
+            CanAgentSetWaitForMonitor(true);
 
             // Enable TX/RX feedback so that DUT will see its own transmitted frame!
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
 
             /*****************************************************************
@@ -93,21 +93,22 @@ class TestIso_8_1_5 : public test_lib::TestBase
                 FrameFlags frameFlags;
                 
                 if (i == 0){
-                    frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER, DATA_FRAME);
+                    frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base,
+                                            RtrFlag::DataFrame);
                 } else {
-                    frameFlags = FrameFlags(CAN_FD, ESI_ERROR_ACTIVE);
+                    frameFlags = FrameFlags(FrameType::CanFd, EsiFlag::ErrorActive);
                 }
 
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -117,40 +118,41 @@ class TestIso_8_1_5 : public test_lib::TestBase
                  *   4. Insert 15 recessive bits at the end of Overload delimiter.
                  *      This checks that DUT does not retransmitt the frame!
                  */
-                driverBitFrame->turnReceivedFrame();
+                driver_bit_frame->TurnReceivedFrame();
 
-                driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION)->setBitValue(DOMINANT);
+                driver_bit_frame->GetBitOf(0, BitType::Intermission)
+                    ->bit_value_ = BitValue::Dominant;
 
-                Bit *overloadStartBit = monitorBitFrame->getBitOf(1, BIT_TYPE_INTERMISSION);
-                monitorBitFrame->insertOverloadFrame(overloadStartBit);
+                Bit *overloadStartBit = monitor_bit_frame->GetBitOf(1, BitType::Intermission);
+                monitor_bit_frame->InsertOverloadFrame(overloadStartBit);
 
-                Bit *overloadEndBit = monitorBitFrame->getBitOf(6, BIT_TYPE_OVERLOAD_DELIMITER);
-                int bitIndex = monitorBitFrame->getBitIndex(overloadEndBit);
+                Bit *overloadEndBit = monitor_bit_frame->GetBitOf(6, BitType::OverloadDelimiter);
+                int bitIndex = monitor_bit_frame->GetBitIndex(overloadEndBit);
                 for (int i = 0; i < 15; i++)
-                    monitorBitFrame->insertBit(Bit(BIT_TYPE_OVERLOAD_DELIMITER, RECESSIVE,
-                                                   &frameFlags, &nominalBitTiming, &dataBitTiming),
+                    monitor_bit_frame->InsertBit(Bit(BitType::OverloadDelimiter, BitValue::Recessive,
+                                                   &frameFlags, &nominal_bit_timing, &data_bit_timing),
                                                 bitIndex);
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, insert to DUT, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                startDriverAndMonitor();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                StartDriverAndMonitor();
 
-                testMessage("Sending frame via DUT!");
-                this->dutIfc->sendFrame(goldenFrame);
-                testMessage("Sent frame via DUT!");
+                TestMessage("Sending frame via DUT!");
+                this->dut_ifc->SendFrame(golden_frame);
+                TestMessage("Sent frame via DUT!");
                 
-                waitForDriverAndMonitor();
-                checkLowerTesterResult();
+                WaitForDriverAndMonitor();
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

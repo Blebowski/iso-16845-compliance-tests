@@ -74,64 +74,65 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
-            int upperTh = dataBitTiming.ph1 + dataBitTiming.prop + 1;
+            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
 
-            for (int i = 1; i <= dataBitTiming.sjw; i++)
+            for (int i = 1; i <= data_bit_timing.sjw_; i++)
             {
                 // CAN FD frame with bit rate shift, ESI = Dominant
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
+                                                    EsiFlag::ErrorActive);
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
-                testMessage("Testing ESI negative resynchronisation with phase error: %d", i + 1);
+                TestMessage("Testing ESI negative resynchronisation with phase error: %d", i + 1);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
                  *   1. Turn monitor frame as if received!
                  *   2. Shorten PH2 of BRS by e.
-                 *   3. Force ESI to Recessive from Sync+Prop+Ph1-e till the
+                 *   3. Force ESI to Recessive from Sync+Prop+Phase1-e till the
                  *      end of bit.
                  */
-                monitorBitFrame->turnReceivedFrame();
+                monitor_bit_frame->TurnReceivedFrame();
 
-                Bit *brsBit = driverBitFrame->getBitOf(0, BIT_TYPE_BRS);
-                Bit *esiBit = driverBitFrame->getBitOf(0, BIT_TYPE_ESI);
-                Bit *brsBitMonitor = monitorBitFrame->getBitOf(0, BIT_TYPE_BRS);
+                Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
+                Bit *esiBit = driver_bit_frame->GetBitOf(0, BitType::Esi);
+                Bit *brsBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Brs);
 
 
                 /**************************************************************
                  * These modifications are how I think this was meant!!
                  **************************************************************/
-                brsBit->shortenPhase(PH2_PHASE, i);
-                brsBitMonitor->shortenPhase(PH2_PHASE, i);
+                brsBit->ShortenPhase(BitPhase::Ph2, i);
+                brsBitMonitor->ShortenPhase(BitPhase::Ph2, i);
 
-                for (int j = 0; j < dataBitTiming.ph2; j++)
-                    esiBit->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
+                for (int j = 0; j < data_bit_timing.ph2_; j++)
+                    esiBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
 
                 /**************************************************************
@@ -143,31 +144,31 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
 
                 //int startTq = 1 + dataBitTiming.prop + dataBitTiming.ph1 - i;
                 //for (int j = startTq; j < brsBit->getLenTimeQuanta(); j++)
-                //    esiBit->forceTimeQuanta(j, RECESSIVE);
+                //    esiBit->ForceTimeQuanta(j, RECESSIVE);
 
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

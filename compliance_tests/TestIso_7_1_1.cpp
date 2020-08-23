@@ -78,10 +78,12 @@ class TestIso_7_1_1 : public test_lib::TestBase
     public:
 
         // TODO: Use approach with randomization!
-        FrameFlags frameFlags_2_0 = FrameFlags(CAN_2_0, BASE_IDENTIFIER,
-            DATA_FRAME, BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
-        FrameFlags frameFlags_fd = FrameFlags(CAN_FD, BASE_IDENTIFIER,
-            DATA_FRAME, BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
+        FrameFlags frameFlags_2_0 = FrameFlags(
+            FrameType::Can2_0, IdentifierType::Base, RtrFlag::DataFrame,
+            BrsFlag::DontShift, EsiFlag::ErrorActive);
+        FrameFlags frameFlags_fd = FrameFlags(
+            FrameType::CanFd, IdentifierType::Base, RtrFlag::DataFrame,
+            BrsFlag::DontShift, EsiFlag::ErrorActive);
 
         int idList[5];
         uint8_t data[64];
@@ -96,18 +98,18 @@ class TestIso_7_1_1 : public test_lib::TestBase
             idList[2] = 0x000;
             idList[3] = 0x7FF;
             idList[4] = rand() % (2 ^ 11);
-            testResult = true;
+            test_result = true;
         }
 
         /**
          * 
          */
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
+            TestBase::Run();
 
-            testMessage("Test %s : Run Entered", testName);
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * CAN 2_0, FD Tolerant, FD Enabled common part.
@@ -122,42 +124,42 @@ class TestIso_7_1_1 : public test_lib::TestBase
                         data[k] = rand() % (2 ^ 8);
 
                     // Create frames
-                    goldenFrame = new Frame(frameFlags_2_0, dlc, idList[id], data);
-                    driverBitFrame = new BitFrame(*goldenFrame, &nominalBitTiming,
-                                                    &dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame, &nominalBitTiming,
-                                                    &dataBitTiming);
+                    golden_frame = new Frame(frameFlags_2_0, dlc, idList[id], data);
+                    driver_bit_frame = new BitFrame(*golden_frame, &nominal_bit_timing,
+                                                    &data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame, &nominal_bit_timing,
+                                                    &data_bit_timing);
 
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
 
                     // Monitor frame as if received, driver frame must have ACK too!
-                    monitorBitFrame->turnReceivedFrame();
-                    driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
+                    monitor_bit_frame->TurnReceivedFrame();
+                    driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_= BitValue::Dominant;
 
                     // Convert frames to test sequences, push to Lower tester, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    runLowerTester(true, true);
-                    checkLowerTesterResult();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
 
                     // Read received frame from DUT and compare with sent frame
-                    Frame readFrame = this->dutIfc->readFrame();
-                    if (compareFrames(*goldenFrame, readFrame) == false)
+                    Frame readFrame = this->dut_ifc->ReadFrame();
+                    if (CompareFrames(*golden_frame, readFrame) == false)
                     {
-                        testResult = false;
-                        testControllerAgentEndTest(testResult);
+                        test_result = false;
+                        TestControllerAgentEndTest(test_result);
                     }
 
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
 
-                    if (testResult == false)
+                    if (test_result == false)
                         return false;
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

@@ -66,20 +66,20 @@ class TestIso_7_2_9 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
              ****************************************************************/
             
             int iterCnt;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -89,24 +89,24 @@ class TestIso_7_2_9 : public test_lib::TestBase
                 if (i == 0)
                 {
                     // Generate CAN frame (CAN 2.0, randomize others)
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                 } else {
                     // Generate CAN frame (CAN FD, randomize others)
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                 }
                 FrameFlags frameFlags = FrameFlags(dataRate);
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
             
                 /**
                  * Modify test frames:
@@ -116,41 +116,43 @@ class TestIso_7_2_9 : public test_lib::TestBase
                  *             -> Add second ACK bit, driven dominant, monitored recessive
                  *   3. Insert Active Error frame from first bit of EOF!
                  */
-                monitorBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, BitType::BIT_TYPE_ACK)->setBitValue(DOMINANT);
-                driverBitFrame->getBitOf(0, BitType::BIT_TYPE_ACK_DELIMITER)->setBitValue(DOMINANT);
+                monitor_bit_frame->TurnReceivedFrame();
+                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                driver_bit_frame->GetBitOf(0, BitType::AckDelimiter)->bit_value_ = BitValue::Dominant;
 
-                if (dataRate == CAN_FD)
+                if (dataRate == FrameType::CanFd)
                 {
-                    Bit *ackDelimBit = driverBitFrame->getBitOf(0, BitType::BIT_TYPE_ACK_DELIMITER);
-                    int ackDelimIndex = driverBitFrame->getBitIndex(ackDelimBit);
-                    driverBitFrame->insertBit(
-                        Bit(BitType::BIT_TYPE_ACK, DOMINANT, &frameFlags,
-                        &this->nominalBitTiming, &this->dataBitTiming, STUFF_NO), ackDelimIndex);
-                    monitorBitFrame->insertBit(
-                        Bit(BitType::BIT_TYPE_ACK, RECESSIVE, &frameFlags,
-                        &this->nominalBitTiming, &this->dataBitTiming, STUFF_NO), ackDelimIndex);
+                    Bit *ackDelimBit = driver_bit_frame->GetBitOf(0, BitType::AckDelimiter);
+                    int ackDelimIndex = driver_bit_frame->GetBitIndex(ackDelimBit);
+                    driver_bit_frame->InsertBit(
+                        Bit(BitType::Ack, BitValue::Dominant, &frameFlags,
+                        &this->nominal_bit_timing, &this->data_bit_timing, StuffBitType::NoStuffBit),
+                        ackDelimIndex);
+                    monitor_bit_frame->InsertBit(
+                        Bit(BitType::Ack, BitValue::Recessive, &frameFlags,
+                        &this->nominal_bit_timing, &this->data_bit_timing, StuffBitType::NoStuffBit),
+                        ackDelimIndex);
                 }
 
-                monitorBitFrame->insertActiveErrorFrame(
-                    monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_EOF));
-                driverBitFrame->insertActiveErrorFrame(
-                    driverBitFrame->getBitOf(0, BitType::BIT_TYPE_EOF));
+                monitor_bit_frame->InsertActiveErrorFrame(
+                    monitor_bit_frame->GetBitOf(0, BitType::Eof));
+                driver_bit_frame->InsertActiveErrorFrame(
+                    driver_bit_frame->GetBitOf(0, BitType::Eof));
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

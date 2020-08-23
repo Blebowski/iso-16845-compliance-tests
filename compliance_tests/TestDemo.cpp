@@ -35,84 +35,33 @@ class test_lib::TestDemo : public TestBase
 {
     public:
 
-        // Here put any test dependent declarations!
+        /* Here put any test dependent declarations! */
 
-        /**
-         *
-         */
-        TestDemo() : TestBase()
+        void ConfigureTest()
         {
-            // Here initialize test specific variables, create test specific
-            // objects.
+            /*
+             * Here initialize test specific variables, create test specific
+             * objects. Each test shall initialize 'elem_tests' list and fill
+             * 'test_variants'. This method will be called if
+             * 'SetupTestEnvironment' is called from "Run" method.
+             */
         }
 
         /**
-         *
+         * Test execution function shall consist of following actions:
+         *  1. Call of "SetupTestEnvironment"
+         *  2. Iterating over "elem_tests" and executing elementary test for
+         *     each variant.
+         *  3. Call of "CleanupTestEnvironment" and returning what it returns
          */
-        int run()
+        int Run()
         {
-            // Run Base test to setup TB
-            TestBase::run();
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Test sequence start
-             ****************************************************************/
-
-            testMessage("Test %s : Run Entered", testName);
-
-            // Write your test code here!
-
-            FrameFlags frameFlags = FrameFlags(
-                CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
-
-            uint8_t data[64] =
-            {
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 
-                0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55
-            };
-
-            BitFrame driverFrame = BitFrame(frameFlags, 0xF, 0xAAAA, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
-            BitFrame monitorFrame = BitFrame(frameFlags, 0xF, 0xAAAA, &(data[0]), &this->nominalBitTiming, &this->dataBitTiming);
-
-            driverFrame.print(true);
-
-            // 
-            monitorFrame.turnReceivedFrame();
-
-            monitorFrame.print(true);
-
-            // Insert ACK to received sequence!
-            driverFrame.getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
-
-            test_lib::TestSequence testSequence =
-                test_lib::TestSequence(std::chrono::nanoseconds(10), driverFrame, monitorFrame);
-            testSequence.pushDriverValuesToSimulator();
-            testSequence.pushMonitorValuesToSimulator();
-
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_DRIVER_START);
-            canAgentMonitorStart();
-
-            canAgentDriverStart();
-            canAgentDriverWaitFinish();
-
-            canAgentCheckResult();
-
-            testControllerAgentEndTest(true);
-
-
-            testMessage("Test %s : Run Exiting", testName);
-
-            return 0;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            /****************************************************************
+             * Write your test code here!
+             ***************************************************************/
+            
+            return (int)FinishTest();
         }
 };

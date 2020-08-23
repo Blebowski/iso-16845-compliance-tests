@@ -75,40 +75,40 @@ class TestIso_7_8_9_2 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
             // CAN FD frame with bit rate shift.
-            FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
+            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
 
             // Recessive stuff bit on 7-th data bit!
             uint8_t dataByte = 0x80;
-            goldenFrame = new Frame(frameFlags, 0x1, &dataByte);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            golden_frame = new Frame(frameFlags, 0x1, &dataByte);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
-            testMessage("No synchronisation after dominant bit sampled on Data field bit!");
+            TestMessage("DontShift synchronisation after dominant bit sampled on Data field bit!");
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -119,27 +119,30 @@ class TestIso_7_8_9_2 : public test_lib::TestBase
              *      8-th bit of data field. Insert passive error frame on driven
              *      frame!
              */
-            monitorBitFrame->turnReceivedFrame();
+            monitor_bit_frame->TurnReceivedFrame();
 
-            Bit *stuffBit = driverBitFrame->getBitOf(6, BIT_TYPE_DATA);
-            stuffBit->forceTimeQuanta(1, dataBitTiming.prop + dataBitTiming.ph1, DOMINANT);
+            Bit *stuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
+            stuffBit->ForceTimeQuanta(1, data_bit_timing.prop_ + data_bit_timing.ph1_,
+                                      BitValue::Dominant);
 
-            driverBitFrame->insertPassiveErrorFrame(driverBitFrame->getBitOf(7, BIT_TYPE_DATA));
-            monitorBitFrame->insertActiveErrorFrame(monitorBitFrame->getBitOf(7, BIT_TYPE_DATA));
+            driver_bit_frame->InsertPassiveErrorFrame(
+                driver_bit_frame->GetBitOf(7, BitType::Data));
+            monitor_bit_frame->InsertActiveErrorFrame(
+                monitor_bit_frame->GetBitOf(7, BitType::Data));
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            runLowerTester(true, true);
-            checkLowerTesterResult();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

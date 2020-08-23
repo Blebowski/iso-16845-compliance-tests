@@ -68,11 +68,11 @@ class TestIso_7_6_12 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
@@ -82,9 +82,9 @@ class TestIso_7_6_12 : public test_lib::TestBase
             int rec;
             int recNew;
             uint8_t dataByte = 0x80;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -93,25 +93,25 @@ class TestIso_7_6_12 : public test_lib::TestBase
             {
                 if (i == 0)
                 {
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                 } else {
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                 }
 
                 for (int j = 0; j < 2; j++)
                 {
                     // CAN 2.0 / CAN FD, DLC = 1, DATA Frame, Data byte = 0x01
                     // randomize Identifier 
-                    FrameFlags frameFlags = FrameFlags(dataRate, DATA_FRAME);
-                    goldenFrame = new Frame(frameFlags, 1, &dataByte);
-                    goldenFrame->randomize();
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
+                    FrameFlags frameFlags = FrameFlags(dataRate, RtrFlag::DataFrame);
+                    golden_frame = new Frame(frameFlags, 1, &dataByte);
+                    golden_frame->Randomize();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
 
                     // Read REC before scenario
-                    rec = dutIfc->getRec();
+                    rec = dut_ifc->GetRec();
 
                     int bitToCorrupt;
                     if (j == 0)
@@ -119,14 +119,14 @@ class TestIso_7_6_12 : public test_lib::TestBase
                     else
                         bitToCorrupt = 7;
 
-                    testMessage("Forcing Error delimiter bit %d to Dominant",
+                    TestMessage("Forcing Error delimiter bit %d to Dominant",
                                     bitToCorrupt);
 
                     // Convert to Bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driver_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
 
                     /**
                      * Modify test frames:
@@ -138,51 +138,51 @@ class TestIso_7_6_12 : public test_lib::TestBase
                      *   5. Insert next active error frame from 3-rd or 8-th bit
                      *      of Error delimiter!
                      */
-                    monitorBitFrame->turnReceivedFrame();
-                    driverBitFrame->getBitOf(6, BitType::BIT_TYPE_DATA)->flipBitValue();
+                    monitor_bit_frame->TurnReceivedFrame();
+                    driver_bit_frame->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitorBitFrame->insertActiveErrorFrame(
-                        monitorBitFrame->getBitOf(7, BitType::BIT_TYPE_DATA));
-                    driverBitFrame->insertActiveErrorFrame(
-                        driverBitFrame->getBitOf(7, BitType::BIT_TYPE_DATA));
+                    monitor_bit_frame->InsertActiveErrorFrame(
+                        monitor_bit_frame->GetBitOf(7, BitType::Data));
+                    driver_bit_frame->InsertActiveErrorFrame(
+                        driver_bit_frame->GetBitOf(7, BitType::Data));
 
                     // Force n-th bit of Error Delimiter to dominant!
-                    Bit *bit = driverBitFrame->getBitOf(bitToCorrupt - 1, BIT_TYPE_ERROR_DELIMITER);
-                    int bitIndex = driverBitFrame->getBitIndex(bit);
-                    bit->setBitValue(DOMINANT);
+                    Bit *bit = driver_bit_frame->GetBitOf(bitToCorrupt - 1, BitType::ErrorDelimiter);
+                    int bitIndex = driver_bit_frame->GetBitIndex(bit);
+                    bit->bit_value_ = BitValue::Dominant;
 
-                    monitorBitFrame->insertActiveErrorFrame(
-                        monitorBitFrame->getBitOf(bitToCorrupt,BIT_TYPE_ERROR_DELIMITER));
-                    driverBitFrame->insertActiveErrorFrame(
-                        driverBitFrame->getBitOf(bitToCorrupt, BIT_TYPE_ERROR_DELIMITER));
+                    monitor_bit_frame->InsertActiveErrorFrame(
+                        monitor_bit_frame->GetBitOf(bitToCorrupt, BitType::ErrorDelimiter));
+                    driver_bit_frame->InsertActiveErrorFrame(
+                        driver_bit_frame->GetBitOf(bitToCorrupt, BitType::ErrorDelimiter));
 
-                    driverBitFrame->print(true);
-                    monitorBitFrame->print(true);
+                    driver_bit_frame->Print(true);
+                    monitor_bit_frame->Print(true);
 
                     // Push frames to Lower tester, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    runLowerTester(true, true);
-                    checkLowerTesterResult();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
 
-                    recNew = dutIfc->getRec();
+                    recNew = dut_ifc->GetRec();
 
                     // Check that REC was incremented by 2
                     // (1 stuff error in data field, 1 form error in error delimiter!)
                     if (recNew != rec + 2)
                     {
-                        testMessage("DUT REC not as expected. Expected %d, Real %d",
+                        TestMessage("DUT REC not as expected. Expected %d, Real %d",
                                         rec + 2, recNew);
-                        testResult = false;
-                        testControllerAgentEndTest(testResult);
-                        return testResult;
+                        test_result = false;
+                        TestControllerAgentEndTest(test_result);
+                        return test_result;
                     }
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

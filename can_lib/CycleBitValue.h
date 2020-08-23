@@ -17,21 +17,42 @@
 #ifndef CYCLE_BIT_VALUE
 #define CYCLE_BIT_VALUE
 
-
+/**
+ * @class CycleBitValue
+ * @namespace can
+ * 
+ * Represents value of single clock cycle within a time quanta.
+ */
 class can::CycleBitValue
 {
     public:
+
+        /**
+         * Default value for given cycle.
+         */
         CycleBitValue();
-        CycleBitValue(BitValue bitValue);
 
-        void forceValue(BitValue bitValue);
-        void releaseValue();
+        /**
+         * Forced value for given cycle.
+         */
+        CycleBitValue(BitValue bit_value);
 
-        // Default value from CanBit should be taken
-        bool hasDefaultValue;
+        /**
+         * Forces value within a cycle
+         * @param bit_value Value to force
+         */
+        void ForceValue(BitValue bit_value);
 
-        // If not default value, then this value is taken instead
-        BitValue bitValue;
+        /**
+         * Releases value within given cycle (returns to default value)
+         */
+        void ReleaseValue();
+
+        /* Default value from CanBit should be taken */
+        bool has_default_value_;
+
+        /* If has_default_value_ = false, then cycle has this value */
+        BitValue bit_value_;
 };
 
 #endif

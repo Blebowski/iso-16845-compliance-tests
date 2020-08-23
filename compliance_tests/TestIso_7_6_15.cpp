@@ -64,11 +64,11 @@ class TestIso_7_6_15 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
@@ -77,9 +77,9 @@ class TestIso_7_6_15 : public test_lib::TestBase
             int iterCnt;
             int rec;
             int recNew;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -88,69 +88,69 @@ class TestIso_7_6_15 : public test_lib::TestBase
             {
                 if (i == 0)
                 {
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                 } else {
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                 }
 
-                testMessage("Setting IUT to Error passive!");
-                dutIfc->setErrorState(ERROR_PASSIVE);
+                TestMessage("Setting IUT to Error passive!");
+                dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
 
                 // CAN 2.0 / CAN FD, randomize others
                 FrameFlags frameFlags = FrameFlags(dataRate);
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // Read REC before scenario
-                rec = dutIfc->getRec();
+                rec = dut_ifc->GetRec();
                 if (rec < 128)
                 {
-                    testBigMessage("REC not at Error passive level!");
-                    testResult = false;
+                    TestBigMessage("REC not at Error passive level!");
+                    test_result = false;
                 }
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
                  *   1. Monitor frame as if received.
                  */
-                monitorBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
+                monitor_bit_frame->TurnReceivedFrame();
+                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
-                recNew = dutIfc->getRec();
+                recNew = dut_ifc->GetRec();
 
                 // Check that REC was not incremented
                 if (recNew < 120 || recNew > 126)
                 {
-                    testMessage("DUT REC not as expected. Expected %d, Real %d",
+                    TestMessage("DUT REC not as expected. Expected %d, Real %d",
                                     125, recNew);
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
-                    return testResult;
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
+                    return test_result;
                 }
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

@@ -74,39 +74,39 @@ class TestIso_7_8_9_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
             // CAN FD frame with bit rate shift, Dont shift bit rate
             // Here we have to set Bit rate dont shift because we intend to
             // get BRS dominant, so bit rate should not be shifted!
-            FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_DONT_SHIFT);
-            goldenFrame = new Frame(frameFlags);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::DontShift);
+            golden_frame = new Frame(frameFlags);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
-            testMessage("No synchronisation after dominant bit sampled on BRS bit!");
+            TestMessage("No synchronisation after dominant bit sampled on BRS bit!");
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -117,40 +117,41 @@ class TestIso_7_8_9_1 : public test_lib::TestBase
              *      with phase error 2, but DUT shall ignore it and not
              *      resynchronize because previous bit (r0) was Dominant!
              */
-            monitorBitFrame->turnReceivedFrame();
+            monitor_bit_frame->TurnReceivedFrame();
 
-            Bit *brsBit = driverBitFrame->getBitOf(0, BIT_TYPE_BRS);
+            Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
             
-            brsBit->setBitValue(DOMINANT);
+            brsBit->bit_value_ = BitValue::Dominant;
             
-            brsBit->forceTimeQuanta(0, RECESSIVE);
-            brsBit->forceTimeQuanta(1, RECESSIVE);
+            brsBit->ForceTimeQuanta(0, BitValue::Recessive);
+            brsBit->ForceTimeQuanta(1, BitValue::Recessive);
 
             // Force all TQ of PH2 as if no shift occured (this is what frame
             // was generated with)
-            brsBit->forceTimeQuanta(0, nominalBitTiming.ph2 - 1, PH2_PHASE, RECESSIVE);
+            brsBit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
+                                    BitPhase::Ph2, BitValue::Recessive);
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            runLowerTester(true, true);
-            checkLowerTesterResult();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
             // Read received frame from DUT and compare with sent frame
-            Frame readFrame = this->dutIfc->readFrame();
-            if (compareFrames(*goldenFrame, readFrame) == false)
+            Frame readFrame = this->dut_ifc->ReadFrame();
+            if (CompareFrames(*golden_frame, readFrame) == false)
             {
-                testResult = false;
-                testControllerAgentEndTest(testResult);
+                test_result = false;
+                TestControllerAgentEndTest(test_result);
             }
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

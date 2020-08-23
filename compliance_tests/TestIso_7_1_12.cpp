@@ -67,20 +67,20 @@ class TestIso_7_1_12 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
              ****************************************************************/
             
             int iterCnt;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -90,24 +90,24 @@ class TestIso_7_1_12 : public test_lib::TestBase
                 if (i == 0)
                 {
                     // Generate CAN frame (CAN 2.0, randomize others)
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                 } else {
                     // Generate CAN frame (CAN FD, randomize others)
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                 }
                 FrameFlags frameFlags = FrameFlags(dataRate);
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
             
                 /**
                  * Modify test frames:
@@ -117,33 +117,33 @@ class TestIso_7_1_12 : public test_lib::TestBase
                  *   3. Insert overload frame to monitored/driven frame on first bit of
                  *      intermission.
                  */
-                driverBitFrame->getBitOf(6, BitType::BIT_TYPE_EOF)->setBitValue(DOMINANT);
-                driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
-                monitorBitFrame->turnReceivedFrame();
-                monitorBitFrame->insertOverloadFrame(
-                    monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_INTERMISSION));
-                driverBitFrame->insertOverloadFrame(
-                    driverBitFrame->getBitOf(0, BitType::BIT_TYPE_INTERMISSION));
+                driver_bit_frame->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                monitor_bit_frame->TurnReceivedFrame();
+                monitor_bit_frame->InsertOverloadFrame(
+                    monitor_bit_frame->GetBitOf(0, BitType::Intermission));
+                driver_bit_frame->InsertOverloadFrame(
+                    driver_bit_frame->GetBitOf(0, BitType::Intermission));
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frames from DUT and compare with sent frames
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

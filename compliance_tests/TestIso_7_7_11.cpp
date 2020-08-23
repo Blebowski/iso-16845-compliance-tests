@@ -72,33 +72,33 @@ class TestIso_7_7_11 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
-            for (int i = 0; i < nominalBitTiming.sjw; i++)
+            for (int i = 0; i < nominal_bit_timing.sjw_; i++)
             {
                 // CAN 2.0 frame, randomize others
-                FrameFlags frameFlags = FrameFlags(CAN_2_0);
+                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0);
 
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
-                testMessage("Testing ACK negative phase error: %d", i + 1);
+                TestMessage("Testing ACK negative phase error: %d", i + 1);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -111,45 +111,45 @@ class TestIso_7_7_11 : public test_lib::TestBase
                  *       there bits are not shortened but flipped, but overall
                  *       effect is the same!
                  */
-                monitorBitFrame->turnReceivedFrame();
+                monitor_bit_frame->TurnReceivedFrame();
 
-                Bit *crcDelimiter = driverBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
-                crcDelimiter->shortenPhase(PH2_PHASE, i + 1);
-                crcDelimiter = monitorBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
-                crcDelimiter->shortenPhase(PH2_PHASE, i + 1);
+                Bit *crcDelimiter = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
+                crcDelimiter->ShortenPhase(BitPhase::Ph2, i + 1);
+                crcDelimiter = monitor_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
+                crcDelimiter->ShortenPhase(BitPhase::Ph2, i + 1);
 
-                Bit *ack = driverBitFrame->getBitOf(0, BIT_TYPE_ACK);
-                ack->setBitValue(DOMINANT);
+                Bit *ack = driver_bit_frame->GetBitOf(0, BitType::Ack);
+                ack->bit_value_ = BitValue::Dominant;
 
-                ack->shortenPhase(PH2_PHASE, nominalBitTiming.ph2);
+                ack->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
 
                 // Shorten monitored ACK by 1 TQ since DUT will re-synchronise
                 // with SYNC segment completed!
-                Bit *ackMon = monitorBitFrame->getBitOf(0, BIT_TYPE_ACK);
-                ackMon->shortenPhase(PH1_PHASE, 1);
+                Bit *ackMon = monitor_bit_frame->GetBitOf(0, BitType::Ack);
+                ackMon->ShortenPhase(BitPhase::Ph1, 1);
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

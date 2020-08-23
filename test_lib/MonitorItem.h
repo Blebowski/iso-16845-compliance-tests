@@ -29,29 +29,22 @@ class test_lib::MonitorItem
 {
     public:
         MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                    std::chrono::nanoseconds sampleRate);
+                    std::chrono::nanoseconds sample_rate);
         MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                    std::chrono::nanoseconds sampleRate, std::string message);
-        MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                    std::chrono::nanoseconds sampleRate, LoggerSeverity loggerSeverity);
-        MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                    std::chrono::nanoseconds sampleRate, std::string message,
-                    LoggerSeverity loggerSeverity);
+                    std::chrono::nanoseconds sample_rate, std::string message);
 
         /**
-         * @brief Checks if items has message
-         * 
          * Checks if item has message which will be printed by digital simulator
          * when CAN agent starts monitoring this item.
          * 
-         * @return true if item has message, false otherwise
+         * @returns true if item has message, false otherwise
          */
-        bool hasMessage();
+        bool HasMessage();
 
         /**
-         * @brief Print item
+         * Prints item
          */
-        void print();
+        void Print();
 
         /**
          * Time for which the item is monitored. When this is CAN bit, then this
@@ -60,13 +53,13 @@ class test_lib::MonitorItem
         std::chrono::nanoseconds duration;
 
         /**
-         * Sample rate for this item. Indicates how often during monitoring of
+         * Sample rate of this item. Indicates how often during monitoring of
          * item CAN agent monitor checks value of can_tx.
          */
-        std::chrono::nanoseconds sampleRate;
+        std::chrono::nanoseconds sample_rate;
 
         /**
-         * Value which is monitored by CAN agent monitor.
+         * Value towards which can_tc shall be checked by CAN agent monitor during monitoring.
          */
         StdLogic value;
 
@@ -75,11 +68,6 @@ class test_lib::MonitorItem
          * starts.
          */
         std::string message;
-
-        /**
-         * Severity of message to be printed when mismatch is monitored.
-         */
-        LoggerSeverity loggerSeverity;
 };
 
 #endif

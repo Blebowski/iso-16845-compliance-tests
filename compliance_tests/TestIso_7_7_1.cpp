@@ -65,36 +65,36 @@ class TestIso_7_7_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
             // CAN 2.0 frame, Base identifier, randomize others
-            FrameFlags frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER);
+            FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);
 
             // Base ID full of 1s
             int id = pow(2,11) - 1;
-            goldenFrame = new Frame(frameFlags, 0x1, id);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            golden_frame = new Frame(frameFlags, 0x1, id);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
-            testMessage("Sample point test.");
+            TestMessage("Sample point test.");
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -105,47 +105,47 @@ class TestIso_7_7_1 : public test_lib::TestBase
              *   4. Correct lenght of one of the monitored bits since second
              *      stuff bit causes negative re-synchronization.
              */
-            monitorBitFrame->turnReceivedFrame();
+            monitor_bit_frame->TurnReceivedFrame();
 
-            Bit *firstStuffBit = driverBitFrame->getStuffBit(0);
-            firstStuffBit->shortenPhase(PH2_PHASE, nominalBitTiming.ph2);
+            Bit *firstStuffBit = driver_bit_frame->GetStuffBit(0);
+            firstStuffBit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
 
-            Bit *secStuffBit = driverBitFrame->getStuffBit(1);
-            secStuffBit->shortenPhase(PH2_PHASE, nominalBitTiming.ph2);
-            BitPhase prevPhase = secStuffBit->prevBitPhase(PH2_PHASE);
-            secStuffBit->shortenPhase(prevPhase, 1);
+            Bit *secStuffBit = driver_bit_frame->GetStuffBit(1);
+            secStuffBit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            BitPhase prevPhase = secStuffBit->PrevBitPhase(BitPhase::Ph2);
+            secStuffBit->ShortenPhase(prevPhase, 1);
 
             /* Compensate the monitored frame as if negative resynchronisation
                happend */
-            int resyncAmount = nominalBitTiming.ph2;
-            if (nominalBitTiming.sjw < resyncAmount)
-                resyncAmount = nominalBitTiming.sjw;
-            monitorBitFrame->getBitOf(11, BIT_TYPE_BASE_ID)->shortenPhase(
-                PH2_PHASE, resyncAmount);
+            int resyncAmount = nominal_bit_timing.ph2_;
+            if (nominal_bit_timing.sjw_ < resyncAmount)
+                resyncAmount = nominal_bit_timing.sjw_;
+            monitor_bit_frame->GetBitOf(11, BitType::BaseIdentifier)->ShortenPhase(
+                BitPhase::Ph2, resyncAmount);
 
             /* 5 + Stuff + 5 + Stuff = 12 bits. We need to insert error frame
                from 13-th bit on! */
-            int bitIndex = driverBitFrame->getBitIndex(
-                            driverBitFrame->getBitOf(12, BIT_TYPE_BASE_ID));
+            int bitIndex = driver_bit_frame->GetBitIndex(
+                            driver_bit_frame->GetBitOf(12, BitType::BaseIdentifier));
 
             /* Expected error frame on monitor (from start of bit after stuff bit)
              * Driver will have passive error frame -> transmitt all recessive */
-            monitorBitFrame->insertActiveErrorFrame(bitIndex);
-            driverBitFrame->insertPassiveErrorFrame(bitIndex);
+            monitor_bit_frame->InsertActiveErrorFrame(bitIndex);
+            driver_bit_frame->InsertPassiveErrorFrame(bitIndex);
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            runLowerTester(true, true);
-            checkLowerTesterResult();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

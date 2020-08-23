@@ -81,42 +81,42 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
-            int upperTh = dataBitTiming.ph1 + dataBitTiming.prop + 1;
+            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
 
-            for (int i = dataBitTiming.sjw + 1; i < upperTh; i++)
+            for (int i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
             {
                 // CAN FD frame with bit rate shift
                 uint8_t dataByte = 0x7F;
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
-                goldenFrame = new Frame(frameFlags, 0x1, &dataByte);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
+                golden_frame = new Frame(frameFlags, 0x1, &dataByte);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
-                testMessage("Testing data byte positive resynchronisation with phase error: %d", i + 1);
+                TestMessage("Testing data byte positive resynchronisation with phase error: %d", i + 1);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -130,41 +130,41 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
                  *   5. Insert active error frame from 8-th data bit further to monitored
                  *      frame. Insert passive error frame to driven frame!
                  */
-                monitorBitFrame->turnReceivedFrame();
+                monitor_bit_frame->TurnReceivedFrame();
 
-                Bit *driverStuffBit = driverBitFrame->getBitOf(6, BIT_TYPE_DATA);
-                Bit *monitorStuffBit = monitorBitFrame->getBitOf(6, BIT_TYPE_DATA);
+                Bit *driverStuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
+                Bit *monitorStuffBit = monitor_bit_frame->GetBitOf(6, BitType::Data);
 
                 // One bit after stuff bit will be recessive due to data byte. Insert
                 // passive error frame from one bit further so that model does not modify
                 // the stuff bit due to insertion of error frame after bit in data bit rate!
-                Bit *driverNextBit = driverBitFrame->getBitOf(8, BIT_TYPE_DATA);
-                Bit *monitorNextBit = monitorBitFrame->getBitOf(7, BIT_TYPE_DATA);
+                Bit *driverNextBit = driver_bit_frame->GetBitOf(8, BitType::Data);
+                Bit *monitorNextBit = monitor_bit_frame->GetBitOf(7, BitType::Data);
 
                 for (int j = 0; j < i; j++)
-                    driverStuffBit->forceTimeQuanta(j, RECESSIVE);
-                for (int j = dataBitTiming.sjw - 1; j < dataBitTiming.ph2; j++)
-                    driverStuffBit->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
+                    driverStuffBit->ForceTimeQuanta(j, BitValue::Recessive);
+                for (int j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
+                    driverStuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
-                monitorStuffBit->lengthenPhase(SYNC_PHASE, dataBitTiming.sjw);
+                monitorStuffBit->LengthenPhase(BitPhase::Sync, data_bit_timing.sjw_);
 
-                driverBitFrame->insertPassiveErrorFrame(driverNextBit);
-                monitorBitFrame->insertActiveErrorFrame(monitorNextBit);
+                driver_bit_frame->InsertPassiveErrorFrame(driverNextBit);
+                monitor_bit_frame->InsertActiveErrorFrame(monitorNextBit);
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

@@ -17,126 +17,143 @@
 
 namespace can {
 
-    enum FlexibleDataRate
+    enum class FrameType
     {
-        CAN_2_0,
-        CAN_FD
+        Can2_0,
+        CanFd
     };
 
-    enum ExtendedIdentifier
+    std::ostream &operator<<(std::ostream &os, FrameType &frame_type);
+
+    enum class IdentifierType
     {
-        BASE_IDENTIFIER,
-        EXTENDED_IDENTIFIER
+        Base,
+        Extended
     };
 
-    enum BitRateShift
+    std::ostream &operator<<(std::ostream &os, IdentifierType &identifier_type);
+
+    enum class BrsFlag
     {
-        BIT_RATE_SHIFT,
-        BIT_RATE_DONT_SHIFT
+        Shift,
+        DontShift
     };
 
-    enum RemoteTransmissionRequest
+    std::ostream &operator<<(std::ostream &os, BrsFlag &brs_flag);
+
+    enum class RtrFlag
     {
-        DATA_FRAME,
-        RTR_FRAME
+        DataFrame,
+        RtrFrame
     };
 
-    enum ErrorStateIndicator
+    std::ostream &operator<<(std::ostream &os, RtrFlag &rtr_flag);
+    
+    enum class EsiFlag
     {
-        ESI_ERROR_ACTIVE,
-        ESI_ERROR_PASSIVE
+        ErrorActive,
+        ErrorPassive
     };
 
-    enum BitType
+    std::ostream &operator<<(std::ostream &os, EsiFlag &esi_flag);
+
+    enum class BitType
     {
-        BIT_TYPE_SOF,
-        BIT_TYPE_BASE_ID,
-        BIT_TYPE_EXTENDED_ID,
-        BIT_TYPE_RTR,
-        BIT_TYPE_IDE,
-        BIT_TYPE_SRR,
-        BIT_TYPE_EDL,
-        BIT_TYPE_R0,
-        BIT_TYPE_R1,
-        BIT_TYPE_BRS,
-        BIT_TYPE_ESI,
-        BIT_TYPE_DLC,
-        BIT_TYPE_DATA,
-        BIT_TYPE_STUFF_COUNT,
-        BIT_TYPE_STUFF_PARITY,
-        BIT_TYPE_CRC,
-        BIT_TYPE_CRC_DELIMITER,
-        BIT_TYPE_ACK,
-        BIT_TYPE_ACK_DELIMITER,
-        BIT_TYPE_EOF,
-        BIT_TYPE_INTERMISSION,
-        BIT_TYPE_IDLE,
-        BIT_TYPE_SUSPEND,
-        BIT_TYPE_ACTIVE_ERROR_FLAG,
-        BIT_TYPE_PASSIVE_ERROR_FLAG,
-        BIT_TYPE_ERROR_DELIMITER,
-        BIT_TYPE_OVERLOAD_FLAG,
-        BIT_TYPE_OVERLOAD_DELIMITER
+        Sof,
+        BaseIdentifier,
+        IdentifierExtension,
+        Rtr,
+        Ide,
+        Srr,
+        Edl,
+        R0,
+        R1,
+        Brs,
+        Esi,
+        Dlc,
+        Data,
+        StuffCount,
+        StuffParity,
+        Crc,
+        CrcDelimiter,
+        Ack,
+        AckDelimiter,
+        Eof,
+        Intermission,
+        Idle,
+        Suspend,
+        ActiveErrorFlag,
+        PassiveErrorFlag,
+        ErrorDelimiter,
+        OverloadFlag,
+        OverloadDelimiter
     };
 
     struct BitTypeName
     {
-        BitType bitType;
+        BitType bit_type;
         std::string name;
     };
 
-    enum BitValue {
-        DOMINANT = 0,
-        RECESSIVE = 1
+    enum class BitValue {
+        Dominant = 0,
+        Recessive = 1
     };
 
-    enum StuffBitType
+    enum class StuffBitType
     {
-        STUFF_NO,
-        STUFF_NORMAL,
-        STUFF_FIXED
+        NoStuffBit,
+        NormalStuffBit,
+        FixedStuffBit
     };
 
-    enum BitRate
+    enum class BitRate
     {
-        NOMINAL_BIT_RATE,
-        DATA_BIT_RATE
+        Nominal,
+        Data
     };
 
-    enum BitPhase
+    enum class BitPhase
     {
-        SYNC_PHASE,
-        PROP_PHASE,
-        PH1_PHASE,
-        PH2_PHASE
+        Sync,
+        Prop,
+        Ph1,
+        Ph2
     };
 
-    enum ErrorState
+    enum class FaultConfinementState
     {
-        ERROR_ACTIVE,
-        ERROR_PASSIVE,
-        BUS_OFF
+        ErrorActive,
+        ErrorPassive,
+        BusOff
     };
 
-    enum SspType {
-        SSP_DISABLED,           // Secondary sample point disabled
-        SSP_OFFSET,             // Offset only
-        SSP_MEAS_AND_OFFSET     // Measured value + offset
+    enum class SspType {
+        Disabled,           // Secondary sample point disabled
+        Offset,             // Offset only
+        MeasuredPlusOffset  // Measured value + offset
     };
 
-    enum CanVersion
+    enum class CanVersion
     {
-        CAN_2_0_VERSION,
-        CAN_FD_TOLERANT_VERSION,
-        CAN_FD_ENABLED_VERSION
+        Can_2_0,
+        CanFdTolerant,
+        CanFdEnabled
     };
+
+    /* Classes modeling CAN frame:
+     *   Frame          - contains metadata (DLC, ID, Data, flags) of CAN frame
+     *   Bit            - Represents single bit on CAN bus. Contains time quantas.
+     *   TimeQuanta     - Represents single Time Quanta. Contains list of Cycle bit values.
+     *   CycleBitValue  - Value of bit during single cycle.
+     *   FrameFlags     - Frame flags (RTR, IDE, BRS, etc...)
+     *   BitTiming      - Timing parameters of CAN bus.
+     *   BitFrame       - CAN frame with representation of each bit and its value.
+     */
 
     class Bit;
-    class CycleBit;
-    
     class Frame;
     class BitFrame;
-    class CycleFrame;
 
     class FrameFlags;
 

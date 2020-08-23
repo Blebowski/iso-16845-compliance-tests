@@ -50,11 +50,11 @@
  * Response:
  *  Test DATA #1:
  *      The modified data bit shall be sampled as recessive.
- *      The frame is valid. No error flag shall occur.
+ *      The frame is valid. DontShift error flag shall occur.
  * 
  *  Test DATA #2:
  *      The modified data bit shall be sampled as dominant.
- *      The frame is valid. No error flag shall occur.
+ *      The frame is valid. DontShift error flag shall occur.
  *****************************************************************************/
 
 #include <iostream>
@@ -83,17 +83,17 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
@@ -108,30 +108,30 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
             for (int i = 0; i < 2; i++)
             {
                 // CAN FD frame, shift bit rate
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
 
                 // In 2nd iteration dominant bit will be sampled at second bit
                 // position of data field! We must expect this in golden frame
                 // so that it will be compared correctly with received frame!
                 if (i == 0)
-                    goldenFrame = new Frame(frameFlags, 1, &dataByteRecessiveSampled);
+                    golden_frame = new Frame(frameFlags, 1, &dataByteRecessiveSampled);
                 else
-                    goldenFrame = new Frame(frameFlags, 1, &dataByteDominantSampled);
+                    golden_frame = new Frame(frameFlags, 1, &dataByteDominantSampled);
 
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 if (i == 0)
-                    testMessage("Testing Data bit sampled Recessive");
+                    TestMessage("Testing Data bit sampled Recessive");
                 else
-                    testMessage("Testing Data bit sampled Dominant");
+                    TestMessage("Testing Data bit sampled Dominant");
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -140,43 +140,43 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
                  *      this bit is recessive. Flip its TSEG - 1 (i == 0)
                  *      or TSEG1 (i == 1) to dominant.
                  */
-                monitorBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
+                monitor_bit_frame->TurnReceivedFrame();
+                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                Bit *dataBit = driverBitFrame->getBitOf(1, BIT_TYPE_DATA);
-                dataBit->setBitValue(RECESSIVE);
+                Bit *dataBit = driver_bit_frame->GetBitOf(1, BitType::Data);
+                dataBit->bit_value_ = BitValue::Recessive;
 
                 int domPulseLength;
                 if (i == 0)
-                    domPulseLength = dataBitTiming.prop + dataBitTiming.ph1;
+                    domPulseLength = data_bit_timing.prop_ + data_bit_timing.ph1_;
                 else
-                    domPulseLength = dataBitTiming.prop + dataBitTiming.ph1 + 1;
+                    domPulseLength = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
 
                 for (int j = 0; j < domPulseLength; j++)
-                    dataBit->forceTimeQuanta(j, DOMINANT);    
+                    dataBit->ForceTimeQuanta(j, BitValue::Dominant);    
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

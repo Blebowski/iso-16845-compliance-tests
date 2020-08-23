@@ -72,37 +72,37 @@ class TestIso_7_8_7_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
             // CAN FD frame with bit rate shift
-            FrameFlags frameFlags = FrameFlags(CAN_FD);
-            goldenFrame = new Frame(frameFlags);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            FrameFlags frameFlags = FrameFlags(FrameType::CanFd);
+            golden_frame = new Frame(frameFlags);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
-            testMessage("Glitch filtering test for positive phase error on res bit");
+            TestMessage("Glitch filtering test for positive phase error on res bit");
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -110,34 +110,35 @@ class TestIso_7_8_7_1 : public test_lib::TestBase
              *   2. Force second TQ of res bit to recessive.
              *   3. Force Phase2 of res bit to recessive.
              */
-            monitorBitFrame->turnReceivedFrame();
+            monitor_bit_frame->TurnReceivedFrame();
 
             // Res post EDL in model we mark r0 as in original CAN FD 1.0 by Bosch.
-            Bit *resBit = driverBitFrame->getBitOf(0, BIT_TYPE_R0);
-            resBit->forceTimeQuanta(1, RECESSIVE);
-            resBit->forceTimeQuanta(0, nominalBitTiming.ph2 - 1, PH2_PHASE, RECESSIVE);
+            Bit *resBit = driver_bit_frame->GetBitOf(0, BitType::R0);
+            resBit->ForceTimeQuanta(1, BitValue::Recessive);
+            resBit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
+                                    BitPhase::Ph2, BitValue::Recessive);
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            runLowerTester(true, true);
-            checkLowerTesterResult();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
             // Read received frame from DUT and compare with sent frame
-            Frame readFrame = this->dutIfc->readFrame();
-            if (compareFrames(*goldenFrame, readFrame) == false)
+            Frame readFrame = this->dut_ifc->ReadFrame();
+            if (CompareFrames(*golden_frame, readFrame) == false)
             {
-                testResult = false;
-                testControllerAgentEndTest(testResult);
+                test_result = false;
+                TestControllerAgentEndTest(test_result);
             }
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

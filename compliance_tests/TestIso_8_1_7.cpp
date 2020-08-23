@@ -89,29 +89,29 @@ class TestIso_8_1_7 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Start monitoring when DUT starts transmitting!
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_TX_FALLING);
-            canAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
 
             // Configure driver to wait for monitor so that LT sends ACK in right moment.
-            canAgentSetWaitForMonitor(true);
+            CanAgentSetWaitForMonitor(true);
 
             // Enable TX/RX feedback so that DUT will see its own transmitted frame!
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             /*****************************************************************
              * Common part of test (i=0), CAN FD enabled part of test(i=1)
              ****************************************************************/
             int iterCnt;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -121,12 +121,12 @@ class TestIso_8_1_7 : public test_lib::TestBase
                 int numElemTests;
                 if (i == 0)
                 {
-                    testMessage("Common part of test!");
+                    TestMessage("Common part of test!");
                     numElemTests = 3;
                 }
                 else
                 {
-                    testMessage("CAN FD enabled part of test!");
+                    TestMessage("CAN FD enabled part of test!");
                     numElemTests = 10;
                 }
 
@@ -137,7 +137,8 @@ class TestIso_8_1_7 : public test_lib::TestBase
                     // Common part
                     if (i == 0)
                     {
-                        frameFlags = FrameFlags(CAN_2_0, EXTENDED_IDENTIFIER, DATA_FRAME);
+                        frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Extended,
+                                                RtrFlag::DataFrame);
 
                         // Data, dlcs and identifiers for each iteration
                         uint8_t data[3][8] = {
@@ -152,32 +153,36 @@ class TestIso_8_1_7 : public test_lib::TestBase
                             0x07C30F0F, 0x07C30F0F, 0x1FB80000
                         };
 
-                        goldenFrame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
+                        golden_frame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
 
                     // CAN FD enabled part
                     } else {
                         
                         // Flags based on elementary test
                         if (j == 0 || j == 1 || j == 6 || j == 7 || j == 8) {
-                            frameFlags = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                                                    BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
+                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
+                                                    RtrFlag::DataFrame, BrsFlag::Shift,
+                                                    EsiFlag::ErrorActive);
                         } else if (j == 2 || j == 9){
-                            frameFlags = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                                                    BIT_RATE_SHIFT, ESI_ERROR_PASSIVE);
+                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
+                                                    RtrFlag::DataFrame, BrsFlag::Shift,
+                                                    EsiFlag::ErrorPassive);
                         } else if (j == 3) {
-                            frameFlags = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                                                    BIT_RATE_DONT_SHIFT, ESI_ERROR_PASSIVE);
+                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
+                                                    RtrFlag::DataFrame, BrsFlag::DontShift,
+                                                    EsiFlag::ErrorPassive);
                         } else if (j == 4 || j == 5) {
-                            frameFlags = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER, DATA_FRAME,
-                                                    BIT_RATE_DONT_SHIFT, ESI_ERROR_ACTIVE);
+                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
+                                                    RtrFlag::DataFrame, BrsFlag::DontShift,
+                                                    EsiFlag::ErrorActive);
                         }
 
-                        // DUT must be set to error passive state when ESI_ERROR_PASSIVE
+                        // DUT must be set to error passive state when ErrorPassive
                         // is expected! Otherwise, it would transmitt ESI_ERROR_ACTIVE
                         if (j == 2 || j == 3 || j == 9)
-                            dutIfc->setErrorState(ERROR_PASSIVE);
+                            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
                         else
-                            dutIfc->setErrorState(ERROR_ACTIVE);
+                            dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
 
                         int ids[] = {
                             0x01E38787, 0x11F3C3C3, 0x1079C1E1, 0x083DF0F0, 0x041EF878,
@@ -281,17 +286,17 @@ class TestIso_8_1_7 : public test_lib::TestBase
                         uint8_t dlcs[] = {
                             0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, 0x0
                         };
-                        goldenFrame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
+                        golden_frame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
                     }
 
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
 
                     // Convert to Bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driver_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
 
                     /**
                      * Modify test frames:
@@ -300,29 +305,29 @@ class TestIso_8_1_7 : public test_lib::TestBase
                      * No other modifications are needed as correct stuff generation is
                      * verified by model!
                      */
-                    driverBitFrame->turnReceivedFrame();
+                    driver_bit_frame->TurnReceivedFrame();
 
-                    driverBitFrame->print(true);
-                    monitorBitFrame->print(true);
+                    driver_bit_frame->Print(true);
+                    monitor_bit_frame->Print(true);
 
                     // Push frames to Lower tester, insert to DUT, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    startDriverAndMonitor();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    StartDriverAndMonitor();
 
-                    testMessage("Sending frame via DUT!");
-                    this->dutIfc->sendFrame(goldenFrame);
-                    testMessage("Sent frame via DUT!");
+                    TestMessage("Sending frame via DUT!");
+                    this->dut_ifc->SendFrame(golden_frame);
+                    TestMessage("Sent frame via DUT!");
                     
-                    waitForDriverAndMonitor();
-                    checkLowerTesterResult();
+                    WaitForDriverAndMonitor();
+                    CheckLowerTesterResult();
 
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

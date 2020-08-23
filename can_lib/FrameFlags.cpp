@@ -18,231 +18,231 @@
 can::FrameFlags::FrameFlags()
 {
     // These are considered default values.
-    isFdf_ = CAN_2_0;
-    isIde_ = BASE_IDENTIFIER;
-    isEsi_ = ESI_ERROR_ACTIVE;
-    isRtr_ = DATA_FRAME;
-    isBrs_ = BIT_RATE_DONT_SHIFT;
+    is_fdf_ = FrameType::Can2_0;
+    is_ide_ = IdentifierType::Base;
+    is_esi_ = EsiFlag::ErrorActive;
+    is_rtr_ = RtrFlag::DataFrame;
+    is_brs_ = BrsFlag::DontShift;
 
-    randomizeEnableAll();
+    RandomizeEnableAll();
 }
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                             RemoteTransmissionRequest isRtr,
-                             BitRateShift isBrs, ErrorStateIndicator isEsi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
+                             RtrFlag is_rtr,
+                             BrsFlag is_brs, EsiFlag is_esi)
 {
-    isFdf_ = isFdf;
-    isIde_ = isIde;
-    isRtr_ = isRtr;
-    isBrs_ = isBrs;
-    isEsi_ = isEsi;
+    is_fdf_ = is_fdf;
+    is_ide_ = is_ide;
+    is_rtr_ = is_rtr;
+    is_brs_ = is_brs;
+    is_esi_ = is_esi;
 
-    if (isFdf == CAN_FD && isRtr == RTR_FRAME){
+    if (is_fdf == FrameType::CanFd && is_rtr == RtrFlag::RtrFrame){
         std::cerr << "Can't set RTR flag and FDF flag at once, RTR ignored!\n";
-        isRtr = DATA_FRAME;
+        is_rtr = RtrFlag::DataFrame;
     }
 
-    if (isFdf == CAN_2_0 && isBrs == BIT_RATE_SHIFT){
+    if (is_fdf == FrameType::Can2_0 && is_brs == BrsFlag::Shift){
         std::cerr << "Can't set BRS flag when BRS flag is not set, BRS ignored!\n";
-        isBrs = BIT_RATE_DONT_SHIFT;
+        is_brs = BrsFlag::DontShift;
     }
 
-    if (isFdf == CAN_2_0 && isEsi == ESI_ERROR_PASSIVE){
+    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
         std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
-        isEsi_ = ESI_ERROR_ACTIVE; // Error active is assumed default
+        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
     }
 
-    randomizeDisableAll();
+    RandomizeDisableAll();
 };
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                            RemoteTransmissionRequest isRtr)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
+                            RtrFlag is_rtr)
 {
-    isFdf_ = isFdf;
-    isIde_ = isIde;
-    isRtr_ = isRtr;
+    is_fdf_ = is_fdf;
+    is_ide_ = is_ide;
+    is_rtr_ = is_rtr;
 
-    if (isFdf == CAN_FD && isRtr == RTR_FRAME){
+    if (is_fdf == FrameType::CanFd && is_rtr == RtrFlag::RtrFrame){
         std::cerr << "Can't set RTR flag and FDF flag at once, RTR ignored!\n";
-        isRtr = DATA_FRAME;
+        is_rtr = RtrFlag::DataFrame;
     }
 
-    randomizeDisableAll();
-    randomizeEsi = true;
-    randomizeBrs = true;
+    RandomizeDisableAll();
+    randomize_esi = true;
+    randomize_brs = true;
 }
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide)
 {
-    isFdf_ = isFdf;
-    isIde_ = isIde;
+    is_fdf_ = is_fdf;
+    is_ide_ = is_ide;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-    randomizeIde = false;
+    RandomizeEnableAll();
+    randomize_fdf = false;
+    randomize_ide = false;
 }
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, RemoteTransmissionRequest isRtr)
+can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr)
 {
-    isFdf_ = isFdf;
-    isRtr_ = isRtr;
+    is_fdf_ = is_fdf;
+    is_rtr_ = is_rtr;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-    randomizeRtr = false;
+    RandomizeEnableAll();
+    randomize_fdf = false;
+    randomize_rtr = false;
 }
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf)
+can::FrameFlags::FrameFlags(FrameType is_fdf)
 {
-    isFdf_ = isFdf;
+    is_fdf_ = is_fdf;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-}
-
-
-can::FrameFlags::FrameFlags(ExtendedIdentifier isIde)
-{
-    isIde_ = isIde;
-
-    randomizeEnableAll();
-    randomizeIde = false;
+    RandomizeEnableAll();
+    randomize_fdf = false;
 }
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs)
+can::FrameFlags::FrameFlags(IdentifierType is_ide)
 {
-    isFdf_ = isFdf;
-    isBrs_ = isBrs;
+    is_ide_ = is_ide;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-    randomizeBrs = false;
+    RandomizeEnableAll();
+    randomize_ide = false;
 }
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, BitRateShift isBrs,
-                            ErrorStateIndicator isEsi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs)
 {
-    isFdf_ = isFdf;
-    isBrs_ = isBrs;
-    isEsi_ = isEsi;
+    is_fdf_ = is_fdf;
+    is_brs_ = is_brs;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-    randomizeBrs = false;
-    randomizeEsi = false;
+    RandomizeEnableAll();
+    randomize_fdf = false;
+    randomize_brs = false;
 }
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ErrorStateIndicator isEsi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs,
+                            EsiFlag is_esi)
 {
-    isFdf_ = isFdf;
-    isEsi_ = isEsi;
+    is_fdf_ = is_fdf;
+    is_brs_ = is_brs;
+    is_esi_ = is_esi;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-    randomizeEsi = false;
+    RandomizeEnableAll();
+    randomize_fdf = false;
+    randomize_brs = false;
+    randomize_esi = false;
 }
 
 
-can::FrameFlags::FrameFlags(FlexibleDataRate isFdf, ExtendedIdentifier isIde,
-                            ErrorStateIndicator isEsi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi)
 {
-    isFdf_ = isFdf;
-    isEsi_ = isEsi;
-    isIde_ = isIde;
+    is_fdf_ = is_fdf;
+    is_esi_ = is_esi;
 
-    randomizeEnableAll();
-    randomizeFdf = false;
-    randomizeEsi = false;
-    randomizeIde = false;
+    RandomizeEnableAll();
+    randomize_fdf = false;
+    randomize_esi = false;
+}
+
+
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
+                            EsiFlag is_esi)
+{
+    is_fdf_ = is_fdf;
+    is_esi_ = is_esi;
+    is_ide_ = is_ide;
+
+    RandomizeEnableAll();
+    randomize_fdf = false;
+    randomize_esi = false;
+    randomize_ide = false;
 }
 
 bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
 {
-    if (lhs.isBrs_ != rhs.isBrs_)
+    if (lhs.is_brs_ != rhs.is_brs_)
         return false;
-    if (lhs.isEsi_ != rhs.isEsi_)
+    if (lhs.is_esi_ != rhs.is_esi_)
         return false;
-    if (lhs.isFdf_ != rhs.isFdf_)
+    if (lhs.is_fdf_ != rhs.is_fdf_)
         return false;
-    if (lhs.isIde_ != rhs.isIde_)
+    if (lhs.is_ide_ != rhs.is_ide_)
         return false;
-    if (lhs.isRtr_ != rhs.isRtr_)
+    if (lhs.is_rtr_ != rhs.is_rtr_)
         return false;
     return true;
 }
 
 
-void can::FrameFlags::randomize()
+void can::FrameFlags::Randomize()
 {
-    if (randomizeFdf)
+    if (randomize_fdf)
     {
         if (rand() % 2 == 1)
-            isFdf_ = FlexibleDataRate::CAN_2_0;
+            is_fdf_ = FrameType::Can2_0;
         else
-            isFdf_ = FlexibleDataRate::CAN_FD;
+            is_fdf_ = FrameType::CanFd;
     }
 
-    if (randomizeIde)
+    if (randomize_ide)
     {
         if (rand() % 2 == 1)
-            isIde_ = ExtendedIdentifier::BASE_IDENTIFIER;
+            is_ide_ = IdentifierType::Base;
         else
-            isIde_ = ExtendedIdentifier::EXTENDED_IDENTIFIER;
+            is_ide_ = IdentifierType::Extended;
     }    
 
-    if (randomizeRtr)
+    if (randomize_rtr)
     {
-        if (isFdf_ == FlexibleDataRate::CAN_FD)
-            isRtr_ = RemoteTransmissionRequest::DATA_FRAME;
+        if (is_fdf_ == FrameType::CanFd)
+            is_rtr_ = RtrFlag::DataFrame;
         else if (rand() % 4 == 1)
-            isRtr_ = RemoteTransmissionRequest::RTR_FRAME;
+            is_rtr_ = RtrFlag::RtrFrame;
         else
-            isRtr_ = RemoteTransmissionRequest::DATA_FRAME;
+            is_rtr_ = RtrFlag::DataFrame;
     }
 
-    if (randomizeBrs)
+    if (randomize_brs)
     {
-        if (isFdf_ == FlexibleDataRate::CAN_2_0)
-            isBrs_ = BitRateShift::BIT_RATE_DONT_SHIFT;
+        if (is_fdf_ == FrameType::Can2_0)
+            is_brs_ = BrsFlag::DontShift;
         else if (rand() % 2 == 1)
-            isBrs_ = BitRateShift::BIT_RATE_SHIFT;
+            is_brs_ = BrsFlag::Shift;
         else
-            isBrs_ = BitRateShift::BIT_RATE_DONT_SHIFT;
+            is_brs_ = BrsFlag::DontShift;
     }
 
-    if (randomizeEsi)
+    if (randomize_esi)
     {
-        if (isFdf_ == FlexibleDataRate::CAN_2_0)
-            isEsi_ = ErrorStateIndicator::ESI_ERROR_ACTIVE;
+        if (is_fdf_ == FrameType::Can2_0)
+            is_esi_ = EsiFlag::ErrorActive;
         else if (rand() % 2 == 1)
-            isEsi_ = ErrorStateIndicator::ESI_ERROR_PASSIVE;
+            is_esi_ = EsiFlag::ErrorPassive;
         else
-            isEsi_ = ErrorStateIndicator::ESI_ERROR_ACTIVE;
+            is_esi_ = EsiFlag::ErrorActive;
     }
 }
 
 
-void can::FrameFlags::randomizeEnableAll()
+void can::FrameFlags::RandomizeEnableAll()
 {
-    randomizeFdf = true;
-    randomizeIde = true;
-    randomizeRtr = true;
-    randomizeBrs = true;
-    randomizeEsi = true;
+    randomize_fdf = true;
+    randomize_ide = true;
+    randomize_rtr = true;
+    randomize_brs = true;
+    randomize_esi = true;
 }
 
 
-void can::FrameFlags::randomizeDisableAll()
+void can::FrameFlags::RandomizeDisableAll()
 {
-    randomizeFdf = false;
-    randomizeIde = false;
-    randomizeRtr = false;
-    randomizeBrs = false;
-    randomizeEsi = false;
+    randomize_fdf = false;
+    randomize_ide = false;
+    randomize_rtr = false;
+    randomize_brs = false;
+    randomize_esi = false;
 }

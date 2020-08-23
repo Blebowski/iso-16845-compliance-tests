@@ -31,9 +31,9 @@
  *    ID      RTR/RRS         DATA      Description of the     Number of elementary
  *                           field     concerned arbitration          tests
  *                                            bit               
- *  0x7EF        0          No Data     Collision on all bits          10
+ *  0x7EF        0          DontShift Data     Collision on all bits          10
  *                                           equal to 1.
- *  0x010        0          No Data     Collision on all bits          1
+ *  0x010        0          DontShift Data     Collision on all bits          1
  *                                           equal to 1.
  *  For a SPECIFIC device, all possible possibilities of transmitting a recessive
  *  arbitration bit shall be considered.
@@ -91,7 +91,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
                 int dut_id = 0x7EF;
                 int lt_id = dut_id;
 
-                testMessage("CAN 2.0: Invoking arbitration lost %d-th bit of Base id", i + 1);
+                TestMessage("CAN 2.0: Invoking arbitration lost %d-th bit of Base id", i + 1);
 
                 /* 
                  * Data byte does not matter from test meaning point. Use only one byte
@@ -101,7 +101,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
                  */
                 uint8_t dataByte = 0x55;
 
-                // 7-th bit is dominant -> No arbitration lost!
+                // 7-th bit is dominant -> DontShift arbitration lost!
                 if (i == 6)
                     continue;
 
@@ -111,25 +111,26 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
                 // Golden frame - this is what LT will transmit
                 // CAN 2.0 Frame, Base ID only, Data frame, one byte is enough
-                FrameFlags frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER, DATA_FRAME);
-                goldenFrame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base,
+                                                    RtrFlag::DataFrame);
+                golden_frame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // DUT frame - will be sent by DUT
                 Frame *dutFrame = new Frame(frameFlags, 0x1, dut_id, &dataByte);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*dutFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*dutFrame,
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
 
                 BitFrame *secDriverBitFrame = new BitFrame(*dutFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
                 BitFrame *secMonitorBitFrame = new BitFrame(*dutFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -148,13 +149,13 @@ class TestIso_8_1_3 : public test_lib::TestBase
                  *      insertion of dominant bit by LT causes dropping of stuff bit in
                  *      comparison with nominal bit rate.
                  */
-                Bit *lostArbBit = monitorBitFrame->getBitOfNoStuffBits(i, BIT_TYPE_BASE_ID);
-                monitorBitFrame->looseArbitration(lostArbBit);
+                Bit *lostArbBit = monitor_bit_frame->GetBitOfNoStuffBits(i, BitType::BaseIdentifier);
+                monitor_bit_frame->LooseArbitration(lostArbBit);
 
-                secDriverBitFrame->turnReceivedFrame();
+                secDriverBitFrame->TurnReceivedFrame();
 
-                driverBitFrame->appendBitFrame(secDriverBitFrame);
-                monitorBitFrame->appendBitFrame(secMonitorBitFrame);
+                driver_bit_frame->AppendBitFrame(secDriverBitFrame);
+                monitor_bit_frame->AppendBitFrame(secMonitorBitFrame);
 
                 /* Compensation
                  *  Raw:            11111101111
@@ -179,29 +180,29 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
                 // Compensation by removing bits                  
                 if (i == 1 || i == 2 || i == 3)
-                    monitorBitFrame->removeBit(monitorBitFrame->getBitOf(0, BIT_TYPE_CRC));
+                    monitor_bit_frame->RemoveBit(monitor_bit_frame->GetBitOf(0, BitType::Crc));
 
                 // Compensation by adding bits (changed bit caused shorter CRC than with
                 // normal bit value)
                 if (i == 5)
-                    monitorBitFrame->insertBit(Bit(BIT_TYPE_R0, RECESSIVE, &frameFlags,
-                                                   &nominalBitTiming, &dataBitTiming), 13);
+                    monitor_bit_frame->InsertBit(Bit(BitType::R0, BitValue::Recessive, &frameFlags,
+                                                   &nominal_bit_timing, &data_bit_timing), 13);
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, insert to DUT, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                startDriverAndMonitor();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                StartDriverAndMonitor();
 
-                testMessage("Sending frame via DUT!");
-                this->dutIfc->sendFrame(dutFrame);
-                testMessage("Sent frame via DUT!");
+                TestMessage("Sending frame via DUT!");
+                this->dut_ifc->SendFrame(dutFrame);
+                TestMessage("Sent frame via DUT!");
 
-                waitForDriverAndMonitor();
-                checkLowerTesterResult();
+                WaitForDriverAndMonitor();
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
                 delete secDriverBitFrame;
                 delete secMonitorBitFrame;
             }
@@ -214,7 +215,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
             uint8_t dataByte = 0x55;
 
-            testMessage("CAN 2.0: Invoking arbitration lost 7 bit of Base id");
+            TestMessage("CAN 2.0: Invoking arbitration lost 7 bit of Base id");
 
             // LT Identifier for golden frame must have Dominant in 7-th bit because
             // this is what DUT will see!
@@ -222,25 +223,26 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
             // Golden frame - this is what LT will transmit
             // CAN 2.0 Frame, Base ID only, Data frame, one byte is enough
-            FrameFlags frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER, DATA_FRAME);
-            goldenFrame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base,
+                                               RtrFlag::DataFrame);
+            golden_frame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
             // DUT frame - will be sent by DUT
             Frame *dutFrame = new Frame(frameFlags, 0x1, dut_id, &dataByte);
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*dutFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*dutFrame,
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
 
             BitFrame *secDriverBitFrame = new BitFrame(*dutFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
             BitFrame *secMonitorBitFrame = new BitFrame(*dutFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -250,31 +252,31 @@ class TestIso_8_1_3 : public test_lib::TestBase
              *      DUT will retransmitt frame after intermission.
              *   4. Do compensation, since due to flipping we loose one stuff bit!
              */
-            Bit *lostArbBit = monitorBitFrame->getBitOfNoStuffBits(6, BIT_TYPE_BASE_ID);
-            monitorBitFrame->looseArbitration(lostArbBit);
+            Bit *lostArbBit = monitor_bit_frame->GetBitOfNoStuffBits(6, BitType::BaseIdentifier);
+            monitor_bit_frame->LooseArbitration(lostArbBit);
 
-            secDriverBitFrame->turnReceivedFrame();
+            secDriverBitFrame->TurnReceivedFrame();
 
-            driverBitFrame->appendBitFrame(secDriverBitFrame);
-            monitorBitFrame->appendBitFrame(secMonitorBitFrame);
+            driver_bit_frame->AppendBitFrame(secDriverBitFrame);
+            monitor_bit_frame->AppendBitFrame(secMonitorBitFrame);
 
-            monitorBitFrame->removeBit(monitorBitFrame->getBitOf(0, BIT_TYPE_DATA));
+            monitor_bit_frame->RemoveBit(monitor_bit_frame->GetBitOf(0, BitType::Data));
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, insert to DUT, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            startDriverAndMonitor();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            StartDriverAndMonitor();
 
-            testMessage("Sending frame via DUT!");
-            this->dutIfc->sendFrame(dutFrame);
-            testMessage("Sent frame via DUT!");
+            TestMessage("Sending frame via DUT!");
+            this->dut_ifc->SendFrame(dutFrame);
+            TestMessage("Sent frame via DUT!");
 
-            waitForDriverAndMonitor();
-            checkLowerTesterResult();
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
             delete secDriverBitFrame;
             delete secMonitorBitFrame;
         }
@@ -290,7 +292,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
                 int dut_id = 0x7EF;
                 int lt_id = dut_id;
 
-                testMessage("CAN FD: Invoking arbitration lost %d-th bit of Base id", i + 1);
+                TestMessage("CAN FD: Invoking arbitration lost %d-th bit of Base id", i + 1);
 
                 /* 
                  * Data byte does not matter from test meaning point. Use only one byte
@@ -300,7 +302,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
                  */
                 uint8_t dataByte = 0x55;
 
-                // 7-th bit is dominant -> No arbitration lost!
+                // 7-th bit is dominant -> DontShift arbitration lost!
                 if (i == 6)
                     continue;
 
@@ -310,26 +312,27 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
                 // Golden frame - this is what LT will transmit
                 // CAN FD Frame, Base ID only, Data frame, one byte is enough
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME,
-                                                    BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
-                goldenFrame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Base,
+                                                    RtrFlag::DataFrame, BrsFlag::Shift,
+                                                    EsiFlag::ErrorActive);
+                golden_frame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // DUT frame - will be sent by DUT
                 Frame *dutFrame = new Frame(frameFlags, 0x1, dut_id, &dataByte);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*dutFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*dutFrame,
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
 
                 BitFrame *secDriverBitFrame = new BitFrame(*dutFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
                 BitFrame *secMonitorBitFrame = new BitFrame(*dutFrame,
-                                                &this->nominalBitTiming, &this->dataBitTiming);
+                                                &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -342,13 +345,13 @@ class TestIso_8_1_3 : public test_lib::TestBase
                  *      DUT will retransmitt frame after intermission.
                  *   4. Do compensation for changed bits which caused drop of stuff bits!
                  */
-                Bit *lostArbBit = monitorBitFrame->getBitOfNoStuffBits(i, BIT_TYPE_BASE_ID);
-                monitorBitFrame->looseArbitration(lostArbBit);
+                Bit *lostArbBit = monitor_bit_frame->GetBitOfNoStuffBits(i, BitType::BaseIdentifier);
+                monitor_bit_frame->LooseArbitration(lostArbBit);
 
-                secDriverBitFrame->turnReceivedFrame();
+                secDriverBitFrame->TurnReceivedFrame();
 
-                driverBitFrame->appendBitFrame(secDriverBitFrame);
-                monitorBitFrame->appendBitFrame(secMonitorBitFrame);
+                driver_bit_frame->AppendBitFrame(secDriverBitFrame);
+                monitor_bit_frame->AppendBitFrame(secMonitorBitFrame);
 
                 /* Compensation
                  *  Raw:            11111101111
@@ -371,23 +374,23 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
                 // Compensation by removing bits                  
                 if (i == 1 || i == 2 || i == 3 || i == 4)
-                    monitorBitFrame->removeBit(monitorBitFrame->getBitOf(0, BIT_TYPE_R0));
+                    monitor_bit_frame->RemoveBit(monitor_bit_frame->GetBitOf(0, BitType::R0));
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, insert to DUT, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                startDriverAndMonitor();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                StartDriverAndMonitor();
 
-                testMessage("Sending frame via DUT!");
-                this->dutIfc->sendFrame(dutFrame);
-                testMessage("Sent frame via DUT!");
+                TestMessage("Sending frame via DUT!");
+                this->dut_ifc->SendFrame(dutFrame);
+                TestMessage("Sent frame via DUT!");
 
-                waitForDriverAndMonitor();
-                checkLowerTesterResult();
+                WaitForDriverAndMonitor();
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
                 delete secDriverBitFrame;
                 delete secMonitorBitFrame;
             }
@@ -400,7 +403,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
             uint8_t dataByte = 0x55;
 
-            testMessage("CAN FD: Invoking arbitration lost 7 bit of Base id");
+            TestMessage("CAN FD: Invoking arbitration lost 7 bit of Base id");
 
             // LT Identifier for golden frame must have Dominant in 7-th bit because
             // this is what DUT will see!
@@ -408,26 +411,27 @@ class TestIso_8_1_3 : public test_lib::TestBase
 
             // Golden frame - this is what LT will transmit
             // CAN 2.0 Frame, Base ID only, Data frame, one byte is enough
-            FrameFlags frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER, DATA_FRAME,
-                                                BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
-            goldenFrame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Base,
+                                                RtrFlag::DataFrame, BrsFlag::Shift,
+                                                EsiFlag::ErrorActive);
+            golden_frame = new Frame(frameFlags, 0x1, lt_id, &dataByte);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
             // DUT frame - will be sent by DUT
             Frame *dutFrame = new Frame(frameFlags, 0x1, dut_id, &dataByte);
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*dutFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*dutFrame,
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
 
             BitFrame *secDriverBitFrame = new BitFrame(*dutFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
             BitFrame *secMonitorBitFrame = new BitFrame(*dutFrame,
-                                            &this->nominalBitTiming, &this->dataBitTiming);
+                                            &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -435,59 +439,59 @@ class TestIso_8_1_3 : public test_lib::TestBase
              *   2. Turn 2nd frame as received (there LT is not sending anything)!
              *   3. Append 2nd frame after the first one. This represents exactly as if
              *      DUT will retransmitt frame after intermission.
-             *   4. No compensation needed in this case!
+             *   4. DontShift compensation needed in this case!
              */
-            Bit *lostArbBit = monitorBitFrame->getBitOfNoStuffBits(6, BIT_TYPE_BASE_ID);
-            monitorBitFrame->looseArbitration(lostArbBit);
+            Bit *lostArbBit = monitor_bit_frame->GetBitOfNoStuffBits(6, BitType::BaseIdentifier);
+            monitor_bit_frame->LooseArbitration(lostArbBit);
 
-            secDriverBitFrame->turnReceivedFrame();
+            secDriverBitFrame->TurnReceivedFrame();
 
-            driverBitFrame->appendBitFrame(secDriverBitFrame);
-            monitorBitFrame->appendBitFrame(secMonitorBitFrame);
+            driver_bit_frame->AppendBitFrame(secDriverBitFrame);
+            monitor_bit_frame->AppendBitFrame(secMonitorBitFrame);
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, insert to DUT, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            startDriverAndMonitor();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            StartDriverAndMonitor();
 
-            testMessage("Sending frame via DUT!");
-            this->dutIfc->sendFrame(dutFrame);
-            testMessage("Sent frame via DUT!");
+            TestMessage("Sending frame via DUT!");
+            this->dut_ifc->SendFrame(dutFrame);
+            TestMessage("Sent frame via DUT!");
 
-            waitForDriverAndMonitor();
-            checkLowerTesterResult();
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
             delete secDriverBitFrame;
             delete secMonitorBitFrame;
         }
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Start monitoring when DUT starts transmitting, have no delay then!
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_TX_FALLING);
-            canAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
 
             // Configure driver to wait for monitor so that LT sends ACK in right moment.
-            canAgentSetWaitForMonitor(true);
+            CanAgentSetWaitForMonitor(true);
 
             // Enable TX/RX feedback so that DUT will see its own transmitted frame!
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // Run test
             run_can_2_0();
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 run_can_fd();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

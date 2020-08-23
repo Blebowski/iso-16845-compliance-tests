@@ -24,53 +24,53 @@
  * Reset agent functions
  ****************************************************************************/
 
-void resetAgentAssert()
+void ResetAgentAssert()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_ASSERT);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_RES_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_RST_AGNT_CMD_ASSERT);
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void resetAgentDeassert()
+void ResetAgentDeassert()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_DEASSERT);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_RES_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_RST_AGNT_CMD_DEASSERT);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void resetAgentPolaritySet(int polarity)
+void ResetAgentPolaritySet(int polarity)
 {
     char pol[2];
     sprintf(pol, "%d", polarity);
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_POLARITY_SET);
-    simulatorChannel.vpiDataIn = pol;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_RES_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_RST_AGNT_CMD_POLARITY_SET);
+    simulator_channel.vpi_data_in = pol;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-int resetAgentPolarityGet()
+int ResetAgentPolarityGet()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_RES_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_RST_AGNT_CMD_POLARITY_GET);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_RES_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_RST_AGNT_CMD_POLARITY_GET);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    return atoi(&simulatorChannel.vpiDataOut.at(0));
+    return atoi(&simulator_channel.vpi_data_out.at(0));
 }
 
 
@@ -78,107 +78,107 @@ int resetAgentPolarityGet()
  * Clock generator agent functions
  ****************************************************************************/
 
-void clockAgentStart()
+void ClockAgentStart()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_START);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_START);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void clockAgentStop()
+void ClockAgentStop()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_STOP);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_STOP);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void clockAgentSetPeriod(std::chrono::nanoseconds clockPeriod)
+void ClockAgentSetPeriod(std::chrono::nanoseconds clockPeriod)
 {
     unsigned long long timeVal = clockPeriod.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_PERIOD_SET);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_PERIOD_SET);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-std::chrono::nanoseconds clockAgentGetPeriod()
+std::chrono::nanoseconds ClockAgentGetPeriod()
 {
     unsigned long long readTime;
 
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_PERIOD_GET);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_PERIOD_GET);
     
-    simulatorChannelProcessRequest();
-    readTime = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
+    SimulatorChannelProcessRequest();
+    readTime = std::strtoll(simulator_channel.vpi_data_out.c_str(), nullptr, 2) / 1000000;
     return std::chrono::nanoseconds(readTime);
 }
 
 
-void clockAgentSetJitter(std::chrono::nanoseconds jitter)
+void ClockAgentSetJitter(std::chrono::nanoseconds jitter)
 {
     unsigned long long timeVal = jitter.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_JITTER_SET);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_JITTER_SET);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-std::chrono::nanoseconds clockAgentGetJitter()
+std::chrono::nanoseconds ClockAgentGetJitter()
 {
     unsigned long long readJitter;
 
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_JITTER_GET);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_JITTER_GET);
     
-    simulatorChannelProcessRequest();
-    readJitter = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
+    SimulatorChannelProcessRequest();
+    readJitter = std::strtoll(simulator_channel.vpi_data_out.c_str(), nullptr, 2) / 1000000;
     return std::chrono::nanoseconds(readJitter);
 }
 
 
-void clockAgentSetDuty(int duty)
+void ClockAgentSetDuty(int duty)
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_DUTY_SET);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(duty).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_DUTY_SET);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(duty).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-int clockAgentGetDuty()
+int ClockAgentGetDuty()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CLK_GEN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CLK_AGNT_CMD_DUTY_GET);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CLK_GEN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CLK_AGNT_CMD_DUTY_GET);
     
-    simulatorChannelProcessRequest();
-    return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
+    SimulatorChannelProcessRequest();
+    return std::stoi(simulator_channel.vpi_data_out.c_str(), nullptr, 2);
 }
 
 
@@ -186,156 +186,156 @@ int clockAgentGetDuty()
  * Memory bus agent functions
  ****************************************************************************/
 
-void memBusAgentStart()
+void MemBusAgentStart()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_START);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_START);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentStop()
+void MemBusAgentStop()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_STOP);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_STOP);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentWrite32(int address, uint32_t data)
+void MemBusAgentWrite32(int address, uint32_t data)
 {
-    std::string vpiDataIn = "1"; // Use blocking write
-    vpiDataIn.append("10"); // 32 bit write
-    vpiDataIn.append(std::bitset<16>(address).to_string());
-    vpiDataIn.append(std::bitset<32>(data).to_string());
+    std::string vpi_data_in = "1"; // Use blocking write
+    vpi_data_in.append("10"); // 32 bit write
+    vpi_data_in.append(std::bitset<16>(address).to_string());
+    vpi_data_in.append(std::bitset<32>(data).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentWrite16(int address, uint16_t data)
+void MemBusAgentWrite16(int address, uint16_t data)
 {
-    std::string vpiDataIn = "1"; // Use blocking write
-    vpiDataIn.append("01"); // 16 bit write
-    vpiDataIn.append(std::bitset<16>(address).to_string());
-    vpiDataIn.append("0000000000000000");
-    vpiDataIn.append(std::bitset<16>(data).to_string());
+    std::string vpi_data_in = "1"; // Use blocking write
+    vpi_data_in.append("01"); // 16 bit write
+    vpi_data_in.append(std::bitset<16>(address).to_string());
+    vpi_data_in.append("0000000000000000");
+    vpi_data_in.append(std::bitset<16>(data).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentWrite8(int address, uint8_t data)
+void MemBusAgentWrite8(int address, uint8_t data)
 {
-    std::string vpiDataIn = "1"; // Use blocking write
-    vpiDataIn.append("00"); // 8 bit write
-    vpiDataIn.append(std::bitset<16>(address).to_string());
-    vpiDataIn.append("000000000000000000000000");
-    vpiDataIn.append(std::bitset<8>(data).to_string());
+    std::string vpi_data_in = "1"; // Use blocking write
+    vpi_data_in.append("00"); // 8 bit write
+    vpi_data_in.append(std::bitset<16>(address).to_string());
+    vpi_data_in.append("000000000000000000000000");
+    vpi_data_in.append(std::bitset<8>(data).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_WRITE);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-uint32_t memBusAgentRead32(int address)
+uint32_t MemBusAgentRead32(int address)
 {
-    std::string vpiDataIn = "";
-    vpiDataIn.append("10"); // 32 bit access
-    vpiDataIn.append(std::bitset<16>(address).to_string());
-    vpiDataIn.append("00000000000000000000000000000000");
+    std::string vpi_data_in = "";
+    vpi_data_in.append("10"); // 32 bit access
+    vpi_data_in.append(std::bitset<16>(address).to_string());
+    vpi_data_in.append("00000000000000000000000000000000");
 
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_READ);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_READ);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    return (uint32_t)strtoul(simulatorChannel.vpiDataOut.c_str(), NULL, 2);
+    return (uint32_t)strtoul(simulator_channel.vpi_data_out.c_str(), NULL, 2);
 }
 
-uint16_t memBusAgentRead16(int address)
+uint16_t MemBusAgentRead16(int address)
 {
-    std::string vpiDataIn = "";
-    vpiDataIn.append("01"); // 16 bit access
-    vpiDataIn.append(std::bitset<16>(address).to_string());
-    vpiDataIn.append("00000000000000000000000000000000");
+    std::string vpi_data_in = "";
+    vpi_data_in.append("01"); // 16 bit access
+    vpi_data_in.append(std::bitset<16>(address).to_string());
+    vpi_data_in.append("00000000000000000000000000000000");
 
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_READ);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_READ);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    return (uint16_t)strtoul(simulatorChannel.vpiDataOut.c_str(), NULL, 2);
-}
-
-
-uint8_t memBusAgentRead8(int address)
-{
-    std::string vpiDataIn = "";
-    vpiDataIn.append("00"); // 8 bit access
-    vpiDataIn.append(std::bitset<16>(address).to_string());
-    vpiDataIn.append("00000000000000000000000000000000");
-
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_READ);
-    simulatorChannel.vpiDataIn = vpiDataIn;
-    
-    simulatorChannelProcessRequest();
-
-    return (uint8_t)strtoul(simulatorChannel.vpiDataOut.c_str(), NULL, 2);
+    return (uint16_t)strtoul(simulator_channel.vpi_data_out.c_str(), NULL, 2);
 }
 
 
-void memBusAgentXModeStart()
+uint8_t MemBusAgentRead8(int address)
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_X_MODE_START);
+    std::string vpi_data_in = "";
+    vpi_data_in.append("00"); // 8 bit access
+    vpi_data_in.append(std::bitset<16>(address).to_string());
+    vpi_data_in.append("00000000000000000000000000000000");
+
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_READ);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
+
+    return (uint8_t)strtoul(simulator_channel.vpi_data_out.c_str(), NULL, 2);
 }
 
 
-void memBusAgentXModeStop()
+void MemBusAgentXModeStart()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_X_MODE_STOP);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_X_MODE_START);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
+}
+
+
+void MemBusAgentXModeStop()
+{
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_X_MODE_STOP);
+    
+    SimulatorChannelProcessRequest();
 }
 
 
@@ -343,635 +343,635 @@ void memBusAgentSetXModeSetup(std::chrono::nanoseconds setup)
 {
     unsigned long long timeVal = setup.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_X_MODE_SETUP);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_SET_X_MODE_SETUP);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentSetXModeHold(std::chrono::nanoseconds hold)
+void MemBusAgentSetXModeHold(std::chrono::nanoseconds hold)
 {
     unsigned long long timeVal = hold.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_X_MODE_HOLD);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_SET_X_MODE_HOLD);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentSetPeriod(std::chrono::nanoseconds period)
+void MemBusAgentSetPeriod(std::chrono::nanoseconds period)
 {
     unsigned long long timeVal = period.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_PERIOD);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_SET_PERIOD);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void memBusAgentSetOutputDelay(std::chrono::nanoseconds delay)
+void MemBusAgentSetOutputDelay(std::chrono::nanoseconds delay)
 {
     unsigned long long timeVal = delay.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_MEM_BUS_AGNT_SET_OUTPUT_DELAY);
-    simulatorChannel.vpiDataIn = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_SET_OUTPUT_DELAY);
+    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriverStart()
+void CanAgentDriverStart()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_START);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_START);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriverStop()
+void CanAgentDriverStop()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_STOP);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_STOP);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriverFlush()
+void CanAgentDriverFlush()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_FLUSH);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_FLUSH);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-bool canAgentDriverGetProgress()
+bool CanAgentDriverGetProgress()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_GET_PROGRESS);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_GET_PROGRESS);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    if (simulatorChannel.vpiDataOut.at(0) == '1')
+    if (simulator_channel.vpi_data_out.at(0) == '1')
         return true;
     return false;
 }
 
 
-char canAgentDriverGetDrivenVal()
+char CanAgentDriverGetDrivenVal()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_GET_DRIVEN_VAL);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_GET_DRIVEN_VAL);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    return simulatorChannel.vpiDataOut.c_str()[0];
+    return simulator_channel.vpi_data_out.c_str()[0];
 }
 
 
-void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration)
+void CanAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
-    vpiDataIn.append(1, drivenValue);    // Driven value
-    vpiDataIn.append("0");      // No message
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string vpi_data_in = "";
+    vpi_data_in.append(1, drivenValue);    // Driven value
+    vpi_data_in.append("0");      // No message
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg)
+void CanAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
+    std::string vpi_data_in = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
 
-    vpiDataIn.append(1, drivenValue); // Driven value
-    vpiDataIn.append("1");   // Message included
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    vpi_data_in.append(1, drivenValue); // Driven value
+    vpi_data_in.append("1");   // Message included
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = true;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
-    simulatorChannel.vpiMessageData = msg;
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = true;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_PUSH_ITEM);
+    simulator_channel.vpi_message_data = msg;
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout)
+void CanAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout)
 {
     unsigned long long timeVal = timeout.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT);
-    simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT);
+    simulator_channel.vpi_data_in = std::bitset<64>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriverWaitFinish()
+void CanAgentDriverWaitFinish()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_WAIT_FINISH);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_WAIT_FINISH);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg)
+void CanAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
+    std::string vpi_data_in = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
 
-    vpiDataIn.append(1, drivenValue); // Driven value
-    vpiDataIn.append("1");   // Message included
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    vpi_data_in.append(1, drivenValue); // Driven value
+    vpi_data_in.append("1");   // Message included
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = true;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
-    simulatorChannel.vpiMessageData = msg;
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = true;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
+    simulator_channel.vpi_message_data = msg;
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration)
+void CanAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
-    vpiDataIn.append(1, drivenValue);    // Driven value
-    vpiDataIn.append("0");         // No message
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string vpi_data_in = "";
+    vpi_data_in.append(1, drivenValue);    // Driven value
+    vpi_data_in.append("0");         // No message
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentDriveAllItems()
+void CanAgentDriveAllItems()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_ALL_ITEM);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_DRIVER_DRIVE_ALL_ITEM);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentSetWaitForMonitor(bool waitForMonitor)
+void CanAgentSetWaitForMonitor(bool waitForMonitor)
 {
-    std::string vpiDataIn = "";
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-1>(0).to_string());
+    std::string vpi_data_in = "";
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-1>(0).to_string());
     if (waitForMonitor)
-        vpiDataIn.append("1");
+        vpi_data_in.append("1");
     else
-        vpiDataIn.append("0");
+        vpi_data_in.append("0");
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_CMD_SET_WAIT_FOR_MONITOR);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_CMD_SET_WAIT_FOR_MONITOR);
+    simulator_channel.vpi_data_in = vpi_data_in;
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorStart()
+void CanAgentMonitorStart()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_START);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_START);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorStop()
+void CanAgentMonitorStop()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_STOP);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_STOP);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorFlush()
+void CanAgentMonitorFlush()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_FLUSH);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_FLUSH);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-CanAgentMonitorState canAgentMonitorGetState()
+CanAgentMonitorState CanAgentMonitorGetState()
 {
     CanAgentMonitorState retVal;
 
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_STATE);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_GET_STATE);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    if (!simulatorChannel.vpiDataOut.compare("000"))
-        retVal = CAN_AGENT_MONITOR_DISABLED;
-    else if (!simulatorChannel.vpiDataOut.compare("001"))
-        retVal = CAN_AGENT_MONITOR_WAITING_FOR_TRIGGER;
-    else if (!simulatorChannel.vpiDataOut.compare("010"))
-        retVal = CAN_AGENT_MONITOR_RUNNING;
-    else if (!simulatorChannel.vpiDataOut.compare("011"))
-        retVal = CAN_AGENT_MONITOR_PASSED;
+    if (!simulator_channel.vpi_data_out.compare("000"))
+        retVal = CanAgentMonitorState::Disabled;
+    else if (!simulator_channel.vpi_data_out.compare("001"))
+        retVal = CanAgentMonitorState::WaitingForTrigger;
+    else if (!simulator_channel.vpi_data_out.compare("010"))
+        retVal = CanAgentMonitorState::Running;
+    else if (!simulator_channel.vpi_data_out.compare("011"))
+        retVal = CanAgentMonitorState::Passed;
     else
-        retVal = CAN_AGENT_MONITOR_FAILED;
+        retVal = CanAgentMonitorState::Failed;
 
     return retVal;
 }
 
 
-char canAgentMonitorGetMonitoredVal()
+char CanAgentMonitorGetMonitoredVal()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_MONITORED_VAL);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_GET_MONITORED_VAL);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    return simulatorChannel.vpiDataOut.at(0);
+    return simulator_channel.vpi_data_out.at(0);
 }
 
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
+void CanAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
                              std::chrono::nanoseconds sampleRate)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
-    vpiDataIn.append(1, monitorValue);    // Driven value
-    vpiDataIn.append("0");      // No message
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string vpi_data_in = "";
+    vpi_data_in.append(1, monitorValue);    // Driven value
+    vpi_data_in.append("0");      // No message
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string vpiDataIn2 = "";
-    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string vpi_data_in_2 = "";
+    vpi_data_in_2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
-    simulatorChannel.vpiDataIn = vpiDataIn;
-    simulatorChannel.vpiDataIn2 = vpiDataIn2;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
+    simulator_channel.vpi_data_in = vpi_data_in;
+    simulator_channel.vpi_data_in_2 = vpi_data_in_2;
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
+void CanAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
                              std::chrono::nanoseconds sampleRate, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
+    std::string vpi_data_in = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
 
-    vpiDataIn.append(1, monitorValue); // Driven value
-    vpiDataIn.append("1");   // Message included
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    vpi_data_in.append(1, monitorValue); // Driven value
+    vpi_data_in.append("1");   // Message included
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string vpiDataIn2 = "";
-    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string vpi_data_in_2 = "";
+    vpi_data_in_2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = true;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
-    simulatorChannel.vpiDataIn = vpiDataIn;
-    simulatorChannel.vpiMessageData = msg;
-    simulatorChannel.vpiDataIn2 = vpiDataIn2;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = true;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_PUSH_ITEM);
+    simulator_channel.vpi_data_in = vpi_data_in;
+    simulator_channel.vpi_message_data = msg;
+    simulator_channel.vpi_data_in_2 = vpi_data_in_2;
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout)
+void CanAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout)
 {
     unsigned long long timeVal = timeout.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT);
-    simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT);
+    simulator_channel.vpi_data_in = std::bitset<64>(timeVal).to_string();
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorWaitFinish()
+void CanAgentMonitorWaitFinish()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_WAIT_FINISH);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_WAIT_FINISH);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
+void CanAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
                                std::chrono::nanoseconds sampleRate)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
+    std::string vpi_data_in = "";
 
-    vpiDataIn.append(1, monitorValue); // Driven value
-    vpiDataIn.append("0");   // No Message
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    vpi_data_in.append(1, monitorValue); // Driven value
+    vpi_data_in.append("0");   // No Message
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string vpiDataIn2 = "";
-    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string vpi_data_in_2 = "";
+    vpi_data_in_2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
-    simulatorChannel.vpiDataIn = vpiDataIn;
-    simulatorChannel.vpiDataIn2 = vpiDataIn2;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
+    simulator_channel.vpi_data_in = vpi_data_in;
+    simulator_channel.vpi_data_in_2 = vpi_data_in_2;
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
+void CanAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
                                std::chrono::nanoseconds sampleRate, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string vpiDataIn = "";
+    std::string vpi_data_in = "";
     int strLen = msg.length();
 
     if (strLen > VPI_STR_BUF_SIZE)
         strLen = VPI_STR_BUF_SIZE;
 
-    vpiDataIn.append(1, monitorValue); // Driven value
-    vpiDataIn.append("1");   // Message included
-    vpiDataIn.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    vpi_data_in.append(1, monitorValue); // Driven value
+    vpi_data_in.append("1");   // Message included
+    vpi_data_in.append(std::bitset<VPI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string vpiDataIn2 = "";
-    vpiDataIn2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string vpi_data_in_2 = "";
+    vpi_data_in_2.append(std::bitset<VPI_DBUF_SIZE-2>(sampleRateVal).to_string());
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = true;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
-    simulatorChannel.vpiDataIn = vpiDataIn;
-    simulatorChannel.vpiDataIn2 = vpiDataIn2;
-    simulatorChannel.vpiMessageData = msg;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = true;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
+    simulator_channel.vpi_data_in = vpi_data_in;
+    simulator_channel.vpi_data_in_2 = vpi_data_in_2;
+    simulator_channel.vpi_message_data = msg;
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorAllItems()
+void CanAgentMonitorAllItems()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_ALL_ITEMS);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_MONITOR_ALL_ITEMS);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger)
+void CanAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger)
 {
-    std::string vpiDataIn = "";
+    std::string vpi_data_in = "";
     switch (trigger){
-    case CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY:
-        vpiDataIn.append("000");
+    case CanAgentMonitorTrigger::Immediately:
+        vpi_data_in.append("000");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_RX_RISING:
-        vpiDataIn.append("001");
+    case CanAgentMonitorTrigger::RxRising:
+        vpi_data_in.append("001");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_RX_FALLING:
-        vpiDataIn.append("010");
+    case CanAgentMonitorTrigger::RxFalling:
+        vpi_data_in.append("010");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_TX_RISING:
-        vpiDataIn.append("011");
+    case CanAgentMonitorTrigger::TxRising:
+        vpi_data_in.append("011");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_TX_FALLING:
-        vpiDataIn.append("100");
+    case CanAgentMonitorTrigger::TxFalling:
+        vpi_data_in.append("100");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_TIME_ELAPSED:
-        vpiDataIn.append("101");
+    case CanAgentMonitorTrigger::TimeElapsed:
+        vpi_data_in.append("101");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_DRIVER_START:
-        vpiDataIn.append("110");
+    case CanAgentMonitorTrigger::DriverStart:
+        vpi_data_in.append("110");
         break;
-    case CAN_AGENT_MONITOR_TRIGGER_DRIVER_STOP:
-        vpiDataIn.append("111");
+    case CanAgentMonitorTrigger::DriverStop:
+        vpi_data_in.append("111");
         break;
     }
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_TRIGGER);
-    simulatorChannel.vpiDataIn = vpiDataIn;
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_SET_TRIGGER);
+    simulator_channel.vpi_data_in = vpi_data_in;
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-CanAgentMonitorTrigger canAgentMonitorGetTrigger()
+CanAgentMonitorTrigger CanAgentMonitorGetTrigger()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_GET_TRIGGER);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_GET_TRIGGER);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    if (!simulatorChannel.vpiDataOut.compare("000"))
-        return CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY;
-    if (!simulatorChannel.vpiDataOut.compare("001"))
-        return CAN_AGENT_MONITOR_TRIGGER_RX_RISING;
-    if (!simulatorChannel.vpiDataOut.compare("010"))
-        return CAN_AGENT_MONITOR_TRIGGER_RX_FALLING;
-    if (!simulatorChannel.vpiDataOut.compare("011"))
-        return CAN_AGENT_MONITOR_TRIGGER_TX_RISING;
-    if (!simulatorChannel.vpiDataOut.compare("100"))
-        return CAN_AGENT_MONITOR_TRIGGER_TX_FALLING;
-    if (!simulatorChannel.vpiDataOut.compare("101"))
-        return CAN_AGENT_MONITOR_TRIGGER_TIME_ELAPSED;
-    if (!simulatorChannel.vpiDataOut.compare("110"))
-        return CAN_AGENT_MONITOR_TRIGGER_DRIVER_START;
-    if (!simulatorChannel.vpiDataOut.compare("111"))
-        return CAN_AGENT_MONITOR_TRIGGER_DRIVER_STOP;
+    if (!simulator_channel.vpi_data_out.compare("000"))
+        return CanAgentMonitorTrigger::Immediately;
+    if (!simulator_channel.vpi_data_out.compare("001"))
+        return CanAgentMonitorTrigger::RxRising;
+    if (!simulator_channel.vpi_data_out.compare("010"))
+        return CanAgentMonitorTrigger::RxFalling;
+    if (!simulator_channel.vpi_data_out.compare("011"))
+        return CanAgentMonitorTrigger::TxRising;
+    if (!simulator_channel.vpi_data_out.compare("100"))
+        return CanAgentMonitorTrigger::TxFalling;
+    if (!simulator_channel.vpi_data_out.compare("101"))
+        return CanAgentMonitorTrigger::TimeElapsed;
+    if (!simulator_channel.vpi_data_out.compare("110"))
+        return CanAgentMonitorTrigger::DriverStart;
+    if (!simulator_channel.vpi_data_out.compare("111"))
+        return CanAgentMonitorTrigger::DriverStop;
 
-    return CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY;
+    return CanAgentMonitorTrigger::Immediately;
 }
 
 
-void canAgentCheckResult()
+void CanAgentCheckResult()
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_CHECK_RESULT);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_CHECK_RESULT);
     
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay)
+void CanAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay)
 {
     unsigned long long timeVal = inputDelay.count() * 1000000;
 
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_MONITOR_SET_INPUT_DELAY);
-    simulatorChannel.vpiDataIn = std::bitset<64>(timeVal).to_string();
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_MONITOR_SET_INPUT_DELAY);
+    simulator_channel.vpi_data_in = std::bitset<64>(timeVal).to_string();
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-void canAgentConfigureTxToRxFeedback(bool enable)
+void CanAgentConfigureTxToRxFeedback(bool enable)
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_CAN_AGENT);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_CAN_AGENT);
     if (enable)
-        simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE);
+        simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE);
     else
-        simulatorChannel.vpiCmd = std::string(VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE);
+        simulator_channel.vpi_cmd = std::string(VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE);
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
-void testControllerAgentEndTest(bool success)
+void TestControllerAgentEndTest(bool success)
 {
-    simulatorChannel.readAccess = false;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_TEST_END);
+    simulator_channel.read_access = false;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_TEST_AGNT_TEST_END);
     
     if (success)
-        simulatorChannel.vpiDataIn = std::string("1");
+        simulator_channel.vpi_data_in = std::string("1");
     else
-        simulatorChannel.vpiDataIn = std::string("0");
+        simulator_channel.vpi_data_in = std::string("0");
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 }
 
 
-std::chrono::nanoseconds testControllerAgentGetCfgDutClockPeriod()
+std::chrono::nanoseconds TestControllerAgentGetCfgDutClockPeriod()
 {
     unsigned long long readTime;
 
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = true;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_GET_CFG);
-    simulatorChannel.vpiMessageData = "CFG_DUT_CLOCK_PERIOD";
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = true;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_TEST_AGNT_GET_CFG);
+    simulator_channel.vpi_message_data = "CFG_DUT_CLOCK_PERIOD";
 
-    simulatorChannelProcessRequest();
+    SimulatorChannelProcessRequest();
 
-    readTime = std::strtoll(simulatorChannel.vpiDataOut.c_str(), nullptr, 2) / 1000000;
+    readTime = std::strtoll(simulator_channel.vpi_data_out.c_str(), nullptr, 2) / 1000000;
     return std::chrono::nanoseconds(readTime);
 }
 
 
-int testControllerAgentGetBitTimingElement(std::string elemName)
+int TestControllerAgentGetBitTimingElement(std::string elemName)
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = true;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_GET_CFG);
-    simulatorChannel.vpiMessageData = elemName;
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = true;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_TEST_AGNT_GET_CFG);
+    simulator_channel.vpi_message_data = elemName;
 
-    simulatorChannelProcessRequest();
-    return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
+    SimulatorChannelProcessRequest();
+    return std::stoi(simulator_channel.vpi_data_out.c_str(), nullptr, 2);
 }
 
 
-int testControllerAgentGetSeed()
+int TestControllerAgentGetSeed()
 {
-    simulatorChannel.readAccess = true;
-    simulatorChannel.useMsgData = false;
-    simulatorChannel.vpiDest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
-    simulatorChannel.vpiCmd = std::string(VPI_TEST_AGNT_GET_SEED);
+    simulator_channel.read_access = true;
+    simulator_channel.use_msg_data = false;
+    simulator_channel.vpi_dest = std::string(VPI_DEST_TEST_CONTROLLER_AGENT);
+    simulator_channel.vpi_cmd = std::string(VPI_TEST_AGNT_GET_SEED);
 
-    simulatorChannelProcessRequest();
-    return std::stoi(simulatorChannel.vpiDataOut.c_str(), nullptr, 2);
+    SimulatorChannelProcessRequest();
+    return std::stoi(simulator_channel.vpi_data_out.c_str(), nullptr, 2);
 }

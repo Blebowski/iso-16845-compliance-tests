@@ -34,7 +34,7 @@ test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic val
 }
 
 
-bool test_lib::DriverItem::hasMessage()
+bool test_lib::DriverItem::HasMessage()
 {
     if (message.size() > 0)
         return true;
@@ -42,14 +42,17 @@ bool test_lib::DriverItem::hasMessage()
 }
 
 
-void test_lib::DriverItem::print()
+void test_lib::DriverItem::Print()
 {
-    if (hasMessage() == true)
+    if (HasMessage() == true)
         std::cout << message << std::endl;
-    if (value == 0)
+    if (value == StdLogic::LOGIC_0)
         std::cout << "_";
-    else
+    else if (value == StdLogic::LOGIC_1)
         std::cout << "¯";
-    //std::cout << "Value:    " << value << std::endl;
-    //std::cout << "Duration: " << duration.count() << " ns" << std::endl;
+    else
+        std::cout << char(value);
+
+    std::cout << "Value:    " << (char)value << std::endl;
+    std::cout << "Duration: " << duration.count() << " ns" << std::endl;
 }

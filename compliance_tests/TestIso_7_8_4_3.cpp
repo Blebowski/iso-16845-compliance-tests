@@ -52,7 +52,7 @@
  *
  * Response:
  *  The modified ESI bit shall be sampled as recessive.
- *  The frame is valid. No error flag shall occur.
+ *  The frame is valid. DontShift error flag shall occur.
  *****************************************************************************/
 
 #include <iostream>
@@ -81,44 +81,45 @@ class TestIso_7_8_4_3 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
-            int upperTh = dataBitTiming.ph1 + dataBitTiming.prop + 1;
+            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
 
-            for (int i = dataBitTiming.sjw + 1; i < upperTh; i++)
+            for (int i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
             {
                 // CAN FD frame with bit rate shift, Base ID only and
                 uint8_t dataByte = 0x55;
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BASE_IDENTIFIER,
-                                                   DATA_FRAME, BIT_RATE_SHIFT, ESI_ERROR_ACTIVE);
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Base,
+                                                   RtrFlag::DataFrame, BrsFlag::Shift,
+                                                   EsiFlag::ErrorActive);
                 // Frame was empirically debugged to have last bit of CRC in 1!
-                goldenFrame = new Frame(frameFlags, 0x1, 50, &dataByte);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags, 0x1, 50, &dataByte);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
-                testMessage("Testing CRC delimiter positive resynchronisation with phase error: %d", i + 1);
+                TestMessage("Testing CRC delimiter positive resynchronisation with phase error: %d", i + 1);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -133,40 +134,40 @@ class TestIso_7_8_4_3 : public test_lib::TestBase
                  *      is transmitted recessive by driver so this will act
                  *      as remaining recessive part of CRC delimiter!
                  */
-                monitorBitFrame->turnReceivedFrame();
+                monitor_bit_frame->TurnReceivedFrame();
 
-                Bit *crcDelimiter = driverBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
-                crcDelimiter->setBitValue(DOMINANT);
+                Bit *crcDelimiter = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
+                crcDelimiter->bit_value_ = BitValue::Dominant;
 
                 for (int j = 0; j < i; j++)
-                    crcDelimiter->forceTimeQuanta(j, RECESSIVE);
+                    crcDelimiter->ForceTimeQuanta(j, BitValue::Recessive);
 
-                crcDelimiter->shortenPhase(PH2_PHASE, nominalBitTiming.ph2);
-                BitPhase phase = crcDelimiter->prevBitPhase(PH2_PHASE);
-                crcDelimiter->lengthenPhase(phase, dataBitTiming.sjw - 1);
+                crcDelimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+                BitPhase phase = crcDelimiter->PrevBitPhase(BitPhase::Ph2);
+                crcDelimiter->LengthenPhase(phase, data_bit_timing.sjw_ - 1);
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

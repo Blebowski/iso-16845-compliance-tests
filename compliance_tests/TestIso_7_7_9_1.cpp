@@ -68,30 +68,30 @@ class TestIso_7_7_9_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
             // CAN 2.0 frame, randomize others
-            FrameFlags frameFlags = FrameFlags(CAN_2_0);
-            goldenFrame = new Frame(frameFlags);
-            goldenFrame->randomize();
-            testBigMessage("Test frame:");
-            goldenFrame->print();
+            FrameFlags frameFlags = FrameFlags(FrameType::Can2_0);
+            golden_frame = new Frame(frameFlags);
+            golden_frame->Randomize();
+            TestBigMessage("Test frame:");
+            golden_frame->Print();
 
-            testMessage("Glitch filtering in idle state - single glitch");
+            TestMessage("Glitch filtering in idle state - single glitch");
 
             // Convert to Bit frames
-            driverBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
-            monitorBitFrame = new BitFrame(*goldenFrame,
-                &this->nominalBitTiming, &this->dataBitTiming);
+            driver_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
+            monitor_bit_frame = new BitFrame(*golden_frame,
+                &this->nominal_bit_timing, &this->data_bit_timing);
 
             /**
              * Modify test frames:
@@ -100,36 +100,36 @@ class TestIso_7_7_9_1 : public test_lib::TestBase
              *   3. Shorten SOF to PROP + PH1 - 1 Time quanta in driven frame.
              *   4. Insert 9 recessive bits to monitor.
              */
-            driverBitFrame->clearBitsFrom(1);
-            monitorBitFrame->clearBitsFrom(1);
-            monitorBitFrame->getBit(0)->setBitValue(RECESSIVE);
+            driver_bit_frame->RemoveBitsFrom(1);
+            monitor_bit_frame->RemoveBitsFrom(1);
+            monitor_bit_frame->GetBit(0)->bit_value_ = BitValue::Recessive;
 
-            driverBitFrame->getBit(0)->shortenPhase(PH2_PHASE, nominalBitTiming.ph2);
-            driverBitFrame->getBit(0)->shortenPhase(SYNC_PHASE, 1);
-            BitPhase phase = driverBitFrame->getBit(0)->prevBitPhase(PH2_PHASE);
-            driverBitFrame->getBit(0)->shortenPhase(phase, 1);
+            driver_bit_frame->GetBit(0)->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            driver_bit_frame->GetBit(0)->ShortenPhase(BitPhase::Sync, 1);
+            BitPhase phase = driver_bit_frame->GetBit(0)->PrevBitPhase(BitPhase::Ph2);
+            driver_bit_frame->GetBit(0)->ShortenPhase(phase, 1);
             
             for (int i = 0; i < 9; i++)
             {
-                monitorBitFrame->insertBit(Bit(BIT_TYPE_SOF, RECESSIVE,
-                    &frameFlags, &nominalBitTiming, &dataBitTiming), 1);
-                driverBitFrame->insertBit(Bit(BIT_TYPE_SOF, RECESSIVE,
-                    &frameFlags, &nominalBitTiming, &dataBitTiming), 1);
+                monitor_bit_frame->InsertBit(Bit(BitType::Sof, BitValue::Recessive,
+                    &frameFlags, &nominal_bit_timing, &data_bit_timing), 1);
+                driver_bit_frame->InsertBit(Bit(BitType::Sof, BitValue::Recessive,
+                    &frameFlags, &nominal_bit_timing, &data_bit_timing), 1);
             }
 
-            driverBitFrame->print(true);
-            monitorBitFrame->print(true);
+            driver_bit_frame->Print(true);
+            monitor_bit_frame->Print(true);
 
             // Push frames to Lower tester, run and check!
-            pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-            runLowerTester(true, true);
-            checkLowerTesterResult();
+            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
-            deleteCommonObjects();
+            DeleteCommonObjects();
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

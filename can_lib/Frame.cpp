@@ -24,100 +24,100 @@
 
 can::Frame::Frame()
 {
-    frameFlags_ = FrameFlags();
+    frame_flags_ = FrameFlags();
     dlc_ = 0;
     identifier_ = 0;
-    dataLenght_ = 0;
+    data_lenght_ = 0;
 
-    randomizeDlc = true;
-    randomizeIdentifier = true;
-    randomizeData = true;
+    randomize_dlc = true;
+    randomize_identifier = true;
+    randomize_data = true;
 }
 
 can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
                   uint8_t *data)
 {
-    frameFlags_ = frameFlags;   
-    setIdentifer(identifier);
-    setDlc(dlc);
-    copyData(data, dataLenght_);
+    frame_flags_ = frameFlags;   
+    set_identifer(identifier);
+    set_dlc(dlc);
+    CopyData(data, data_lenght_);
 
-    randomizeDlc = false;
-    randomizeIdentifier = false;
-    randomizeData = false;
+    randomize_dlc = false;
+    randomize_identifier = false;
+    randomize_data = false;
 }
 
 
 can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, int identifier)
 {
-    frameFlags_ = frameFlags;
-    setIdentifer(identifier);
-    setDlc(dlc);
+    frame_flags_ = frameFlags;
+    set_identifer(identifier);
+    set_dlc(dlc);
 
-    randomizeDlc = false;
-    randomizeIdentifier = false;
-    randomizeData = true;
+    randomize_dlc = false;
+    randomize_identifier = false;
+    randomize_data = true;
 }
 
 
 can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc)
 {
-    frameFlags_ = frameFlags;
-    setDlc(dlc);
+    frame_flags_ = frameFlags;
+    set_dlc(dlc);
 
-    randomizeDlc = false;
-    randomizeIdentifier = true;
-    randomizeData = true;
+    randomize_dlc = false;
+    randomize_identifier = true;
+    randomize_data = true;
 }
 
 
 can::Frame::Frame(FrameFlags frameFlags)
 {
-    frameFlags_ = frameFlags;
+    frame_flags_ = frameFlags;
 
-    randomizeDlc = true;
-    randomizeIdentifier = true;
-    randomizeData = true;
+    randomize_dlc = true;
+    randomize_identifier = true;
+    randomize_data = true;
 }
 
 
 can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data)
 {
-    frameFlags_ = frameFlags;
-    setDlc(dlc);
-    copyData(data, dataLenght_);
+    frame_flags_ = frameFlags;
+    set_dlc(dlc);
+    CopyData(data, data_lenght_);
 
-    randomizeDlc = false;
-    randomizeIdentifier = true;
-    randomizeData = false;
+    randomize_dlc = false;
+    randomize_identifier = true;
+    randomize_data = false;
 }
 
-void can::Frame::randomize()
+void can::Frame::Randomize()
 {
     // First randomize flags, this gives cosntraints for further randomization
-    frameFlags_.randomize();
+    frame_flags_.Randomize();
 
     // Due to RTR Flag , Data length might have changed! Update it!
-    setDlc(dlc_);
+    set_dlc(dlc_);
 
-    if (randomizeIdentifier)
+    if (randomize_identifier)
     {
-        if (getFrameFlags().isIde_ == ExtendedIdentifier::EXTENDED_IDENTIFIER)
-            setIdentifer(rand() % (2 ^ 29));
+        if (frame_flags().is_ide_ == IdentifierType::Extended)
+            set_identifer(rand() % (2 ^ 29));
         else
-            setIdentifer(rand() % (2 ^ 11));
+            set_identifer(rand() % (2 ^ 11));
     }
 
-    if (randomizeDlc)
+    if (randomize_dlc)
     {
         // Constrain here so that we get reasonable frames for CAN 2.0
-        if (getFrameFlags().isFdf_ == FlexibleDataRate::CAN_FD)
-            setDlc(rand() % 0x9);
+        if (frame_flags().is_fdf_ == FrameType::CanFd)
+            set_dlc(rand() % 0x9);
         else
-            setDlc(rand() % 0xF);
+            set_dlc(rand() % 0xF);
     }
 
-    if (randomizeData)
+    if (randomize_data)
         for (int i = 0; i < 64; i++)
             data_[i] = rand() % 256;
 }
@@ -127,46 +127,46 @@ void can::Frame::randomize()
 // Getters
 ///////////////////////////////////////////////////////////////////////////////
 
-can::FrameFlags can::Frame::getFrameFlags()
+can::FrameFlags can::Frame::frame_flags()
 {
-    return frameFlags_;
+    return frame_flags_;
 }
 
-uint8_t can::Frame::getDlc()
+uint8_t can::Frame::dlc()
 {
     return dlc_;
 }
 
-int can::Frame::getDataLenght()
+int can::Frame::data_length()
 {
-    return dataLenght_;
+    return data_lenght_;
 }
 
-int can::Frame::getIdentifier()
+int can::Frame::identifier()
 {
     return identifier_;
 }
 
-uint8_t* can::Frame::getData()
+uint8_t* can::Frame::data()
 {
     return data_;
 }
 
-uint8_t can::Frame::getData(int index)
+uint8_t can::Frame::data(int index)
 {
     return data_[index];
 }
 
 bool operator==(can::Frame& lhs, can::Frame& rhs)
 {
-    if (lhs.getIdentifier() != rhs.getIdentifier())
+    if (lhs.identifier() != rhs.identifier())
         return false;
-    if (lhs.getDlc() != rhs.getDlc())
+    if (lhs.dlc() != rhs.dlc())
         return false;
-    if (!(lhs.getFrameFlags() == rhs.getFrameFlags()))
+    if (!(lhs.frame_flags() == rhs.frame_flags()))
         return false;
-    for (int i = 0; i < lhs.getDataLenght(); i++)
-        if (lhs.getData(i) != rhs.getData(i))
+    for (int i = 0; i < lhs.data_length(); i++)
+        if (lhs.data(i) != rhs.data(i))
             return false;
     return true;
 }
@@ -175,53 +175,36 @@ bool operator==(can::Frame& lhs, can::Frame& rhs)
 // Setters
 ///////////////////////////////////////////////////////////////////////////////
 
-void can::Frame::setFrameFlags(FrameFlags frameFlags)
+void can::Frame::set_dlc(uint8_t dlc)
 {
-    frameFlags_ = frameFlags;
-}
-
-void can::Frame::setDlc(uint8_t dlc)
-{
-    if (dlc > 16){
-        std::cerr << "Can't set DLC higher than 16" << std::endl;
-        return;
-    }
+    assert((dlc < 17, "Can't set DLC higher than 16"));
+    
     dlc_ = dlc;
-    dataLenght_ = convertDlcToDataLenght(dlc);
+    data_lenght_ = ConvertDlcToDataLenght(dlc);
 }
 
-bool can::Frame::setDataLenght(int dataLenght)
+void can::Frame::set_data_lenght(int dataLenght)
 {
-    if (!isValidDataLength(dataLenght)){
-        std::cerr << "Can't set data length: " << dataLenght << std::endl;
-        return false;
-    }
+    assert((IsValidDataLength(dataLenght), "Invalid data length"));
 
-    if (frameFlags_.isFdf_ == CAN_2_0 && dataLenght > 8){
-        std::cerr << "Can't set data length: " << dataLenght <<
-                     " to more than 8 on CAN 2.0 frame";
-        return false;
-    }
-
-    dataLenght_ = dataLenght;
-    dlc_ = convertDataLenghtToDlc(dataLenght);
-
-    return true;
+    assert(!(frame_flags_.is_fdf_ == FrameType::Can2_0 && dataLenght > 8,
+            "Can't set data length to more than 8 on CAN 2.0 frame"));
+    
+    data_lenght_ = dataLenght;
+    dlc_ = ConvertDataLenghtToDlc(dataLenght);
 }
 
-void can::Frame::setIdentifer(int identifier)
+void can::Frame::set_identifer(int identifier)
 {
-    if (frameFlags_.isIde_ == BASE_IDENTIFIER && identifier >= pow(2.0, 11)){
-        std::cerr << "Can't set Base identifier larger than 2^11" << std::endl;
-        return;
-    } else if (identifier >= pow(2.0, 29)){
-        std::cerr << "Can't set Extended identifier larger than 2^29" << std::endl;
-        return;
-    }
+    assert((!(frame_flags_.is_ide_ == IdentifierType::Base && identifier >= pow(2.0, 11)),
+             "Can't set Base identifier larger than 2^11"));
+
+    assert((!(identifier >= pow(2.0, 29)), "Can't set Extended identifier larger than 2^29"));
+
     identifier_ = identifier;
 }
 
-void can::Frame::copyData(uint8_t *data, int dataLen)
+void can::Frame::CopyData(uint8_t *data, int dataLen)
 {
     if (data == 0){
         std::cerr << "Null pointer: source data" << std::endl;
@@ -232,54 +215,54 @@ void can::Frame::copyData(uint8_t *data, int dataLen)
         data_[i] = data[i];
 }
 
-int can::Frame::convertDlcToDataLenght(uint8_t dlc)
+int can::Frame::ConvertDlcToDataLenght(uint8_t dlc)
 {
-    if (frameFlags_.isFdf_ == CAN_2_0 && frameFlags_.isRtr_ == RTR_FRAME)
+    if (frame_flags_.is_fdf_ == FrameType::Can2_0 && frame_flags_.is_rtr_ == RtrFlag::RtrFrame)
         return 0;
 
-    if (frameFlags_.isFdf_ == CAN_2_0 && dlc >= 0x8)
+    if (frame_flags_.is_fdf_ == FrameType::Can2_0 && dlc >= 0x8)
         return 0x8;
 
     assert(dlc <= 16);
 
-    return dlcToDataLenghtTable_[dlc][1];
+    return dlc_to_data_lenght_table_[dlc][1];
 }
 
-uint8_t can::Frame::convertDataLenghtToDlc(int dataLenght)
+uint8_t can::Frame::ConvertDataLenghtToDlc(int dataLenght)
 {
     for (int i = 0; i < 16; i++){
-        if (uint8_t(dlcToDataLenghtTable_[i][1]) == dataLenght)
-            return dlcToDataLenghtTable_[i][0];
+        if (uint8_t(dlc_to_data_lenght_table_[i][1]) == dataLenght)
+            return dlc_to_data_lenght_table_[i][0];
     }
     return -1;
 }
 
-bool can::Frame::isValidDataLength(int dataLenght)
+bool can::Frame::IsValidDataLength(int dataLenght)
 {
     for (int i = 0; i < 16; i++)
-        if (dlcToDataLenghtTable_[i][1] == dataLenght)
+        if (dlc_to_data_lenght_table_[i][1] == dataLenght)
             return true;
     return false;
 }
 
-void can::Frame::print()
+void can::Frame::Print()
 {
     std::cout << std::string(80, '*') << std::endl;
     std::cout << "CAN Frame:" << std::endl;
-    std::cout << "FDF: " << frameFlags_.isFdf_ << std::endl;
-    std::cout << "IDE: " << frameFlags_.isIde_ << std::endl;
-    if (frameFlags_.isFdf_ == CAN_FD)
-        std::cout << "BRS: " << frameFlags_.isBrs_ << std::endl;
+    std::cout << "FDF: " << frame_flags_.is_fdf_ << std::endl;
+    std::cout << "IDE: " << frame_flags_.is_ide_ << std::endl;
+    if (frame_flags_.is_fdf_ == FrameType::CanFd)
+        std::cout << "BRS: " << frame_flags_.is_brs_ << std::endl;
     else
-        std::cout << "RTR: " << frameFlags_.isRtr_ << std::endl;
-    printf("DLC: 0x%x\n", dlc_);
-    printf("ESI: 0x%x\n", frameFlags_.isEsi_);
-    std::cout << "Data field length: " << dataLenght_ << std::endl;
-    printf("Identifier: 0x%x\n", identifier_);
+        std::cout << "RTR: " << frame_flags_.is_rtr_ << std::endl;
+    std::cout << "DLC: " << std::hex << dlc_ << std::endl;
+    std::cout << "ESI: " << frame_flags_.is_esi_ << std::endl;
+    std::cout << "Data field length: " << data_lenght_ << std::endl;
+    std::cout << "Identifier: " << std::hex << identifier_ << std::endl;
 
     std::cout << "Data: ";
-    for (int i = 0; i < dataLenght_; i++)
-        printf("0x%x ", data_[i]);
+    for (int i = 0; i < data_lenght_; i++)
+        std::cout << "0x" << std::hex << data_[i] << " ";
     std::cout << std::endl;
 
     std::cout << std::string(80, '*') << std::endl;

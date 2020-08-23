@@ -29,67 +29,67 @@ extern "C" {
 }
 
 
-void can::CtuCanFdInterface::enable()
+void can::CtuCanFdInterface::Enable()
 {
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.ena = CTU_CAN_ENABLED;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 }
 
 
-void can::CtuCanFdInterface::disable()
+void can::CtuCanFdInterface::Disable()
 {
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.ena = CTU_CAN_DISABLED;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 }
 
 
-void can::CtuCanFdInterface::reset()
+void can::CtuCanFdInterface::Reset()
 {
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.rst = 1;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 }
 
 
-bool can::CtuCanFdInterface::setFdStandardType(bool isIso)
+bool can::CtuCanFdInterface::SetFdStandardType(bool isIso)
 {
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     if (isIso)
         data.s.nisofd = ISO_FD;
     else
         data.s.nisofd = NON_ISO_FD;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 
     return true;
 }
 
 
-bool can::CtuCanFdInterface::setCanVersion(CanVersion canVersion)
+bool can::CtuCanFdInterface::SetCanVersion(CanVersion canVersion)
 {
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
 
     switch (canVersion)
     {
-    case CAN_2_0_VERSION:
+    case CanVersion::Can_2_0:
         data.s.fde = FDE_DISABLE;
-        memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+        MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
         return true;
         break;
 
-    case CAN_FD_ENABLED_VERSION:
+    case CanVersion::CanFdEnabled:
         data.s.fde = FDE_ENABLE;
-        memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+        MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
         return true;
         break;
 
-    case CAN_FD_TOLERANT_VERSION:
+    case CanVersion::CanFdTolerant:
         std::cerr << "CTU CAN FD does not support CAN FD tolerant operation!" <<
         std::endl;
         return false;
@@ -99,317 +99,317 @@ bool can::CtuCanFdInterface::setCanVersion(CanVersion canVersion)
 
 
 
-void can::CtuCanFdInterface::configureBitTiming(can::BitTiming nominalBitTiming,
-                                                can::BitTiming dataBitTiming)
+void can::CtuCanFdInterface::ConfigureBitTiming(can::BitTiming nominal_bit_timing,
+                                                can::BitTiming data_bit_timing)
 {
     union ctu_can_fd_btr data;
-    union ctu_can_fd_btr_fd dataFd;
+    union ctu_can_fd_btr_fd data_fd;
 
     data.u32 = 0;
-    data.s.brp = nominalBitTiming.brp;
-    data.s.ph1 = nominalBitTiming.ph1;
-    data.s.ph2 = nominalBitTiming.ph2;
-    data.s.sjw = nominalBitTiming.sjw;
-    data.s.prop = nominalBitTiming.prop;
-    memBusAgentWrite32(CTU_CAN_FD_BTR, data.u32);
+    data.s.brp = nominal_bit_timing.brp_;
+    data.s.ph1 = nominal_bit_timing.ph1_;
+    data.s.ph2 = nominal_bit_timing.ph2_;
+    data.s.sjw = nominal_bit_timing.sjw_;
+    data.s.prop = nominal_bit_timing.prop_;
+    MemBusAgentWrite32(CTU_CAN_FD_BTR, data.u32);
 
-    dataFd.u32 = 0;
-    dataFd.s.brp_fd = dataBitTiming.brp;
-    dataFd.s.ph1_fd = dataBitTiming.ph1;
-    dataFd.s.ph2_fd = dataBitTiming.ph2;
-    dataFd.s.sjw_fd = dataBitTiming.sjw;
-    dataFd.s.prop_fd = dataBitTiming.prop;
-    memBusAgentWrite32(CTU_CAN_FD_BTR_FD, dataFd.u32);
+    data_fd.u32 = 0;
+    data_fd.s.brp_fd = data_bit_timing.brp_;
+    data_fd.s.ph1_fd = data_bit_timing.ph1_;
+    data_fd.s.ph2_fd = data_bit_timing.ph2_;
+    data_fd.s.sjw_fd = data_bit_timing.sjw_;
+    data_fd.s.prop_fd = data_bit_timing.prop_;
+    MemBusAgentWrite32(CTU_CAN_FD_BTR_FD, data_fd.u32);
 }
 
 
-void can::CtuCanFdInterface::configureSsp(SspType sspType, int sspOffset)
+void can::CtuCanFdInterface::ConfigureSsp(SspType ssp_type, int ssp_offset)
 {
-    union ctu_can_fd_trv_delay_ssp_cfg sspCfg;
-    sspCfg.u32 = 0;
+    union ctu_can_fd_trv_delay_ssp_cfg ssp_cfg;
+    ssp_cfg.u32 = 0;
 
-    if (sspType == SspType::SSP_DISABLED)
-        sspCfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_NO_SSP;
-    else if (sspType == SspType::SSP_MEAS_AND_OFFSET)
-        sspCfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_MEAS_N_OFFSET;
-    else if (sspType == SspType::SSP_OFFSET)
-        sspCfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_OFFSET;
+    if (ssp_type == SspType::Disabled)
+        ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_NO_SSP;
+    else if (ssp_type == SspType::MeasuredPlusOffset)
+        ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_MEAS_N_OFFSET;
+    else if (ssp_type == SspType::Offset)
+        ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_OFFSET;
 
-    sspCfg.s.ssp_offset = sspOffset;
-    memBusAgentWrite32(CTU_CAN_FD_TRV_DELAY, sspCfg.u32);
+    ssp_cfg.s.ssp_offset = ssp_offset;
+    MemBusAgentWrite32(CTU_CAN_FD_TRV_DELAY, ssp_cfg.u32);
 }
 
 
-void can::CtuCanFdInterface::sendFrame(can::Frame *frame)
+void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
 {
-    union ctu_can_fd_frame_form_w frameFormatWord;
-    union ctu_can_fd_identifier_w identifierWord;
+    union ctu_can_fd_frame_form_w frame_format_word;
+    union ctu_can_fd_identifier_w identifier_word;
 
     // Choose random TXT Buffer
-    int txtBufNr = (rand() % 4) + 1;
+    int txt_buf_nr = (rand() % 4) + 1;
 
     // TXT Buffer address
-    int txtBufferAddress;
-    switch (txtBufNr)
+    int txt_buffer_address;
+    switch (txt_buf_nr)
     {
     case 1:
-        txtBufferAddress = CTU_CAN_FD_TXTB1_DATA_1;
+        txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
         break;
     case 2:
-        txtBufferAddress = CTU_CAN_FD_TXTB2_DATA_1;
+        txt_buffer_address = CTU_CAN_FD_TXTB2_DATA_1;
         break;
     case 3:
-        txtBufferAddress = CTU_CAN_FD_TXTB3_DATA_1;
+        txt_buffer_address = CTU_CAN_FD_TXTB3_DATA_1;
         break;
     case 4:
-        txtBufferAddress = CTU_CAN_FD_TXTB4_DATA_1;
+        txt_buffer_address = CTU_CAN_FD_TXTB4_DATA_1;
         break;
     default:
         break;
     }
 
     // Frame format word
-    frameFormatWord.u32 = 0;    
-    if (frame->getFrameFlags().isFdf_ == can::CAN_FD)
-        frameFormatWord.s.fdf = ctu_can_fd_frame_form_w_fdf::FD_CAN;
+    frame_format_word.u32 = 0;    
+    if (frame->frame_flags().is_fdf_ == FrameType::CanFd)
+        frame_format_word.s.fdf = ctu_can_fd_frame_form_w_fdf::FD_CAN;
     else
-        frameFormatWord.s.fdf = ctu_can_fd_frame_form_w_fdf::NORMAL_CAN;
+        frame_format_word.s.fdf = ctu_can_fd_frame_form_w_fdf::NORMAL_CAN;
 
-    if (frame->getFrameFlags().isIde_ == can::EXTENDED_IDENTIFIER)
-        frameFormatWord.s.ide = ctu_can_fd_frame_form_w_ide::EXTENDED;
+    if (frame->frame_flags().is_ide_ == IdentifierType::Extended)
+        frame_format_word.s.ide = ctu_can_fd_frame_form_w_ide::EXTENDED;
     else
-        frameFormatWord.s.ide = ctu_can_fd_frame_form_w_ide::BASE;
+        frame_format_word.s.ide = ctu_can_fd_frame_form_w_ide::BASE;
 
-    if (frame->getFrameFlags().isRtr_ == can::RTR_FRAME)
-        frameFormatWord.s.rtr = ctu_can_fd_frame_form_w_rtr::RTR_FRAME;
+    if (frame->frame_flags().is_rtr_ == RtrFlag::RtrFrame)
+        frame_format_word.s.rtr = ctu_can_fd_frame_form_w_rtr::RTR_FRAME;
     else
-        frameFormatWord.s.rtr = ctu_can_fd_frame_form_w_rtr::NO_RTR_FRAME;
+        frame_format_word.s.rtr = ctu_can_fd_frame_form_w_rtr::NO_RTR_FRAME;
 
-    if (frame->getFrameFlags().isBrs_ == can::BIT_RATE_SHIFT)
-        frameFormatWord.s.brs = ctu_can_fd_frame_form_w_brs::BR_SHIFT;
+    if (frame->frame_flags().is_brs_ == BrsFlag::Shift)
+        frame_format_word.s.brs = ctu_can_fd_frame_form_w_brs::BR_SHIFT;
     else
-        frameFormatWord.s.brs = ctu_can_fd_frame_form_w_brs::BR_NO_SHIFT;
+        frame_format_word.s.brs = ctu_can_fd_frame_form_w_brs::BR_NO_SHIFT;
 
-    if (frame->getFrameFlags().isEsi_ == can::ESI_ERROR_ACTIVE)
-        frameFormatWord.s.esi_rsv = ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_ACTIVE;
+    if (frame->frame_flags().is_esi_ == EsiFlag::ErrorActive)
+        frame_format_word.s.esi_rsv = ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_ACTIVE;
     else
-        frameFormatWord.s.esi_rsv = ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_PASIVE;
+        frame_format_word.s.esi_rsv = ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_PASIVE;
 
-    frameFormatWord.s.dlc = frame->getDlc();
+    frame_format_word.s.dlc = frame->dlc();
 
     // Identifier word
-    identifierWord.u32 = 0;
+    identifier_word.u32 = 0;
 
-    if (frame->getFrameFlags().isIde_ == can::EXTENDED_IDENTIFIER)
+    if (frame->frame_flags().is_ide_ == IdentifierType::Extended)
     {
-        identifierWord.s.identifier_base =
-            (((uint32_t)frame->getIdentifier()) >> 18) & 0x7FF;
-        identifierWord.s.identifier_ext =
-            ((uint32_t)frame->getIdentifier()) & 0x3FFFF;
+        identifier_word.s.identifier_base =
+            (((uint32_t)frame->identifier()) >> 18) & 0x7FF;
+        identifier_word.s.identifier_ext =
+            ((uint32_t)frame->identifier()) & 0x3FFFF;
     } else {
-        identifierWord.s.identifier_base =
-            ((uint32_t)frame->getIdentifier() & 0x7FF);
-        identifierWord.s.identifier_ext = 0;
+        identifier_word.s.identifier_base =
+            ((uint32_t)frame->identifier() & 0x7FF);
+        identifier_word.s.identifier_ext = 0;
     }
 
     // Write first 4 words to TXT Buffer. Timestamp 0 -> send immediately!
-    memBusAgentWrite32(txtBufferAddress, frameFormatWord.u32);
-    memBusAgentWrite32(txtBufferAddress + 0x4, identifierWord.u32);
-    memBusAgentWrite32(txtBufferAddress + 0x8, 0);
-    memBusAgentWrite32(txtBufferAddress + 0xC, 0);
-    txtBufferAddress += 0x10;
+    MemBusAgentWrite32(txt_buffer_address, frame_format_word.u32);
+    MemBusAgentWrite32(txt_buffer_address + 0x4, identifier_word.u32);
+    MemBusAgentWrite32(txt_buffer_address + 0x8, 0);
+    MemBusAgentWrite32(txt_buffer_address + 0xC, 0);
+    txt_buffer_address += 0x10;
 
-    int numDataWords = (frame->getDataLenght() - 1) / 4 + 1;
-    std::cout << "FRAME DATA LENGTH: " << frame->getDataLenght();
+    int num_data_words = (frame->data_length() - 1) / 4 + 1;
+    std::cout << "FRAME DATA LENGTH: " << frame->data_length();
 
-    for (int i = 0; i < numDataWords; i++)
+    for (int i = 0; i < num_data_words; i++)
     {
-        uint32_t dataWrd = 0;
+        uint32_t data_wrd = 0;
         for (int j = 0; j < 4; j++)
-            dataWrd |= (frame->getData(i * 4 + j)) << (j * 8);
-        memBusAgentWrite32(txtBufferAddress, dataWrd);
-        txtBufferAddress += 0x4;
+            data_wrd |= (frame->data(i * 4 + j)) << (j * 8);
+        MemBusAgentWrite32(txt_buffer_address, data_wrd);
+        txt_buffer_address += 0x4;
     }
 
     // Give command to chosen buffer
-    memBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txtBufNr + 7)));
+    MemBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txt_buf_nr + 7)));
 }
 
 
-can::Frame can::CtuCanFdInterface::readFrame()
+can::Frame can::CtuCanFdInterface::ReadFrame()
 {
-    union ctu_can_fd_frame_form_w frameFormatWord;
-    union ctu_can_fd_identifier_w identifierWord;
-    uint32_t dataWord;
+    union ctu_can_fd_frame_form_w frame_format_word;
+    union ctu_can_fd_identifier_w identifier_word;
+    uint32_t data_word;
     int rwcnt;
     int identifier;
     uint8_t data[64];
     memset(data, 0, sizeof(data));
 
     // Flags
-    FlexibleDataRate isFdf;
-    ExtendedIdentifier isIde;
-    RemoteTransmissionRequest isRtr;
-    BitRateShift isBrs;
-    ErrorStateIndicator isEsi;
+    FrameType is_fdf;
+    IdentifierType is_ide;
+    RtrFlag is_rtr;
+    BrsFlag is_brs;
+    EsiFlag is_esi;
     
-    frameFormatWord.u32 = memBusAgentRead32(CTU_CAN_FD_RX_DATA);
-    identifierWord.u32 = memBusAgentRead32(CTU_CAN_FD_RX_DATA);
+    frame_format_word.u32 = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
+    identifier_word.u32 = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
 
     // Skip Timestamp words
-    dataWord = memBusAgentRead32(CTU_CAN_FD_RX_DATA);
-    dataWord = memBusAgentRead32(CTU_CAN_FD_RX_DATA);
-    rwcnt = frameFormatWord.s.rwcnt;
+    data_word = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
+    data_word = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
+    rwcnt = frame_format_word.s.rwcnt;
 
     // Set flags
-    if (frameFormatWord.s.fdf == ctu_can_fd_frame_form_w_fdf::FD_CAN)
-        isFdf = FlexibleDataRate::CAN_FD;
+    if (frame_format_word.s.fdf == ctu_can_fd_frame_form_w_fdf::FD_CAN)
+        is_fdf = FrameType::CanFd;
     else
-        isFdf = FlexibleDataRate::CAN_2_0;
+        is_fdf = FrameType::Can2_0;
     
-    if (frameFormatWord.s.ide == ctu_can_fd_frame_form_w_ide::EXTENDED)
-        isIde = ExtendedIdentifier::EXTENDED_IDENTIFIER;
+    if (frame_format_word.s.ide == ctu_can_fd_frame_form_w_ide::EXTENDED)
+        is_ide = IdentifierType::Extended;
     else
-        isIde = ExtendedIdentifier::BASE_IDENTIFIER;
+        is_ide = IdentifierType::Base;
     
-    if (frameFormatWord.s.rtr == ctu_can_fd_frame_form_w_rtr::RTR_FRAME)
-        isRtr = RemoteTransmissionRequest::RTR_FRAME;
+    if (frame_format_word.s.rtr == ctu_can_fd_frame_form_w_rtr::RTR_FRAME)
+        is_rtr = RtrFlag::RtrFrame;
     else
-        isRtr = RemoteTransmissionRequest::DATA_FRAME;
+        is_rtr = RtrFlag::DataFrame;
 
-    if (frameFormatWord.s.brs == ctu_can_fd_frame_form_w_brs::BR_SHIFT)
-        isBrs = BitRateShift::BIT_RATE_SHIFT;
+    if (frame_format_word.s.brs == ctu_can_fd_frame_form_w_brs::BR_SHIFT)
+        is_brs = BrsFlag::Shift;
     else
-        isBrs = BitRateShift::BIT_RATE_DONT_SHIFT;
+        is_brs = BrsFlag::DontShift;
 
-    if (frameFormatWord.s.esi_rsv == ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_ACTIVE)
-        isEsi = ErrorStateIndicator::ESI_ERROR_ACTIVE;
+    if (frame_format_word.s.esi_rsv == ctu_can_fd_frame_form_w_esi_rsv::ESI_ERR_ACTIVE)
+        is_esi = EsiFlag::ErrorActive;
     else
-        isEsi = ErrorStateIndicator::ESI_ERROR_PASSIVE;
+        is_esi = EsiFlag::ErrorPassive;
 
-    FrameFlags frameFlags = FrameFlags(isFdf, isIde, isRtr, isBrs, isEsi);
+    FrameFlags frameFlags = FrameFlags(is_fdf, is_ide, is_rtr, is_brs, is_esi);
 
     // Read identifier
-    if (isIde == ExtendedIdentifier::EXTENDED_IDENTIFIER)
-        identifier = (identifierWord.s.identifier_base << 18) |
-                     identifierWord.s.identifier_ext;
+    if (is_ide == IdentifierType::Extended)
+        identifier = (identifier_word.s.identifier_base << 18) |
+                     identifier_word.s.identifier_ext;
     else
-        identifier = identifierWord.s.identifier_base;
+        identifier = identifier_word.s.identifier_base;
 
     // Read data
     for (int i = 0; i < rwcnt - 3; i++)
     {
-        dataWord = memBusAgentRead32(CTU_CAN_FD_RX_DATA);
+        data_word = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
 
         for (int j = 0; j < 4; j++)
         {
-            data[(i * 4) + j] = (uint8_t)(dataWord & 0xFF);
-            dataWord >>= 8;
+            data[(i * 4) + j] = (uint8_t)(data_word & 0xFF);
+            data_word >>= 8;
         }
     }
 
-    return Frame(frameFlags, (uint8_t)frameFormatWord.s.dlc, identifier, data);
+    return Frame(frameFlags, (uint8_t)frame_format_word.s.dlc, identifier, data);
 }
 
 
-bool can::CtuCanFdInterface::hasRxFrame()
+bool can::CtuCanFdInterface::HasRxFrame()
 {
-    union ctu_can_fd_rx_status_rx_settings rxStatus;
-    rxStatus.u32 = memBusAgentRead32(CTU_CAN_FD_RX_STATUS);
+    union ctu_can_fd_rx_status_rx_settings rx_status;
+    rx_status.u32 = MemBusAgentRead32(CTU_CAN_FD_RX_STATUS);
 
-    assert(!(rxStatus.s.rxe == 1 && rxStatus.s.rxfrc > 0));
+    assert(!(rx_status.s.rxe == 1 && rx_status.s.rxfrc > 0));
 
-    if (rxStatus.s.rxe == 1)
+    if (rx_status.s.rxe == 1)
         return false;
     return true;
 }
 
-int can::CtuCanFdInterface::getRec()
+int can::CtuCanFdInterface::GetRec()
 {
     union ctu_can_fd_rec_tec data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_REC);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_REC);
     return data.s.rec_val;
 }
 
 
-int can::CtuCanFdInterface::getTec()
+int can::CtuCanFdInterface::GetTec()
 {
     union ctu_can_fd_rec_tec data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_REC);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_REC);
     return data.s.tec_val;
 }
 
         
-void can::CtuCanFdInterface::setRec(int rec)
+void can::CtuCanFdInterface::SetRec(int rec)
 {
     // Enable test-mode otherwise we will not be able to change REC or TEC!
-    union ctu_can_fd_ctr_pres ctrPres;
+    union ctu_can_fd_ctr_pres ctr_pres;
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.tstm = 1;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 
-    ctrPres.u32 = 0;
-    ctrPres.s.prx = 1;
-    ctrPres.s.ctpv = rec;
+    ctr_pres.u32 = 0;
+    ctr_pres.s.prx = 1;
+    ctr_pres.s.ctpv = rec;
 
-    memBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctrPres.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
 }
         
     
-void can::CtuCanFdInterface::setTec(int tec)
+void can::CtuCanFdInterface::SetTec(int tec)
 {
     // Enable test-mode otherwise we will not be able to change REC or TEC!
-    union ctu_can_fd_ctr_pres ctrPres;
+    union ctu_can_fd_ctr_pres ctr_pres;
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.tstm = 1;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 
-    ctrPres.u32 = 0;
-    ctrPres.s.ptx = 1;
-    ctrPres.s.ctpv = tec;
+    ctr_pres.u32 = 0;
+    ctr_pres.s.ptx = 1;
+    ctr_pres.s.ctpv = tec;
 
-    memBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctrPres.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
 }
 
 
-void can::CtuCanFdInterface::setErrorState(ErrorState errorState)
+void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
 {
     // Enable test-mode otherwise we will not be able to change REC or TEC!
-    union ctu_can_fd_ctr_pres ctrPres;
+    union ctu_can_fd_ctr_pres ctr_pres;
     union ctu_can_fd_mode_settings data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_MODE);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.tstm = 1;
-    memBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 
-    ctrPres.u32 = 0;
-    ctrPres.s.ptx = 1;
-    ctrPres.s.prx = 1;
+    ctr_pres.u32 = 0;
+    ctr_pres.s.ptx = 1;
+    ctr_pres.s.prx = 1;
 
-    switch (errorState)
+    switch (error_state)
     {
-    case ERROR_ACTIVE:
-        ctrPres.s.ctpv = 0;
+    case FaultConfinementState::ErrorActive:
+        ctr_pres.s.ctpv = 0;
         break;
 
-    case ERROR_PASSIVE:
-        ctrPres.s.ctpv = 130;
+    case FaultConfinementState::ErrorPassive:
+        ctr_pres.s.ctpv = 130;
         break;
 
-    case BUS_OFF:
-        ctrPres.s.ctpv = 260;
+    case FaultConfinementState::BusOff:
+        ctr_pres.s.ctpv = 260;
         break;
     }
 
-    memBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctrPres.u32);
+    MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
 }
 
 
-can::ErrorState can::CtuCanFdInterface::getErrorState()
+can::FaultConfinementState can::CtuCanFdInterface::GetErrorState()
 {
     union ctu_can_fd_ewl_erp_fault_state data;
-    data.u32 = memBusAgentRead32(CTU_CAN_FD_EWL);
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_EWL);
 
     printf("READ FAULT VALUE: 0x%x\n", data.u32);
     // HW should signal always only one state!
@@ -417,11 +417,11 @@ can::ErrorState can::CtuCanFdInterface::getErrorState()
     //assert(stateBits == 1 || stateBits == 2 || stateBits == 4);
 
     if (data.s.bof == 1)
-        return can::BUS_OFF;
+        return FaultConfinementState::BusOff;
     if (data.s.era == 1)
-        return can::ERROR_ACTIVE;
+        return FaultConfinementState::ErrorActive;
     if (data.s.erp == 1)
-        return can::BUS_OFF;
+        return FaultConfinementState::BusOff;
 
     // We should never get here!
     assert(false);

@@ -17,55 +17,105 @@
 #ifndef CAN_FRAME
 #define CAN_FRAME
 
+
+/**
+ * @class Frame
+ * @namespace can
+ * 
+ * Represents CAN frame and its metadata (DLC, ID, Data, etc...). Used for transmission,
+ * reception by DUT. Does not hold cycle-accurate representation of frame, BitFrame class
+ * is intended for that.
+ */
 class can::Frame {
 
     public:
+
+        /* 
+         * A constructor which does not specify all attributes, leaves these arguments enabled
+         * for randomization. Attributes will be randomized upon call of 'randomize'.
+         */
+
+        /**
+         * Randomizes everything
+         */
         Frame();
 
         /**
-         * @brief Create CAN Frame
-         * @param frameFlags Frame flags to use (copied)
+         * Does not randomize
+         * @param frame_flags Frame flags of frame
          * @param dlc Data length code
          * @param identifier CAN Identifier
-         * @param data Pointer to data to set. Should be pointer to array of 64
-         *             uint8_t.
-         * 
-         * No parameter will be allowed for randomization.
+         * @param data Data payload
          */
-        Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
+        Frame(FrameFlags frame_flags, uint8_t dlc, int identifier,
               uint8_t *data);
 
-        Frame(FrameFlags frameFlags, uint8_t dlc, int identifier);
+        /**
+         * Randomizes data.
+         * @param frame_flags Frame flags of frame
+         * @param dlc Data length code
+         * @param identifier CAN Identifier
+         */
+        Frame(FrameFlags frame_flags, uint8_t dlc, int identifier);
 
-        Frame(FrameFlags frameFlags, uint8_t dlc);
+        /**
+         * Randomizes data and identifier
+         * @param frame_flags Frame flags of frame
+         * @param dlc Data length code
+         */
+        Frame(FrameFlags frame_flags, uint8_t dlc);
 
-        Frame(FrameFlags frameFlags);
+        /**
+         * Randomizes data, identifier and DLC.
+         * @param frame_flags Frame flags of frame
+         */
+        Frame(FrameFlags frame_flags);
 
-        Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data);
+        /**
+         * Randomizes identifier
+         * @param frame_flags Frame flags of frame
+         * @param dlc Data length code
+         * @param data Data payload
+         */
+        Frame(FrameFlags frame_flags, uint8_t dlc, uint8_t *data);
 
-        void Copy(Frame frame);
+        FrameFlags frame_flags();
+        uint8_t dlc();
+        int data_length();
+        int identifier();
 
-        FrameFlags getFrameFlags();
-        uint8_t getDlc();
-        int getDataLenght();
-        int getIdentifier();
-        uint8_t* getData();
-        uint8_t getData(int index);
+        /**
+         * @returns Pointer to first data byte.
+         */
+        uint8_t* data();
 
-        void randomize();
+        /**
+         * @returns Data byte on 'index' position.
+         */
+        uint8_t data(int index);
+
+        /**
+         * Randomize attribtue which are enabled for randomization (see constructor).
+         */
+        void Randomize();
 
         friend bool operator==(Frame& lhs, Frame& rhs);
 
-        void print();
+        /**
+         * Prints frame.
+         * TODO: Add stream input
+         */
+        void Print();
 
     protected:
-        FrameFlags frameFlags_;
+
+        FrameFlags frame_flags_;
 
         // Data length code
         uint8_t dlc_;
 
         // Data length (always should reflect data length)
-        int dataLenght_;
+        int data_lenght_;
 
         // Frame identfier
         int identifier_;
@@ -74,12 +124,12 @@ class can::Frame {
         uint8_t data_[64];
 
         // Randomization attributes
-        bool randomizeDlc;
-        bool randomizeIdentifier;
-        bool randomizeData;
+        bool randomize_dlc;
+        bool randomize_identifier;
+        bool randomize_data;
 
         // Supported DLC / Datalength combinations
-        const int dlcToDataLenghtTable_ [16][2] =
+        const int dlc_to_data_lenght_table_ [16][2] =
         {
             {0b0000, 0},
             {0b0001, 1},
@@ -98,46 +148,51 @@ class can::Frame {
             {0b1110, 48},
             {0b1111, 64}
         };
+    
+        /**
+         * Sets DLC and data lenght from DLC. Aborts on invalid DLC.
+         * @param dlc DLC to be set
+         */
+        void set_dlc(uint8_t dlc);
 
         /**
-         * 
+         * Sets data lenght and DLC from data length. Aborts on invalid data length.
+         * @param data_length data length to be set
          */
-        void setFrameFlags(FrameFlags frameFlags);
+        void set_data_lenght(int data_length);
 
         /**
-         * 
+         * Sets identifier, aborts if identifier is out of range.
+         * @param identifier Identifier in range  0 - 2^11-1 (Base) , 0 - 2^29-1(Extended)
+         * Aborts on invalid identifier.
          */
-        void setDlc(uint8_t dlc);
+        void set_identifer(int identifier);
 
         /**
-         * 
+         * Copies data into frame data.
+         * @param data Pointer to data being copied
+         * @param length Number of bytes to be copied
          */
-        bool setDataLenght(int dataLenght);
+        void CopyData(uint8_t *data, int length);
 
         /**
-         * 
+         * @param dlc DLC to be converted
+         * @returns dlc converted to according data length in bytes
          */
-        void setIdentifer(int identifier);
+        int ConvertDlcToDataLenght(uint8_t dlc);
 
         /**
-         * 
+         * @param data_length Data length to be converted
+         * @returns Data length converted to DLC.
          */
-        void copyData(uint8_t *data, int dataLen);
+        uint8_t ConvertDataLenghtToDlc(int data_length);
 
         /**
-         * 
+         * Checks whether data length is valid data payload length for CAN frame.
+         * @param data_length data length to be checked.
+         * @returns true if it is, false otherwise
          */
-        int convertDlcToDataLenght(uint8_t dlc);
-
-        /**
-         * 
-         */
-        uint8_t convertDataLenghtToDlc(int dataLenght);
-
-        /**
-         * 
-         */
-        bool isValidDataLength(int dataLenght);
+        bool IsValidDataLength(int data_length);
 };
 
 #endif

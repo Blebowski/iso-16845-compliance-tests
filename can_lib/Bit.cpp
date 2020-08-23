@@ -17,526 +17,504 @@
 #include "TimeQuanta.h"
 #include "Bit.h"
 
-can::Bit::Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
-              BitTiming* nominalBitTiming, BitTiming* dataBitTiming)
+
+can::Bit::Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
+              BitTiming* nominal_bit_timing, BitTiming* data_bit_timing)
 {
-    this->bitType = bitType;
-    this->bitValue = bitValue;
-    this->stuffBitType = STUFF_NO;
+    this->bit_type_ = bit_type;
+    this->bit_value_ = bit_value;
+    this->stuff_bit_type = StuffBitType::NoStuffBit;
 
-    this->frameFlags = frameFlags;
-    this->nominalBitTiming = nominalBitTiming;
-    this->dataBitTiming = dataBitTiming;
+    this->frame_flags = frame_flags;
+    this->nominal_bit_timing = nominal_bit_timing;
+    this->data_bit_timing = data_bit_timing;
 
-    constructTimeQuantas(nominalBitTiming, dataBitTiming);
+    ConstructTimeQuantas();
 }
 
 
-can::Bit::Bit(BitType bitType, BitValue bitValue, FrameFlags* frameFlags,
-              BitTiming* nominalBitTiming, BitTiming* dataBitTiming,
-              StuffBitType stuffBitType)
+can::Bit::Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
+              BitTiming* nominal_bit_timing, BitTiming* data_bit_timing,
+              StuffBitType stuff_bit_type)
 {
-    this->bitType = bitType;
-    this->bitValue = bitValue;
-    this->stuffBitType = stuffBitType;
+    this->bit_type_ = bit_type;
+    this->bit_value_ = bit_value;
+    this->stuff_bit_type = stuff_bit_type;
     
-    this->frameFlags = frameFlags;
-    this->nominalBitTiming = nominalBitTiming;
-    this->dataBitTiming = dataBitTiming;
+    this->frame_flags = frame_flags;
+    this->nominal_bit_timing = nominal_bit_timing;
+    this->data_bit_timing = data_bit_timing;
 
-    constructTimeQuantas(nominalBitTiming, dataBitTiming);
+    ConstructTimeQuantas();
 }
 
 
-can::BitValue can::Bit::getBitValue()
+void can::Bit::FlipBitValue()
 {
-    return bitValue;
+    bit_value_ = GetOppositeValue();
 }
 
 
-can::BitType can::Bit::getBitType()
+can::BitValue can::Bit::GetOppositeValue()
 {
-    return bitType;
+    if (bit_value_ == BitValue::Dominant)
+        return BitValue::Recessive;
+    return BitValue::Dominant;
 }
 
 
-can::StuffBitType can::Bit::getStuffBitType()
+bool can::Bit::IsStuffBit()
 {
-    return stuffBitType;
-}
-
-
-bool can::Bit::setBitValue(BitValue bitValue)
-{
-    this->bitValue = bitValue;
-}
-
-
-void can::Bit::flipBitValue()
-{
-    bitValue = getOppositeValue();
-}
-
-
-can::BitValue can::Bit::getOppositeValue()
-{
-    if (bitValue == DOMINANT)
-        return RECESSIVE;
-    return DOMINANT;
-}
-
-
-bool can::Bit::isStuffBit()
-{
-    if (stuffBitType == STUFF_NORMAL || stuffBitType == STUFF_FIXED)
+    if (stuff_bit_type == StuffBitType::NormalStuffBit ||
+        stuff_bit_type == StuffBitType::FixedStuffBit)
+    {
         return true;
+    }
     return false;
 }
 
 
-std::string can::Bit::getBitTypeName()
+std::string can::Bit::GetBitTypeName()
 {
-    for (int i = 0; i < sizeof(bitTypeNames) / sizeof(BitTypeName); i++)
-        if (bitTypeNames[i].bitType == bitType)
-            return bitTypeNames[i].name;
+    for (int i = 0; i < sizeof(bit_type_names_) / sizeof(BitTypeName); i++)
+        if (bit_type_names_[i].bit_type == bit_type_)
+            return bit_type_names_[i].name;
     return " ";
 }
 
 
-std::string can::Bit::getStringValue()
+std::string can::Bit::GetColouredValue()
 {
-    if (isStuffBit())
-        return "\033[1;32m" + std::to_string((int)bitValue) + "\033[0m";
-    else if (bitType == BIT_TYPE_ACTIVE_ERROR_FLAG ||
-             bitType == BIT_TYPE_PASSIVE_ERROR_FLAG ||
-             bitType == BIT_TYPE_ERROR_DELIMITER)
-        return "\033[1;31m" + std::to_string((int)bitValue) + "\033[0m";
-    else if (bitType == BIT_TYPE_OVERLOAD_FLAG ||
-             bitType == BIT_TYPE_OVERLOAD_DELIMITER)
-        return "\033[1;36m" + std::to_string((int)bitValue) + "\033[0m";
+    if (IsStuffBit())
+        return "\033[1;32m" + std::to_string((int)bit_value_) + "\033[0m";
+    else if (bit_type_ == BitType::ActiveErrorFlag ||
+             bit_type_ == BitType::PassiveErrorFlag ||
+             bit_type_ == BitType::ErrorDelimiter)
+        return "\033[1;31m" + std::to_string((int)bit_value_) + "\033[0m";
+    else if (bit_type_ == BitType::OverloadFlag ||
+             bit_type_ == BitType::OverloadDelimiter)
+        return "\033[1;36m" + std::to_string((int)bit_value_) + "\033[0m";
     else
-        return std::to_string((int)bitValue);
+        return std::to_string((int)bit_value_);
 }
 
 
-bool can::Bit::isSingleBitField()
+bool can::Bit::IsSingleBitField()
 {
-    if (bitType == BIT_TYPE_SOF ||
-        bitType == BIT_TYPE_R0 ||
-        bitType == BIT_TYPE_R1 ||
-        bitType == BIT_TYPE_SRR ||
-        bitType == BIT_TYPE_RTR ||
-        bitType == BIT_TYPE_IDE ||
-        bitType == BIT_TYPE_EDL ||
-        bitType == BIT_TYPE_BRS ||
-        bitType == BIT_TYPE_ESI ||
-        bitType == BIT_TYPE_CRC_DELIMITER ||
-        bitType == BIT_TYPE_STUFF_PARITY ||
-        bitType == BIT_TYPE_ACK ||
-        bitType == BIT_TYPE_ACK_DELIMITER)
+    if (bit_type_ == BitType::Sof ||
+        bit_type_ == BitType::R0 ||
+        bit_type_ == BitType::R1 ||
+        bit_type_ == BitType::Srr ||
+        bit_type_ == BitType::Rtr ||
+        bit_type_ == BitType::Ide ||
+        bit_type_ == BitType::Edl ||
+        bit_type_ == BitType::Brs ||
+        bit_type_ == BitType::Esi ||
+        bit_type_ == BitType::CrcDelimiter ||
+        bit_type_ == BitType::StuffParity ||
+        bit_type_ == BitType::Ack ||
+        bit_type_ == BitType::AckDelimiter)
         return true;
 
     return false;
 }
 
 
-bool can::Bit::hasPhase(BitPhase bitPhase)
+bool can::Bit::HasPhase(BitPhase bit_phase)
 {
-    for (auto timeQuanta : timeQuantas_)
-        if (timeQuanta.bitPhase == bitPhase)
+    for (auto time_quanta : time_quantas_)
+        if (time_quanta.bit_phase == bit_phase)
             return true;
 
     return false;
 }
 
 
-bool can::Bit::hasNonDefaultValues()
+bool can::Bit::HasNonDefaultValues()
 {
-    for (auto timeQuanta : timeQuantas_)
-        if (timeQuanta.hasNonDefaultValues())
+    for (auto time_quanta : time_quantas_)
+        if (time_quanta.HasNonDefaultValues())
             return true;
 
     return false;
 }
 
 
-void can::Bit::setAllDefaultValues()
+void can::Bit::SetAllDefaultValues()
 {
-    for (auto timeQuanta : timeQuantas_)
-        timeQuanta.setAllDefaultValues();
+    for (auto time_quanta : time_quantas_)
+        time_quanta.SetAllDefaultValues();
 }
 
 
-int can::Bit::getPhaseLenTimeQuanta(BitPhase bitPhase)
+int can::Bit::GetPhaseLenTimeQuanta(BitPhase bit_phase)
 {
-    int numTimeQuanta = 0;
+    int num_time_quanta = 0;
 
-    for (auto timeQuanta : timeQuantas_)
-        if (timeQuanta.bitPhase == bitPhase)
-            numTimeQuanta++;
+    for (auto time_quanta : time_quantas_)
+        if (time_quanta.bit_phase == bit_phase)
+            num_time_quanta++;
 
-    return numTimeQuanta;
+    return num_time_quanta;
 }
 
 
-int can::Bit::getPhaseLenCycles(BitPhase bitPhase)
+int can::Bit::GetPhaseLenCycles(BitPhase bit_phase)
 {
-    int numCycles = 0;
+    int num_cycles = 0;
 
-    for (auto timeQuanta : timeQuantas_)
-        if (timeQuanta.bitPhase == bitPhase)
-            numCycles += timeQuanta.getLengthCycles();
+    for (auto time_quanta : time_quantas_)
+        if (time_quanta.bit_phase == bit_phase)
+            num_cycles += time_quanta.getLengthCycles();
 
-    return numCycles;
+    return num_cycles;
 }
 
 
-int can::Bit::getLenTimeQuanta()
+int can::Bit::GetLengthTimeQuanta()
 {
-    int numTimeQuanta = 0;
+    int num_time_quanta = 0;
 
-    numTimeQuanta += getPhaseLenTimeQuanta(SYNC_PHASE);
-    numTimeQuanta += getPhaseLenTimeQuanta(PROP_PHASE);
-    numTimeQuanta += getPhaseLenTimeQuanta(PH1_PHASE);
-    numTimeQuanta += getPhaseLenTimeQuanta(PH2_PHASE);
+    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Sync);
+    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Prop);
+    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Ph1);
+    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Ph2);
 
-    return numTimeQuanta;
+    return num_time_quanta;
 }
 
 
-int can::Bit::getLenCycles()
+int can::Bit::GetLengthCycles()
 {
-    int numCycles = 0;
+    int num_cycles = 0;
 
-    numCycles += getPhaseLenCycles(SYNC_PHASE);
-    numCycles += getPhaseLenCycles(PROP_PHASE);
-    numCycles += getPhaseLenCycles(PH1_PHASE);
-    numCycles += getPhaseLenCycles(PH2_PHASE);
+    num_cycles += GetPhaseLenCycles(BitPhase::Sync);
+    num_cycles += GetPhaseLenCycles(BitPhase::Prop);
+    num_cycles += GetPhaseLenCycles(BitPhase::Ph1);
+    num_cycles += GetPhaseLenCycles(BitPhase::Ph2);
 
-    return numCycles;
+    return num_cycles;
 }
 
 
-int can::Bit::shortenPhase(BitPhase bitPhase, int numTimeQuanta)
+int can::Bit::ShortenPhase(BitPhase bit_phase, int num_time_quanta)
 {
-    int phaseLen = getPhaseLenTimeQuanta(bitPhase);
-    int shortenBy = numTimeQuanta;
+    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    int shorten_by = num_time_quanta;
 
-    printf("Phase lenght: %d\n", phaseLen);
-    printf("Shorten by: %d\n", shortenBy);
+    std::cout << "Phase lenght: " << std::to_string(phase_len) << std::endl;
+    std::cout << "Shorten by: " << std::to_string(shorten_by) << std::endl;
 
-    if (phaseLen == 0)
+    if (phase_len == 0)
         return 0;
-    if (phaseLen < numTimeQuanta)
-        shortenBy = phaseLen;
+    if (phase_len < num_time_quanta)
+        shorten_by = phase_len;
 
-    auto timeQuantaIterator = getLastTimeQuantaIterator(bitPhase);
-    for (int i = 0; i < shortenBy; i++){
-        timeQuantaIterator = timeQuantas_.erase(timeQuantaIterator);
-        timeQuantaIterator--;
+    auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
+    for (int i = 0; i < shorten_by; i++){
+        time_quanta_iterator = time_quantas_.erase(time_quanta_iterator);
+        time_quanta_iterator--;
     }
 
-    return shortenBy;
+    return shorten_by;
 }
 
 
-void can::Bit::lengthenPhase(BitPhase bitPhase, int numTimeQuanta)
+void can::Bit::LengthenPhase(BitPhase bit_phase, int num_time_quanta)
 {
-    int phaseLen = getPhaseLenTimeQuanta(bitPhase);
-    auto timeQuantaIterator = getLastTimeQuantaIterator(bitPhase);
+    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
 
-    // GetLastTimeQuantaIterator returns Last time Quanta of phase or
-    // first of next phase if phase does not exist. If it exist, move
-    // to one further so that we append to the end
-    if (phaseLen > 0)
-        timeQuantaIterator++;
+    /* 
+     * GetLastTimeQuantaIterator returns Last time Quanta of phase or
+     * first of next phase if phase does not exist. If it exist, move
+     * to one further so that we append to the end
+     */
+    if (phase_len > 0)
+        time_quanta_iterator++;
 
-    BitTiming *bitTiming = getPhaseBitTiming(bitPhase);
+    BitTiming *bit_timing = GetPhaseBitTiming(bit_phase);
 
-    for (int i = 0; i < numTimeQuanta; i++)
-        timeQuantas_.insert(timeQuantaIterator,
-                            TimeQuanta(bitTiming->brp, bitPhase));
+    for (int i = 0; i < num_time_quanta; i++)
+        time_quantas_.insert(time_quanta_iterator,
+                             TimeQuanta(bit_timing->brp_, bit_phase));
 }
 
 
-can::TimeQuanta* can::Bit::getTimeQuanta(int index)
+can::TimeQuanta* can::Bit::GetTimeQuanta(int index)
 {
-    assert(index < timeQuantas_.size());
+    assert(("Bit does not have so many time quantas", index < time_quantas_.size()));
 
-    auto timeQuantaIterator = timeQuantas_.begin();
-    std::advance(timeQuantaIterator, index);
+    auto time_quanta_iterator = time_quantas_.begin();
+    std::advance(time_quanta_iterator, index);
 
-    return &(*timeQuantaIterator);
+    return &(*time_quanta_iterator);
 }
 
 
-can::TimeQuanta* can::Bit::getTimeQuanta(BitPhase bitPhase, int index)
+can::TimeQuanta* can::Bit::GetTimeQuanta(BitPhase bit_phase, int index)
 {
-    int phaseLen = getPhaseLenTimeQuanta(bitPhase);
-    int realIndex = index;
-    assert(phaseLen > 0);
+    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
 
-    auto timeQuantaIterator = getFirstTimeQuantaIterator(bitPhase);
+    assert(("Bit phase does not exist", phase_len > 0));
+    assert(("Bit does not have so many time quantas", index < phase_len));
 
-    // Saturate
-    if (index >= phaseLen)
-        realIndex = phaseLen - 1;
-    std::advance(timeQuantaIterator, realIndex);
+    auto time_quanta_iterator = GetFirstTimeQuantaIterator(bit_phase);
+    std::advance(time_quanta_iterator, index);
 
-    return &(*timeQuantaIterator);
+    return &(*time_quanta_iterator);
 }
 
 
-bool can::Bit::forceTimeQuanta(int index, BitValue bitValue)
+bool can::Bit::ForceTimeQuanta(int index, BitValue bit_value)
 {
-    if (index >= getLenTimeQuanta())
+    if (index >= GetLengthTimeQuanta())
         return false;
 
-    auto timeQuantaIterator = timeQuantas_.begin();
-    std::advance(timeQuantaIterator, index);
-    timeQuantaIterator->forceValue(bitValue);
+    auto time_quanta_iterator = time_quantas_.begin();
+    std::advance(time_quanta_iterator, index);
+    time_quanta_iterator->ForceValue(bit_value);
 
     return true;
 }
 
 
-int can::Bit::forceTimeQuanta(int fromIndex, int toIndex, BitValue bitValue)
+int can::Bit::ForceTimeQuanta(int start_index, int end_index, BitValue bit_value)
 {
-    int lenTimeQuanta = getLenTimeQuanta();
+    int len_time_quanta = GetLengthTimeQuanta();
 
-    if (fromIndex >= lenTimeQuanta)
+    if (start_index >= len_time_quanta)
         return 0;
-    if (fromIndex > toIndex)
+    if (start_index > end_index)
         return 0;
 
-    int toIndexReal = toIndex;
-    if (toIndex >= lenTimeQuanta)
-        toIndexReal = lenTimeQuanta - 1;
+    int end_index_real = end_index;
+    if (end_index >= len_time_quanta)
+        end_index_real = len_time_quanta - 1;
 
-    auto timeQuantaIterator = timeQuantas_.begin();
-    std::advance(timeQuantaIterator, fromIndex);
+    auto time_quanta_iterator = time_quantas_.begin();
+    std::advance(time_quanta_iterator, start_index);
 
     int i = 0;
-    for (; i <= toIndexReal - fromIndex; i++)
+    for (; i <= end_index_real - start_index; i++)
     {
-        timeQuantaIterator->forceValue(bitValue);
-        timeQuantaIterator++;
+        time_quanta_iterator->ForceValue(bit_value);
+        time_quanta_iterator++;
     }
 
     return i;
 }
 
 
-bool can::Bit::forceTimeQuanta(int index, BitPhase bitPhase, BitValue bitValue)
+bool can::Bit::ForceTimeQuanta(int index, BitPhase bit_phase, BitValue bit_value)
 {
-    int phaseLen = getPhaseLenTimeQuanta(bitPhase);
+    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
 
-    if ((phaseLen == 0) || (phaseLen <= index))
+    if ((phase_len == 0) || (phase_len <= index))
         return false;
 
-    TimeQuanta *timeQuanta = getTimeQuanta(bitPhase, index);
-    timeQuanta->forceValue(bitValue);
+    TimeQuanta *time_quanta = GetTimeQuanta(bit_phase, index);
+    time_quanta->ForceValue(bit_value);
 
     return true;
 }
 
 
-bool can::Bit::forceTimeQuanta(int fromIndex, int toIndex, BitPhase bitPhase,
-                               BitValue bitValue)
+int can::Bit::ForceTimeQuanta(int start_index, int end_index, BitPhase bit_phase,
+                              BitValue bit_value)
 {
-    int phaseLen = getPhaseLenTimeQuanta(bitPhase);
-    if ((phaseLen == 0) || (phaseLen <= fromIndex))
+    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    if ((phase_len == 0) || (phase_len <= start_index))
         return false;
 
-    int toIndexReal = toIndex;
-    if (toIndex >= phaseLen)
-        toIndexReal = phaseLen - 1;
+    int end_index_real = end_index;
+    if (end_index >= phase_len)
+        end_index_real = phase_len - 1;
 
     int i;
-    for (i = fromIndex; i <= toIndexReal; i++)
-        forceTimeQuanta(i, bitPhase, bitValue);
+    for (i = start_index; i <= end_index_real; i++)
+        ForceTimeQuanta(i, bit_phase, bit_value);
 
     return i;
 }
 
 
-can::BitPhase can::Bit::prevBitPhase(BitPhase bitPhase)
+can::BitPhase can::Bit::PrevBitPhase(BitPhase bit_phase)
 {
-    switch (bitPhase)
+    switch (bit_phase)
     {
-    case PH2_PHASE:
-        if (hasPhase(PH1_PHASE))
-            return PH1_PHASE;
-        if (hasPhase(PROP_PHASE))
-            return PROP_PHASE;
+    case BitPhase::Ph2:
+        if (HasPhase(BitPhase::Ph1))
+            return BitPhase::Ph1;
+        if (HasPhase(BitPhase::Prop))
+            return BitPhase::Prop;
         
         // Assume here Sync phase is always there. We can't remove
         // it by Bit time settings. Having bit without sync phase
         // means corrupted bit!
-        assert(hasPhase(SYNC_PHASE));
-        return SYNC_PHASE;
+        assert(HasPhase(BitPhase::Sync));
+        return BitPhase::Sync;
 
-    case PH1_PHASE:
-        if (hasPhase(PROP_PHASE))
-            return PROP_PHASE;
+    case BitPhase::Ph1:
+        if (HasPhase(BitPhase::Prop))
+            return BitPhase::Prop;
 
-        assert(hasPhase(SYNC_PHASE));
-        return SYNC_PHASE;
+        assert(HasPhase(BitPhase::Sync));
+        return BitPhase::Sync;
 
-    case PROP_PHASE:
-        assert(hasPhase(SYNC_PHASE));
-        return SYNC_PHASE;
+    case BitPhase::Prop:
+        assert(HasPhase(BitPhase::Sync));
+        return BitPhase::Sync;
 
     // In case of Sync phase do not link to previous bit in any way...
-    case SYNC_PHASE:
-        return SYNC_PHASE;
+    case BitPhase::Sync:
+        return BitPhase::Sync;
     }
 }
 
 
-can::BitPhase can::Bit::nextBitPhase(BitPhase bitPhase)
+can::BitPhase can::Bit::NextBitPhase(BitPhase bit_phase)
 {
-    switch (bitPhase)
+    switch (bit_phase)
     {
-    case SYNC_PHASE:
-        if (hasPhase(PROP_PHASE))
-            return PROP_PHASE;
-        if (hasPhase(PH1_PHASE))
-            return PH1_PHASE;
-        if (hasPhase(PH2_PHASE))
-            return PH2_PHASE;
-        return SYNC_PHASE;
+    case BitPhase::Sync:
+        if (HasPhase(BitPhase::Prop))
+            return BitPhase::Prop;
+        if (HasPhase(BitPhase::Ph1))
+            return BitPhase::Ph1;
+        if (HasPhase(BitPhase::Ph2))
+            return BitPhase::Ph2;
+        return BitPhase::Sync;
 
-    case PROP_PHASE:
-        if (hasPhase(PH1_PHASE))
-            return PH1_PHASE;
-        if (hasPhase(PH2_PHASE))
-            return PH2_PHASE;
-        return PROP_PHASE;
+    case BitPhase::Prop:
+        if (HasPhase(BitPhase::Ph1))
+            return BitPhase::Ph1;
+        if (HasPhase(BitPhase::Ph2))
+            return BitPhase::Ph2;
+        return BitPhase::Prop;
 
-    case PH1_PHASE:
-        if (hasPhase(PH2_PHASE))
-            return PH2_PHASE;
-        return PH1_PHASE;
-    case PH2_PHASE:
-        return PH2_PHASE;
+    case BitPhase::Ph1:
+        if (HasPhase(BitPhase::Ph2))
+            return BitPhase::Ph2;
+        return BitPhase::Ph1;
+    case BitPhase::Ph2:
+        return BitPhase::Ph2;
     }
 }
 
 
-can::BitRate can::Bit::getPhaseBitRate(BitPhase bitPhase)
+can::BitRate can::Bit::GetPhaseBitRate(BitPhase bit_phase)
 {
-    if (frameFlags->isFdf_ == CAN_FD && frameFlags->isBrs_ == BIT_RATE_SHIFT)
+    if (frame_flags->is_fdf_ == FrameType::CanFd && frame_flags->is_brs_ == BrsFlag::Shift)
     {
-        switch (bitType) {
-        case BIT_TYPE_BRS :
-            if (bitPhase == PH2_PHASE)
-                return DATA_BIT_RATE;
+        switch (bit_type_) {
+        case BitType::Brs:
+            if (bit_phase == BitPhase::Ph2)
+                return BitRate::Data;
             else
-                return NOMINAL_BIT_RATE;
+                return BitRate::Nominal;
 
-        case BIT_TYPE_CRC_DELIMITER :
-            if (bitPhase == PH2_PHASE)
-                return NOMINAL_BIT_RATE;
+        case BitType::CrcDelimiter:
+            if (bit_phase == BitPhase::Ph2)
+                return BitRate::Nominal;
             else
-                return DATA_BIT_RATE;
+                return BitRate::Data;
 
-        case BIT_TYPE_ESI:
-        case BIT_TYPE_DLC:
-        case BIT_TYPE_DATA:
-        case BIT_TYPE_STUFF_COUNT:
-        case BIT_TYPE_STUFF_PARITY:
-        case BIT_TYPE_CRC:
-            return DATA_BIT_RATE;
+        case BitType::Esi:
+        case BitType::Dlc:
+        case BitType::Data:
+        case BitType::StuffCount:
+        case BitType::StuffParity:
+        case BitType::Crc:
+            return BitRate::Data;
 
         default:
             break;
         }
     }
-    return NOMINAL_BIT_RATE;
+    return BitRate::Nominal;
 }
 
 
-can::BitTiming* can::Bit::getPhaseBitTiming(BitPhase bitPhase)
+can::BitTiming* can::Bit::GetPhaseBitTiming(BitPhase bit_phase)
 {
-    BitRate bitRate = getPhaseBitRate(bitPhase);
+    BitRate bit_rate = GetPhaseBitRate(bit_phase);
 
-    if (bitRate == NOMINAL_BIT_RATE)
-        return nominalBitTiming;
+    if (bit_rate == BitRate::Nominal)
+        return nominal_bit_timing;
     else
-        return dataBitTiming;
+        return data_bit_timing;
 }
 
 
-void can::Bit::correctPh2LenToNominal()
+void can::Bit::CorrectPh2LenToNominal()
 {
     // If bit Phase 2 is in data bit rate, then correct it to nominal
-    if (getPhaseBitTiming(PH2_PHASE) == dataBitTiming)
+    if (GetPhaseBitTiming(BitPhase::Ph2) == data_bit_timing)
     {
-        for (auto tqIter = timeQuantas_.begin(); tqIter != timeQuantas_.end();)
-            if (tqIter->bitPhase == PH2_PHASE)
-                tqIter = timeQuantas_.erase(tqIter);
+        for (auto tqIter = time_quantas_.begin(); tqIter != time_quantas_.end();)
+            if (tqIter->bit_phase == BitPhase::Ph2)
+                tqIter = time_quantas_.erase(tqIter);
             else
                 tqIter++;
 
-        for (int i = 0; i < nominalBitTiming->ph2; i++)
-            timeQuantas_.push_back(TimeQuanta(nominalBitTiming->brp, PH2_PHASE));
+        for (int i = 0; i < nominal_bit_timing->ph2_; i++)
+            time_quantas_.push_back(TimeQuanta(nominal_bit_timing->brp_, BitPhase::Ph2));
     }
 }
 
 
 std::list<can::TimeQuanta>::iterator
-can::Bit::getFirstTimeQuantaIterator(BitPhase bitPhase)
+can::Bit::GetFirstTimeQuantaIterator(BitPhase bit_phase)
 {
-    if (hasPhase(bitPhase))
+    if (HasPhase(bit_phase))
     {
-        auto iterator = timeQuantas_.begin();
-        while (iterator->bitPhase != bitPhase)
+        auto iterator = time_quantas_.begin();
+        while (iterator->bit_phase != bit_phase)
             iterator++;
         return iterator;
     }
-    return getLastTimeQuantaIterator(prevBitPhase(bitPhase));
+    return GetLastTimeQuantaIterator(PrevBitPhase(bit_phase));
 }
 
 
 std::list<can::TimeQuanta>::iterator
-    can::Bit::getLastTimeQuantaIterator(BitPhase bitPhase)
+    can::Bit::GetLastTimeQuantaIterator(BitPhase bit_phase)
 {
-    if (hasPhase(bitPhase))
+    if (HasPhase(bit_phase))
     {
-        auto iterator = getFirstTimeQuantaIterator(bitPhase);
-        while (iterator->bitPhase == bitPhase)
+        auto iterator = GetFirstTimeQuantaIterator(bit_phase);
+        while (iterator->bit_phase == bit_phase)
             iterator++;
         return --iterator;
     }
-    return getFirstTimeQuantaIterator(nextBitPhase(bitPhase));
+    return GetFirstTimeQuantaIterator(NextBitPhase(bit_phase));
 }
 
 
-void can::Bit::constructTimeQuantas(BitTiming* nominalBitTiming,
-                                    BitTiming* dataBitTiming)
+void can::Bit::ConstructTimeQuantas()
 {
-    BitTiming *tseg1BitTiming = nominalBitTiming;
-    BitTiming *tseg2BitTiming = nominalBitTiming;
+    BitTiming *tseg1_bit_timing = this->nominal_bit_timing;
+    BitTiming *tseg2_bit_timing = this->nominal_bit_timing;
 
     // Here Assume that PH1 has the same bit rate as TSEG1 which is reasonable
     // as there is no bit-rate shift within TSEG1
-    BitRate tseg1BitRate = getPhaseBitRate(PH1_PHASE);
-    BitRate tseg2BitRate = getPhaseBitRate(PH2_PHASE);
+    BitRate tseg1_bit_rate = GetPhaseBitRate(BitPhase::Ph1);
+    BitRate tseg2_bit_rate = GetPhaseBitRate(BitPhase::Ph2);
 
-    if (tseg1BitRate == DATA_BIT_RATE)
-        tseg1BitTiming = dataBitTiming;
-    if (tseg2BitRate == DATA_BIT_RATE)
-        tseg2BitTiming = dataBitTiming;
+    if (tseg1_bit_rate == BitRate::Data)
+        tseg1_bit_timing = data_bit_timing;
+    if (tseg2_bit_rate == BitRate::Data)
+        tseg2_bit_timing = data_bit_timing;
 
     // Construct TSEG 1
-    timeQuantas_.push_back(TimeQuanta(tseg1BitTiming->brp, SYNC_PHASE));
-    for (int i = 0; i < tseg1BitTiming->prop; i++)
-        timeQuantas_.push_back(TimeQuanta(tseg1BitTiming->brp, PROP_PHASE));
-    for (int i = 0; i < tseg1BitTiming->ph1; i++)
-        timeQuantas_.push_back(TimeQuanta(tseg1BitTiming->brp, PH1_PHASE));
+    time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Sync));
+    for (int i = 0; i < tseg1_bit_timing->prop_; i++)
+        time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Prop));
+    for (int i = 0; i < tseg1_bit_timing->ph1_; i++)
+        time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Ph1));
 
     // Construct TSEG 2
-    for (int i = 0; i < tseg2BitTiming->ph2; i++)
-        timeQuantas_.push_back(TimeQuanta(tseg2BitTiming->brp, PH2_PHASE));
+    for (int i = 0; i < tseg2_bit_timing->ph2_; i++)
+        time_quantas_.push_back(TimeQuanta(tseg2_bit_timing->brp_, BitPhase::Ph2));
 }

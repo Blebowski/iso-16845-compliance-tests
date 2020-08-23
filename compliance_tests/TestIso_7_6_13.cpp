@@ -68,11 +68,11 @@ class TestIso_7_6_13 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
@@ -81,9 +81,9 @@ class TestIso_7_6_13 : public test_lib::TestBase
             int iterCnt;
             int rec;
             int recNew;
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -92,24 +92,24 @@ class TestIso_7_6_13 : public test_lib::TestBase
             {
                 if (i == 0)
                 {
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                 } else {
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                 }
 
                 for (int j = 0; j < 2; j++)
                 {
                     // CAN 2.0 / CAN FD, randomize others
                     FrameFlags frameFlags = FrameFlags(dataRate);
-                    goldenFrame = new Frame(frameFlags);
-                    goldenFrame->randomize();
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
+                    golden_frame = new Frame(frameFlags);
+                    golden_frame->Randomize();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
 
                     // Read REC before scenario
-                    rec = dutIfc->getRec();
+                    rec = dut_ifc->GetRec();
 
                     int bitToCorrupt;
                     if (j == 0)
@@ -117,14 +117,14 @@ class TestIso_7_6_13 : public test_lib::TestBase
                     else
                         bitToCorrupt = 7;
 
-                    testMessage("Forcing Overload delimiter bit %d to recessive",
+                    TestMessage("Forcing Overload delimiter bit %d to recessive",
                                 bitToCorrupt);
 
                     // Convert to Bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driver_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
 
                     /**
                      * Modify test frames:
@@ -135,45 +135,46 @@ class TestIso_7_6_13 : public test_lib::TestBase
                      *   5. Insert Active Error frame to both monitored and driven
                      *      frame!
                      */
-                    monitorBitFrame->turnReceivedFrame();
-                    driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
-                    driverBitFrame->getBitOf(6, BIT_TYPE_EOF)->setBitValue(DOMINANT);
+                    monitor_bit_frame->TurnReceivedFrame();
+                    driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                    driver_bit_frame->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
 
-                    monitorBitFrame->insertOverloadFrame(
-                        monitorBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
-                    driverBitFrame->insertOverloadFrame(
-                        driverBitFrame->getBitOf(0, BIT_TYPE_INTERMISSION));
+                    monitor_bit_frame->InsertOverloadFrame(
+                        monitor_bit_frame->GetBitOf(0, BitType::Intermission));
+                    driver_bit_frame->InsertOverloadFrame(
+                        driver_bit_frame->GetBitOf(0, BitType::Intermission));
 
                     // Force n-th bit of Overload Delimiter to Dominant
-                    Bit *bit = driverBitFrame->getBitOf(bitToCorrupt - 1, BIT_TYPE_OVERLOAD_DELIMITER);
-                    int bitIndex = driverBitFrame->getBitIndex(bit);
-                    bit->setBitValue(DOMINANT);
+                    Bit *bit = driver_bit_frame->GetBitOf(bitToCorrupt - 1,
+                                BitType::OverloadDelimiter);
+                    int bitIndex = driver_bit_frame->GetBitIndex(bit);
+                    bit->bit_value_ = BitValue::Dominant;
 
                     // Insert Error flag from one bit further, both driver and monitor!
-                    driverBitFrame->insertActiveErrorFrame(bitIndex + 1);
-                    monitorBitFrame->insertActiveErrorFrame(bitIndex + 1);
+                    driver_bit_frame->InsertActiveErrorFrame(bitIndex + 1);
+                    monitor_bit_frame->InsertActiveErrorFrame(bitIndex + 1);
 
-                    driverBitFrame->print(true);
-                    monitorBitFrame->print(true);
+                    driver_bit_frame->Print(true);
+                    monitor_bit_frame->Print(true);
 
                     // Push frames to Lower tester, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    runLowerTester(true, true);
-                    checkLowerTesterResult();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
 
                     ////////////////////////////////////////////////////////////
                     // Receiver will make received frame valid on 6th bit of EOF!
                     // Therefore at point where Error occurs, frame was already
                     // received OK and should be readable!
                     ////////////////////////////////////////////////////////////
-                    Frame readFrame = this->dutIfc->readFrame();
-                    if (compareFrames(*goldenFrame, readFrame) == false)
+                    Frame readFrame = this->dut_ifc->ReadFrame();
+                    if (CompareFrames(*golden_frame, readFrame) == false)
                     {
-                        testResult = false;
-                        testControllerAgentEndTest(testResult);
+                        test_result = false;
+                        TestControllerAgentEndTest(test_result);
                     }
 
-                    recNew = dutIfc->getRec();
+                    recNew = dut_ifc->GetRec();
 
                     // For first iteration we start from 0 so there will be no
                     // decrement on sucessfull reception! So there will be only
@@ -188,20 +189,20 @@ class TestIso_7_6_13 : public test_lib::TestBase
 
                     if (recNew != (rec + recIncrement))
                     {
-                        testMessage("DUT REC not as expected. Expected %d, Real %d",
+                        TestMessage("DUT REC not as expected. Expected %d, Real %d",
                                      rec + recIncrement, recNew);
-                        testResult = false;
-                        testControllerAgentEndTest(testResult);
-                        return testResult;
+                        test_result = false;
+                        TestControllerAgentEndTest(test_result);
+                        return test_result;
                     }
 
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

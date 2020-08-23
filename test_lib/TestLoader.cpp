@@ -13,6 +13,8 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <cstdarg>
+#include <memory>
 
 #include "test_lib.h"
 #include "TestLoader.h"
@@ -131,7 +133,6 @@
 /******************************************************************************
  *****************************************************************************/
 
-test_lib::TestBase *cppTest;
 std::thread *testThread;
 
 
@@ -140,250 +141,248 @@ std::thread *testThread;
  * This is simple workaround so that we don't have to implement some form
  * of reflection/factory solution which would convert us string to constructor
  *****************************************************************************/
-test_lib::TestBase* constructTestObject(std::string name)
+std::unique_ptr<test_lib::TestBase> ConstructTestObject(std::string name)
 {
-    test_lib::TestBase *testPtr = NULL;
+    std::unique_ptr<test_lib::TestBase> test_ptr = NULL;
 
     if (name == "base") {
-        testPtr = new test_lib::TestBase();
+        test_ptr = std::make_unique<test_lib::TestBase>();
     } else if (name == "demo") {
-        testPtr = new test_lib::TestDemo();
+        test_ptr = std::make_unique<test_lib::TestDemo>();
     } else if (name == "iso_7_1_1") {
-        testPtr = new TestIso_7_1_1();
+        test_ptr = std::make_unique<TestIso_7_1_1>();
     } else if (name == "iso_7_1_4") {
-        testPtr = new TestIso_7_1_4();
+        test_ptr = std::make_unique<TestIso_7_1_4>();
     } else if (name == "iso_7_1_5") {
-        testPtr = new TestIso_7_1_5();
+        test_ptr = std::make_unique<TestIso_7_1_5>();
     } else if (name == "iso_7_1_8") {
-        testPtr = new TestIso_7_1_8();
+        test_ptr = std::make_unique<TestIso_7_1_8>();
     } else if (name == "iso_7_1_9") {
-        testPtr = new TestIso_7_1_9();
+        test_ptr = std::make_unique<TestIso_7_1_9>();
     } else if (name == "iso_7_1_12") {
-        testPtr = new TestIso_7_1_12();
+        test_ptr = std::make_unique<TestIso_7_1_12>();
     
     } else if (name == "iso_7_2_1") {
-        testPtr = new TestIso_7_2_1();
+        test_ptr = std::make_unique<TestIso_7_2_1>();
     } else if (name == "iso_7_2_6") {
-        testPtr = new TestIso_7_2_6();
+        test_ptr = std::make_unique<TestIso_7_2_6>();
     } else if (name == "iso_7_2_7") {
-        testPtr = new TestIso_7_2_7();
+        test_ptr = std::make_unique<TestIso_7_2_7>();
     } else if (name == "iso_7_2_9") {
-        testPtr = new TestIso_7_2_9();
+        test_ptr = std::make_unique<TestIso_7_2_9>();
     } else if (name == "iso_7_2_11") {
-        testPtr = new TestIso_7_2_11();
+        test_ptr = std::make_unique<TestIso_7_2_11>();
     } else if (name == "iso_7_2_10") {
-        testPtr = new TestIso_7_2_10();
+        test_ptr = std::make_unique<TestIso_7_2_10>();
 
     } else if (name == "iso_7_3_1") {
-        testPtr = new TestIso_7_3_1();
+        test_ptr = std::make_unique<TestIso_7_3_1>();
     } else if (name == "iso_7_3_2") {
-        testPtr = new TestIso_7_3_2();
+        test_ptr = std::make_unique<TestIso_7_3_2>();
     } else if (name == "iso_7_3_3") {
-        testPtr = new TestIso_7_3_3();
+        test_ptr = std::make_unique<TestIso_7_3_3>();
     } else if (name == "iso_7_3_4") {
-        testPtr = new TestIso_7_3_4();
+        test_ptr = std::make_unique<TestIso_7_3_4>();
 
     } else if (name == "iso_7_4_1") {
-        testPtr = new TestIso_7_4_1();
+        test_ptr = std::make_unique<TestIso_7_4_1>();
     } else if (name == "iso_7_4_2") {
-        testPtr = new TestIso_7_4_2();
+        test_ptr = std::make_unique<TestIso_7_4_2>();
     } else if (name == "iso_7_4_4") {
-        testPtr = new TestIso_7_4_4();
+        test_ptr = std::make_unique<TestIso_7_4_4>();
     } else if (name == "iso_7_4_5") {
-        testPtr = new TestIso_7_4_5();
+        test_ptr = std::make_unique<TestIso_7_4_5>();
 
     } else if (name == "iso_7_6_1") {
-        testPtr = new TestIso_7_6_1();
+        test_ptr = std::make_unique<TestIso_7_6_1>();
     } else if (name == "iso_7_6_2") {
-        testPtr = new TestIso_7_6_2();
+        test_ptr = std::make_unique<TestIso_7_6_2>();
     } else if (name == "iso_7_6_3") {
-        testPtr = new TestIso_7_6_3();
+        test_ptr = std::make_unique<TestIso_7_6_3>();
     } else if (name == "iso_7_6_4") {
-        testPtr = new TestIso_7_6_4();
+        test_ptr = std::make_unique<TestIso_7_6_4>();
     } else if (name == "iso_7_6_5") {
-        testPtr = new TestIso_7_6_5();
+        test_ptr = std::make_unique<TestIso_7_6_5>();
     } else if (name == "iso_7_6_6") {
-        testPtr = new TestIso_7_6_6();
+        test_ptr = std::make_unique<TestIso_7_6_6>();
     } else if (name == "iso_7_6_7") {
-        testPtr = new TestIso_7_6_7();
+        test_ptr = std::make_unique<TestIso_7_6_7>();
     } else if (name == "iso_7_6_8") {
-        testPtr = new TestIso_7_6_8();
+        test_ptr = std::make_unique<TestIso_7_6_8>();
     } else if (name == "iso_7_6_11") {
-        testPtr = new TestIso_7_6_11();
+        test_ptr = std::make_unique<TestIso_7_6_11>();
     } else if (name == "iso_7_6_12") {
-        testPtr = new TestIso_7_6_12();
+        test_ptr = std::make_unique<TestIso_7_6_12>();
     } else if (name == "iso_7_6_13") {
-        testPtr = new TestIso_7_6_13();
+        test_ptr = std::make_unique<TestIso_7_6_13>();
     } else if (name == "iso_7_6_14") {
-        testPtr = new TestIso_7_6_14();
+        test_ptr = std::make_unique<TestIso_7_6_14>();
     } else if (name == "iso_7_6_15") {
-        testPtr = new TestIso_7_6_15();
+        test_ptr = std::make_unique<TestIso_7_6_15>();
     } else if (name == "iso_7_6_16") {
-        testPtr = new TestIso_7_6_16();
+        test_ptr = std::make_unique<TestIso_7_6_16>();
     } else if (name == "iso_7_6_17") {
-        testPtr = new TestIso_7_6_17();
+        test_ptr = std::make_unique<TestIso_7_6_17>();
     } else if (name == "iso_7_6_18") {
-        testPtr = new TestIso_7_6_18();
+        test_ptr = std::make_unique<TestIso_7_6_18>();
     } else if (name == "iso_7_6_19") {
-        testPtr = new TestIso_7_6_19();
+        test_ptr = std::make_unique<TestIso_7_6_19>();
     } else if (name == "iso_7_6_20") {
-        testPtr = new TestIso_7_6_20();
+        test_ptr = std::make_unique<TestIso_7_6_20>();
 
     } else if (name == "iso_7_7_1") {
-        testPtr = new TestIso_7_7_1();
+        test_ptr = std::make_unique<TestIso_7_7_1>();
     } else if (name == "iso_7_7_3") {
-        testPtr = new TestIso_7_7_3();
+        test_ptr = std::make_unique<TestIso_7_7_3>();
     } else if (name == "iso_7_7_4") {
-        testPtr = new TestIso_7_7_4();
+        test_ptr = std::make_unique<TestIso_7_7_4>();
     } else if (name == "iso_7_7_5") {
-        testPtr = new TestIso_7_7_5();
+        test_ptr = std::make_unique<TestIso_7_7_5>();
     } else if (name == "iso_7_7_6") {
-        testPtr = new TestIso_7_7_6();
+        test_ptr = std::make_unique<TestIso_7_7_6>();
     } else if (name == "iso_7_7_7") {
-        testPtr = new TestIso_7_7_7();
+        test_ptr = std::make_unique<TestIso_7_7_7>();
     } else if (name == "iso_7_7_8") {
-        testPtr = new TestIso_7_7_8();
+        test_ptr = std::make_unique<TestIso_7_7_8>();
     } else if (name == "iso_7_7_9_1") {
-        testPtr = new TestIso_7_7_9_1();
+        test_ptr = std::make_unique<TestIso_7_7_9_1>();
     } else if (name == "iso_7_7_9_2") {
-        testPtr = new TestIso_7_7_9_2();
+        test_ptr = std::make_unique<TestIso_7_7_9_2>();
     } else if (name == "iso_7_7_10") {
-        testPtr = new TestIso_7_7_10();
+        test_ptr = std::make_unique<TestIso_7_7_10>();
     } else if (name == "iso_7_7_11") {
-        testPtr = new TestIso_7_7_11();
+        test_ptr = std::make_unique<TestIso_7_7_11>();
 
     } else if (name == "iso_7_8_1_1") {
-        testPtr = new TestIso_7_8_1_1();
+        test_ptr = std::make_unique<TestIso_7_8_1_1>();
     } else if (name == "iso_7_8_1_2") {
-        testPtr = new TestIso_7_8_1_2();
+        test_ptr = std::make_unique<TestIso_7_8_1_2>();
     } else if (name == "iso_7_8_1_3") {
-        testPtr = new TestIso_7_8_1_3();
+        test_ptr = std::make_unique<TestIso_7_8_1_3>();
     } else if (name == "iso_7_8_2_1") {
-        testPtr = new TestIso_7_8_2_1();
+        test_ptr = std::make_unique<TestIso_7_8_2_1>();
     } else if (name == "iso_7_8_2_2") {
-        testPtr = new TestIso_7_8_2_2();
+        test_ptr = std::make_unique<TestIso_7_8_2_2>();
     } else if (name == "iso_7_8_3_1") {
-        testPtr = new TestIso_7_8_3_1();
+        test_ptr = std::make_unique<TestIso_7_8_3_1>();
     } else if (name == "iso_7_8_3_2") {
-        testPtr = new TestIso_7_8_3_2();
+        test_ptr = std::make_unique<TestIso_7_8_3_2>();
     } else if (name == "iso_7_8_3_3") {
-        testPtr = new TestIso_7_8_3_3();
+        test_ptr = std::make_unique<TestIso_7_8_3_3>();
     } else if (name == "iso_7_8_4_1") {
-        testPtr = new TestIso_7_8_4_1();
+        test_ptr = std::make_unique<TestIso_7_8_4_1>();
     } else if (name == "iso_7_8_4_2") {
-        testPtr = new TestIso_7_8_4_2();
+        test_ptr = std::make_unique<TestIso_7_8_4_2>();
     } else if (name == "iso_7_8_4_3") {
-        testPtr = new TestIso_7_8_4_3();
+        test_ptr = std::make_unique<TestIso_7_8_4_3>();
     } else if (name == "iso_7_8_5_1") {
-        testPtr = new TestIso_7_8_5_1();
+        test_ptr = std::make_unique<TestIso_7_8_5_1>();
     } else if (name == "iso_7_8_5_2") {
-        testPtr = new TestIso_7_8_5_2();
+        test_ptr = std::make_unique<TestIso_7_8_5_2>();
     } else if (name == "iso_7_8_5_3") {
-        testPtr = new TestIso_7_8_5_3();
+        test_ptr = std::make_unique<TestIso_7_8_5_3>();
     } else if (name == "iso_7_8_6_1") {
-        testPtr = new TestIso_7_8_6_1();
+        test_ptr = std::make_unique<TestIso_7_8_6_1>();
     } else if (name == "iso_7_8_6_2") {
-        testPtr = new TestIso_7_8_6_2();
+        test_ptr = std::make_unique<TestIso_7_8_6_2>();
     } else if (name == "iso_7_8_6_3") {
-        testPtr = new TestIso_7_8_6_3();
+        test_ptr = std::make_unique<TestIso_7_8_6_3>();
     } else if (name == "iso_7_8_7_1") {
-        testPtr = new TestIso_7_8_7_1();
+        test_ptr = std::make_unique<TestIso_7_8_7_1>();
     } else if (name == "iso_7_8_7_2") {
-        testPtr = new TestIso_7_8_7_2();
+        test_ptr = std::make_unique<TestIso_7_8_7_2>();
     } else if (name == "iso_7_8_7_3") {
-        testPtr = new TestIso_7_8_7_3();
+        test_ptr = std::make_unique<TestIso_7_8_7_3>();
     } else if (name == "iso_7_8_8_1") {
-        testPtr = new TestIso_7_8_8_1();
+        test_ptr = std::make_unique<TestIso_7_8_8_1>();
     } else if (name == "iso_7_8_8_2") {
-        testPtr = new TestIso_7_8_8_2();
+        test_ptr = std::make_unique<TestIso_7_8_8_2>();
     } else if (name == "iso_7_8_8_3") {
-        testPtr = new TestIso_7_8_8_3();
+        test_ptr = std::make_unique<TestIso_7_8_8_3>();
     } else if (name == "iso_7_8_9_1") {
-        testPtr = new TestIso_7_8_9_1();
+        test_ptr = std::make_unique<TestIso_7_8_9_1>();
     } else if (name == "iso_7_8_9_2") {
-        testPtr = new TestIso_7_8_9_2();
+        test_ptr = std::make_unique<TestIso_7_8_9_2>();
     } else if (name == "iso_7_8_9_3") {
-        testPtr = new TestIso_7_8_9_3();
+        test_ptr = std::make_unique<TestIso_7_8_9_3>();
 
     } else if (name == "iso_8_1_1") {
-        testPtr = new TestIso_8_1_1();
+        test_ptr = std::make_unique<TestIso_8_1_1>();
     } else if (name == "iso_8_1_3") {
-        testPtr = new TestIso_8_1_3();
+        test_ptr = std::make_unique<TestIso_8_1_3>();
     } else if (name == "iso_8_1_5") {
-        testPtr = new TestIso_8_1_5();
+        test_ptr = std::make_unique<TestIso_8_1_5>();
     } else if (name == "iso_8_1_6") {
-        testPtr = new TestIso_8_1_6();
+        test_ptr = std::make_unique<TestIso_8_1_6>();
     } else if (name == "iso_8_1_7") {
-        testPtr = new TestIso_8_1_7();
+        test_ptr = std::make_unique<TestIso_8_1_7>();
     } else if (name == "iso_8_1_8") {
-        testPtr = new TestIso_8_1_8();
+        test_ptr = std::make_unique<TestIso_8_1_8>();
     } else if (name == "iso_8_2_6") {
-        testPtr = new TestIso_8_2_6();
+        test_ptr = std::make_unique<TestIso_8_2_6>();
     } else if (name == "iso_8_2_7") {
-        testPtr = new TestIso_8_2_7();
+        test_ptr = std::make_unique<TestIso_8_2_7>();
 
     } else if (name == "iso_8_3_1") {
-        testPtr = new TestIso_8_3_1();
+        test_ptr = std::make_unique<TestIso_8_3_1>();
     } else if (name == "iso_8_3_2") {
-        testPtr = new TestIso_8_3_2();
+        test_ptr = std::make_unique<TestIso_8_3_2>();
     } else if (name == "iso_8_3_3") {
-        testPtr = new TestIso_8_3_3();
+        test_ptr = std::make_unique<TestIso_8_3_3>();
     } else if (name == "iso_8_3_4") {
-        testPtr = new TestIso_8_3_4();
+        test_ptr = std::make_unique<TestIso_8_3_4>();
 
     } else if (name == "iso_8_4_1") {
-        testPtr = new TestIso_8_4_1();
+        test_ptr = std::make_unique<TestIso_8_4_1>();
     } else if (name == "iso_8_4_2") {
-        testPtr = new TestIso_8_4_2();
+        test_ptr = std::make_unique<TestIso_8_4_2>();
     } else if (name == "iso_8_4_3") {
-        testPtr = new TestIso_8_4_3();
+        test_ptr = std::make_unique<TestIso_8_4_3>();
     } else if (name == "iso_8_4_4") {
-        testPtr = new TestIso_8_4_4();
+        test_ptr = std::make_unique<TestIso_8_4_4>();
     } else if (name == "iso_8_4_5") {
-        testPtr = new TestIso_8_4_5();
+        test_ptr = std::make_unique<TestIso_8_4_5>();
 
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
     }
 
-    testPtr->testName = name;
+    test_ptr->test_name = name;
 
-    return testPtr;
+    return std::move(test_ptr);
 }
 
 
-void testMessage(std::string message, ...)
+void TestMessage(std::string message, ...)
 {
     std::cout << "\033[1;92mSW test: \033[0m" << message << std::endl;
 }
 
 
-void testBigMessage(std::string message, ...)
+void TestBigMessage(std::string message, ...)
 {
-    testMessage(std::string(80, '*'));
-    testMessage(message);
-    testMessage(std::string(80, '*'));
+    TestMessage(std::string(80, '*'));
+    TestMessage(message);
+    TestMessage(std::string(80, '*'));
 }
 
 
-int cppTestThread(char *testName)
-{
-    int testRetVal;
-    cppTest = constructTestObject(testName);
-    testRetVal = cppTest->run();
-    delete cppTest;
-
-    return testRetVal;
+int cppTestThread(char *test_name)
+{   
+    std::unique_ptr<test_lib::TestBase> cppTest = ConstructTestObject(test_name);
+    return cppTest->Run();
 }
 
 
-void runCppTest(char* testName)
+void RunCppTest(char* test_name)
 {
-    testMessage(std::string(80, '*'));
-    testMessage("Running C++ test: %s", testName);
-    testMessage(std::string(80, '*'));
+    TestMessage(std::string(80, '*'));
+    TestMessage("Running C++ test: %s", test_name);
+    TestMessage(std::string(80, '*'));
 
-    testThread = new std::thread(cppTestThread, testName);
+    testThread = new std::thread(cppTestThread, test_name);
 
-    // TODO: Destroy thread object when it ends!
+    // TODO: Destroy thread object when it ends! We can't join here since this
+    //       is called in simulator context and must end before the simulator
+    //       proceeds with next simulation time. That would cause deadlock!
 }

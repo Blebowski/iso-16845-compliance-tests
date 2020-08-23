@@ -13,20 +13,29 @@
 #ifndef BIT_TIMING
 #define BIT_TIMING
 
+
+/**
+ * @class BitTiming
+ * @namespace can
+ * 
+ * Class representing bit time setting on CAN bus. Single data bit rate is
+ * expressed by a class.
+ * 
+ */
 class can::BitTiming
 {
     public:
-        unsigned int prop;
-        unsigned int ph1;
-        unsigned int ph2;
-        unsigned int brp;
-        unsigned int sjw;
+        unsigned int prop_;
+        unsigned int ph1_;
+        unsigned int ph2_;
+        unsigned int brp_;
+        unsigned int sjw_;
 
         BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
                   unsigned int brp, unsigned int sjw);
         BitTiming();
 
-        void print();
+        void Print();
         
 };
 

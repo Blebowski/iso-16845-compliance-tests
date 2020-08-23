@@ -71,75 +71,76 @@ class TestIso_7_1_4 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Classical CAN part
              ****************************************************************/
-            if (canVersion == CAN_2_0_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0)
             {
-                testMessage("Classical CAN part of test not supporetd!");
-                testControllerAgentEndTest(testResult);
+                TestMessage("Classical CAN part of test not supporetd!");
+                TestControllerAgentEndTest(test_result);
+                // TODO: Add support for it (Protocol exception is done so should be OK)!
                 return false;
             }
 
             /*****************************************************************
              * CAN FD Enabled part
              ****************************************************************/
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
             {
-                testMessage("CAN FD ENABLED part of test");
+                TestMessage("CAN FD ENABLED part of test");
 
                 // Generate frame (Set Base ID, Data frame, randomize others)
-                FrameFlags frameFlagsFd = FrameFlags(CAN_FD, BASE_IDENTIFIER,
-                                                     DATA_FRAME);
-                goldenFrame = new Frame(frameFlagsFd);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                FrameFlags frameFlagsFd = FrameFlags(FrameType::CanFd, IdentifierType::Base,
+                                                     RtrFlag::DataFrame);
+                golden_frame = new Frame(frameFlagsFd);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // Convert to bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 // Force RRS bit to recessive, update frames (Stuff bits and CRC
                 // might change)!
-                driverBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
-                monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
+                driver_bit_frame->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                monitor_bit_frame->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
 
                 // Update frames (Stuff bits, CRC might have changed!)
-                driverBitFrame->updateFrame();
-                monitorBitFrame->updateFrame();
+                driver_bit_frame->UpdateFrame();
+                monitor_bit_frame->UpdateFrame();
 
                 // Monitor frame as if received, driver frame must have ACK too!
-                monitorBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
+                monitor_bit_frame->TurnReceivedFrame();
+                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
 
-            return testResult;
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

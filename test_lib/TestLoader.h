@@ -10,6 +10,8 @@
  * 
  *****************************************************************************/
 
+#include <memory>
+
 #include "test_lib.h"
 
 #include "test_lib.h"
@@ -24,12 +26,12 @@
  * 
  * Main C++ test execution function. Forks of test thread. Called by VPI
  * callback when TB in digital simulator requests passing control to SW
- * test.
+ * test. Called in simulator context.
  * 
- * @param testName Name of SW testcase to run. Used to construct corresponding
+ * @param test_name Name of SW testcase to run. Used to construct corresponding
  *                 test object.
  */
-extern "C" void runCppTest(char *testName);
+extern "C" void RunCppTest(char *test_name);
 
 
 /**
@@ -38,26 +40,24 @@ extern "C" void runCppTest(char *testName);
  * Creates test object for given test name. Test object must be supported in
  * implementation of this function.
  * 
- * @param testName Name of SW test object to create.
+ * @param name Name of SW test object to create.
  */
-test_lib::TestBase *constructTestObject(std::string name);
+std::unique_ptr<test_lib::TestBase> ConstructTestObject(std::string name);
 
 
 /**
- * @brief Print message to standard output.
+ * Prints message to standard output. Message with "SW test" prefix is printed.
  * 
- * Message with "SW test" prefix is printed.
- * 
+ * @param message String to be printed.
  * @todo Implement support of varargs!
- * 
- * @param message String to be printed
  */
-void testMessage(std::string message, ...);
+void TestMessage(std::string message, ...);
 
 
 /**
- * @brief TODO
+ * Prints message enclosed with line of "*".
+ * @param message String to be printed.
  */
-void testBigMessage(std::string message, ...);
+void TestBigMessage(std::string message, ...);
 
 #endif

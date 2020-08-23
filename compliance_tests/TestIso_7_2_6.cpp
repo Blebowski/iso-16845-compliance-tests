@@ -73,11 +73,11 @@ class TestIso_7_2_6: public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             /*****************************************************************
              * Common part of test (i=0) / CAN FD enabled part of test (i=1)
@@ -86,7 +86,7 @@ class TestIso_7_2_6: public test_lib::TestBase
             int iterCnt;
             int crcCnt;
             uint8_t dlcVals[3];
-            FlexibleDataRate dataRate;
+            FrameType dataRate;
 
             // Generate random DLCs manually to meet constraints for CRCs
             dlcVals[0] = rand() % 9;
@@ -96,7 +96,7 @@ class TestIso_7_2_6: public test_lib::TestBase
                 dlcVals[1] = 0xA;
             dlcVals[2] = (rand() % 5) + 11;
 
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+            if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;
             else
                 iterCnt = 1;
@@ -106,13 +106,13 @@ class TestIso_7_2_6: public test_lib::TestBase
                 if (i == 0)
                 {
                     // Generate CAN frame (CAN 2.0, randomize others)
-                    testMessage("Common part of test!");
-                    dataRate = CAN_2_0;
+                    TestMessage("Common part of test!");
+                    dataRate = FrameType::Can2_0;
                     crcCnt = 1;
                 } else {
                     // Generate CAN frame (CAN FD, randomize others)
-                    testMessage("CAN FD enabled part of test!");
-                    dataRate = CAN_FD;
+                    TestMessage("CAN FD enabled part of test!");
+                    dataRate = FrameType::CanFd;
                     crcCnt = 3;
                 }
 
@@ -120,16 +120,16 @@ class TestIso_7_2_6: public test_lib::TestBase
                 {
 
                     FrameFlags frameFlags = FrameFlags(dataRate);
-                    goldenFrame = new Frame(frameFlags, dlcVals[j]);
-                    goldenFrame->randomize();
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
+                    golden_frame = new Frame(frameFlags, dlcVals[j]);
+                    golden_frame->Randomize();
+                    TestBigMessage("Test frame:");
+                    golden_frame->Print();
 
                     // Convert to Bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
+                    driver_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    monitor_bit_frame = new BitFrame(*golden_frame,
+                        &this->nominal_bit_timing, &this->data_bit_timing);
                 
                     /**
                      * Modify test frames:
@@ -138,7 +138,7 @@ class TestIso_7_2_6: public test_lib::TestBase
                      *   3. Force CRC Delimiter to dominant.
                      *   4. Insert Error frame to position of ACK!
                      */
-                    monitorBitFrame->turnReceivedFrame();
+                    monitor_bit_frame->TurnReceivedFrame();
 
                     int crcIndex;
                     if (j == 0)
@@ -148,31 +148,31 @@ class TestIso_7_2_6: public test_lib::TestBase
                     else
                         crcIndex = rand() % 21;
 
-                    testMessage("Forcing CRC bit nr: %d", crcIndex);
+                    TestMessage("Forcing CRC bit nr: %d", crcIndex);
                     printf("Forcing CRC bit nr: %d\n", crcIndex);
-                    driverBitFrame->getBitOfNoStuffBits(crcIndex, BitType::BIT_TYPE_CRC)->flipBitValue();
+                    driver_bit_frame->GetBitOfNoStuffBits(crcIndex, BitType::Crc)->FlipBitValue();
 
                     // TODO: Here we should re-stuff CRC because we might have added/removed
                     //       Stuff bit in CRC and causes length of model CRC and to be different!
-                    driverBitFrame->getBitOf(0, BitType::BIT_TYPE_CRC_DELIMITER)->setBitValue(DOMINANT);
+                    driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
 
-                    monitorBitFrame->insertActiveErrorFrame(
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_ACK));
-                    driverBitFrame->insertActiveErrorFrame(
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_ACK));
+                    monitor_bit_frame->InsertActiveErrorFrame(
+                        monitor_bit_frame->GetBitOf(0, BitType::Ack));
+                    driver_bit_frame->InsertActiveErrorFrame(
+                        driver_bit_frame->GetBitOf(0, BitType::Ack));
 
                     // Push frames to Lower tester, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    runLowerTester(true, true);
-                    checkLowerTesterResult();
+                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
 
-                    deleteCommonObjects();
+                    DeleteCommonObjects();
                 }
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

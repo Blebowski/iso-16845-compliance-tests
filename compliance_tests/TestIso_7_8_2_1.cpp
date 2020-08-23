@@ -48,7 +48,7 @@
  *  The modified BRS bit shall be sampled as recessive.
  *  The hard synchronization shall correct the maximum phase error as defined
  *  in ISO 11898-1.
- *  The frame is valid. No error flag shall occur.
+ *  The frame is valid. DontShift error flag shall occur.
  *****************************************************************************/
 
 #include <iostream>
@@ -77,20 +77,20 @@ class TestIso_7_8_2_1 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // CAN FD enabled only!
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            if (dut_can_version == CanVersion::Can_2_0 ||
+                dut_can_version == CanVersion::CanFdTolerant)
             {
-                testResult = false;
+                test_result = false;
                 return false;
             }
 
@@ -98,65 +98,65 @@ class TestIso_7_8_2_1 : public test_lib::TestBase
              * CRC Delimiter sampled Recessive (OK) /
              * CRC Delimiter sampled Dominant (Error frame)
              ****************************************************************/
-            int highTh = nominalBitTiming.prop + nominalBitTiming.ph1 + 1;
-            for (int i = nominalBitTiming.sjw + 1; i < highTh; i++)
+            int highTh = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 1;
+            for (int i = nominal_bit_timing.sjw_ + 1; i < highTh; i++)
             {
                 // CAN FD frame
-                FrameFlags frameFlags = FrameFlags(CAN_FD, BIT_RATE_SHIFT);
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
-                testMessage("Testing 'res' bit hard-sync with phase error: %d", i);
+                TestMessage("Testing 'res' bit hard-sync with phase error: %d", i);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
                  *   1. Turn monitor frame as if received!
                  *   2. Prolong FDF/EDL bit by e (both driven and monitored
                  *      frame since DUT shall execute hard sync).
-                 *   3. Set first Prop+Ph1 TQ of BRS to Dominant.
+                 *   3. Set first Prop+Phase1 TQ of BRS to Dominant.
                  */
-                monitorBitFrame->turnReceivedFrame();
+                monitor_bit_frame->TurnReceivedFrame();
 
-                Bit *edlBitDriver = driverBitFrame->getBitOf(0, BIT_TYPE_EDL);
-                Bit *edlBitMonitor = monitorBitFrame->getBitOf(0, BIT_TYPE_EDL);
-                Bit *brsBit = driverBitFrame->getBitOf(0, BIT_TYPE_BRS);
+                Bit *edlBitDriver = driver_bit_frame->GetBitOf(0, BitType::Edl);
+                Bit *edlBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Edl);
+                Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
 
-                edlBitDriver->lengthenPhase(PH2_PHASE, i);
-                edlBitMonitor->lengthenPhase(PH2_PHASE, i);
+                edlBitDriver->LengthenPhase(BitPhase::Ph2, i);
+                edlBitMonitor->LengthenPhase(BitPhase::Ph2, i);
 
-                for (int j = 0; j < (nominalBitTiming.ph1 + nominalBitTiming.prop); j++)
-                    brsBit->getTimeQuanta(j)->forceValue(DOMINANT);
+                for (int j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
+                    brsBit->GetTimeQuanta(j)->ForceValue(BitValue::Dominant);
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
                 // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dutIfc->readFrame();
-                if (compareFrames(*goldenFrame, readFrame) == false)
+                Frame readFrame = this->dut_ifc->ReadFrame();
+                if (CompareFrames(*golden_frame, readFrame) == false)
                 {
-                    testResult = false;
-                    testControllerAgentEndTest(testResult);
+                    test_result = false;
+                    TestControllerAgentEndTest(test_result);
                 }
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

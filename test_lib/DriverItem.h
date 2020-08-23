@@ -40,12 +40,12 @@ class test_lib::DriverItem
          * 
          * @return true if item has message, false otherwise
          */
-        bool hasMessage();
+        bool HasMessage();
 
         /**
          * @brief Print item
          */
-        void print();
+        void Print();
 
         /**
          * Time for which the item is driven. When this is CAN bit, then this

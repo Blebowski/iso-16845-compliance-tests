@@ -74,6 +74,7 @@
 #include "../test_lib/DriverItem.h"
 #include "../test_lib/MonitorItem.h"
 #include "../test_lib/TestLoader.h"
+#include "../test_lib/ElementaryTest.h"
 
 #include "../can_lib/can.h"
 #include "../can_lib/Frame.h"
@@ -82,109 +83,105 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_1_5 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
-
-            /*****************************************************************
-             * Classical CAN part / CAN FD Tolerant version
-             ****************************************************************/
-            if (canVersion == CAN_2_0_VERSION ||
-                canVersion == CAN_FD_TOLERANT_VERSION)
+            FillTestVariants(VariantMatchingType::OneToOne);
+            
+            switch (test_variants[0])
             {
-                testMessage("Unsupported CAN version type!");
-                testControllerAgentEndTest(false);
-                return false;
+            case TestVariant::CanFdEnabled:
+                num_elem_tests = 3;
+                break;
+            case TestVariant::CanFdTolerant:
+                num_elem_tests = 3;
+                break;
+            case TestVariant::Can_2_0:
+                num_elem_tests = 7;
+                break;
+            default:
+                break;
             }
+            for (int i = 0; i < num_elem_tests; i++)
+                elem_tests[0].push_back(ElementaryTest(i + 1));
+        }
 
-            /*****************************************************************
-             * CAN FD Enabled part
-             ****************************************************************/
-            if (canVersion == CAN_FD_ENABLED_VERSION)
+        int Run()
+        {
+            SetupTestEnvironment();
+
+            // TODO: Add support of CAN 2.0 and FD Tolerant
+            if (test_variants[0] == TestVariant::CanFdTolerant ||
+                test_variants[0] == TestVariant::Can_2_0)
+                return (int)FinishTest(TestResult::Failed);
+
+
+            for (auto elem_test : elem_tests[0])
             {
-                testMessage("CAN FD enabled part of test!");
+                PrintElemTestInfo(elem_test);
 
-                for (int i = 1; i <= 3; i++)
+                frame_flags = std::make_unique<FrameFlags>(
+                                FrameType::CanFd, IdentifierType::Extended, RtrFlag::DataFrame);
+                golden_frm = std::make_unique<Frame>(*frame_flags);
+                RandomizeAndPrint(*golden_frm);
+
+                driver_bit_frm = ConvertBitFrame(*golden_frm);
+                monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                /**************************************************************
+                 * Modify test frames:
+                 *   1. Force bits like so (both driver and monitor):
+                 *          TEST    SRR     RRS
+                 *          #1      1       1
+                 *          #2      0       1
+                 *          #3      0       0
+                 *   2. Update frames (needed since CRC might have changed)
+                 *   3. Turned monitored frame received, insert ACK to driver
+                 *      (TX to RX feedback disabled)
+                 **************************************************************/
+
+                switch (elem_test.index)
                 {
-                    // Generate frame (Set Extended ID, Data frame, randomize others)
-                    FrameFlags frameFlags = FrameFlags(CAN_FD, EXTENDED_IDENTIFIER,
-                                                       DATA_FRAME);
-                    goldenFrame = new Frame(frameFlags);
-                    goldenFrame->randomize();
-                    testBigMessage("Test frame:");
-                    goldenFrame->print();
-                    testBigMessage("Iteration nr: %d", i);
-
-                    // Convert to bit frames
-                    driverBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-                    monitorBitFrame = new BitFrame(*goldenFrame,
-                        &this->nominalBitTiming, &this->dataBitTiming);
-
-                    // Force bits like so:
-                    //  TEST    SRR     RRS
-                    //   #1      1       1
-                    //   #2      0       1
-                    //   #3      0       0
-                    switch (i)
-                    {
-                    case 1:
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_SRR)->setBitValue(RECESSIVE);
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_SRR)->setBitValue(RECESSIVE);
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
-                        break;
-                    case 2:
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_SRR)->setBitValue(DOMINANT);
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_SRR)->setBitValue(DOMINANT);
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(RECESSIVE);
-                        break;
-                    case 3:
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_SRR)->setBitValue(DOMINANT);
-                        driverBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(DOMINANT);
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_SRR)->setBitValue(DOMINANT);
-                        monitorBitFrame->getBitOf(0, BitType::BIT_TYPE_R1)->setBitValue(DOMINANT);
-                        break;
-                    }
-
-                    driverBitFrame->updateFrame();
-                    monitorBitFrame->updateFrame();
-
-                    // Monitor frame as if received, driver frame must have ACK too!
-                    monitorBitFrame->turnReceivedFrame();
-                    driverBitFrame->getBitOf(0, can::BIT_TYPE_ACK)->setBitValue(DOMINANT);
-
-                    // Push frames to Lower tester, run and check!
-                    pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                    runLowerTester(true, true);
-                    checkLowerTesterResult();
-
-                    // Read received frame from DUT and compare with sent frame
-                    Frame readFrame = this->dutIfc->readFrame();
-                    if (compareFrames(*goldenFrame, readFrame) == false)
-                    {
-                        testResult = false;
-                        testControllerAgentEndTest(testResult);
-                    }
-
-                    deleteCommonObjects();
+                case 1:
+                    driver_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Recessive;
+                    driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    break;
+                case 2:
+                    driver_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Dominant;
+                    driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Dominant;
+                    monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    break;
+                case 3:
+                    driver_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Dominant;
+                    driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Dominant;
+                    monitor_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Dominant;
+                    monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Dominant;
+                    break;
                 }
+
+                driver_bit_frm->UpdateFrame();
+                monitor_bit_frm->UpdateFrame();
+
+                monitor_bit_frm->TurnReceivedFrame();
+                driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+                /************************************************************************* 
+                 * Execute test
+                 *************************************************************************/
+                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
+                CheckRxFrame(*golden_frm);
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };

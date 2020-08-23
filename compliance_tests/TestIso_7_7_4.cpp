@@ -72,43 +72,43 @@ class TestIso_7_7_4 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Enable TX to RX feedback
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             /*****************************************************************
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
-            for (int e = nominalBitTiming.sjw + 1;
-                 e <= nominalBitTiming.prop + nominalBitTiming.ph1;
+            for (int e = nominal_bit_timing.sjw_ + 1;
+                 e <= nominal_bit_timing.prop_ + nominal_bit_timing.ph1_;
                  e++)
             {
                 // Clean REC so that errors don't accumulate over testing!
-                dutIfc->setRec(0);
+                dut_ifc->SetRec(0);
 
                 // CAN 2.0 frame, Base identifier, randomize others
-                FrameFlags frameFlags = FrameFlags(CAN_2_0, BASE_IDENTIFIER);
+                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);
 
                 // Base ID full of 1s, 5th will be dominant stuff bit!
                 int id = pow(2,11) - 1;
-                goldenFrame = new Frame(frameFlags, 0x1, id);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags, 0x1, id);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
-                testMessage("Testing positive phase error: %d", e);
+                TestMessage("Testing positive phase error: %d", e);
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -126,47 +126,47 @@ class TestIso_7_7_4 : public test_lib::TestBase
                  *      position. Insert passive error frame to driven bit so that
                  *      it will transmitt all recessive!
                  */
-                monitorBitFrame->turnReceivedFrame();
-                Bit *beforeStuffBit = driverBitFrame->getBitOf(3, BIT_TYPE_BASE_ID);
-                beforeStuffBit->lengthenPhase(PH2_PHASE, e);
+                monitor_bit_frame->TurnReceivedFrame();
+                Bit *beforeStuffBit = driver_bit_frame->GetBitOf(3, BitType::BaseIdentifier);
+                beforeStuffBit->LengthenPhase(BitPhase::Ph2, e);
 
                 // Monitor bit as if node re-synchronised by SJW!
-                Bit *monitorStuffBit = monitorBitFrame->getStuffBit(0);
-                monitorStuffBit->lengthenPhase(SYNC_PHASE, nominalBitTiming.sjw);
+                Bit *monitorStuffBit = monitor_bit_frame->GetStuffBit(0);
+                monitorStuffBit->LengthenPhase(BitPhase::Sync, nominal_bit_timing.sjw_);
 
-                Bit *driverStuffBit = driverBitFrame->getStuffBit(0);
-                for (int j = 0; j < nominalBitTiming.ph2; j++)
-                    driverStuffBit->forceTimeQuanta(j, PH2_PHASE, RECESSIVE);
+                Bit *driverStuffBit = driver_bit_frame->GetStuffBit(0);
+                for (int j = 0; j < nominal_bit_timing.ph2_; j++)
+                    driverStuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
-                BitPhase prevPhase = driverStuffBit->prevBitPhase(PH2_PHASE);
-                int toBeShortened = e - nominalBitTiming.sjw + 1;
+                BitPhase prevPhase = driverStuffBit->PrevBitPhase(BitPhase::Ph2);
+                int toBeShortened = e - nominal_bit_timing.sjw_ + 1;
                 
-                int shortened = driverStuffBit->shortenPhase(prevPhase, toBeShortened);
+                int shortened = driverStuffBit->ShortenPhase(prevPhase, toBeShortened);
 
                 if (shortened < toBeShortened)
                 {
-                    prevPhase = driverStuffBit->prevBitPhase(prevPhase);
-                    driverStuffBit->shortenPhase(prevPhase, toBeShortened - shortened);
+                    prevPhase = driverStuffBit->PrevBitPhase(prevPhase);
+                    driverStuffBit->ShortenPhase(prevPhase, toBeShortened - shortened);
                 }
 
-                int index = driverBitFrame->getBitIndex(driverStuffBit);
-                monitorBitFrame->insertActiveErrorFrame(index + 1);
-                driverBitFrame->insertPassiveErrorFrame(index + 1);
+                int index = driver_bit_frame->GetBitIndex(driverStuffBit);
+                monitor_bit_frame->InsertActiveErrorFrame(index + 1);
+                driver_bit_frame->InsertPassiveErrorFrame(index + 1);
                 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                runLowerTester(true, true);
-                checkLowerTesterResult();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                RunLowerTester(true, true);
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

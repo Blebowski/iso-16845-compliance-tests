@@ -67,24 +67,24 @@ class TestIso_8_2_7 : public test_lib::TestBase
 {
     public:
 
-        int run()
+        int Run()
         {
             // Run Base test to setup TB
-            TestBase::run();
-            testMessage("Test %s : Run Entered", testName);
+            TestBase::Run();
+            TestMessage("Test %s : Run Entered", test_name);
 
             // Start monitoring when DUT starts transmitting!
-            canAgentMonitorSetTrigger(CAN_AGENT_MONITOR_TRIGGER_TX_FALLING);
-            canAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
 
             // Configure driver to wait for monitor so that LT sends ACK in right moment.
-            canAgentSetWaitForMonitor(true);
+            CanAgentSetWaitForMonitor(true);
 
             // Enable TX/RX feedback so that DUT will see its own transmitted frame!
-            canAgentConfigureTxToRxFeedback(true);
+            CanAgentConfigureTxToRxFeedback(true);
 
             // For CAN FD enabled nodes only!
-            if (canVersion != CAN_FD_ENABLED_VERSION)
+            if (dut_can_version != CanVersion::CanFdEnabled)
                 return false;
 
             /*****************************************************************
@@ -93,22 +93,22 @@ class TestIso_8_2_7 : public test_lib::TestBase
             for (int i = 0; i < 2; i++)
             {
                 if (i == 0)
-                    testMessage("Testing 2 bit long CRC delimiter!");
+                    TestMessage("Testing 2 bit long CRC delimiter!");
                 else
-                    testMessage("Testing 2 bit long ACK!");
+                    TestMessage("Testing 2 bit long ACK!");
 
-                FrameFlags frameFlags = FrameFlags(CAN_FD, ESI_ERROR_ACTIVE);
+                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, EsiFlag::ErrorActive);
 
-                goldenFrame = new Frame(frameFlags);
-                goldenFrame->randomize();
-                testBigMessage("Test frame:");
-                goldenFrame->print();
+                golden_frame = new Frame(frameFlags);
+                golden_frame->Randomize();
+                TestBigMessage("Test frame:");
+                golden_frame->Print();
 
                 // Convert to Bit frames
-                driverBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
-                monitorBitFrame = new BitFrame(*goldenFrame,
-                    &this->nominalBitTiming, &this->dataBitTiming);
+                driver_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
+                monitor_bit_frame = new BitFrame(*golden_frame,
+                    &this->nominal_bit_timing, &this->data_bit_timing);
 
                 /**
                  * Modify test frames:
@@ -120,49 +120,49 @@ class TestIso_8_2_7 : public test_lib::TestBase
                  *          Insert one extra ACK bit to both driven and monitored
                  *          frame.
                  */
-                driverBitFrame->turnReceivedFrame();
-                driverBitFrame->getBitOf(0, BIT_TYPE_ACK)->setBitValue(DOMINANT);
+                driver_bit_frame->TurnReceivedFrame();
+                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
                 if (i == 0)
                 {
-                    Bit *crcDelimDriver = driverBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
-                    Bit *crcDelimMonitor = monitorBitFrame->getBitOf(0, BIT_TYPE_CRC_DELIMITER);
-                    int crcDelimIndex = driverBitFrame->getBitIndex(crcDelimDriver);
+                    Bit *crcDelimDriver = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
+                    Bit *crcDelimMonitor = monitor_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
+                    int crcDelimIndex = driver_bit_frame->GetBitIndex(crcDelimDriver);
 
                     // Copy CRC delimiter
                     // Note: All nominal bit timing will be used in copied bit!
-                    driverBitFrame->insertBit(*crcDelimDriver, crcDelimIndex);
-                    monitorBitFrame->insertBit(*crcDelimMonitor, crcDelimIndex);
+                    driver_bit_frame->InsertBit(*crcDelimDriver, crcDelimIndex);
+                    monitor_bit_frame->InsertBit(*crcDelimMonitor, crcDelimIndex);
                 } else {
-                    Bit *ackDriver = driverBitFrame->getBitOf(0, BIT_TYPE_ACK);
-                    Bit *ackMonitor = monitorBitFrame->getBitOf(0, BIT_TYPE_ACK);
-                    int ackIndex = driverBitFrame->getBitIndex(ackDriver);
+                    Bit *ackDriver = driver_bit_frame->GetBitOf(0, BitType::Ack);
+                    Bit *ackMonitor = monitor_bit_frame->GetBitOf(0, BitType::Ack);
+                    int ackIndex = driver_bit_frame->GetBitIndex(ackDriver);
 
                     // Copy ACK bit
-                    driverBitFrame->insertBit(*ackDriver, ackIndex);
-                    monitorBitFrame->insertBit(*ackMonitor, ackIndex);
+                    driver_bit_frame->InsertBit(*ackDriver, ackIndex);
+                    monitor_bit_frame->InsertBit(*ackMonitor, ackIndex);
                 }
 
-                driverBitFrame->print(true);
-                monitorBitFrame->print(true);
+                driver_bit_frame->Print(true);
+                monitor_bit_frame->Print(true);
 
                 // Push frames to Lower tester, insert to DUT, run and check!
-                pushFramesToLowerTester(*driverBitFrame, *monitorBitFrame);
-                startDriverAndMonitor();
+                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                StartDriverAndMonitor();
 
-                testMessage("Sending frame via DUT!");
-                this->dutIfc->sendFrame(goldenFrame);
-                testMessage("Sent frame via DUT!");
+                TestMessage("Sending frame via DUT!");
+                this->dut_ifc->SendFrame(golden_frame);
+                TestMessage("Sent frame via DUT!");
                 
-                waitForDriverAndMonitor();
-                checkLowerTesterResult();
+                WaitForDriverAndMonitor();
+                CheckLowerTesterResult();
 
-                deleteCommonObjects();
+                DeleteCommonObjects();
             }
 
-            testControllerAgentEndTest(testResult);
-            testMessage("Test %s : Run Exiting", testName);
-            return testResult;
+            TestControllerAgentEndTest(test_result);
+            TestMessage("Test %s : Run Exiting", test_name);
+            return test_result;
 
             /*****************************************************************
              * Test sequence end

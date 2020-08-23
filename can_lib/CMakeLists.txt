@@ -15,6 +15,7 @@ add_library(
 
     # CAN namespace
     can.h
+    can.cpp
     
     # Headers
     Bit.h

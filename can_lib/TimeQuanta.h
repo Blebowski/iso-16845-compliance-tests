@@ -20,81 +20,101 @@
 #ifndef TIME_QUANTA
 #define TIME_QUANTA
 
+
+/**
+ * @class TimeQuanta
+ * @namespace can
+ * 
+ * Represents single Time Quanta. Contains individual cycles.
+ */
 class can::TimeQuanta
 {
     public:
-        /**
-         *
-         */
-        TimeQuanta();
 
         /**
-         *
+         *  @param brp Baud rate prescaler (number of cycles within Time quanta)
+         *  @param bit_phase Phase of bit to which this time quanta belongs
          */
-        TimeQuanta(int brp, BitPhase bitPhase);
+        TimeQuanta(int brp, BitPhase bit_phase);
 
         /**
-         *
+         * @param brp Baud rate prescaler (number of cycles within Time quanta)
+         * @param bit_phase Phase of bit to which this time quanta belongs
+         * @param bit_value Bit value of each cycle in time quanta (set as non default value)
          */
-        TimeQuanta(int brp, BitPhase bitPhase, BitValue bitValue);
+        TimeQuanta(int brp, BitPhase bit_phase, BitValue bit_value);
 
         /**
-         * 
+         * @returns true if any of cycles in this Time quanta contain non-default values.
          */
-        bool hasNonDefaultValues();
+        bool HasNonDefaultValues();
 
         /**
-         *
+         * Sets all clock cycle values to default (Cycles with default values inherit value from
+         * bit to which they belong).
          */
-        void setAllDefaultValues();
+        void SetAllDefaultValues();
 
         /**
-         *
+         * @returns length of Time quanta in clock cycles.
          */
         int getLengthCycles();
 
         /**
-         * 
+         * Gets value of cycle.
+         * @param index Position of cycle within Time quanta.
+         * @returns Pointer to cycle bit value.
          */
         CycleBitValue *getCycleBitValue(int index);
 
         /**
-         *
+         * Lengthens time quanta (appends cycles at the end).
+         * @param by_cycles number of cycles to lengthen by
          */
-        void lengthen(int byCycles);
+        void Lengthen(int by_cycles);
 
         /**
-         *
+         * Lengthens time quanta (appends cycles at the end). Appended bits are forced to
+         * non-default value.
+         * @param by_cycles number of cycles to lengthen by
+         * @param bit_value Value to set appended cycles to.
          */
-        void lengthen(int byCycles, BitValue bitValue);
+        void Lengthen(int by_cycles, BitValue bit_value);
 
         /**
-         *
+         * Shortens time quanta.
+         * @param by_cycles number of cycles to shorten time quanta by.
          */
-        void shorten(int byCycles);
+        void Shorten(int by_cycles);
 
         /**
-         *
+         * Forces value of a one cycle.
+         * @param cycle_index Index of cycle to force.
+         * @param bit_value Value of cycle to force.
          */
-        bool forceCycleValue(int cycleIndex, BitValue bitValue);
+        bool ForceCycleValue(int cycle_index, BitValue bit_value);
 
         /**
-         *
+         * Forces value of range of cycles.
+         * @param cycle_index_from Index from which cycle value shall be forced.
+         * @param cycle_index_to Index to which cycle value shall be forced.
+         * @param bit_value Value to be forced.
          */
-        bool forceCycleValue(int cycleIndexFrom, int cycleIndexTo, BitValue bitValue);
+        bool ForceCycleValue(int cycle_index_from, int cycle_index_to, BitValue bit_value);
 
         /**
-         *
+         * Forces value of each cycle within time quanta
+         * @param bit_value Value to force time quanta to
          */
-        bool forceValue(BitValue bitValue);
+        bool ForceValue(BitValue bit_value);
 
         /**
-         * 
+         * Phase of bit to which this time quanta belongs.
          */
-        BitPhase bitPhase;
+        BitPhase bit_phase;
 
     private:
-        std::list<CycleBitValue> cycleBitValues_;
+        std::list<CycleBitValue> cycle_bit_values_;
 };
 
 #endif

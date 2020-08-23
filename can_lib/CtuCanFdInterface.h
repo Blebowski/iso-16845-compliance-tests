@@ -17,32 +17,39 @@
 
 extern "C" {
 
-class can::CtuCanFdInterface : public can::DutInterface
-{
     /**
-     * All functions implement virtual interface "DutInterface" which allows
-     * writing tests in DUT independent manner! All configuration of DUT shall
-     * be executed via functions of this interface, not by manuall access to
-     * DUT!
+     * @class CtuCanFdInterface
+     * @namespace can
+     * 
+     * Implementation of DutInterface for CTU CAN FD IP Core.
+     * 
      */
-    public:
-        void enable();
-        void disable();
-        void reset();
-        bool setFdStandardType(bool isIso);
-        bool setCanVersion(CanVersion canVersion);
-        void configureBitTiming(can::BitTiming nominalBitTiming,
-                                can::BitTiming dataBitTiming);
-        void configureSsp(SspType sspType, int sspOffset);
-        void sendFrame(can::Frame *frame);
-        can::Frame readFrame();
-        bool hasRxFrame();
-        int getRec();
-        int getTec();
-        void setRec(int rec);
-        void setTec(int tec);
-        void setErrorState(can::ErrorState errorState);
-        can::ErrorState getErrorState();
-};
+    class can::CtuCanFdInterface : public can::DutInterface
+    {
+        /**
+         * All functions implement virtual interface "DutInterface" which allows
+         * writing tests in DUT independent manner! All configuration of DUT shall
+         * be executed via functions of this interface, not by manuall access to
+         * DUT!
+         */
+        public:
+            void Enable();
+            void Disable();
+            void Reset();
+            bool SetFdStandardType(bool isIso);
+            bool SetCanVersion(CanVersion canVersion);
+            void ConfigureBitTiming(can::BitTiming nominal_bit_timing,
+                                    can::BitTiming data_bit_timing);
+            void ConfigureSsp(SspType sspType, int sspOffset);
+            void SendFrame(can::Frame *frame);
+            can::Frame ReadFrame();
+            bool HasRxFrame();
+            int GetRec();
+            int GetTec();
+            void SetRec(int rec);
+            void SetTec(int tec);
+            void SetErrorState(can::FaultConfinementState errorState);
+            can::FaultConfinementState GetErrorState();
+    };
 
 };

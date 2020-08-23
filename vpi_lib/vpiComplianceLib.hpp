@@ -28,7 +28,7 @@ extern "C" {
  *****************************************************************************/
 
 /**
- * @subsection Agent destinations with testbench
+ * @subsection Agent destinations within testbench
  */
 #define VPI_DEST_TEST_CONTROLLER_AGENT (char*)"00000000"
 #define VPI_DEST_CLK_GEN_AGENT         (char*)"00000001"
@@ -118,72 +118,72 @@ extern "C" {
 /**
  * @enum CAN Agent Monitor State.
  * 
- *  CAN_AGENT_MONITOR_DISABLED:
+ *  Disabled:
  *      Monitor FIFO can be filled with values to be monitored, sampling
  *      rate and trigger can be configured.
  *  
- *  CAN_AGENT_MONITOR_WAITING_FOR_TRIGGER:
+ *  WaitingForTrigger:
  *      Monitor has been started, but trigger condition has not yet occurred.
  * 
- *  CAN_AGENT_MONITOR_RUNNING:
+ *  Running:
  *      Monitor is running and monitoring values from Monitor FIFO on "can_tx".
  * 
- *  CAN_AGENT_MONITOR_PASSED:
+ *  Passed:
  *      Monitor has monitored all values from monitor FIFO and it is not running
  *      anymore. During monitoring, no mismatch occurred therefore it PASSED.
  * 
- *  CAN_AGENT_MONITOR_FAILED:
+ *  Failed:
  *      Monitor has monitored all values from monitor FIFO and it is not running
  *      anymore. During monitoring mismatches occured therefore it FAILED.
  */
-enum CanAgentMonitorState
+enum class CanAgentMonitorState
 {
-    CAN_AGENT_MONITOR_DISABLED,
-    CAN_AGENT_MONITOR_WAITING_FOR_TRIGGER,
-    CAN_AGENT_MONITOR_RUNNING,
-    CAN_AGENT_MONITOR_PASSED,
-    CAN_AGENT_MONITOR_FAILED
+    Disabled,
+    WaitingForTrigger,
+    Running,
+    Passed,
+    Failed
 };
 
 
 /**
  * @enum CAN Agent Monitor Trigger type
  * 
- * CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY:
+ * Immediately:
  *  Trigger immediately after CAN monitor is started.
  * 
- * CAN_AGENT_MONITOR_TRIGGER_RX_RISING:
+ * RxRising:
  *  Trigger on rising edge on can_rx. 
  * 
- * CAN_AGENT_MONITOR_TRIGGER_RX_FALLING:
+ * RxFalling:
  *  Trigger on falling edge on can_rx.
  * 
- * CAN_AGENT_MONITOR_TRIGGER_TX_RISING:
+ * TxRising:
  *  Trigger on rising edge on can_tx.
  * 
  * CAN_AGENT_MONITOR_TRIGGER_TX_FALLING:
  *  Trigger on falling edge on can_tx.
  * 
- * CAN_AGENT_MONITOR_TRIGGER_TIME_ELAPSED:
+ * TimeElapsed:
  *  Trigger after certain time has elapsed.
  * 
- * CAN_AGENT_MONITOR_TRIGGER_DRIVER_START:
+ * DriverStart:
  *  Trigger when CAN Agent driver starts. This trigger type can be used to start
  *  monitoring at the same time as driver starts driving.
  *
- * CAN_AGENT_MONITOR_TRIGGER_DRIVER_STOP:
+ * DriverStop:
  *  Trigger when CAN Agent driver stops.
  */
-enum CanAgentMonitorTrigger
+enum class CanAgentMonitorTrigger
 {
-     CAN_AGENT_MONITOR_TRIGGER_IMMEDIATELY,
-     CAN_AGENT_MONITOR_TRIGGER_RX_RISING,
-     CAN_AGENT_MONITOR_TRIGGER_RX_FALLING,
-     CAN_AGENT_MONITOR_TRIGGER_TX_RISING,
-     CAN_AGENT_MONITOR_TRIGGER_TX_FALLING,
-     CAN_AGENT_MONITOR_TRIGGER_TIME_ELAPSED,
-     CAN_AGENT_MONITOR_TRIGGER_DRIVER_START,
-     CAN_AGENT_MONITOR_TRIGGER_DRIVER_STOP
+     Immediately,
+     RxRising,
+     RxFalling,
+     TxRising,
+     TxFalling,
+     TimeElapsed,
+     DriverStart,
+     DriverStop
 };
 
 /**
@@ -203,14 +203,14 @@ enum CanAgentMonitorTrigger
  * 
  * @brief Assert reset.
  */
-void resetAgentAssert();
+void ResetAgentAssert();
 
 /**
  * @ingroup resetAgent
  * 
  * @brief Deassert reset
  */
-void resetAgentDeassert();
+void ResetAgentDeassert();
 
 /**
  * @ingroup resetAgent
@@ -218,7 +218,7 @@ void resetAgentDeassert();
  * @brief Set reset polarity
  * @param polarity Polarity of reset (Allowed values: 0, 1)
  */
-void resetAgentPolaritySet(int polarity);
+void ResetAgentPolaritySet(int polarity);
 
 /**
  * @ingroup resetAgent
@@ -226,7 +226,7 @@ void resetAgentPolaritySet(int polarity);
  * @brief Get reset agent polarity
  * @returns Polarity of reset (0, 1)
  */
-int resetAgentPolarityGet();
+int ResetAgentPolarityGet();
 
 
 /******************************************************************************
@@ -242,7 +242,7 @@ int resetAgentPolarityGet();
  * 
  * When clock generator agent is running, it generates clock on its output.
  */
-void clockAgentStart();
+void ClockAgentStart();
 
 
 /**
@@ -253,25 +253,25 @@ void clockAgentStart();
  * When clock generator agent is stopped, it does not generate clock on its
  * output.
  */
-void clockAgentStop();
+void ClockAgentStop();
 
 
 /**
  * @ingroup clockGeneratorAgent
  * 
  * @brief Set clock generator agent period
- * @param clockPeriod Period to be set.
+ * @param clock_period Period to be set.
  */
-void clockAgentSetPeriod(std::chrono::nanoseconds clockPeriod);
+void ClockAgentSetPeriod(std::chrono::nanoseconds clock_period);
 
 
 /**
  * @ingroup clockGeneratorAgent
  * 
  * @brief Get clock generator agent period.
- * @return Clock generator agent period.
+ * @returns Clock generator agent period.
  */
-std::chrono::nanoseconds clockAgentGetPeriod();
+std::chrono::nanoseconds ClockAgentGetPeriod();
 
 
 /**
@@ -280,16 +280,16 @@ std::chrono::nanoseconds clockAgentGetPeriod();
  * @brief Set clock generator agent jitter (Jitter of clock period).
  * @param jitter Jitter to be set.
  */
-void clockAgentSetJitter(std::chrono::nanoseconds jitter);
+void ClockAgentSetJitter(std::chrono::nanoseconds jitter);
 
 
 /**
  * @ingroup clockGeneratorAgent
  * 
  * @brief Get clock generator agent jitter (Jitter of clock period).
- * @return Jitter of Clock generator agent.
+ * @returns Jitter of Clock generator agent.
  */
-std::chrono::nanoseconds clockAgentGetJitter();
+std::chrono::nanoseconds ClockAgentGetJitter();
 
 
 /**
@@ -298,7 +298,7 @@ std::chrono::nanoseconds clockAgentGetJitter();
  * @brief Set clock generator agent duty cycle.
  * @param duty Duty cycle to set (valid value between 0 - 100)
  */
-void clockAgentSetDuty(int duty);
+void ClockAgentSetDuty(int duty);
 
 
 /**
@@ -307,7 +307,7 @@ void clockAgentSetDuty(int duty);
  * @brief Get clock generator agent duty cycle.
  * @return Duty cycle of Clock generator agent (between 0 - 100)
  */
-int clockAgentGetDuty();
+int ClockAgentGetDuty();
 
 
 /******************************************************************************
@@ -321,7 +321,7 @@ int clockAgentGetDuty();
  * 
  * @brief Start Memory Bus agent.
  */
-void memBusAgentStart();
+void MemBusAgentStart();
 
 
 /**
@@ -329,7 +329,7 @@ void memBusAgentStart();
  * 
  * @brief Stop Memory Bus agent.
  */
-void memBusAgentStop();
+void MemBusAgentStop();
 
 
 /**
@@ -339,7 +339,7 @@ void memBusAgentStop();
  * @param address Address to write into (Must be 4 bytes aligned).
  * @param data Data to be written.
  */
-void memBusAgentWrite32(int address, uint32_t data);
+void MemBusAgentWrite32(int address, uint32_t data);
 
 
 /**
@@ -349,7 +349,7 @@ void memBusAgentWrite32(int address, uint32_t data);
  * @param address Address to write into (Must be 2 bytes aligned).
  * @param data Data to be written.
  */
-void memBusAgentWrite16(int address, uint16_t data);
+void MemBusAgentWrite16(int address, uint16_t data);
 
 
 /**
@@ -359,7 +359,7 @@ void memBusAgentWrite16(int address, uint16_t data);
  * @param address Address to write into.
  * @param data Data to be written.
  */
-void memBusAgentWrite8(int address, uint8_t data);
+void MemBusAgentWrite8(int address, uint8_t data);
 
 
 /**
@@ -369,7 +369,7 @@ void memBusAgentWrite8(int address, uint8_t data);
  * @param address Address to read from (Must be 4 bytes aligned).
  * @return Data read by Memory bus agent.
  */
-uint32_t memBusAgentRead32(int address);
+uint32_t MemBusAgentRead32(int address);
 
 
 /**
@@ -379,7 +379,7 @@ uint32_t memBusAgentRead32(int address);
  * @param address Address to read from (Must be 2 bytes aligned).
  * @return Data read by Memory bus agent.
  */
-uint16_t memBusAgentRead16(int address);
+uint16_t MemBusAgentRead16(int address);
 
 
 /**
@@ -389,7 +389,7 @@ uint16_t memBusAgentRead16(int address);
  * @param address Address to read from.
  * @return Data read by Memory bus agent.
  */
-uint8_t memBusAgentRead8(int address);
+uint8_t MemBusAgentRead8(int address);
 
 
 /**
@@ -399,7 +399,7 @@ uint8_t memBusAgentRead8(int address);
  *        X on data signals everywhere apart from setup + hold window from
  *        rising edge!
  */
-void memBusAgentXModeStart();
+void MemBusAgentXModeStart();
 
 
 /**
@@ -409,7 +409,7 @@ void memBusAgentXModeStart();
  *        X on data signals everywhere apart from setup + hold window from
  *        rising edge!
  */
-void memBusAgentXModeStop();
+void MemBusAgentXModeStop();
 
 
 /**
@@ -431,7 +431,7 @@ void memBusAgentSetXModeSetup(std::chrono::nanoseconds setup);
  * 
  * Hold time must be less than half of Clock of Memory Bus agent!
  */
-void memBusAgentSetXModeHold(std::chrono::nanoseconds hold);
+void MemBusAgentSetXModeHold(std::chrono::nanoseconds hold);
 
 
 /**
@@ -444,7 +444,7 @@ void memBusAgentSetXModeHold(std::chrono::nanoseconds hold);
  * on input clock of Memory Bus agent! This is required to properly calculate
  * setup and hold constraints by Memory bus agent.
  */
-void memBusAgentSetPeriod(std::chrono::nanoseconds period);
+void MemBusAgentSetPeriod(std::chrono::nanoseconds period);
 
 
 /**
@@ -456,7 +456,7 @@ void memBusAgentSetPeriod(std::chrono::nanoseconds period);
  * Memory bus agent samples data output with output delay from rising edge
  * of clock in case of read access.
  */
-void memBusAgentSetOutputDelay(std::chrono::nanoseconds delay);
+void MemBusAgentSetOutputDelay(std::chrono::nanoseconds delay);
 
 
 /******************************************************************************
@@ -472,7 +472,7 @@ void memBusAgentSetOutputDelay(std::chrono::nanoseconds delay);
  * 
  * When driver is enabled, it drives items from Driver FIFO.
  */
-void canAgentDriverStart();
+void CanAgentDriverStart();
 
 
 /**
@@ -482,7 +482,7 @@ void canAgentDriverStart();
  * 
  * When driver is disabled, it drives only recessive value.
  */
-void canAgentDriverStop();
+void CanAgentDriverStop();
 
 
 /**
@@ -490,7 +490,7 @@ void canAgentDriverStop();
  * 
  * @brief Flush CAN agent driver FIFO.
  */
-void canAgentDriverFlush();
+void CanAgentDriverFlush();
 
 
 /**
@@ -499,7 +499,7 @@ void canAgentDriverFlush();
  * @brief Check if CAN agent driver is driving some item from driver FIFO.
  * @return true when driving is in progress, false otherwise
  */
-bool canAgentDriverGetProgress();
+bool CanAgentDriverGetProgress();
 
 
 /**
@@ -508,31 +508,31 @@ bool canAgentDriverGetProgress();
  * @brief Get currently driven value by CAN agent driver.
  * @return Value driven by CAN agent driver.
  */
-char canAgentDriverGetDrivenVal();
+char CanAgentDriverGetDrivenVal();
 
 
 /**
  * @ingroup canAgent
  * 
  * @brief Insert item to CAN agent driver FIFO.
- * @param drivenValue Logic value corresponding to this item. (This value is
+ * @param driven_value Logic value corresponding to this item. (This value is
  *                    driven on "can_rx").
  * @param duration Time duration for which this value is driven.
  */
-void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration);
+void CanAgentDriverPushItem(char driven_value, std::chrono::nanoseconds duration);
 
 
 /**
  * @ingroup canAgent
  * 
  * @brief Insert item to CAN agent driver FIFO.
- * @param drivenValue Logic value corresponding to this item. (This value is
+ * @param driven_value Logic value corresponding to this item. (This value is
  *                    driven on "can_rx").
  * @param duration Time duration for which this value is driven.
  * @param msg Message which will be printed in simulator when CAN Agent driver
  *            starts driving this value.
  */
-void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg);
+void CanAgentDriverPushItem(char driven_value, std::chrono::nanoseconds duration, std::string msg);
 
 
 /**
@@ -544,7 +544,7 @@ void canAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration,
  * Driver Wait timeout is upper threshold for waiting on end of CAN Agent
  * driving from Driver FIFO.
  */
-void canAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout);
+void CanAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout);
 
 
 /**
@@ -553,7 +553,7 @@ void canAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout);
  * @brief Wait till CAN Agent driver ends. Wait time is limited by wait
  *        timeout.
  */
-void canAgentDriverWaitFinish();
+void CanAgentDriverWaitFinish();
 
 
 /**
@@ -562,12 +562,12 @@ void canAgentDriverWaitFinish();
  * @brief Insert single item to CAN Agent driver FIFO and wait until this item
  *        is driven. If other items are in CAN Agent driver FIFO, these will be
  *        driven first.
- * @param drivenValue Value to be driven on "can_rx".
+ * @param driven_value Value to be driven on "can_rx".
  * @param duration Time for which this value will be driven.
  * @param msg Message to be printed in simulator log when driving od this item
  *            starts!
  */
-void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg);
+void CanAgentDriveSingleItem(char driven_value, std::chrono::nanoseconds duration, std::string msg);
 
 
 /**
@@ -576,10 +576,10 @@ void canAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration
  * @brief Insert single item to CAN Agent driver FIFO and wait until this item
  *        is driven. If other items are in CAN Agent driver FIFO, these will be
  *        driven first.
- * @param drivenValue Value to be driven on "can_rx".
+ * @param driven_value Value to be driven on "can_rx".
  * @param duration Time for which this value will be driven.
  */
-void canAgentDriveSingleItem(char vdrivenValuealue, std::chrono::nanoseconds duration);
+void CanAgentDriveSingleItem(char driven_value, std::chrono::nanoseconds duration);
 
 
 /**
@@ -587,7 +587,7 @@ void canAgentDriveSingleItem(char vdrivenValuealue, std::chrono::nanoseconds dur
  * 
  * @brief Drive all items already present in CAN Agent driver FIFO.
  */
-void canAgentDriveAllItems();
+void CanAgentDriveAllItems();
 
 
 /**
@@ -595,7 +595,7 @@ void canAgentDriveAllItems();
  * 
  * @brief Configure waiting of driver for start of monitor
  */
-void canAgentSetWaitForMonitor(bool waitForMonitor);
+void CanAgentSetWaitForMonitor(bool wait_for_monitor);
 
 /**
  * @ingroup canAgent
@@ -603,7 +603,7 @@ void canAgentSetWaitForMonitor(bool waitForMonitor);
  * @brief Start monitor. When monitor is running, it monitors items from CAN
  *        agent monitor FIFO on "can_tx".
  */
-void canAgentMonitorStart();
+void CanAgentMonitorStart();
 
 
 /**
@@ -612,7 +612,7 @@ void canAgentMonitorStart();
  * @brief Stop monitor. When monitor is stopped it does not monitor any values
  *        on "can_tx".
  */
-void canAgentMonitorStop();
+void CanAgentMonitorStop();
 
 
 /**
@@ -620,7 +620,7 @@ void canAgentMonitorStop();
  * 
  * @brief Flush Monitor FIFO.
  */
-void canAgentMonitorFlush();
+void CanAgentMonitorFlush();
 
 
 /**
@@ -629,7 +629,7 @@ void canAgentMonitorFlush();
  * @brief Get Monitor state.
  * @return Current monitor state.
  */
-CanAgentMonitorState canAgentMonitorGetState();
+CanAgentMonitorState CanAgentMonitorGetState();
 
 
 /**
@@ -638,31 +638,31 @@ CanAgentMonitorState canAgentMonitorGetState();
  * @brief Currently monitored value on "can_tx".
  * @return Value of currently monitored item.
  */
-char canAgentMonitorGetMonitoredVal();
+char CanAgentMonitorGetMonitoredVal();
 
 
 /**
  * @ingroup canAgent
  * 
  * @brief Insert Item to Monitor FIFO.
- * @param monitorValue Value to be monitored
- * @param duration Time for which monitorValue is monitored.
- * @param sampleRate Sample rate used to check this item during monitoring.
+ * @param monitor_value Value to be monitored
+ * @param duration Time for which monitor_value is monitored.
+ * @param sample_rate Sample rate used to check this item during monitoring.
  */
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
-                             std::chrono::nanoseconds sampleRate);
+void CanAgentMonitorPushItem(char monitor_value, std::chrono::nanoseconds duration,
+                             std::chrono::nanoseconds sample_rate);
 
 
 /**
  * @ingroup canAgent
  * 
  * @brief Insert Item to Monitor FIFO.
- * @param monitorValue Value to be monitored
- * @param duration Time for which monitorValue is monitored.
+ * @param monitor_value Value to be monitored
+ * @param duration Time for which monitor_value is monitored.
  * @param msg Message to be printed when monitoring of this item starts.
  */
-void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duration,
-                             std::chrono::nanoseconds sampleRate, std::string msg);
+void CanAgentMonitorPushItem(char monitor_value, std::chrono::nanoseconds duration,
+                             std::chrono::nanoseconds sample_rate, std::string msg);
 
 
 /**
@@ -674,7 +674,7 @@ void canAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
  * Monitor Wait timeout is upper threshold for waiting on end of CAN Agent
  * monitoring from Monitor FIFO.
  */
-void canAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout);
+void CanAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout);
 
 
 /**
@@ -686,7 +686,7 @@ void canAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout);
  * Monitor Wait timeout is upper threshold for waiting on end of CAN Agent
  * monitoring from Monitor FIFO.
  */
-void canAgentMonitorWaitFinish();
+void CanAgentMonitorWaitFinish();
 
 
 /**
@@ -698,15 +698,15 @@ void canAgentMonitorWaitFinish();
  * Monitor Wait timeout is upper threshold for waiting on end of CAN Agent
  * monitoring from Monitor FIFO.
  */
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
-                               std::chrono::nanoseconds sampleRate);
+void CanAgentMonitorSingleItem(char monitor_value, std::chrono::nanoseconds duration,
+                               std::chrono::nanoseconds sample_rate);
 
 
 /**
  * @ingroup canAgent
  * 
  * @brief Monitor single Item by CAN Agent.
- * @param monitorValue Value to be monitored on "can_tx"
+ * @param monitor_value Value to be monitored on "can_tx"
  * @param duration Time for which to monitor this value.
  * @param msg Message to be printed in simulator log when monitoring of this
  *            value starts.
@@ -714,8 +714,8 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
  * Monitor Wait timeout is upper threshold for waiting on end of CAN Agent
  * monitoring from Monitor FIFO.
  */
-void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds duration,
-                               std::chrono::nanoseconds sampleRate, std::string msg);
+void CanAgentMonitorSingleItem(char monitor_value, std::chrono::nanoseconds duration,
+                               std::chrono::nanoseconds sample_rate, std::string msg);
 
 
 /**
@@ -723,7 +723,7 @@ void canAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
  * 
  * @brief Monitor all items from Monitor FIFO.
  */
-void canAgentMonitorAllItems();
+void CanAgentMonitorAllItems();
 
 
 /**
@@ -732,7 +732,7 @@ void canAgentMonitorAllItems();
  * @brief Set trigger for Monitor.
  * @param trigger Trigger type to be configured.
  */
-void canAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger);
+void CanAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger);
 
 
 /**
@@ -741,7 +741,7 @@ void canAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger);
  * @brief Get trigger for Monitor.
  * @return Monitor Trigger type
  */
-CanAgentMonitorTrigger canAgentMonitorGetTrigger();
+CanAgentMonitorTrigger CanAgentMonitorGetTrigger();
 
 
 /**
@@ -750,7 +750,7 @@ CanAgentMonitorTrigger canAgentMonitorGetTrigger();
  * @brief Perform check by a monitor whether result of previous monitoring
  *        was succesfull. Print result to simulator log.
  */
-void canAgentCheckResult();
+void CanAgentCheckResult();
 
 
 /**
@@ -759,9 +759,9 @@ void canAgentCheckResult();
  * @brief Set Monitor input delay. Monitor will apply additional input delay
  *        after trigger before monitoring first item! This delay corresponds
  *        to DUT input delay.
- * @param inputDelay Input delay to set
+ * @param input_delay Input delay to set
  */
-void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay);
+void CanAgentSetMonitorInputDelay(std::chrono::nanoseconds input_delay);
 
 
 /**
@@ -772,12 +772,8 @@ void canAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay);
  *        insert error frame to driver sequence.
  * @param enable Whether 
  */
-void canAgentConfigureTxToRxFeedback(bool enable);
+void CanAgentConfigureTxToRxFeedback(bool enable);
 
-
-
-#define VPI_CAN_AGNT_TX_RX_FEEDBACK_ENABLE         (char*)"00011011"
-#define VPI_CAN_AGNT_TX_RX_FEEDBACK_DISABLE        (char*)"00011100"
 
 
 
@@ -793,7 +789,7 @@ void canAgentConfigureTxToRxFeedback(bool enable);
  * @brief Signal to TB in simulator that test has ended.
  * @param success Test result. This will be passed to VUnit.
  */
-void testControllerAgentEndTest(bool success);
+void TestControllerAgentEndTest(bool success);
 
 
 /**
@@ -802,7 +798,7 @@ void testControllerAgentEndTest(bool success);
  * @brief 
  * @return
  */
-std::chrono::nanoseconds testControllerAgentGetCfgDutClockPeriod();
+std::chrono::nanoseconds TestControllerAgentGetCfgDutClockPeriod();
 
 
 /**
@@ -811,16 +807,16 @@ std::chrono::nanoseconds testControllerAgentGetCfgDutClockPeriod();
  * @brief 
  * @return
  */
-int testControllerAgentGetBitTimingElement(std::string elemName);
+int TestControllerAgentGetBitTimingElement(std::string elem_name);
 
 
 /**
  * @ingroup testControllerAgent
  * 
- * @brief 
- * @return
+ * @brief Gets seed used by digital simulator for randomization!
+ * @returns Seed within VHDL TB
  */
-int testControllerAgentGetSeed();
+int TestControllerAgentGetSeed();
 
 
 #endif
