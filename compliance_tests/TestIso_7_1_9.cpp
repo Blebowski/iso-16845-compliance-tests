@@ -64,173 +64,80 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_1_9 : public test_lib::TestBase
 {
     public:
 
-        Frame *goldenFrame2;
-        BitFrame *driverBitFrame2;
-        BitFrame *monitorBitFrame2;
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            num_elem_tests = 2;
+            for (int i = 0; i < num_elem_tests; i++)
+            {
+                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+            }
+        }
 
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Common part of test
-             ****************************************************************/
-            TestMessage("Common part of test!");
-
-            for (int i = 0; i < 2; i++)
+            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                TestBigMessage("\n\nIteration nr: %d\n", i + 1);
+                PrintVariantInfo(test_variants[test_variant]);
 
-                // Generate 2 consecutivve frames
-                // (Set CAN 2.0, randomize other)
-                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame 1:");
-                golden_frame->Print();
-
-                FrameFlags frameFlags2 = FrameFlags(FrameType::Can2_0);
-                goldenFrame2 = new Frame(frameFlags2);
-                goldenFrame2->Randomize();
-                TestBigMessage("Test frame 2:");
-                goldenFrame2->Print();
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                driverBitFrame2 = new BitFrame(*goldenFrame2,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitorBitFrame2 = new BitFrame(*goldenFrame2,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                // In first iteration, Intermission lasts only 2 bits ->
-                // Remove last bit of intermission!
-                if (i == 0)
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    printf("Removing bit!\n");
-                    driver_bit_frame->RemoveBit(driver_bit_frame->GetBitOf(2, BitType::Intermission));
-                    monitor_bit_frame->RemoveBit(monitor_bit_frame->GetBitOf(2, BitType::Intermission));
-                    printf("Removed bit!\n");
-                }
+                    PrintElemTestInfo(elem_test);
 
-                // Monitor frames as if received, driver frame must have ACK too!
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-                monitorBitFrame2->TurnReceivedFrame();
-                driverBitFrame2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
 
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                PushFramesToLowerTester(*driverBitFrame2, *monitorBitFrame2);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
+                    frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
+                    RandomizeAndPrint(golden_frm_2.get());
 
-                // Read received frames from DUT and compare with sent frames
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                Frame readFrame2 = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false ||
-                    CompareFrames(*goldenFrame2, readFrame2) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
 
-                DeleteCommonObjects();
-
-                if (test_result == false)
-                    return false;
-            }
-
-            /*****************************************************************
-             * CAN FD Enabled part of test!
-             ****************************************************************/
-            if (dut_can_version == CanVersion::CanFdEnabled)
-            {
-                TestMessage("CAN FD Enabled part of test!");
-                for (int i = 0; i < 2; i++)
-                {
-                    TestBigMessage("\n\nIteration nr: %d\n", i + 1);
-
-                    // Generate 2 consecutivve frames
-                    // (Set CAN FD, randomize other)
-                    FrameFlags frameFlags = FrameFlags(FrameType::CanFd);
-                    golden_frame = new Frame(frameFlags);
-                    golden_frame->Randomize();
-                    TestBigMessage("Test frame 1:");
-                    golden_frame->Print();
-
-                    FrameFlags frameFlags2 = FrameFlags(FrameType::CanFd);
-                    goldenFrame2 = new Frame(frameFlags2);
-                    goldenFrame2->Randomize();
-                    TestBigMessage("Test frame 2:");
-                    goldenFrame2->Print();
-
-                    // Convert to Bit frames
-                    driver_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    monitor_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    driverBitFrame2 = new BitFrame(*goldenFrame2,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    monitorBitFrame2 = new BitFrame(*goldenFrame2,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-
-                    // In first iteration, Intermission lasts only 2 bits ->
-                    // Remove last bit of intermission!
-                    if (i == 0)
+                    /**********************************************************************************
+                     * Modify test frames:
+                     *   1. In first Elementary test, Intermission lasts only 2 bits ->
+                     *      Remove last bit of intermission!
+                     *   2. Monitor frames as if received, driver frame must have ACK too!
+                     **********************************************************************************/
+                    if (elem_test.index == 1)
                     {
-                        printf("Removing bit!\n");
-                        driver_bit_frame->RemoveBit(driver_bit_frame->GetBitOf(2, BitType::Intermission));
-                        monitor_bit_frame->RemoveBit(monitor_bit_frame->GetBitOf(2, BitType::Intermission));
-                        printf("Removed bit!\n");
+                        driver_bit_frm->RemoveBit(
+                            driver_bit_frm->GetBitOf(2, BitType::Intermission));
+                        monitor_bit_frm->RemoveBit(
+                            monitor_bit_frm->GetBitOf(2, BitType::Intermission));
                     }
 
-                    // Monitor frames as if received, driver frame must have ACK too!
-                    monitor_bit_frame->TurnReceivedFrame();
-                    driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-                    monitorBitFrame2->TurnReceivedFrame();
-                    driverBitFrame2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                    monitor_bit_frm->TurnReceivedFrame();
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    // Push frames to Lower tester, run and check!
-                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                    PushFramesToLowerTester(*driverBitFrame2, *monitorBitFrame2);
+                    monitor_bit_frm_2->TurnReceivedFrame();
+                    driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+                    /********************************************************************************** 
+                     * Execute test
+                     *********************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
                     RunLowerTester(true, true);
                     CheckLowerTesterResult();
 
-                    // Read received frames from DUT and compare with sent frames
-                    Frame readFrame = this->dut_ifc->ReadFrame();
-                    Frame readFrame2 = this->dut_ifc->ReadFrame();
-                    if (CompareFrames(*golden_frame, readFrame) == false ||
-                        CompareFrames(*goldenFrame2, readFrame2) == false)
-                    {
-                        test_result = false;
-                        TestControllerAgentEndTest(test_result);
-                    }
-
-                    delete golden_frame;
-                    delete driver_bit_frame;
-                    delete monitor_bit_frame;
-
-                    if (test_result == false)
-                        return false;
+                    CheckRxFrame(*golden_frm);
+                    CheckRxFrame(*golden_frm_2);
                 }
             }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };

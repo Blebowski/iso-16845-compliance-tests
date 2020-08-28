@@ -138,11 +138,12 @@ void test_lib::TestBase::SetupTestEnvironment()
 {
     TestBigMessage("Running base test...");
     TestBase::Run();
+    TestMessage("Done");
 
     TestBigMessage("Running test specific config...");
     ConfigureTest();
+    TestMessage("Done");
 
-    TestBigMessage("Test information:");
     PrintTestInfo();
 
     TestBigMessage("Starting test execution: ", test_name);
@@ -188,6 +189,21 @@ void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
         }
         elem_tests.push_back(std::vector<ElementaryTest>());
         break;
+
+    case VariantMatchingType::Common:
+        test_variants.push_back(TestVariant::Common);
+        elem_tests.push_back(std::vector<ElementaryTest>());
+        break;
+
+    case VariantMatchingType::CommonAndFd:
+        test_variants.push_back(TestVariant::Common);
+        elem_tests.push_back(std::vector<ElementaryTest>());
+
+        if (dut_can_version == CanVersion::CanFdEnabled)
+        {
+            test_variants.push_back(TestVariant::CanFdEnabled);
+            elem_tests.push_back(std::vector<ElementaryTest>());
+        }
 
     default:
         break;
@@ -315,8 +331,9 @@ void test_lib::TestBase::CheckLowerTesterResult()
 void test_lib::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*'));
-    TestMessage("Running C++ test: ", test_name);
-    // TODO: Show elementary tests and variants!
+    TestMessage("Test Name: ", test_name);
+    TestMessage("Number of variants: ", elem_tests.size());
+    TestMessage("Number of elementary tests (per-variant):", num_elem_tests);
 }
 
 void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
@@ -324,11 +341,33 @@ void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
     TestBigMessage("Elementary Test: ", elem_test.msg);
 }
 
-void test_lib::TestBase::RandomizeAndPrint(Frame &frame)
+void test_lib::TestBase::PrintVariantInfo(TestVariant test_variant)
 {
-    frame.Randomize();
-    TestBigMessage("Test frame:");
-    frame.Print();
+    switch (test_variant)
+    {
+        case TestVariant::Can_2_0:
+            TestBigMessage("Test variant: CAN 2.0!");
+            break;
+        case TestVariant::CanFdEnabled:
+            TestBigMessage("Test variant: CAN FD Enabled!");
+            break;
+        case TestVariant::CanFdTolerant:
+            TestBigMessage("Test variant: CAN FD Tolerant");
+            break;
+        case TestVariant::Common:
+            TestBigMessage("Test variant: Common");
+            break;
+        default:
+            assert(("Unsupported variant!", false));
+            break;
+        }
+}
+
+void test_lib::TestBase::RandomizeAndPrint(Frame *frame)
+{
+    frame->Randomize();
+    TestMessage("Test frame:");
+    frame->Print();
 }
 
 void test_lib::TestBase::DeleteCommonObjects()

@@ -50,11 +50,25 @@ namespace test_lib
     enum class VariantMatchingType
     {
         /* 
-         * CAN 2.0 -> CAN 2.0
-         * CAN FD Tolerant -> CAN FD Tolerant
-         * CAN FD Enabled -> CAN FD Enabled
+         * CAN 2.0          -> CAN 2.0
+         * CAN FD Tolerant  -> CAN FD Tolerant
+         * CAN FD Enabled   -> CAN FD Enabled
          */
-        OneToOne
+        OneToOne,
+
+        /*
+         * Any DUT version to single common variant.
+         */
+        Common,
+
+        /*
+         * CAN 2.0         -> Common variant only
+         * CAN FD Tolerant -> Common variant only
+         * CAN FD Enabled  -> Common variant (with FDF = 0) + FD variant (FDF = 1)
+         * 
+         * This is the most frequently used mapping between DUT version and variants!
+         */
+        CommonAndFd
     };
 
     enum class TestResult : int {

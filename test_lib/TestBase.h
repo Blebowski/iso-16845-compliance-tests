@@ -117,6 +117,7 @@ class test_lib::TestBase
         /* Metadata and flags */
         FrameType frame_type;
         std::unique_ptr<FrameFlags> frame_flags;
+        std::unique_ptr<FrameFlags> frame_flags_2;
 
         /* Frames used during test case. */
         std::unique_ptr<Frame> golden_frm;
@@ -243,9 +244,14 @@ class test_lib::TestBase
         void PrintElemTestInfo(ElementaryTest elem_test);
 
         /**
+         * 
+         */
+        void PrintVariantInfo(TestVariant test_variant);
+
+        /**
          * Randomizes and prints 
          */
-        void RandomizeAndPrint(Frame &frame);
+        void RandomizeAndPrint(Frame *frame);
 
         /**
          * Deletes: golden frame, driver bit frame and monitor bit frame

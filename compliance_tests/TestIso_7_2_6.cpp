@@ -68,114 +68,95 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_2_6: public test_lib::TestBase
 {
     public:
 
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            num_elem_tests = 2;
+            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            elem_tests[1].push_back(ElementaryTest(2, FrameType::CanFd));
+        }
+
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Common part of test (i=0) / CAN FD enabled part of test (i=1)
-             ****************************************************************/
-            
-            int iterCnt;
-            int crcCnt;
-            uint8_t dlcVals[3];
-            FrameType dataRate;
-
-            // Generate random DLCs manually to meet constraints for CRCs
-            dlcVals[0] = rand() % 9;
-            if (rand() % 2 == 1)
-                dlcVals[1] = 0x9;
-            else
-                dlcVals[1] = 0xA;
-            dlcVals[2] = (rand() % 5) + 11;
-
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    // Generate CAN frame (CAN 2.0, randomize others)
-                    TestMessage("Common part of test!");
-                    dataRate = FrameType::Can2_0;
-                    crcCnt = 1;
-                } else {
-                    // Generate CAN frame (CAN FD, randomize others)
-                    TestMessage("CAN FD enabled part of test!");
-                    dataRate = FrameType::CanFd;
-                    crcCnt = 3;
-                }
+                    PrintElemTestInfo(elem_test);
 
-                for (int j = 0; j < crcCnt; j++)
-                {
+                    uint8_t dlc;
+                    if (test_variant == 0)
+                    {
+                        dlc = rand() % 9;
+                    } else if (elem_test.index == 1)
+                    {
+                        if (rand() % 2)
+                            dlc = 0x9;
+                        else
+                            dlc = 0xA;
+                    } else
+                    {
+                        dlc = (rand() % 5) + 11; 
+                    }
 
-                    FrameFlags frameFlags = FrameFlags(dataRate);
-                    golden_frame = new Frame(frameFlags, dlcVals[j]);
-                    golden_frame->Randomize();
-                    TestBigMessage("Test frame:");
-                    golden_frame->Print();
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
+                    RandomizeAndPrint(golden_frm.get());
 
-                    // Convert to Bit frames
-                    driver_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    monitor_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
                 
-                    /**
+                    /******************************************************************************
                      * Modify test frames:
                      *   1. Monitor frame as if received.
                      *   2. Force random CRC bit to its opposite value
                      *   3. Force CRC Delimiter to dominant.
                      *   4. Insert Error frame to position of ACK!
-                     */
-                    monitor_bit_frame->TurnReceivedFrame();
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
 
-                    int crcIndex;
-                    if (j == 0)
-                        crcIndex = rand() % 15;
-                    else if (j == 1)
-                        crcIndex = rand() % 17;
+                    int crc_index;
+                    if (test_variants[test_variant] == TestVariant::Common)
+                        crc_index = rand() % 15;
+                    else if (elem_test.index == 1)
+                        crc_index = rand() % 17;
                     else
-                        crcIndex = rand() % 21;
+                        crc_index = rand() % 21;
 
-                    TestMessage("Forcing CRC bit nr: %d", crcIndex);
-                    printf("Forcing CRC bit nr: %d\n", crcIndex);
-                    driver_bit_frame->GetBitOfNoStuffBits(crcIndex, BitType::Crc)->FlipBitValue();
+                    TestMessage("Forcing CRC bit nr: %d", crc_index);
+                    driver_bit_frm->GetBitOfNoStuffBits(crc_index, BitType::Crc)->FlipBitValue();
 
-                    // TODO: Here we should re-stuff CRC because we might have added/removed
-                    //       Stuff bit in CRC and causes length of model CRC and to be different!
-                    driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
+                    /* 
+                     * TODO: Here we should re-stuff CRC because we might have added/removed
+                     *       Stuff bit in CRC and causes length of model CRC and to be different!
+                     */
+                    driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
 
-                    monitor_bit_frame->InsertActiveErrorFrame(
-                        monitor_bit_frame->GetBitOf(0, BitType::Ack));
-                    driver_bit_frame->InsertActiveErrorFrame(
-                        driver_bit_frame->GetBitOf(0, BitType::Ack));
+                    monitor_bit_frm->InsertActiveErrorFrame(
+                        monitor_bit_frm->GetBitOf(0, BitType::Ack));
+                    driver_bit_frm->InsertActiveErrorFrame(
+                        driver_bit_frm->GetBitOf(0, BitType::Ack));
 
-                    // Push frames to Lower tester, run and check!
-                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    /******************************************************************************* 
+                     * Execute test
+                     ******************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
                     RunLowerTester(true, true);
                     CheckLowerTesterResult();
-
-                    DeleteCommonObjects();
                 }
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };

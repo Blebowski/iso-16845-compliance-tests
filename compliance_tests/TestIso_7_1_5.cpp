@@ -128,12 +128,12 @@ class TestIso_7_1_5 : public test_lib::TestBase
                 frame_flags = std::make_unique<FrameFlags>(
                                 FrameType::CanFd, IdentifierType::Extended, RtrFlag::DataFrame);
                 golden_frm = std::make_unique<Frame>(*frame_flags);
-                RandomizeAndPrint(*golden_frm);
+                RandomizeAndPrint(golden_frm.get());
 
                 driver_bit_frm = ConvertBitFrame(*golden_frm);
                 monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                /**************************************************************
+                /**********************************************************************************
                  * Modify test frames:
                  *   1. Force bits like so (both driver and monitor):
                  *          TEST    SRR     RRS
@@ -141,9 +141,9 @@ class TestIso_7_1_5 : public test_lib::TestBase
                  *          #2      0       1
                  *          #3      0       0
                  *   2. Update frames (needed since CRC might have changed)
-                 *   3. Turned monitored frame received, insert ACK to driver
-                 *      (TX to RX feedback disabled)
-                 **************************************************************/
+                 *   3. Turned monitored frame received, insert ACK to driver (TX to RX feedback
+                 *      disabled)
+                 **********************************************************************************/
 
                 switch (elem_test.index)
                 {
@@ -173,9 +173,9 @@ class TestIso_7_1_5 : public test_lib::TestBase
                 monitor_bit_frm->TurnReceivedFrame();
                 driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                /************************************************************************* 
+                /********************************************************************************** 
                  * Execute test
-                 *************************************************************************/
+                 *********************************************************************************/
                 PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
                 RunLowerTester(true, true);
                 CheckLowerTesterResult();

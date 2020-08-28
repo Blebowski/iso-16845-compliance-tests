@@ -40,6 +40,7 @@ class test_lib::ElementaryTest
         ElementaryTest(int index);
         ElementaryTest(int index, std::string msg);
         ElementaryTest(int index, std::string msg, FrameType frame_type);
+        ElementaryTest(int index, FrameType frame_type);
 
         /* Index of the elementary test (starting from 1. This is the same
          * number as is after # in ISO116845!)

@@ -74,6 +74,8 @@ can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc)
 can::Frame::Frame(FrameFlags frameFlags)
 {
     frame_flags_ = frameFlags;
+    dlc_ = 0;
+    identifier_ = 0;
 
     randomize_dlc = true;
     randomize_identifier = true;
@@ -86,6 +88,7 @@ can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data)
     frame_flags_ = frameFlags;
     set_dlc(dlc);
     CopyData(data, data_lenght_);
+    identifier_ = 0;
 
     randomize_dlc = false;
     randomize_identifier = true;
@@ -94,10 +97,10 @@ can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data)
 
 void can::Frame::Randomize()
 {
-    // First randomize flags, this gives cosntraints for further randomization
+    /* First randomize flags, this gives cosntraints for further randomization */
     frame_flags_.Randomize();
 
-    // Due to RTR Flag , Data length might have changed! Update it!
+    /*  Due to RTR Flag , Data length might have changed! Update it! */
     set_dlc(dlc_);
 
     if (randomize_identifier)
