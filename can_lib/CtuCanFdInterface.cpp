@@ -394,7 +394,7 @@ void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
         break;
 
     case FaultConfinementState::ErrorPassive:
-        ctr_pres.s.ctpv = 130;
+        ctr_pres.s.ctpv = 150;
         break;
 
     case FaultConfinementState::BusOff:
