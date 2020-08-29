@@ -156,6 +156,14 @@ class can::BitFrame : public Frame {
         bool InsertActiveErrorFrame(int index);
 
         /**
+         * Inserts Active Error frame to specific bit within frame field of a frame.
+         * @param index index of a bit (within frame field) at which Error frame shall start.
+         * @param bit_type Type of bit (Frame field type)
+         * @returns true if succesfull, false otherwise.
+         */
+        bool InsertActiveErrorFrame(int index, BitType bit_type);
+
+        /**
          * Inserts Active Error frame to a frame. Emulates as if CAN controller detected error.
          * @param can_bit pointer to bit from which error frame shall be inserted.
          *               (This bit is effectively erased from frame).
@@ -180,6 +188,14 @@ class can::BitFrame : public Frame {
         bool InsertPassiveErrorFrame(Bit *can_bit);
 
         /**
+         * Inserts Passive Error frame to specific bit within frame field of a frame.
+         * @param index index of a bit (within frame field) at which Error frame shall start.
+         * @param bit_type Type of bit (Frame field type)
+         * @returns true if succesfull, false otherwise.
+         */
+        bool InsertPassiveErrorFrame(int index, BitType bit_type);
+
+        /**
          * Inserts Overload frame to a frame. Emulates as if CAN controller detected overload
          * condition.
          * @param index index of a bit from which Overload frame shall be inserted.
@@ -196,6 +212,14 @@ class can::BitFrame : public Frame {
          * @returns true if succesfull, false otherwise.
          */
         bool InsertOverloadFrame(Bit *can_bit);
+
+        /**
+         * Inserts Overload frame to specific bit within frame field of a frame.
+         * @param index index of a bit (within frame field) at which Overload frame shall start.
+         * @param bit_type Type of bit (Frame field type)
+         * @returns true if succesfull, false otherwise.
+         */
+        bool InsertOverloadFrame(int index, BitType bit_type);
 
         /**
          * Emulates node loosing arbitration by a CAN node. All bits after 'index' bit become

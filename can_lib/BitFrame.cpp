@@ -805,6 +805,10 @@ bool can::BitFrame::InsertActiveErrorFrame(int index)
     return true;
 }
 
+bool can::BitFrame::InsertActiveErrorFrame(int index, BitType bit_type)
+{
+    return InsertActiveErrorFrame(GetBitOf(index, bit_type));
+}
 
 bool can::BitFrame::InsertActiveErrorFrame(Bit *bit)
 {
@@ -830,6 +834,12 @@ bool can::BitFrame::InsertPassiveErrorFrame(int index)
 bool can::BitFrame::InsertPassiveErrorFrame(Bit *bit)
 {
     return InsertPassiveErrorFrame(GetBitIndex(bit));
+}
+
+
+bool can::BitFrame::InsertPassiveErrorFrame(int index, BitType bit_type)
+{
+    return InsertPassiveErrorFrame(GetBitOf(index, bit_type));
 }
 
 
@@ -865,6 +875,12 @@ bool can::BitFrame::InsertOverloadFrame(int index)
 bool can::BitFrame::InsertOverloadFrame(Bit *bit)
 {
     return InsertOverloadFrame(GetBitIndex(bit));
+}
+
+
+bool can::BitFrame::InsertOverloadFrame(int index, BitType bit_type)
+{
+    return InsertOverloadFrame(GetBitOf(index, bit_type));
 }
 
 
