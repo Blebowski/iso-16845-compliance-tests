@@ -122,6 +122,15 @@ class can::FrameFlags
         void RandomizeDisableAll();
 
         friend bool operator==(const FrameFlags &lhs, const FrameFlags rhs);
+
+    private:
+
+        /**
+         * Corrects frame flag combinations to valid values. E.g. CAN FD and RTR
+         * flags can't be set at once (CAN FD frames have no RTR flags). Similarly
+         * CAN 2.0 frames have no BRS flags or ESI Flags.
+         */
+        void CorrectFlags();
 };
 
 #endif

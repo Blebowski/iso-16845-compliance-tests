@@ -37,21 +37,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
     is_brs_ = is_brs;
     is_esi_ = is_esi;
 
-    if (is_fdf == FrameType::CanFd && is_rtr == RtrFlag::RtrFrame){
-        std::cerr << "Can't set RTR flag and FDF flag at once, RTR ignored!\n";
-        is_rtr = RtrFlag::DataFrame;
-    }
-
-    if (is_fdf == FrameType::Can2_0 && is_brs == BrsFlag::Shift){
-        std::cerr << "Can't set BRS flag when BRS flag is not set, BRS ignored!\n";
-        is_brs = BrsFlag::DontShift;
-    }
-
-    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
-        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
-        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
-    }
-
+    CorrectFlags();
     RandomizeDisableAll();
 };
 
@@ -63,11 +49,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
     is_ide_ = is_ide;
     is_rtr_ = is_rtr;
 
-    if (is_fdf == FrameType::CanFd && is_rtr == RtrFlag::RtrFrame){
-        std::cerr << "Can't set RTR flag and FDF flag at once, RTR ignored!\n";
-        is_rtr = RtrFlag::DataFrame;
-    }
-
+    CorrectFlags();
     RandomizeDisableAll();
     randomize_esi = true;
     randomize_brs = true;
@@ -90,6 +72,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr)
     is_fdf_ = is_fdf;
     is_rtr_ = is_rtr;
 
+    CorrectFlags();
     RandomizeEnableAll();
     randomize_fdf = false;
     randomize_rtr = false;
@@ -118,6 +101,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs)
     is_fdf_ = is_fdf;
     is_brs_ = is_brs;
 
+    CorrectFlags();
     RandomizeEnableAll();
     randomize_fdf = false;
     randomize_brs = false;
@@ -131,16 +115,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs,
     is_brs_ = is_brs;
     is_esi_ = is_esi;
 
-    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
-        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
-        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
-    }
-
-    if (is_fdf == FrameType::Can2_0 && is_brs == BrsFlag::Shift){
-        std::cerr << "Can't set BRS flag when BRS flag is not set, BRS ignored!\n";
-        is_brs = BrsFlag::DontShift;
-    }
-
+    CorrectFlags();
     RandomizeEnableAll();
     randomize_fdf = false;
     randomize_brs = false;
@@ -153,11 +128,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi)
     is_fdf_ = is_fdf;
     is_esi_ = is_esi;
 
-    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
-        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
-        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
-    }
-
+    CorrectFlags();
     RandomizeEnableAll();
     randomize_fdf = false;
     randomize_esi = false;
@@ -171,11 +142,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
     is_esi_ = is_esi;
     is_ide_ = is_ide;
 
-    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
-        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
-        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
-    }
-
+    CorrectFlags();
     RandomizeEnableAll();
     randomize_fdf = false;
     randomize_esi = false;
@@ -265,4 +232,23 @@ void can::FrameFlags::RandomizeDisableAll()
     randomize_rtr = false;
     randomize_brs = false;
     randomize_esi = false;
+}
+
+
+void can::FrameFlags::CorrectFlags()
+{
+    if (is_fdf_ == FrameType::CanFd && is_rtr_ == RtrFlag::RtrFrame){
+        std::cerr << "Can't set RTR flag and FDF flag at once, RTR ignored!\n";
+        is_rtr_ = RtrFlag::DataFrame;
+    }
+
+    if (is_fdf_ == FrameType::Can2_0 && is_brs_ == BrsFlag::Shift){
+        std::cerr << "Can't set BRS flag when BRS flag is not set, BRS ignored!\n";
+        is_brs_ = BrsFlag::DontShift;
+    }
+
+    if (is_fdf_ == FrameType::Can2_0 && is_esi_ == EsiFlag::ErrorPassive){
+        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
+        is_esi_ = EsiFlag::ErrorActive;
+    }
 }
