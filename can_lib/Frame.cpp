@@ -258,14 +258,14 @@ void can::Frame::Print()
         std::cout << "BRS: " << frame_flags_.is_brs_ << std::endl;
     else
         std::cout << "RTR: " << frame_flags_.is_rtr_ << std::endl;
-    std::cout << "DLC: " << std::hex << dlc_ << std::endl;
+    std::cout << "DLC: 0x" << std::hex << +dlc_ << std::endl;
     std::cout << "ESI: " << frame_flags_.is_esi_ << std::endl;
     std::cout << "Data field length: " << data_lenght_ << std::endl;
     std::cout << "Identifier: " << std::hex << identifier_ << std::endl;
 
     std::cout << "Data: ";
     for (int i = 0; i < data_lenght_; i++)
-        std::cout << "0x" << std::hex << data_[i] << " ";
+        std::cout << "0x" << std::hex << +data_[i] << " ";
     std::cout << std::endl;
 
     std::cout << std::string(80, '*') << std::endl;
