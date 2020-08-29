@@ -131,6 +131,16 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs,
     is_brs_ = is_brs;
     is_esi_ = is_esi;
 
+    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
+        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
+        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
+    }
+
+    if (is_fdf == FrameType::Can2_0 && is_brs == BrsFlag::Shift){
+        std::cerr << "Can't set BRS flag when BRS flag is not set, BRS ignored!\n";
+        is_brs = BrsFlag::DontShift;
+    }
+
     RandomizeEnableAll();
     randomize_fdf = false;
     randomize_brs = false;
@@ -142,6 +152,11 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi)
 {
     is_fdf_ = is_fdf;
     is_esi_ = is_esi;
+
+    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
+        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
+        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
+    }
 
     RandomizeEnableAll();
     randomize_fdf = false;
@@ -155,6 +170,11 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
     is_fdf_ = is_fdf;
     is_esi_ = is_esi;
     is_ide_ = is_ide;
+
+    if (is_fdf == FrameType::Can2_0 && is_esi == EsiFlag::ErrorPassive){
+        std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
+        is_esi_ = EsiFlag::ErrorActive; // Error active is assumed default
+    }
 
     RandomizeEnableAll();
     randomize_fdf = false;
