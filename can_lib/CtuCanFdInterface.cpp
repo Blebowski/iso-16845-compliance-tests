@@ -145,8 +145,11 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     union ctu_can_fd_frame_form_w frame_format_word;
     union ctu_can_fd_identifier_w identifier_word;
 
-    // Choose random TXT Buffer
-    int txt_buf_nr = (rand() % 4) + 1;
+    /* Iterate TXT Buffers */
+    static unsigned int txt_buf_nr;
+    txt_buf_nr = ((txt_buf_nr + 1) % 4) + 1;
+
+    assert(txt_buf_nr >= 1 && txt_buf_nr <= 4);
 
     // TXT Buffer address
     int txt_buffer_address;
