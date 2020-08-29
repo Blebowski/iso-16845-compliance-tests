@@ -62,60 +62,39 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_3_2 : public test_lib::TestBase
 {
     public:
 
-        Frame *goldenFrame2;
-        BitFrame *driverBitFrame2;
-        BitFrame *monitorBitFrame2;
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            num_elem_tests = 1;
+            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+        }
 
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Common part of test (i=0) / CAN FD enabled part of test (i=1)
-             ****************************************************************/
+            uint8_t data_byte = 0x80;
 
-            int iterCnt;
-            FrameType dataRate;
-            uint8_t dataByte = 0x80;
-
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
-                {
-                    TestMessage("Common part of test!");
-                    dataRate = FrameType::Can2_0;
-                } else {
-                    TestMessage("CAN FD enabled part of test!");
-                    dataRate = FrameType::CanFd;
-                }
+                PrintVariantInfo(test_variants[test_variant]);
 
-                // CAN 2.0 / CAN FD, DLC = 1, DATA Frame, Data byte = 0x01
-                // randomize Identifier 
-                FrameFlags frameFlags = FrameFlags(dataRate, RtrFlag::DataFrame);
-                golden_frame = new Frame(frameFlags, 1, &dataByte);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
+                frame_flags = std::make_unique<FrameFlags>(
+                        elem_tests[test_variant][0].frame_type, RtrFlag::DataFrame);
+                golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
+                RandomizeAndPrint(golden_frm.get());
 
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
+                driver_bit_frm = ConvertBitFrame(*golden_frm);
+                monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                /**
+                /**********************************************************************************
                  * Modify test frames:
                  *   1. Monitor frame as if received.
                  *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit!
@@ -123,62 +102,43 @@ class TestIso_7_3_2 : public test_lib::TestBase
                  *   3. Insert Active Error frame from 8-th bit of data frame!
                  *   4. Remove last bit of Intermission (after error frame)
                  *   5. Insert second frame directly after first frame.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(6, BitType::Data)->FlipBitValue();
+                 *********************************************************************************/
+                monitor_bit_frm->TurnReceivedFrame();
+                driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                monitor_bit_frame->InsertActiveErrorFrame(
-                    monitor_bit_frame->GetBitOf(7, BitType::Data));
-                driver_bit_frame->InsertActiveErrorFrame(
-                    driver_bit_frame->GetBitOf(7, BitType::Data));
+                monitor_bit_frm->InsertActiveErrorFrame(
+                    monitor_bit_frm->GetBitOf(7, BitType::Data));
+                driver_bit_frm->InsertActiveErrorFrame(
+                    driver_bit_frm->GetBitOf(7, BitType::Data));
 
-                driver_bit_frame->RemoveBit(driver_bit_frame->GetBitOf(2, BitType::Intermission));
-                monitor_bit_frame->RemoveBit(monitor_bit_frame->GetBitOf(2, BitType::Intermission));
+                driver_bit_frm->RemoveBit(driver_bit_frm->GetBitOf(2, BitType::Intermission));
+                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(2, BitType::Intermission));
 
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
+                driver_bit_frm->Print(true);
+                monitor_bit_frm->Print(true);
 
-                // Generate frame 2 - randomize everything
-                FrameFlags frameFlags2 = FrameFlags();
-                goldenFrame2 = new Frame(frameFlags);
-                goldenFrame2->Randomize();
-                TestBigMessage("Test frame 2:");
-                goldenFrame2->Print();
+                /* Generate frame 2 - randomize everything */
+                frame_flags_2 = std::make_unique<FrameFlags>();
+                golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
+                RandomizeAndPrint(golden_frm_2.get());
 
-                driverBitFrame2 = new BitFrame(*goldenFrame2,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitorBitFrame2 = new BitFrame(*goldenFrame2,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitorBitFrame2->TurnReceivedFrame();
-                driverBitFrame2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+                monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
 
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                PushFramesToLowerTester(*driverBitFrame2, *monitorBitFrame2);
+                monitor_bit_frm_2->TurnReceivedFrame();
+                driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+                /********************************************************************************** 
+                 * Execute test
+                 *********************************************************************************/
+                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
                 RunLowerTester(true, true);
                 CheckLowerTesterResult();
 
-                // Read out frame from DUT and check it!
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*goldenFrame2, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
-
-                delete goldenFrame2;
-                delete driverBitFrame2;
-                delete monitorBitFrame2;
+                CheckRxFrame(*golden_frm_2);
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };

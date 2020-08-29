@@ -91,9 +91,11 @@ class TestIso_7_3_1 : public test_lib::TestBase
 
                 for (auto elem_test : elem_tests[test_variant])
                 {
+                    PrintElemTestInfo(elem_test);
+
                     frame_flags = std::make_unique<FrameFlags>(
-                                    elem_tests[test_variant][elem_test.index].frame_type,
-                                    RtrFlag::DataFrame);
+                        elem_tests[test_variant][elem_test.index].frame_type,
+                        RtrFlag::DataFrame);
                     golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
                     RandomizeAndPrint(golden_frm.get());
 
