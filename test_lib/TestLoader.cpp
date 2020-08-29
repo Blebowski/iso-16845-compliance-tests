@@ -130,6 +130,8 @@
 #include "../compliance_tests/TestIso_8_4_5.cpp"
 
 #include "../compliance_tests/TestIso_8_5_1.cpp"
+#include "../compliance_tests/TestIso_8_5_2.cpp"
+#include "../compliance_tests/TestIso_8_5_3.cpp"
 
 
 /******************************************************************************
@@ -347,6 +349,10 @@ std::unique_ptr<test_lib::TestBase> ConstructTestObject(std::string name)
 
     } else if (name == "iso_8_5_1") {
         test_ptr = std::make_unique<TestIso_8_5_1>();
+    } else if (name == "iso_8_5_2") {
+        test_ptr = std::make_unique<TestIso_8_5_2>();
+    } else if (name == "iso_8_5_3") {
+        test_ptr = std::make_unique<TestIso_8_5_3>();
 
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
