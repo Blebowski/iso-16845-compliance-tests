@@ -707,6 +707,12 @@ bool can::BitFrame::InsertBit(Bit bit, int index)
 }
 
 
+void can::BitFrame::AppendBit(Bit can_bit)
+{
+    bits_.push_back(can_bit);
+}
+
+
 bool can::BitFrame::RemoveBit(Bit *bit)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();

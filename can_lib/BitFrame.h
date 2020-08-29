@@ -113,6 +113,12 @@ class can::BitFrame : public Frame {
         bool InsertBit(Bit can_bit, int index);
 
         /**
+         * Appends bit to a frame
+         * @param can_bit Bit to append
+         */
+        void AppendBit(Bit can_bit);
+
+        /**
          * Removes bit from frame.
          * @param can_bit Bit to remove from frame
          * @returns true if sucesfull, false if 'can_bit' is not from this frame.
