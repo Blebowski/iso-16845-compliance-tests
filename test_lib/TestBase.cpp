@@ -272,6 +272,40 @@ void test_lib::TestBase::CheckRxFrame(Frame &golden_frame)
 }
 
 
+void test_lib::TestBase::CheckNoRxFrame()
+{
+    if (dut_ifc->HasRxFrame())
+    {
+        TestMessage("DUT has received frame but it shouldnt!");
+        test_result = false;
+    }
+}
+
+
+void test_lib::TestBase::CheckRecChange(int reference_rec, int delta)
+{
+    int rec_new = dut_ifc->GetRec();
+    if (rec_new != (reference_rec + delta))
+    {
+        TestMessage("DUT REC not as expected. Expected %d, Real %d",
+                        rec_old + delta, rec_new);
+        test_result = false;
+    }
+}
+
+
+void test_lib::TestBase::CheckTecChange(int reference_tec, int delta)
+{
+    int tec_new = dut_ifc->GetRec();
+    if (tec_new != (reference_tec + delta))
+    {
+        TestMessage("DUT TEC not as expected. Expected %d, Real %d",
+                        rec_old + delta, rec_new);
+        test_result = false;
+    }
+}
+
+
 void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
                                                  can::BitFrame &monitor_bit_frame)
 {

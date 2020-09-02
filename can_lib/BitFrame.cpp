@@ -935,7 +935,7 @@ void can::BitFrame::TurnReceivedFrame()
 }
 
 
-void can::BitFrame::Print(bool printStuffBits)
+void can::BitFrame::Print(bool print_stuff_bits)
 {
     std::list<Bit>::iterator bit_it;
 
@@ -953,9 +953,9 @@ void can::BitFrame::Print(bool printStuffBits)
         if (bit_it->IsSingleBitField()) {
             //if (printStuffBits == false && bit->stuffBitType != NoStuffBit)
             //    continue;
-            PrintSingleBitField(bit_it, &vals, &names, printStuffBits);
+            PrintSingleBitField(bit_it, &vals, &names, print_stuff_bits);
         } else {
-            PrintMultiBitField(bit_it, &vals, &names, printStuffBits);
+            PrintMultiBitField(bit_it, &vals, &names, print_stuff_bits);
         }
     }
 

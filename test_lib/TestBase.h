@@ -131,6 +131,12 @@ class test_lib::TestBase
         std::unique_ptr<BitFrame> monitor_bit_frm;
         std::unique_ptr<BitFrame> monitor_bit_frm_2;
 
+        /* REC / TEC counters */
+        int rec_old;
+        int rec_new;
+        int tec_old;
+        int tec_new;
+
         /*********************************************************************************
          * THESE ARE LEGACY AND WILL BE DELETED when all tests are cleaned to use uniques!
          ********************************************************************************/
@@ -195,9 +201,35 @@ class test_lib::TestBase
         bool CompareFrames(can::Frame &expected_frame, can::Frame &real_frame);
 
         /**
-         * Check
+         * Reads frame from IUT and checks that it is equal to given frame. Sets
+         * 'test_result' to false if not.
+         * @param golden Frame to compare with the one which is read from DUT.
          */
         void CheckRxFrame(Frame &golden);
+
+        /**
+         * Checks that IUT has no frame received. Sets 'test_result' to false if
+         * IUT has a frame in its RX Buffer.
+         */
+        void CheckNoRxFrame();
+
+        /**
+         * Reads REC counter from IUT and checks it was changed in comparison to
+         * reference value. Sets 'test_result' to false if not.
+         * @param reference_rec Reference value (old value)
+         * @param delta Change of REC expected. Positive values check that REC
+         *              was incremented, negative that it was decremented.
+         */
+        void CheckRecChange(int reference_rec, int delta);
+
+        /**
+         * Reads TEC counter from IUT and checks it was changed in comparison to
+         * reference value. Sets 'test_result' to false if not.
+         * @param reference_tec Reference value (old value)
+         * @param delta Change of REC expected. Positive values check that TEC
+         *              was incremented, negative that it was decremented.
+         */
+        void CheckTecChange(int reference_tec, int delta);
 
         /**
          * Loads Bit frames to driver and monitor. Pushes it as driver/monitor FIFO items.
