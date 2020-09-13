@@ -100,8 +100,7 @@ class TestIso_8_5_4 : public test_lib::TestBase
                 {
                     PrintElemTestInfo(elem_test);
 
-                    frame_flags = std::make_unique<FrameFlags>(
-                                    elem_tests[test_variant][elem_test.index].frame_type,
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
                                     EsiFlag::ErrorPassive); /* ESI needed for CAN FD variant */
                     golden_frm = std::make_unique<Frame>(*frame_flags);
                     RandomizeAndPrint(golden_frm.get());

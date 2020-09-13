@@ -109,8 +109,7 @@ class TestIso_8_5_9 : public test_lib::TestBase
                     PrintElemTestInfo(elem_test);
 
                     /* First frame */
-                    frame_flags = std::make_unique<FrameFlags>(
-                                    elem_tests[test_variant][elem_test.index].frame_type,
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
                                     RtrFlag::DataFrame);
                     golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
                     RandomizeAndPrint(golden_frm.get());
@@ -119,8 +118,7 @@ class TestIso_8_5_9 : public test_lib::TestBase
                     monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
                     /* Second frame */
-                    frame_flags_2 = std::make_unique<FrameFlags>(
-                        elem_tests[test_variant][elem_test.index].frame_type);
+                    frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type);
                     golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
                     RandomizeAndPrint(golden_frm_2.get());
 
