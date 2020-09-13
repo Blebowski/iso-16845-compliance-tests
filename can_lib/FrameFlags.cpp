@@ -17,13 +17,7 @@
 
 can::FrameFlags::FrameFlags()
 {
-    // These are considered default values.
-    is_fdf_ = FrameType::Can2_0;
-    is_ide_ = IdentifierType::Base;
-    is_esi_ = EsiFlag::ErrorActive;
-    is_rtr_ = RtrFlag::DataFrame;
-    is_brs_ = BrsFlag::DontShift;
-
+    SetDefaultValues();
     RandomizeEnableAll();
 }
 
@@ -41,10 +35,24 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
     RandomizeDisableAll();
 };
 
+can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi)
+{
+    SetDefaultValues();
+
+    is_fdf_ = is_fdf;
+    is_rtr_ = is_rtr;
+    is_brs_ = is_brs;
+    is_esi_ = is_esi;
+
+    RandomizeDisableAll();
+    randomize_ide = true;
+};
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
                             RtrFlag is_rtr)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_ide_ = is_ide;
     is_rtr_ = is_rtr;
@@ -58,6 +66,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_ide_ = is_ide;
 
@@ -69,6 +79,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide)
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_rtr_ = is_rtr;
 
@@ -80,6 +92,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr)
 
 can::FrameFlags::FrameFlags(FrameType is_fdf)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
 
     RandomizeEnableAll();
@@ -89,6 +103,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf)
 
 can::FrameFlags::FrameFlags(IdentifierType is_ide)
 {
+    SetDefaultValues();
+    
     is_ide_ = is_ide;
 
     RandomizeEnableAll();
@@ -98,6 +114,8 @@ can::FrameFlags::FrameFlags(IdentifierType is_ide)
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_brs_ = is_brs;
 
@@ -111,6 +129,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs)
 can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs,
                             EsiFlag is_esi)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_brs_ = is_brs;
     is_esi_ = is_esi;
@@ -125,6 +145,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs,
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_esi_ = is_esi;
 
@@ -138,6 +160,8 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi)
 can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
                             EsiFlag is_esi)
 {
+    SetDefaultValues();
+    
     is_fdf_ = is_fdf;
     is_esi_ = is_esi;
     is_ide_ = is_ide;
@@ -243,7 +267,7 @@ void can::FrameFlags::CorrectFlags()
     }
 
     if (is_fdf_ == FrameType::Can2_0 && is_brs_ == BrsFlag::Shift){
-        std::cerr << "Can't set BRS flag when BRS flag is not set, BRS ignored!\n";
+        std::cerr << "Can't set BRS flag when FDF flag is not set, BRS ignored!\n";
         is_brs_ = BrsFlag::DontShift;
     }
 
@@ -251,4 +275,13 @@ void can::FrameFlags::CorrectFlags()
         std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
         is_esi_ = EsiFlag::ErrorActive;
     }
+}
+
+void can::FrameFlags::SetDefaultValues()
+{
+    is_fdf_ = FrameType::Can2_0;
+    is_ide_ = IdentifierType::Base;
+    is_esi_ = EsiFlag::ErrorActive;
+    is_rtr_ = RtrFlag::DataFrame;
+    is_brs_ = BrsFlag::DontShift;
 }

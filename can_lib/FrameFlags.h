@@ -56,9 +56,13 @@ class can::FrameFlags
         /**
          * Nothing is randomized
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide,
-                   RtrFlag is_rtr, BrsFlag is_brs,
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr, BrsFlag is_brs,
                    EsiFlag is_esi);
+
+        /**
+         * IDE is randomized only
+         */
+        FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi);
 
         /**
          *  BRS and ESI are randomized (if frame is CAN FD frame)
@@ -131,6 +135,11 @@ class can::FrameFlags
          * CAN 2.0 frames have no BRS flags or ESI Flags.
          */
         void CorrectFlags();
+
+        /**
+         * Sets default values of flags
+         */
+        void SetDefaultValues();
 };
 
 #endif
