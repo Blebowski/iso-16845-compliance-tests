@@ -742,14 +742,16 @@ bool can::BitFrame::RemoveBit(int index)
 
 bool can::BitFrame::RemoveBitsFrom(int index)
 {
-    auto bit_it = bits_.begin();
-    auto bitEnd = bits_.end();
-
     if (bits_.size() <= index)
         return false;
 
-    std::advance(bit_it, index);
-    bits_.erase(bit_it, bitEnd);
+    while (bits_.size() > index)
+    {
+        auto end_it = bits_.end();
+        end_it--;
+        bits_.erase(end_it);
+    }
+
     return true;
 }
 

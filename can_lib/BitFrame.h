@@ -113,10 +113,16 @@ class can::BitFrame : public Frame {
         bool InsertBit(Bit can_bit, int index);
 
         /**
-         * Appends bit to a frame
+         * Appends bit to a frame.
          * @param can_bit Bit to append
          */
         void AppendBit(Bit can_bit);
+
+        /**
+         * Creates a new bit and appends it to a frame. Bit timing and frame flags are
+         * inherited from frame itself.
+         */
+        void AppendBit(BitType bit_type, BitValue bit_value);
 
         /**
          * Removes bit from frame.
@@ -385,12 +391,6 @@ class can::BitFrame : public Frame {
          */
         void AppendBit(BitType bit_type, uint8_t bit_val);
 
-        /**
-         * Appends bit at the end of frame
-         * @param bit_type type of bit to be appended
-         * @param bit_val Bit value to be set
-         */
-        void AppendBit(BitType bit_type, BitValue bit_value);
 
         /**
          * Constructs bits of a frame from metadata.
