@@ -12,11 +12,11 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 8.6.1
+ * @test ISO16845 8.6.2
  * 
  * @brief This test verifies that an IUT acting as a transmitter increases its
  *        TEC by 8 when detecting a bit error during the transmission of an
- *        active error flag.
+ *        overload flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
  * Test variables:
@@ -28,21 +28,19 @@
  * 
  * Elementary test cases:
  *   Elementary tests to perform:
- *      #1 corrupting the first bit of the active error flag;
- *      #2 corrupting the third bit of the active error flag;
- *      #3 corrupting the sixth bit of the active error flag.
+ *      #1 corrupting the first bit of the overload flag;
+ *      #2 corrupting the fourth bit of the overload flag;
+ *      #3 corrupting the sixth bit of the overload flag.
  *
  * Setup:
  *  The IUT is left in the default state.
  * 
  * Execution:
  *  The LT causes the IUT to transmit a frame.
- *  
- *  Then, the LT corrupts a bit in data field to causes the IUT to generate an
- *  active error frame.
- * 
- *  The LT corrupts one of the dominant bits of the error flag according to
- *  elementary test cases.
+ *  Then, the LT causes the IUT to generate an overload frame after a data
+ *  frame.
+ *  The LT corrupts one of the dominant bits of the overload flag according
+ *  to elementary test cases.
  *  
  * Response:
  *  The IUT’s TEC value shall be increased by 8 on the corrupted bit.
@@ -71,7 +69,7 @@
 using namespace can;
 using namespace test_lib;
 
-class TestIso_8_6_1 : public test_lib::TestBase
+class TestIso_8_6_2 : public test_lib::TestBase
 {
     public:
 
@@ -93,7 +91,6 @@ class TestIso_8_6_1 : public test_lib::TestBase
         int Run()
         {
             SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
 
             for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
@@ -104,31 +101,27 @@ class TestIso_8_6_1 : public test_lib::TestBase
                     PrintElemTestInfo(elem_test);
 
                     frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+                                                                EsiFlag::ErrorActive);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
                     RandomizeAndPrint(golden_frm.get());
 
                     driver_bit_frm = ConvertBitFrame(*golden_frm);
                     monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    /* Second frame the same due to retransmission. */
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-
                     /******************************************************************************
                      * Modify test frames:
-                     *   1. Force 7-th data bit to dominant to cause stuff error.
-                     *   2. Insert Active Error frame from next bit on.
-                     *   3. Corrupt 1,3,6 th bit of Active Error flag, flip to opposite value!
-                     *   4. Insert next Active Error frame from next bit on.
-                     *   5. Append the same frame after the first frame since IUT will retransmitt
-                     *      the frame. Force ACK low on driven frame.
+                     *   1. Insert ACK to driven frame (TX/RX feedback disabled)
+                     *   2. Force first bit of intermission low (overload condition)
+                     *   3. Corrupt 1,3,6-th bit of overload flag.
+                     *   4. Insert Active error frame from one bit further.
                      *****************************************************************************/
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->GetBitOf(0, BitType::Intermission)
+                        ->bit_value_ = BitValue::Dominant;
+
+                    driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
                     int bit_index_to_corrupt;
                     if (elem_test.index == 1)
@@ -139,17 +132,12 @@ class TestIso_8_6_1 : public test_lib::TestBase
                         bit_index_to_corrupt = 5;
 
                     Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
-                                                                    BitType::ActiveErrorFlag);
+                                                                    BitType::OverloadFlag);
                     bit_to_corrupt->bit_value_ = BitValue::Recessive;
                     
                     int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
                     driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
                     monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-
-                    driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);
@@ -164,8 +152,11 @@ class TestIso_8_6_1 : public test_lib::TestBase
                     WaitForDriverAndMonitor();
                     CheckLowerTesterResult();
 
-                    /* 8 for first Error frame, 8 for next one, - 1 for succesfull retransmission */
-                    CheckTecChange(tec_old, 15);
+                    /* 8 for Error frame, -1 for sucesfull transmision! */
+                    if (test_variant == 0 && elem_test.index == 1)
+                        CheckTecChange(tec_old, 8);
+                    else
+                        CheckTecChange(tec_old, 7);
                 }
             }
 
