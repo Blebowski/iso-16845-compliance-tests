@@ -12,11 +12,11 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 8.6.9
+ * @test ISO16845 8.6.10
  * 
  * @brief This test verifies that an IUT acting as a transmitter increases its
- *        TEC by 8 when detecting a form error on a bit of the error delimiter
- *        it is transmitting.
+ *        TEC by 8 when detecting a form error during the transmission of an
+ *        overload delimiter.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
  * Test variables:
@@ -24,22 +24,22 @@
  *      FDF = 0
  * 
  *  CAN FD Enabled
- *      ACk Slot 2 bits
  *      FDF = 1
  * 
  * Elementary test cases:
  *   Elementary tests to perform:
- *     #1 corrupting the second bit of the error delimiter;
- *     #2 corrupting the fourth bit of the error delimiter;
- *     #3 corrupting the seventh bit of the error delimiter.
+ *     #1 corrupting the second bit of the overload delimiter;
+ *     #2 corrupting the seventh bit of the overload delimiter;
  * 
  * Setup:
  *  The IUT is left in the default state.
  * 
  * Execution:
  *  The LT causes the IUT to transmit a frame.
- *  Then, the LT causes the IUT to generate an error frame in data field.
- *  The LT corrupts the error delimiter according to elementary test cases.
+ *  Then, the LT causes the IUT to generate an overload frame after a data
+ *  frame.
+ *  The LT corrupts one of the recessive bits of the overload delimiter
+ *  according to elementary test cases.
  *  
  * Response:
  *  The IUT’s TEC value shall be increased by 8 at the corrupted bit.
@@ -67,15 +67,15 @@
 using namespace can;
 using namespace test_lib;
 
-class TestIso_8_6_9 : public test_lib::TestBase
+class TestIso_8_6_10 : public test_lib::TestBase
 {
     public:
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 3;
-            for (int i = 0; i < 3; i++)
+            num_elem_tests = 2;
+            for (int i = 0; i < 2; i++)
             {
                 elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
                 elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
@@ -90,7 +90,6 @@ class TestIso_8_6_9 : public test_lib::TestBase
         int Run()
         {
             SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
 
             for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
@@ -101,9 +100,8 @@ class TestIso_8_6_9 : public test_lib::TestBase
                     PrintElemTestInfo(elem_test);
 
                     frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
                                     EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
                     RandomizeAndPrint(golden_frm.get());
 
                     driver_bit_frm = ConvertBitFrame(*golden_frm);
@@ -114,23 +112,23 @@ class TestIso_8_6_9 : public test_lib::TestBase
 
                     /******************************************************************************
                      * Modify test frames:
-                     *   1. Flip 7-th data bit to dominant, this should be Recessive stuff bit.
-                     *   2. Insert Active Error frame from next bit on to monitored frame. Insert
-                     *      passive Error frame to driven frame.
-                     *   3. Flip 2,4 or 7-th bit of error delimiter to dominant.
-                     *   4. Insert next error frame from one bit later!
-                     *   5. Append retransmitted frame.
+                     *   1. Turn driven frame as if received.
+                     *   2. Flip first bit of intermission to dominant (Overload condition)
+                     *   3. Insert Overload frame from next bit on to monitored frame. Insert
+                     *      Passive Error frame to driven frame (TX/RX feedback enabled)
+                     *   4. Flip 2 or 7-th bit of overload delimiter to dominant.
+                     *   5. Insert next Error frame from next bit on.
                      *****************************************************************************/
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+                    driver_bit_frm->TurnReceivedFrame();
 
-                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+
+                    driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
                     int bit_to_flip;
                     if (elem_test.index == 1)
                         bit_to_flip = 1;
-                    else if (elem_test.index == 2)
-                        bit_to_flip = 3;
                     else
                         bit_to_flip = 6;
                     int bit_index = driver_bit_frm->GetBitIndex(
@@ -139,11 +137,6 @@ class TestIso_8_6_9 : public test_lib::TestBase
 
                     driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
                     monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-
-                    driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);
@@ -158,8 +151,13 @@ class TestIso_8_6_9 : public test_lib::TestBase
                     WaitForDriverAndMonitor();
                     CheckLowerTesterResult();
 
-                    /* +8 for original error frame, +8 for new one, -1 for retransmission! */
-                    CheckTecChange(tec_old, 15);
+                    /* +8 for error, -1 for retransmission. In firt elem test, TEC is 0, no r
+                     * retransmission!
+                     */
+                    if (test_variant == 0 && elem_test.index == 1)
+                        CheckTecChange(tec_old, 8);
+                    else
+                        CheckTecChange(tec_old, 7);
                 }
             }
 
