@@ -41,6 +41,12 @@ class can::BitFrame : public Frame {
         int GetBitCount();
 
         /**
+         * @param bit_field Type of bit field whose length to find.
+         * @returns Lenght of queried bit field within a frame. 0 if no such bit field exist.
+         */
+        int GetFieldLength(BitType bit_type);
+
+        /**
          * @param index Index of bit within frame to get (SOF = 0, first bit of Base ID = 1, ...)
          * @returns Pointer to bit on 'index' position, aborts if index is higher than number
          *          of bits in the frame.
@@ -62,6 +68,14 @@ class can::BitFrame : public Frame {
          *          field is not existent or does not have enough bits.
          */
         Bit* GetBitOf(int index, BitType bit_type);
+
+        /**
+         * Returns random bit within a Bit field
+         * @param bit_type Type of bit (bit field)
+         * @returns Pointer to bit on 'index' position within 'bit_type' field, aborts if 'bit_type'
+         *          field is not existent or does not have enough bits.
+         */
+        Bit* GetRandomBitOf(BitType bit_type);
 
         /**
          * Returns bit within given bit field, but skip stuff bits. This function can be used

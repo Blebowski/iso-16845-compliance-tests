@@ -550,6 +550,28 @@ int can::BitFrame::GetBitCount()
     return bits_.size();
 }
 
+        
+int can::BitFrame::GetFieldLength(BitType bit_type)
+{
+    return std::count_if(bits_.begin(), bits_.end(),
+                         [bit_type](can::Bit bit) { return bit.bit_type_ == bit_type; });
+}
+
+
+can::Bit* can::BitFrame::GetRandomBitOf(BitType bit_type)
+{
+    int bit_field_length = GetFieldLength(bit_type);
+    assert(("Frame has no bits of required type!", bit_field_length > 0));
+
+    std::list<Bit>::iterator bit_it =
+        std::find_if(bits_.begin(), bits_.end(),
+                     [bit_type](Bit bit) { return bit.bit_type_ == bit_type; });
+
+    int bit_index = rand() % bit_field_length;
+    std::advance(bit_it, bit_index);
+
+    return &(*bit_it);
+}
 
 can::Bit* can::BitFrame::GetBit(int index)
 {
