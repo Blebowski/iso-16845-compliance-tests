@@ -48,6 +48,19 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, Es
     randomize_ide = true;
 };
 
+can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi)
+{
+    SetDefaultValues();
+
+    is_fdf_ = is_fdf;
+    is_rtr_ = is_rtr;
+    is_esi_ = is_esi;
+
+    RandomizeDisableAll();
+    randomize_ide = true;
+    randomize_brs = true;
+};
+
 can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
                             RtrFlag is_rtr)
 {

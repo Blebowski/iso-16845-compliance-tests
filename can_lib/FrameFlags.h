@@ -81,6 +81,11 @@ class can::FrameFlags
         FrameFlags(FrameType is_fdf, RtrFlag is_rtr);
 
         /**
+         * Randomizes IDE, RTR, ESI
+         */
+        FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi);
+
+        /**
          * Randomizes IDE, BRS, ESI, RTR.
          */
         FrameFlags(FrameType is_fdf);
