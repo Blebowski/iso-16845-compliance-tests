@@ -52,4 +52,4 @@ extern "C" {
             can::FaultConfinementState GetErrorState();
     };
 
-};
+}

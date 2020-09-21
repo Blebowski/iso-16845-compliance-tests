@@ -94,7 +94,7 @@ class TestIso_7_8_6_2 : public test_lib::TestBase
                 return false;
             }
 
-            for (int i = data_bit_timing.sjw_ + 1; i <= data_bit_timing.ph2_; i++)
+            for (size_t i = data_bit_timing.sjw_ + 1; i <= data_bit_timing.ph2_; i++)
             {
                 // CAN FD frame with bit rate shift
                 uint8_t dataByte = 0x7F;
@@ -125,11 +125,11 @@ class TestIso_7_8_6_2 : public test_lib::TestBase
                 Bit *driverBeforeStuffBit = driver_bit_frame->GetBitOf(5, BitType::Data);
                 Bit *driverStuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
 
-                for (int j = 0; j < i; j++)
+                for (size_t j = 0; j < i; j++)
                     driverBeforeStuffBit->ForceTimeQuanta(
                         data_bit_timing.ph2_ - 1 - j, BitPhase::Ph2, BitValue::Dominant);
 
-                for (int j = 0; j < data_bit_timing.ph2_; j++)
+                for (size_t j = 0; j < data_bit_timing.ph2_; j++)
                     driverStuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
                 driver_bit_frame->Print(true);

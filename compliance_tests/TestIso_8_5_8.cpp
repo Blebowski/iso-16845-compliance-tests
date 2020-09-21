@@ -90,7 +90,7 @@ class TestIso_8_5_8 : public test_lib::TestBase
             /* To avoid stuff bits causing mismatches betwen frame lengths */
             uint8_t data_byte = 0xAA;
 
-            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
                 PrintVariantInfo(test_variants[test_variant]);
 

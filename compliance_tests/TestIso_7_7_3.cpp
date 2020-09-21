@@ -85,7 +85,7 @@ class TestIso_7_7_3 : public test_lib::TestBase
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
-            for (int i = 0; i < nominal_bit_timing.sjw_; i++)
+            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++)
             {
                 // CAN 2.0 frame, Base identifier, randomize others
                 FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);
@@ -128,7 +128,7 @@ class TestIso_7_7_3 : public test_lib::TestBase
                 beforeStuffBit->LengthenPhase(BitPhase::Ph2, i + 1);
 
                 Bit *stuffBit = driver_bit_frame->GetStuffBit(0);
-                for (int j = 0; j < nominal_bit_timing.ph2_; j++)
+                for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
                     stuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
                 BitPhase prevPhase = stuffBit->PrevBitPhase(BitPhase::Ph2);
                 stuffBit->GetLastTimeQuantaIterator(prevPhase)->ForceValue(BitValue::Recessive);

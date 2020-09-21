@@ -90,7 +90,7 @@ class TestIso_7_8_3_1 : public test_lib::TestBase
                 return false;
             }
 
-            for (int i = 0; i < data_bit_timing.sjw_; i++)
+            for (size_t i = 0; i < data_bit_timing.sjw_; i++)
             {
                 // CAN FD frame with bit rate shift, set
                 FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
@@ -123,7 +123,7 @@ class TestIso_7_8_3_1 : public test_lib::TestBase
                 esiBitDriver->LengthenPhase(BitPhase::Sync, i + 1);
                 esiBitMonitor->LengthenPhase(BitPhase::Sync, i + 1);
 
-                for (int j = 0; j < data_bit_timing.prop_ + data_bit_timing.ph1_; j++)
+                for (size_t j = 0; j < data_bit_timing.prop_ + data_bit_timing.ph1_; j++)
                     esiBitDriver->ForceTimeQuanta(i + j + 1, BitValue::Dominant);
 
                 driver_bit_frame->Print(true);

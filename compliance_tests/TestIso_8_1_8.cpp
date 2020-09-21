@@ -95,7 +95,6 @@ class TestIso_8_1_8 : public test_lib::TestBase
              * Common part of test (i=0), CAN FD enabled part of test(i=1)
              ****************************************************************/
             int iterCnt;
-            FrameType dataRate;
 
             if (dut_can_version == CanVersion::CanFdEnabled)
                 iterCnt = 2;

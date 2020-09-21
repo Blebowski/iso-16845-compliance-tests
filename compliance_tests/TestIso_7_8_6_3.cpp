@@ -94,7 +94,7 @@ class TestIso_7_8_6_3 : public test_lib::TestBase
                 return false;
             }
 
-            for (int i = nominal_bit_timing.sjw_ + 1; i <= nominal_bit_timing.ph2_; i++)
+            for (size_t i = nominal_bit_timing.sjw_ + 1; i <= nominal_bit_timing.ph2_; i++)
             {
                 // CAN FD frame with bit rate shift
                 FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
@@ -127,13 +127,13 @@ class TestIso_7_8_6_3 : public test_lib::TestBase
                 Bit *crcDelimiterMonitor = monitor_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
                 Bit *ackDriver = driver_bit_frame->GetBitOf(0, BitType::Ack);
 
-                for (int j = 0; j < i; j++)
+                for (size_t j = 0; j < i; j++)
                     crcDelimiterDriver->ForceTimeQuanta(
                         nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2, BitValue::Dominant);
 
                 crcDelimiterMonitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
 
-                for (int j = 0; j < nominal_bit_timing.ph2_; j++)
+                for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
                     ackDriver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
                 driver_bit_frame->Print(true);

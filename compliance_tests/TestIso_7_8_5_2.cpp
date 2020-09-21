@@ -92,9 +92,7 @@ class TestIso_7_8_5_2 : public test_lib::TestBase
                 return false;
             }
 
-            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
-
-            for (int i = 1; i <= data_bit_timing.sjw_; i++)
+            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
             {
                 // CAN FD frame with bit rate shift
                 uint8_t dataByte = 0x7F;
@@ -130,7 +128,7 @@ class TestIso_7_8_5_2 : public test_lib::TestBase
                 driverBeforeStuffBit->ShortenPhase(BitPhase::Ph2, i);
                 monitorBeforeStuffBit->ShortenPhase(BitPhase::Ph2, i);
 
-                for (int j = 0; j < data_bit_timing.ph2_; j++)
+                for (size_t j = 0; j < data_bit_timing.ph2_; j++)
                     driverStuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
                 driver_bit_frame->Print(true);

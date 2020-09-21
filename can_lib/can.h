@@ -166,6 +166,6 @@ namespace can {
     class DutInterface;
     class CtuCanFdInterface;
 
-}; // namespace can
+} // namespace can
 
 #endif

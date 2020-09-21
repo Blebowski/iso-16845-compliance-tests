@@ -93,7 +93,7 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
                 return false;
             }
 
-            for (int i = 0; i < data_bit_timing.sjw_; i++)
+            for (size_t i = 0; i < data_bit_timing.sjw_; i++)
             {
                 // CAN FD frame with bit rate shift
                 uint8_t dataByte = 0x7F; // 7th data bit is dominant stuff bit!
@@ -134,12 +134,12 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
                 // 7-th bit should be stuff bit
                 Bit *driverStuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
                 int bitIndex = driver_bit_frame->GetBitIndex(driverStuffBit);
-                for (int j = 0; j < i + 1; j++)
+                for (size_t j = 0; j < i + 1; j++)
                     driverStuffBit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);
 
                 //driverStuffBit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
 
-                for (int j = i; j < data_bit_timing.ph2_; j++)
+                for (size_t j = i; j < data_bit_timing.ph2_; j++)
                     driverStuffBit->GetTimeQuanta(BitPhase::Ph2, j)
                         ->ForceValue(BitValue::Recessive);
 

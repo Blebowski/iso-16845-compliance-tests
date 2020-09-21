@@ -25,14 +25,13 @@
 class can::BitTiming
 {
     public:
-        unsigned int prop_;
-        unsigned int ph1_;
-        unsigned int ph2_;
-        unsigned int brp_;
-        unsigned int sjw_;
+        size_t prop_;
+        size_t ph1_;
+        size_t ph2_;
+        size_t brp_;
+        size_t sjw_;
 
-        BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
-                  unsigned int brp, unsigned int sjw);
+        BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_t sjw);
         BitTiming();
 
         void Print();

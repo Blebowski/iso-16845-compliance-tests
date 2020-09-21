@@ -21,7 +21,7 @@
 test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period)
 {
     this->clock_period = clock_period;
-};
+}
 
 
 test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
@@ -37,7 +37,7 @@ test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
         monitored_values.clear();
         AppendMonitorFrame(frame);
     }
-};
+}
 
 
 test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
@@ -133,23 +133,23 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 {
     std::chrono::nanoseconds tseg_1_duration (0);
     std::chrono::nanoseconds tseg_2_duration (0);
-    int tseg_1_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Sync);
+    size_t tseg_1_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Sync);
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Prop);
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph1);
-    int tseg_2_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph2);
+    size_t tseg_2_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph2);
 
-    for (int i = 0; i < tseg_1_len; i++)
-        for (int j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
+    for (size_t i = 0; i < tseg_1_len; i++)
+        for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
             tseg_1_duration += clock_period;
 
-    for (int i = 0; i < tseg_2_len; i++)
-        for (int j = 0; j < bit->GetTimeQuanta(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
+    for (size_t i = 0; i < tseg_2_len; i++)
+        for (size_t j = 0; j < bit->GetTimeQuanta(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
             tseg_2_duration += clock_period;
 
-    int brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
-    int brpFd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
+    size_t brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
+    size_t brp_fd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
     std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
-    std::chrono::nanoseconds sampleRateData = brpFd * clock_period;
+    std::chrono::nanoseconds sampleRateData = brp_fd * clock_period;
 
     pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->bit_value_, bit->GetBitTypeName());
     pushMonitorValue(tseg_2_duration, sampleRateData, bit->bit_value_, bit->GetBitTypeName());
@@ -159,12 +159,12 @@ void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
     std::chrono::nanoseconds duration (0);
 
-    for (int i = 0; i < bit->GetLengthTimeQuanta(); i++)
-        for (int j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
+    for (size_t i = 0; i < bit->GetLengthTimeQuanta(); i++)
+        for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
             duration += clock_period;
 
     // Assume first Time quanta length is the same as rest (which is reasonable)!
-    int brp = bit->GetTimeQuanta(0)->getLengthCycles();
+    size_t brp = bit->GetTimeQuanta(0)->getLengthCycles();
     std::chrono::nanoseconds sample_rate = brp * clock_period;
 
     pushMonitorValue(duration, sample_rate, bit->bit_value_, bit->GetBitTypeName());
@@ -173,12 +173,6 @@ void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
 
 void test_lib::TestSequence::AppendMonitorBit(can::Bit* bit)
 {
-    can::BitValue current_value;
-    can::TimeQuanta *time_quanta;
-    can::CycleBitValue* cycle_bit_value;
-    std::chrono::nanoseconds duration (0);
-    int cycles;
-
     if (bit->bit_type_ == can::BitType::Brs ||
         bit->bit_type_ == can::BitType::CrcDelimiter)
         appendMonitorBitWithShift(bit);

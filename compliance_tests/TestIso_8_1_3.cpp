@@ -84,7 +84,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
         /*****************************************************************
          * Common part of test - 10 iterations with 0x7EF + 1 with 0x010 
          ****************************************************************/
-        int run_can_2_0()
+        void run_can_2_0()
         {
             for (int i = 0; i < 11; i++)
             {
@@ -285,7 +285,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
         /*****************************************************************
          * CAN FD Enabled part of the test - 10 iterations with 0x7EF
          ****************************************************************/
-        int run_can_fd()
+        void run_can_fd()
         {
             for (int i = 0; i < 11; i++)
             {

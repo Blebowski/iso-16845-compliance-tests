@@ -84,7 +84,7 @@ class TestIso_7_4_1 : public test_lib::TestBase
         {
             SetupTestEnvironment();
 
-            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
                 PrintVariantInfo(test_variants[test_variant]);
 
@@ -93,7 +93,7 @@ class TestIso_7_4_1 : public test_lib::TestBase
                     PrintElemTestInfo(elem_test);
 
                     frame_flags = std::make_unique<FrameFlags>(
-                        elem_tests[test_variant][elem_test.index].frame_type);
+                        elem_tests[test_variant][elem_test.index - 1].frame_type);
                     golden_frm = std::make_unique<Frame>(*frame_flags);
                     RandomizeAndPrint(golden_frm.get());
                     

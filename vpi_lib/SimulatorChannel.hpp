@@ -19,11 +19,11 @@
 /**
  * @enum State machine for processing of request to simulator.
  */
-enum SimulatorChannelFsm
+enum class SimulatorChannelFsm
 {
-    SIM_CHANNEL_FREE,
-    SIM_CHANNEL_REQ_UP,
-    SIM_CHANNEL_ACK_UP
+    FREE,
+    REQ_UP,
+    ACK_UP
 };
 
 

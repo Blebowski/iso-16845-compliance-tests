@@ -33,7 +33,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
 
     CorrectFlags();
     RandomizeDisableAll();
-};
+}
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi)
 {
@@ -46,7 +46,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, Es
 
     RandomizeDisableAll();
     randomize_ide = true;
-};
+}
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi)
 {
@@ -59,7 +59,7 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi)
     RandomizeDisableAll();
     randomize_ide = true;
     randomize_brs = true;
-};
+}
 
 can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
                             RtrFlag is_rtr)

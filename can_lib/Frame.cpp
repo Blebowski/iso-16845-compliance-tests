@@ -180,7 +180,7 @@ bool operator==(can::Frame& lhs, can::Frame& rhs)
 
 void can::Frame::set_dlc(uint8_t dlc)
 {
-    assert((dlc < 17, "Can't set DLC higher than 16"));
+    assert(dlc < 17 && "Can't set DLC higher than 16");
     
     dlc_ = dlc;
     data_lenght_ = ConvertDlcToDataLenght(dlc);
@@ -188,10 +188,10 @@ void can::Frame::set_dlc(uint8_t dlc)
 
 void can::Frame::set_data_lenght(int dataLenght)
 {
-    assert((IsValidDataLength(dataLenght), "Invalid data length"));
+    assert(IsValidDataLength(dataLenght) && "Invalid data length");
 
-    assert(!(frame_flags_.is_fdf_ == FrameType::Can2_0 && dataLenght > 8,
-            "Can't set data length to more than 8 on CAN 2.0 frame"));
+    assert(!(frame_flags_.is_fdf_ == FrameType::Can2_0 && dataLenght > 8) &&
+            "Can't set data length to more than 8 on CAN 2.0 frame");
     
     data_lenght_ = dataLenght;
     dlc_ = ConvertDataLenghtToDlc(dataLenght);

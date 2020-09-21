@@ -97,7 +97,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
             SetupTestEnvironment();
             uint8_t data_byte = 0x80;
 
-            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
                 PrintVariantInfo(test_variants[test_variant]);
 

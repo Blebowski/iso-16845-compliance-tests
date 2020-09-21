@@ -85,7 +85,7 @@ class TestIso_7_7_4 : public test_lib::TestBase
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
-            for (int e = nominal_bit_timing.sjw_ + 1;
+            for (size_t e = nominal_bit_timing.sjw_ + 1;
                  e <= nominal_bit_timing.prop_ + nominal_bit_timing.ph1_;
                  e++)
             {
@@ -135,7 +135,7 @@ class TestIso_7_7_4 : public test_lib::TestBase
                 monitorStuffBit->LengthenPhase(BitPhase::Sync, nominal_bit_timing.sjw_);
 
                 Bit *driverStuffBit = driver_bit_frame->GetStuffBit(0);
-                for (int j = 0; j < nominal_bit_timing.ph2_; j++)
+                for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
                     driverStuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
                 BitPhase prevPhase = driverStuffBit->PrevBitPhase(BitPhase::Ph2);

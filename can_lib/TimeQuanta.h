@@ -58,20 +58,20 @@ class can::TimeQuanta
         /**
          * @returns length of Time quanta in clock cycles.
          */
-        int getLengthCycles();
+        size_t getLengthCycles();
 
         /**
          * Gets value of cycle.
          * @param index Position of cycle within Time quanta.
          * @returns Pointer to cycle bit value.
          */
-        CycleBitValue *getCycleBitValue(int index);
+        CycleBitValue *getCycleBitValue(size_t index);
 
         /**
          * Lengthens time quanta (appends cycles at the end).
          * @param by_cycles number of cycles to lengthen by
          */
-        void Lengthen(int by_cycles);
+        void Lengthen(size_t by_cycles);
 
         /**
          * Lengthens time quanta (appends cycles at the end). Appended bits are forced to
@@ -79,20 +79,20 @@ class can::TimeQuanta
          * @param by_cycles number of cycles to lengthen by
          * @param bit_value Value to set appended cycles to.
          */
-        void Lengthen(int by_cycles, BitValue bit_value);
+        void Lengthen(size_t by_cycles, BitValue bit_value);
 
         /**
          * Shortens time quanta.
          * @param by_cycles number of cycles to shorten time quanta by.
          */
-        void Shorten(int by_cycles);
+        void Shorten(size_t by_cycles);
 
         /**
          * Forces value of a one cycle.
          * @param cycle_index Index of cycle to force.
          * @param bit_value Value of cycle to force.
          */
-        bool ForceCycleValue(int cycle_index, BitValue bit_value);
+        bool ForceCycleValue(size_t cycle_index, BitValue bit_value);
 
         /**
          * Forces value of range of cycles.
@@ -100,13 +100,13 @@ class can::TimeQuanta
          * @param cycle_index_to Index to which cycle value shall be forced.
          * @param bit_value Value to be forced.
          */
-        bool ForceCycleValue(int cycle_index_from, int cycle_index_to, BitValue bit_value);
+        bool ForceCycleValue(size_t cycle_index_from, size_t cycle_index_to, BitValue bit_value);
 
         /**
          * Forces value of each cycle within time quanta
          * @param bit_value Value to force time quanta to
          */
-        bool ForceValue(BitValue bit_value);
+        void ForceValue(BitValue bit_value);
 
         /**
          * Phase of bit to which this time quanta belongs.

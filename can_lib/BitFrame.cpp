@@ -153,14 +153,13 @@ void can::BitFrame::AppendBit(BitType bit_type, BitValue bit_value)
 
 void can::BitFrame::AppendBitFrame(can::BitFrame *bit_frame)
 {
-    for (int i = 0; i < bit_frame->GetBitCount(); i++)
+    for (size_t i = 0; i < bit_frame->GetBitCount(); i++)
         bits_.push_back(*bit_frame->GetBit(i));
 }
 
 
-bool can::BitFrame::ClearFrameBits(int index)
+bool can::BitFrame::ClearFrameBits(size_t index)
 {
-    int i = 0;
     std::list<Bit>::iterator bit_it;
     std::list<Bit>::iterator end_it;
 
@@ -171,8 +170,9 @@ bool can::BitFrame::ClearFrameBits(int index)
     end_it = bits_.end();
     std::advance(bit_it, index);
     bits_.erase(bit_it, end_it);
-}
 
+    return true;
+}
 
 void can::BitFrame::BuildFrameBits()
 {
@@ -292,7 +292,7 @@ void can::BitFrame::BuildFrameBits()
 }
 
 
-int can::BitFrame::InsertNormalStuffBits()
+size_t can::BitFrame::InsertNormalStuffBits()
 {
     std::list<Bit>::iterator bit_it;
     int same_bits = 1;
@@ -545,13 +545,13 @@ bool can::BitFrame::SetStuffParity()
 }
 
 
-int can::BitFrame::GetBitCount()
+size_t can::BitFrame::GetBitCount()
 {
     return bits_.size();
 }
 
         
-int can::BitFrame::GetFieldLength(BitType bit_type)
+size_t can::BitFrame::GetFieldLength(BitType bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(),
                          [bit_type](can::Bit bit) { return bit.bit_type_ == bit_type; });
@@ -560,44 +560,44 @@ int can::BitFrame::GetFieldLength(BitType bit_type)
 
 can::Bit* can::BitFrame::GetRandomBitOf(BitType bit_type)
 {
-    int bit_field_length = GetFieldLength(bit_type);
-    assert(("Frame has no bits of required type!", bit_field_length > 0));
+    size_t bit_field_length = GetFieldLength(bit_type);
+    assert(bit_field_length > 0 && "Frame has no bits of required type!");
 
     std::list<Bit>::iterator bit_it =
         std::find_if(bits_.begin(), bits_.end(),
                      [bit_type](Bit bit) { return bit.bit_type_ == bit_type; });
 
-    int bit_index = rand() % bit_field_length;
+    size_t bit_index = rand() % bit_field_length;
     std::advance(bit_it, bit_index);
 
     return &(*bit_it);
 }
 
-can::Bit* can::BitFrame::GetBit(int index)
+can::Bit* can::BitFrame::GetBit(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
 
-    assert(("Insufficient number of bits in a frame!", bits_.size() > index));
+    assert(bits_.size() > index && "Insufficient number of bits in a frame!");
 
     std::advance(bit_it, index);
     return &(*bit_it);
 }
 
-std::list<can::Bit>::iterator can::BitFrame::GetBitIterator(int index)
+std::list<can::Bit>::iterator can::BitFrame::GetBitIterator(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
 
-    assert(("Insufficient number of bits in a frame!", bits_.size() > index));
+    assert(bits_.size() > index && "Insufficient number of bits in a frame!");
 
     std::advance(bit_it, index);
     return bit_it;
 }
 
 
-can::Bit* can::BitFrame::GetBitOf(int index, BitType bit_type)
+can::Bit* can::BitFrame::GetBitOf(size_t index, BitType bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (bit_it != bits_.end())
     {
@@ -612,16 +612,16 @@ can::Bit* can::BitFrame::GetBitOf(int index, BitType bit_type)
             bit_it++;
     }
 
-    assert(("Insufficient number of bits in a bit field", bit_it != bits_.end()));
+    assert(bit_it != bits_.end() && "Insufficient number of bits in a bit field");
 
     return &(*bit_it);
 }
 
 
-can::Bit* can::BitFrame::GetBitOfNoStuffBits(int index, BitType bit_type)
+can::Bit* can::BitFrame::GetBitOfNoStuffBits(size_t index, BitType bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (bit_it != bits_.end())
     {
@@ -637,16 +637,16 @@ can::Bit* can::BitFrame::GetBitOfNoStuffBits(int index, BitType bit_type)
             bit_it++;
     }
 
-    assert(("Insufficient number of bits in a bit field", bit_it != bits_.end()));
+    assert(bit_it != bits_.end() && "Insufficient number of bits in a bit field");
 
     return &(*bit_it);
 }
 
 
-std::list<can::Bit>::iterator can::BitFrame::GetBitOfIterator(int index, BitType bit_type)
+std::list<can::Bit>::iterator can::BitFrame::GetBitOfIterator(size_t index, BitType bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (bit_it != bits_.end())
     {
@@ -665,7 +665,7 @@ std::list<can::Bit>::iterator can::BitFrame::GetBitOfIterator(int index, BitType
 }
 
 
-int can::BitFrame::GetBitIndex(Bit *bit)
+size_t can::BitFrame::GetBitIndex(Bit *bit)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     int i = 0;
@@ -698,10 +698,10 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
 }
 
 
-can::Bit* can::BitFrame::GetFixedStuffBit(int index)
+can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (i < index || bit_it != bits_.end())
         if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit){
@@ -716,7 +716,7 @@ can::Bit* can::BitFrame::GetFixedStuffBit(int index)
 }
 
 
-bool can::BitFrame::InsertBit(Bit bit, int index)
+bool can::BitFrame::InsertBit(Bit bit, size_t index)
 {
     if (index > bits_.size())
         return false;
@@ -735,7 +735,7 @@ void can::BitFrame::AppendBit(Bit can_bit)
 }
 
 
-bool can::BitFrame::RemoveBit(Bit *bit)
+void can::BitFrame::RemoveBit(Bit *bit)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     while (bit_it != bits_.end())
@@ -748,7 +748,7 @@ bool can::BitFrame::RemoveBit(Bit *bit)
 }
 
 
-bool can::BitFrame::RemoveBit(int index)
+bool can::BitFrame::RemoveBit(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
 
@@ -762,7 +762,7 @@ bool can::BitFrame::RemoveBit(int index)
 }
 
 
-bool can::BitFrame::RemoveBitsFrom(int index)
+bool can::BitFrame::RemoveBitsFrom(size_t index)
 {
     if (bits_.size() <= index)
         return false;
@@ -778,7 +778,7 @@ bool can::BitFrame::RemoveBitsFrom(int index)
 }
 
 
-bool can::BitFrame::InsertErrorFlag(int index, BitType error_flag_type)
+bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
 {
     Bit *bit = GetBit(index);
 
@@ -814,7 +814,7 @@ bool can::BitFrame::InsertErrorFlag(int index, BitType error_flag_type)
 }
 
 
-bool can::BitFrame::InsertActiveErrorFrame(int index)
+bool can::BitFrame::InsertActiveErrorFrame(size_t index)
 {
     if (InsertErrorFlag(index, BitType::ActiveErrorFlag) == false)
         return false;
@@ -829,7 +829,7 @@ bool can::BitFrame::InsertActiveErrorFrame(int index)
     return true;
 }
 
-bool can::BitFrame::InsertActiveErrorFrame(int index, BitType bit_type)
+bool can::BitFrame::InsertActiveErrorFrame(size_t index, BitType bit_type)
 {
     return InsertActiveErrorFrame(GetBitOf(index, bit_type));
 }
@@ -840,7 +840,7 @@ bool can::BitFrame::InsertActiveErrorFrame(Bit *bit)
 }
 
 
-bool can::BitFrame::InsertPassiveErrorFrame(int index)
+bool can::BitFrame::InsertPassiveErrorFrame(size_t index)
 {
     if (InsertErrorFlag(index, BitType::PassiveErrorFlag) == false)
         return false;
@@ -861,13 +861,13 @@ bool can::BitFrame::InsertPassiveErrorFrame(Bit *bit)
 }
 
 
-bool can::BitFrame::InsertPassiveErrorFrame(int index, BitType bit_type)
+bool can::BitFrame::InsertPassiveErrorFrame(size_t index, BitType bit_type)
 {
     return InsertPassiveErrorFrame(GetBitOf(index, bit_type));
 }
 
 
-bool can::BitFrame::InsertOverloadFrame(int index)
+bool can::BitFrame::InsertOverloadFrame(size_t index)
 {
     Bit *bit = GetBit(index);
 
@@ -902,13 +902,13 @@ bool can::BitFrame::InsertOverloadFrame(Bit *bit)
 }
 
 
-bool can::BitFrame::InsertOverloadFrame(int index, BitType bit_type)
+bool can::BitFrame::InsertOverloadFrame(size_t index, BitType bit_type)
 {
     return InsertOverloadFrame(GetBitOf(index, bit_type));
 }
 
 
-bool can::BitFrame::LooseArbitration(int index)
+bool can::BitFrame::LooseArbitration(size_t index)
 {
     Bit *bit = GetBit(index);
     std::list<Bit>::iterator bit_it = bits_.begin();
@@ -928,7 +928,7 @@ bool can::BitFrame::LooseArbitration(int index)
     }
 
     // Move to position where we want to loose arbitration
-    for (int i = 0; i < index; i++)
+    for (size_t i = 0; i < index; i++)
         bit_it++;
 
     for (; bit_it != bits_.end(); bit_it++)

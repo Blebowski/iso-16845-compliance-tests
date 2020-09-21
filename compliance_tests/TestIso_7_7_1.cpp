@@ -117,21 +117,21 @@ class TestIso_7_7_1 : public test_lib::TestBase
 
             /* Compensate the monitored frame as if negative resynchronisation
                happend */
-            int resyncAmount = nominal_bit_timing.ph2_;
-            if (nominal_bit_timing.sjw_ < resyncAmount)
-                resyncAmount = nominal_bit_timing.sjw_;
+            size_t resync_amount = nominal_bit_timing.ph2_;
+            if (nominal_bit_timing.sjw_ < resync_amount)
+                resync_amount = nominal_bit_timing.sjw_;
             monitor_bit_frame->GetBitOf(11, BitType::BaseIdentifier)->ShortenPhase(
-                BitPhase::Ph2, resyncAmount);
+                BitPhase::Ph2, resync_amount);
 
             /* 5 + Stuff + 5 + Stuff = 12 bits. We need to insert error frame
                from 13-th bit on! */
-            int bitIndex = driver_bit_frame->GetBitIndex(
+            int bit_index = driver_bit_frame->GetBitIndex(
                             driver_bit_frame->GetBitOf(12, BitType::BaseIdentifier));
 
             /* Expected error frame on monitor (from start of bit after stuff bit)
              * Driver will have passive error frame -> transmitt all recessive */
-            monitor_bit_frame->InsertActiveErrorFrame(bitIndex);
-            driver_bit_frame->InsertPassiveErrorFrame(bitIndex);
+            monitor_bit_frame->InsertActiveErrorFrame(bit_index);
+            driver_bit_frame->InsertPassiveErrorFrame(bit_index);
 
             driver_bit_frame->Print(true);
             monitor_bit_frame->Print(true);

@@ -119,24 +119,24 @@ class can::Bit {
          * @param bit_phase phase whose length to find out
          * @returns length of bit in Time Quantas
          */
-        int GetPhaseLenTimeQuanta(BitPhase bit_phase);
+        size_t GetPhaseLenTimeQuanta(BitPhase bit_phase);
 
         /**
          * Gets length of bit phase in clock cycles.
          * @param bit_phase phase whose length to find out
          * @returns length of Bit phase in clock cycles
          */
-        int GetPhaseLenCycles(BitPhase bit_phase);
+        size_t GetPhaseLenCycles(BitPhase bit_phase);
 
         /**
          * @returns Overall bit length in Time quantas.
          */
-        int GetLengthTimeQuanta();
+        size_t GetLengthTimeQuanta();
 
         /**
          * @returns Overall bit length in clock cycles.
          */
-        int GetLengthCycles();
+        size_t GetLengthCycles();
 
         /**
          * Shortens bit phase by number of Time quantas. If a phase is shortened
@@ -146,7 +146,7 @@ class can::Bit {
          * @param num_time_quantas number of time quantas to shorten by
          * @returns Number of time quantas by which a phase was shortened.
          */
-        int ShortenPhase(BitPhase bit_phase, int num_time_quantas);
+        size_t ShortenPhase(BitPhase bit_phase, size_t num_time_quantas);
 
         /**
          * Lengthens phase by Number of time quantas. If the phase does not
@@ -155,7 +155,7 @@ class can::Bit {
          * @param bit_phase phase to lengthen
          * @param num_time_quantas number of time quantas to lengthen the phase by
          */
-        void LengthenPhase(BitPhase bit_phase, int num_time_quantas);
+        void LengthenPhase(BitPhase bit_phase, size_t num_time_quantas);
 
         /**
          * @param index Index of time quanta to return (starting with 0)
@@ -163,7 +163,7 @@ class can::Bit {
          * 
          * If there are less time quantas within a bit than 'index', aborts.
          */
-        TimeQuanta* GetTimeQuanta(int index);
+        TimeQuanta* GetTimeQuanta(size_t index);
 
         /**
          * Gets Time Quanta within a bit phase.
@@ -173,7 +173,7 @@ class can::Bit {
          * 
          * If phase does not exist within a bit or bit does not have so many Time quanta, aborts.
          */
-        TimeQuanta* GetTimeQuanta(BitPhase bit_phase, int index);
+        TimeQuanta* GetTimeQuanta(BitPhase bit_phase, size_t index);
 
         /**
          * Forces a time quanta within a bit to value (Inserts a glitch).
@@ -181,7 +181,7 @@ class can::Bit {
          * @param bit_value Value to which Time quanta shall be forced
          * @return true if successfull, false otherwise
          */
-        bool ForceTimeQuanta(int index, BitValue bit_value);
+        bool ForceTimeQuanta(size_t index, BitValue bit_value);
 
         /**
          * Forces range of Time Quantas within a bit to value.
@@ -190,7 +190,7 @@ class can::Bit {
          * @param bit_value Value to which Time quantas shall be forced
          * @return number of Time Quantas that has actually been forced.
          */
-        int ForceTimeQuanta(int start_index, int end_index, BitValue bit_value);
+        size_t ForceTimeQuanta(size_t start_index, size_t end_index, BitValue bit_value);
 
         /**
          * Forces Time Quanta within a bit phase of a bit to value.
@@ -199,7 +199,7 @@ class can::Bit {
          * @param bit_value Value to which Time quantas shall be forced
          * @return true is successfull, false otherwise
          */
-        bool ForceTimeQuanta(int index, BitPhase bit_phase, BitValue bit_value);
+        bool ForceTimeQuanta(size_t index, BitPhase bit_phase, BitValue bit_value);
 
         /**
          * Forces Time Quanta range within a bit phase of a bit to value. 
@@ -208,8 +208,8 @@ class can::Bit {
          * @param bit_value Value to which Time quantas shall be forced
          * @return number of Time Quantas that has actually been forced
          */
-        int ForceTimeQuanta(int start_index, int end_index, BitPhase bit_phase,
-                            BitValue bit_value);
+        size_t ForceTimeQuanta(size_t start_index, size_t end_index, BitPhase bit_phase,
+                               BitValue bit_value);
 
         /**
          * Corrects (re-calculates) length of Ph2 segment to Nominal bit rate.

@@ -95,9 +95,8 @@ bool can::CtuCanFdInterface::SetCanVersion(CanVersion canVersion)
         return false;
         break;
     }
+    return false;
 }
-
-
 
 void can::CtuCanFdInterface::ConfigureBitTiming(can::BitTiming nominal_bit_timing,
                                                 can::BitTiming data_bit_timing)
@@ -416,7 +415,7 @@ can::FaultConfinementState can::CtuCanFdInterface::GetErrorState()
 
     printf("READ FAULT VALUE: 0x%x\n", data.u32);
     // HW should signal always only one state!
-    uint8_t stateBits = data.u32 & 0x7;
+    //uint8_t stateBits = data.u32 & 0x7;
     //assert(stateBits == 1 || stateBits == 2 || stateBits == 4);
 
     if (data.s.bof == 1)
@@ -427,5 +426,5 @@ can::FaultConfinementState can::CtuCanFdInterface::GetErrorState()
         return FaultConfinementState::BusOff;
 
     // We should never get here!
-    assert(false);
+    assert(false && "Code execution should NOT get here!");
 }

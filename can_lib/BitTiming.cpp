@@ -16,8 +16,7 @@
 #include "BitTiming.h"
 
 
-can::BitTiming::BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
-                          unsigned int brp, unsigned int sjw)
+can::BitTiming::BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_t sjw)
 {
     prop_ = prop;
     ph1_ = ph1;
@@ -34,7 +33,7 @@ can::BitTiming::BitTiming(unsigned int prop, unsigned int ph1, unsigned int ph2,
     assert(sjw <= ph2);
 }
 
-can::BitTiming::BitTiming(){};
+can::BitTiming::BitTiming(){}
 
 
 void can::BitTiming::Print()

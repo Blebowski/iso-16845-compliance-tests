@@ -142,6 +142,4 @@ add_library(
     TestIso_8_6_12.cpp
 )
 
-add_compile_options(COMPLIANCE_TESTS -g -fPIC -Wall -O0)
-
 target_link_libraries(COMPLIANCE_TESTS PUBLIC VPI_LIB)

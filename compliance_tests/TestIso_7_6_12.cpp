@@ -148,7 +148,6 @@ class TestIso_7_6_12 : public test_lib::TestBase
 
                     // Force n-th bit of Error Delimiter to dominant!
                     Bit *bit = driver_bit_frame->GetBitOf(bitToCorrupt - 1, BitType::ErrorDelimiter);
-                    int bitIndex = driver_bit_frame->GetBitIndex(bit);
                     bit->bit_value_ = BitValue::Dominant;
 
                     monitor_bit_frame->InsertActiveErrorFrame(

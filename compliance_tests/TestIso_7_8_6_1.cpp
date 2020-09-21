@@ -93,7 +93,7 @@ class TestIso_7_8_6_1 : public test_lib::TestBase
                 return false;
             }
 
-            for (int i = data_bit_timing.sjw_ + 1; i <= data_bit_timing.ph2_; i++)
+            for (size_t i = data_bit_timing.sjw_ + 1; i <= data_bit_timing.ph2_; i++)
             {
                 // CAN FD frame with bit rate shift, ESI = Dominant
                 FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
@@ -126,10 +126,9 @@ class TestIso_7_8_6_1 : public test_lib::TestBase
                 monitor_bit_frame->TurnReceivedFrame();
 
                 Bit *brsBitDriver = driver_bit_frame->GetBitOf(0, BitType::Brs);
-                Bit *brsBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Brs);
                 Bit *esiBit = driver_bit_frame->GetBitOf(0, BitType::Esi);
 
-                for (int j = 0; j < i; j++)
+                for (size_t j = 0; j < i; j++)
                     brsBitDriver->ForceTimeQuanta(
                         data_bit_timing.ph2_ - 1 - j, BitPhase::Ph2, BitValue::Dominant);
 

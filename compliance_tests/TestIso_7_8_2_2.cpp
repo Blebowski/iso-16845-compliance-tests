@@ -128,7 +128,7 @@ class TestIso_7_8_2_2 : public test_lib::TestBase
             edlBitDriver->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             edlBitMonitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
 
-            for (int j = 0; j < data_bit_timing.ph2_; j++)
+            for (size_t j = 0; j < data_bit_timing.ph2_; j++)
                 brsBit->GetTimeQuanta(BitPhase::Ph2, j)->ForceValue(BitValue::Recessive);
 
             driver_bit_frame->Print(true);

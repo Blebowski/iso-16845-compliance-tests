@@ -132,7 +132,7 @@ class TestIso_7_8_2_1 : public test_lib::TestBase
                 edlBitDriver->LengthenPhase(BitPhase::Ph2, i);
                 edlBitMonitor->LengthenPhase(BitPhase::Ph2, i);
 
-                for (int j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
+                for (size_t j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
                     brsBit->GetTimeQuanta(j)->ForceValue(BitValue::Dominant);
 
                 driver_bit_frame->Print(true);

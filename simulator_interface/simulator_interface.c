@@ -30,15 +30,24 @@ void ProcessVpiClkCallback();
 /**
  * VPI Clock callback
  */
-s_vpi_time vpi_clk_time_data = {vpiSimTime};
-s_vpi_value vpi_clk_value_data = {vpiBinStrVal};
+s_vpi_time vpi_clk_time_data = {
+    .type = vpiSimTime,
+    .high = 0,
+    .low = 0,
+    .real = 0.0
+};
+
+s_vpi_value vpi_clk_value_data = {
+    .format = vpiBinStrVal
+};
+
 s_cb_data vpi_clk_cb_struct;
 
 
 /**
  * Register hook on signal which gives away control to SW part of TB!
  */
-void sw_control_req_callback(struct t_cb_data*cb)
+void sw_control_req_callback()
 {
     vpi_printf("%s Simulator requests passing control to SW!\n", VPI_TAG);
     vpi_drive_str_value(VPI_SIGNAL_CONTROL_GNT, "1");
@@ -51,7 +60,7 @@ void sw_control_req_callback(struct t_cb_data*cb)
     memset(testNameBinary, 0, sizeof(testNameBinary));
     memset(test_name, 0, sizeof(test_name));
     vpi_read_str_value(VPI_SIGNAL_TEST_NAME_ARRAY, &(testNameBinary[0]));
-    for (int i = 0; i < strlen(testNameBinary); i += 8)
+    for (size_t i = 0; i < strlen(testNameBinary); i += 8)
     {
         char letter = 0;
         for (int j = 0; j < 8; j++)
@@ -69,7 +78,7 @@ void sw_control_req_callback(struct t_cb_data*cb)
  * VPI clock callback. Called regularly from TB upon VPI clock which is internally
  * generated. Processes request from Test thread. Called in simulator context.
  */
-void vpi_clk_callback(struct t_cb_data*cb)
+void vpi_clk_callback()
 {
     ProcessVpiClkCallback();
 }
@@ -95,8 +104,15 @@ int register_start_of_sim_cb()
      * the callback declarations static here!
      * TODO: Why is it static?
      */
-    static s_vpi_time timeStruct = {vpiSimTime};
-    static s_vpi_value valueStruct = {vpiBinStrVal};
+    static s_vpi_time timeStruct = {
+        .type = vpiSimTime,
+        .high = 0,
+        .low = 0,
+        .real = 0.0
+    };
+    static s_vpi_value valueStruct = {
+        .format = vpiBinStrVal
+    };
     static s_cb_data cbDataStruct;
 
     // Register hook for function which gives away control of TB to SW!

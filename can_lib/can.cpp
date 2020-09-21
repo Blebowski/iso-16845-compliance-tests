@@ -23,7 +23,7 @@ std::ostream& can::operator<<(std::ostream& os, FrameType &frame_type)
     else
         os << "CAN FD";
     return os;
-};
+}
 
 
 std::ostream& can::operator<<(std::ostream& os, IdentifierType &identifier_type)

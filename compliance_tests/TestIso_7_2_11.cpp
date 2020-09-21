@@ -81,7 +81,7 @@ class TestIso_7_2_11 : public test_lib::TestBase
         {
             SetupTestEnvironment();
 
-            for (int test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
                 frame_flags = std::make_unique<FrameFlags>(elem_tests[test_variant][0].frame_type);
                 golden_frm = std::make_unique<Frame>(*frame_flags);

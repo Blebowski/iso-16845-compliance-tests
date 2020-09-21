@@ -47,6 +47,7 @@ can::FrameType test_lib::TestBase::GetDefaultFrameType(TestVariant &variant)
         default:
             break;
     }
+    return FrameType::Can2_0;
 }
 
 int test_lib::TestBase::Run()
@@ -392,7 +393,7 @@ void test_lib::TestBase::PrintVariantInfo(TestVariant test_variant)
             TestBigMessage("Test variant: Common");
             break;
         default:
-            assert(("Unsupported variant!", false));
+            assert(false && "Unsupported variant!");
             break;
         }
 }

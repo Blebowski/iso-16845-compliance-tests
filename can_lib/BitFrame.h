@@ -38,27 +38,27 @@ class can::BitFrame : public Frame {
         /**
          * @returns number of bits within CAN frame
          */
-        int GetBitCount();
+        size_t GetBitCount();
 
         /**
          * @param bit_field Type of bit field whose length to find.
          * @returns Lenght of queried bit field within a frame. 0 if no such bit field exist.
          */
-        int GetFieldLength(BitType bit_type);
+        size_t GetFieldLength(BitType bit_type);
 
         /**
          * @param index Index of bit within frame to get (SOF = 0, first bit of Base ID = 1, ...)
          * @returns Pointer to bit on 'index' position, aborts if index is higher than number
          *          of bits in the frame.
          */
-        Bit* GetBit(int index);
+        Bit* GetBit(size_t index);
 
         /**
          * @param index Index of bit within frame to get (SOF = 0, first bit of Base ID = 1, ...)
          * @returns Iterator of bit on 'index' position, aborts if index is higher than number
          *          of bits in the frame.
          */
-        std::list<Bit>::iterator GetBitIterator(int index);
+        std::list<Bit>::iterator GetBitIterator(size_t index);
 
         /**
          * Returns bit within given bit field. Stuff bits are counted too.
@@ -67,7 +67,7 @@ class can::BitFrame : public Frame {
          * @returns Pointer to bit on 'index' position within 'bit_type' field, aborts if 'bit_type'
          *          field is not existent or does not have enough bits.
          */
-        Bit* GetBitOf(int index, BitType bit_type);
+        Bit* GetBitOf(size_t index, BitType bit_type);
 
         /**
          * Returns random bit within a Bit field
@@ -86,7 +86,7 @@ class can::BitFrame : public Frame {
          * @returns Pointer to bit on 'index' position within 'bit_type' field, aborts if 'bit_type'
          *          field is not existent or does not have enough bits.
          */
-        Bit* GetBitOfNoStuffBits(int index, BitType bit_type);
+        Bit* GetBitOfNoStuffBits(size_t index, BitType bit_type);
 
         /**
          * Returns bit within given bit field. Stuff bits are counted too.
@@ -94,14 +94,14 @@ class can::BitFrame : public Frame {
          * @param bit_type Type of bit (bit field)
          * @returns Iterator to bit on 'index' position within 'bit_type' field.
          */
-        std::list<Bit>::iterator GetBitOfIterator(int index, BitType bit_type);
+        std::list<Bit>::iterator GetBitOfIterator(size_t index, BitType bit_type);
 
         /**
          * Obtains bit index of bit within a frame.
          * @param can_bit Pointer to a bit (must be within a frame)
          * @returns Index of a bit within a frame (starting from 0 = SOF)
          */
-        int GetBitIndex(Bit *can_bit);
+        size_t GetBitIndex(Bit *can_bit);
 
         /**
          * Obtains stuff bit within a frame.
@@ -115,7 +115,7 @@ class can::BitFrame : public Frame {
          * @param index Index of fixed stuff bit within frame (0 - first stuff bit, 1 - second, ...)
          * @returns Pointer to stuff bit
          */
-        Bit* GetFixedStuffBit(int index);
+        Bit* GetFixedStuffBit(size_t index);
 
         /**
          * Inserts bit to frame.
@@ -124,7 +124,7 @@ class can::BitFrame : public Frame {
          *              shited to one index higher.
          * @returns true if successfull, false otherwise.
          */
-        bool InsertBit(Bit can_bit, int index);
+        bool InsertBit(Bit can_bit, size_t index);
 
         /**
          * Appends bit to a frame.
@@ -143,21 +143,21 @@ class can::BitFrame : public Frame {
          * @param can_bit Bit to remove from frame
          * @returns true if sucesfull, false if 'can_bit' is not from this frame.
          */
-        bool RemoveBit(Bit *can_bit);
+        void RemoveBit(Bit *can_bit);
 
         /**
          * Removes bit from frame
          * @param index Index of bit to be removed.
          * @returns true if sucesfull, false if frame has less than 'index' + 1 bits.
          */
-        bool RemoveBit(int index);
+        bool RemoveBit(size_t index);
 
         /**
          * Removes bits from index till end of bit.
          * @param index Index from which to remove bits.
          * @returns true if sucesfull, false if frame has less than 'index' + 1 bits.
          */
-        bool RemoveBitsFrom(int index);
+        bool RemoveBitsFrom(size_t index);
 
         /**
          * Inserts Error Flag to a frame (Error Delimiter is not inserted).
@@ -165,7 +165,7 @@ class can::BitFrame : public Frame {
          * @param error_flag_type Type of Error flag (active, passive)
          * @returns true if succesfull, false otherwise
          */
-        bool InsertErrorFlag(int index, BitType error_flag_type);
+        bool InsertErrorFlag(size_t index, BitType error_flag_type);
 
         /**
          * Inserts Active Error frame to a frame. Emulates as if CAN controller detected error.
@@ -173,7 +173,7 @@ class can::BitFrame : public Frame {
          *              (This bit is effectively erased from frame).
          * @returns true if succesfull, false otherwise.
          */
-        bool InsertActiveErrorFrame(int index);
+        bool InsertActiveErrorFrame(size_t index);
 
         /**
          * Inserts Active Error frame to specific bit within frame field of a frame.
@@ -181,7 +181,7 @@ class can::BitFrame : public Frame {
          * @param bit_type Type of bit (Frame field type)
          * @returns true if succesfull, false otherwise.
          */
-        bool InsertActiveErrorFrame(int index, BitType bit_type);
+        bool InsertActiveErrorFrame(size_t index, BitType bit_type);
 
         /**
          * Inserts Active Error frame to a frame. Emulates as if CAN controller detected error.
@@ -197,7 +197,7 @@ class can::BitFrame : public Frame {
          *              (This bit is effectively erased from frame).
          * @returns true if succesfull, false otherwise.
          */
-        bool InsertPassiveErrorFrame(int index);
+        bool InsertPassiveErrorFrame(size_t index);
 
         /**
          * Inserts Passive Error frame to a frame. Emulates as if CAN controller detected error.
@@ -213,7 +213,7 @@ class can::BitFrame : public Frame {
          * @param bit_type Type of bit (Frame field type)
          * @returns true if succesfull, false otherwise.
          */
-        bool InsertPassiveErrorFrame(int index, BitType bit_type);
+        bool InsertPassiveErrorFrame(size_t index, BitType bit_type);
 
         /**
          * Inserts Overload frame to a frame. Emulates as if CAN controller detected overload
@@ -222,7 +222,7 @@ class can::BitFrame : public Frame {
          *              (This bit is effectively erased from frame).
          * @returns true if succesfull, false otherwise.
          */
-        bool InsertOverloadFrame(int index);
+        bool InsertOverloadFrame(size_t index);
 
         /**
          * Inserts Overload frame to a frame. Emulates as if CAN controller detected overload
@@ -239,7 +239,7 @@ class can::BitFrame : public Frame {
          * @param bit_type Type of bit (Frame field type)
          * @returns true if succesfull, false otherwise.
          */
-        bool InsertOverloadFrame(int index, BitType bit_type);
+        bool InsertOverloadFrame(size_t index, BitType bit_type);
 
         /**
          * Emulates node loosing arbitration by a CAN node. All bits after 'index' bit become
@@ -248,7 +248,7 @@ class can::BitFrame : public Frame {
          * @param index Index at which arbitration shall be lost.
          * @returns true if succesfull, false otherwise
          */
-        bool LooseArbitration(int index);
+        bool LooseArbitration(size_t index);
 
         /**
          * Emulates node loosing arbitration by a CAN node. All bits after 'index' bit become
@@ -326,7 +326,7 @@ class can::BitFrame : public Frame {
          * @param index Index to clear bits from
          * @return true is succesfull, false otherwise (e.g. bit is not within frame)
          */
-        bool ClearFrameBits(int index);
+        bool ClearFrameBits(size_t index);
 
         /**
          * Calculates all necessary bit fields within CAN frame and creates bits of frame.
@@ -338,7 +338,7 @@ class can::BitFrame : public Frame {
          * In CAN 2.0 frame finish until the end of frame.
          * @returns number of stuff bits inserted.
          */
-        int InsertNormalStuffBits();
+        size_t InsertNormalStuffBits();
 
         /**
          * Inserts stuff bits to stuff count field (first bit and stuff bit after parity).

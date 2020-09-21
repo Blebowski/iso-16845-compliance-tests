@@ -98,9 +98,9 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
                 return false;
             }
 
-            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
+            size_t upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
 
-            for (int i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
+            for (size_t i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
             {
                 // CAN FD frame with bit rate shift
                 uint8_t dataByte = 0x7F;
@@ -141,9 +141,9 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
                 Bit *driverNextBit = driver_bit_frame->GetBitOf(8, BitType::Data);
                 Bit *monitorNextBit = monitor_bit_frame->GetBitOf(7, BitType::Data);
 
-                for (int j = 0; j < i; j++)
+                for (size_t j = 0; j < i; j++)
                     driverStuffBit->ForceTimeQuanta(j, BitValue::Recessive);
-                for (int j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
+                for (size_t j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
                     driverStuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
                 monitorStuffBit->LengthenPhase(BitPhase::Sync, data_bit_timing.sjw_);

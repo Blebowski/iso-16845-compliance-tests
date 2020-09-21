@@ -23,21 +23,21 @@ extern "C" {
 }
 
 
-SimulatorChannel simulator_channel =
+SimulatorChannel simulator_channel
 {
-    .fsm = ATOMIC_VAR_INIT(SIM_CHANNEL_FREE),
+    ATOMIC_VAR_INIT(SimulatorChannelFsm::FREE),      // fsm
 
-    .vpi_dest = "",
-    .vpi_cmd = "",
-    .vpi_data_in = "",
-    .vpi_data_in_2 = "",
-    .vpi_data_out = "",
-    .vpi_message_data = "",
+    "",                                             // vpi_dest
+    "",                                             // vpi_cmd
+    "",                                             // vpi_data_in
+    "",                                             // vpi_data_in_2
+    "",                                             // vpi_data_out
+    "",                                             // vpi_message_data
 
-    .read_access = ATOMIC_VAR_INIT(false),
-    .use_msg_data = ATOMIC_VAR_INIT(false),
+    ATOMIC_VAR_INIT(false),                         // read access
+    ATOMIC_VAR_INIT(false),                         // use_msg_data
 
-    .req = ATOMIC_VAR_INIT(false),
+    ATOMIC_VAR_INIT(false),                         // req
 };
 
 
@@ -92,7 +92,7 @@ void ProcessVpiClkCallback()
     //
     switch (simulator_channel.fsm.load())
     {
-        case SIM_CHANNEL_FREE:
+        case SimulatorChannelFsm::FREE:
             if (req.load())
             {
                 vpi_drive_str_value(VPI_SIGNAL_DEST, (char*)simulator_channel.vpi_dest.c_str());
@@ -102,7 +102,7 @@ void ProcessVpiClkCallback()
                 if (simulator_channel.use_msg_data)
                 {
                     std::string vector = "";
-                    for (int i = 0; i < simulator_channel.vpi_message_data.length(); i++)
+                    for (size_t i = 0; i < simulator_channel.vpi_message_data.length(); i++)
                         vector.append(std::bitset<8>(simulator_channel.vpi_message_data.at(i)).to_string());
 
                     vpi_drive_str_value(VPI_STR_BUF_IN, (char *)vector.c_str());
@@ -110,37 +110,37 @@ void ProcessVpiClkCallback()
 
                 std::atomic_thread_fence(std::memory_order_acquire);
                 vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "1");
-                simulator_channel.fsm.store(SIM_CHANNEL_REQ_UP);
+                simulator_channel.fsm.store(SimulatorChannelFsm::REQ_UP);
                 std::atomic_thread_fence(std::memory_order_acquire);
             }
             break;
 
-        case SIM_CHANNEL_REQ_UP:
+        case SimulatorChannelFsm::REQ_UP:
             memset(vpi_ack, 0, sizeof(vpi_ack));
             vpi_read_str_value(VPI_SIGNAL_ACK, vpi_ack);
             
             if (strcmp(vpi_ack, "1"))
                 return;
-            
-            // Copy back read data for read access
+
+            /* Copy back read data for read access */
             if (simulator_channel.read_access)
             {
                 vpi_read_str_value(VPI_SIGNAL_DATA_OUT, vpi_read_data);
                 simulator_channel.vpi_data_out = std::string(vpi_read_data);
             }
             vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "0");
-            simulator_channel.fsm.store(SIM_CHANNEL_ACK_UP);
+            simulator_channel.fsm.store(SimulatorChannelFsm::ACK_UP);
             std::atomic_thread_fence(std::memory_order_acquire);
             break;
 
-        case SIM_CHANNEL_ACK_UP:
+        case SimulatorChannelFsm::ACK_UP:
             memset(vpi_ack, 0, sizeof(vpi_ack));
 
             vpi_read_str_value(VPI_SIGNAL_ACK, vpi_ack);
             if (strcmp(vpi_ack, (char*) "0"))
                 return;
             vpi_drive_str_value(VPI_SIGNAL_REQ, (char*) "0");
-            simulator_channel.fsm.store(SIM_CHANNEL_FREE);
+            simulator_channel.fsm.store(SimulatorChannelFsm::FREE);
             std::atomic_thread_fence(std::memory_order_acquire);
             SimulatorChannelClearRequest();
             std::atomic_thread_fence(std::memory_order_acquire);
@@ -148,5 +148,5 @@ void ProcessVpiClkCallback()
 
         default:
             break;
-        }
+    }
 }

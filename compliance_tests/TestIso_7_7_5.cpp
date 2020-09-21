@@ -86,7 +86,7 @@ class TestIso_7_7_5 : public test_lib::TestBase
              * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
              ****************************************************************/
 
-            for (int i = 0; i < nominal_bit_timing.sjw_; i++)
+            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++)
             {
                 // CAN 2.0 frame, Base identifier, randomize others
                 FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);

@@ -96,9 +96,9 @@ class TestIso_7_8_4_1 : public test_lib::TestBase
                 return false;
             }
 
-            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
+            size_t upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
 
-            for (int i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
+            for (size_t i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
             {
                 // CAN FD frame with bit rate shift, ESI = Recessive
                 FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
@@ -129,10 +129,10 @@ class TestIso_7_8_4_1 : public test_lib::TestBase
                 Bit *esiBit = driver_bit_frame->GetBitOf(0, BitType::Esi);
                 esiBit->bit_value_ = BitValue::Dominant;
 
-                for (int j = 0; j < i; j++)
+                for (size_t j = 0; j < i; j++)
                     esiBit->ForceTimeQuanta(j, BitValue::Recessive);
 
-                for (int j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
+                for (size_t j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
                     esiBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
                 driver_bit_frame->Print(true);

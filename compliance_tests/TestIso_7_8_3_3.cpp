@@ -95,7 +95,7 @@ class TestIso_7_8_3_3 : public test_lib::TestBase
                 return false;
             }
 
-            for (int i = 0; i < data_bit_timing.sjw_; i++)
+            for (size_t i = 0; i < data_bit_timing.sjw_; i++)
             {
                 // CAN FD frame with bit rate shift, Base ID only and
                 uint8_t dataByte = 0x55;
@@ -134,7 +134,7 @@ class TestIso_7_8_3_3 : public test_lib::TestBase
                 Bit *crcDelimiter = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
                 crcDelimiter->bit_value_ = BitValue::Dominant;
 
-                for (int j = 0; j < i + 1; j++)
+                for (size_t j = 0; j < i + 1; j++)
                     crcDelimiter->ForceTimeQuanta(j, BitValue::Recessive);
 
                 crcDelimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);

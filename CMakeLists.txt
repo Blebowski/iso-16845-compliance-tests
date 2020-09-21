@@ -14,6 +14,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(CAN_FD_MODEL)
 
+add_compile_options(-fPIC -Wall -Wextra -Wpedantic -g -I -c -O0)
+
 # Libraries
 add_subdirectory(can_lib)
 add_subdirectory(test_lib)

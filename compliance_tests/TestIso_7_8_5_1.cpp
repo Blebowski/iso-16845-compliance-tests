@@ -91,9 +91,7 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
                 return false;
             }
 
-            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
-
-            for (int i = 1; i <= data_bit_timing.sjw_; i++)
+            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
             {
                 // CAN FD frame with bit rate shift, ESI = Dominant
                 FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
@@ -131,7 +129,7 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
                 brsBit->ShortenPhase(BitPhase::Ph2, i);
                 brsBitMonitor->ShortenPhase(BitPhase::Ph2, i);
 
-                for (int j = 0; j < data_bit_timing.ph2_; j++)
+                for (size_t j = 0; j < data_bit_timing.ph2_; j++)
                     esiBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
 
 

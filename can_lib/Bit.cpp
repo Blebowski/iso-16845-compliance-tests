@@ -76,7 +76,7 @@ bool can::Bit::IsStuffBit()
 
 std::string can::Bit::GetBitTypeName()
 {
-    for (int i = 0; i < sizeof(bit_type_names_) / sizeof(BitTypeName); i++)
+    for (size_t i = 0; i < sizeof(bit_type_names_) / sizeof(BitTypeName); i++)
         if (bit_type_names_[i].bit_type == bit_type_)
             return bit_type_names_[i].name;
     return " ";
@@ -147,7 +147,7 @@ void can::Bit::SetAllDefaultValues()
 }
 
 
-int can::Bit::GetPhaseLenTimeQuanta(BitPhase bit_phase)
+size_t can::Bit::GetPhaseLenTimeQuanta(BitPhase bit_phase)
 {
     int num_time_quanta = 0;
 
@@ -159,7 +159,7 @@ int can::Bit::GetPhaseLenTimeQuanta(BitPhase bit_phase)
 }
 
 
-int can::Bit::GetPhaseLenCycles(BitPhase bit_phase)
+size_t can::Bit::GetPhaseLenCycles(BitPhase bit_phase)
 {
     int num_cycles = 0;
 
@@ -171,9 +171,9 @@ int can::Bit::GetPhaseLenCycles(BitPhase bit_phase)
 }
 
 
-int can::Bit::GetLengthTimeQuanta()
+size_t can::Bit::GetLengthTimeQuanta()
 {
-    int num_time_quanta = 0;
+    size_t num_time_quanta = 0;
 
     num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Sync);
     num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Prop);
@@ -184,9 +184,9 @@ int can::Bit::GetLengthTimeQuanta()
 }
 
 
-int can::Bit::GetLengthCycles()
+size_t can::Bit::GetLengthCycles()
 {
-    int num_cycles = 0;
+    size_t num_cycles = 0;
 
     num_cycles += GetPhaseLenCycles(BitPhase::Sync);
     num_cycles += GetPhaseLenCycles(BitPhase::Prop);
@@ -197,10 +197,10 @@ int can::Bit::GetLengthCycles()
 }
 
 
-int can::Bit::ShortenPhase(BitPhase bit_phase, int num_time_quanta)
+size_t can::Bit::ShortenPhase(BitPhase bit_phase, size_t num_time_quanta)
 {
-    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
-    int shorten_by = num_time_quanta;
+    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    size_t shorten_by = num_time_quanta;
 
     std::cout << "Phase lenght: " << std::to_string(phase_len) << std::endl;
     std::cout << "Shorten by: " << std::to_string(shorten_by) << std::endl;
@@ -211,7 +211,7 @@ int can::Bit::ShortenPhase(BitPhase bit_phase, int num_time_quanta)
         shorten_by = phase_len;
 
     auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
-    for (int i = 0; i < shorten_by; i++){
+    for (size_t i = 0; i < shorten_by; i++){
         time_quanta_iterator = time_quantas_.erase(time_quanta_iterator);
         time_quanta_iterator--;
     }
@@ -220,9 +220,9 @@ int can::Bit::ShortenPhase(BitPhase bit_phase, int num_time_quanta)
 }
 
 
-void can::Bit::LengthenPhase(BitPhase bit_phase, int num_time_quanta)
+void can::Bit::LengthenPhase(BitPhase bit_phase, size_t num_time_quanta)
 {
-    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
     auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
 
     /* 
@@ -235,15 +235,15 @@ void can::Bit::LengthenPhase(BitPhase bit_phase, int num_time_quanta)
 
     BitTiming *bit_timing = GetPhaseBitTiming(bit_phase);
 
-    for (int i = 0; i < num_time_quanta; i++)
+    for (size_t i = 0; i < num_time_quanta; i++)
         time_quantas_.insert(time_quanta_iterator,
                              TimeQuanta(bit_timing->brp_, bit_phase));
 }
 
 
-can::TimeQuanta* can::Bit::GetTimeQuanta(int index)
+can::TimeQuanta* can::Bit::GetTimeQuanta(size_t index)
 {
-    assert(("Bit does not have so many time quantas", index < time_quantas_.size()));
+    assert(index < time_quantas_.size() && "Bit does not have so many time quantas");
 
     auto time_quanta_iterator = time_quantas_.begin();
     std::advance(time_quanta_iterator, index);
@@ -252,12 +252,12 @@ can::TimeQuanta* can::Bit::GetTimeQuanta(int index)
 }
 
 
-can::TimeQuanta* can::Bit::GetTimeQuanta(BitPhase bit_phase, int index)
+can::TimeQuanta* can::Bit::GetTimeQuanta(BitPhase bit_phase, size_t index)
 {
-    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
 
-    assert(("Bit phase does not exist", phase_len > 0));
-    assert(("Bit does not have so many time quantas", index < phase_len));
+    assert(phase_len > 0 && "Bit phase does not exist");
+    assert(index < phase_len && "Bit does not have so many time quantas");
 
     auto time_quanta_iterator = GetFirstTimeQuantaIterator(bit_phase);
     std::advance(time_quanta_iterator, index);
@@ -266,7 +266,7 @@ can::TimeQuanta* can::Bit::GetTimeQuanta(BitPhase bit_phase, int index)
 }
 
 
-bool can::Bit::ForceTimeQuanta(int index, BitValue bit_value)
+bool can::Bit::ForceTimeQuanta(size_t index, BitValue bit_value)
 {
     if (index >= GetLengthTimeQuanta())
         return false;
@@ -279,23 +279,23 @@ bool can::Bit::ForceTimeQuanta(int index, BitValue bit_value)
 }
 
 
-int can::Bit::ForceTimeQuanta(int start_index, int end_index, BitValue bit_value)
+size_t can::Bit::ForceTimeQuanta(size_t start_index, size_t end_index, BitValue bit_value)
 {
-    int len_time_quanta = GetLengthTimeQuanta();
+    size_t len_time_quanta = GetLengthTimeQuanta();
 
     if (start_index >= len_time_quanta)
         return 0;
     if (start_index > end_index)
         return 0;
 
-    int end_index_real = end_index;
+    size_t end_index_real = end_index;
     if (end_index >= len_time_quanta)
         end_index_real = len_time_quanta - 1;
 
     auto time_quanta_iterator = time_quantas_.begin();
     std::advance(time_quanta_iterator, start_index);
 
-    int i = 0;
+    size_t i = 0;
     for (; i <= end_index_real - start_index; i++)
     {
         time_quanta_iterator->ForceValue(bit_value);
@@ -306,9 +306,9 @@ int can::Bit::ForceTimeQuanta(int start_index, int end_index, BitValue bit_value
 }
 
 
-bool can::Bit::ForceTimeQuanta(int index, BitPhase bit_phase, BitValue bit_value)
+bool can::Bit::ForceTimeQuanta(size_t index, BitPhase bit_phase, BitValue bit_value)
 {
-    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
 
     if ((phase_len == 0) || (phase_len <= index))
         return false;
@@ -320,18 +320,18 @@ bool can::Bit::ForceTimeQuanta(int index, BitPhase bit_phase, BitValue bit_value
 }
 
 
-int can::Bit::ForceTimeQuanta(int start_index, int end_index, BitPhase bit_phase,
-                              BitValue bit_value)
+size_t can::Bit::ForceTimeQuanta(size_t start_index, size_t end_index, BitPhase bit_phase,
+                                 BitValue bit_value)
 {
-    int phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
     if ((phase_len == 0) || (phase_len <= start_index))
         return false;
 
-    int end_index_real = end_index;
+    size_t end_index_real = end_index;
     if (end_index >= phase_len)
         end_index_real = phase_len - 1;
 
-    int i;
+    size_t i;
     for (i = start_index; i <= end_index_real; i++)
         ForceTimeQuanta(i, bit_phase, bit_value);
 
@@ -368,10 +368,11 @@ can::BitPhase can::Bit::PrevBitPhase(BitPhase bit_phase)
 
     // In case of Sync phase do not link to previous bit in any way...
     case BitPhase::Sync:
-        return BitPhase::Sync;
+        break;
     }
-}
 
+    return BitPhase::Sync;
+}
 
 can::BitPhase can::Bit::NextBitPhase(BitPhase bit_phase)
 {
@@ -397,11 +398,12 @@ can::BitPhase can::Bit::NextBitPhase(BitPhase bit_phase)
         if (HasPhase(BitPhase::Ph2))
             return BitPhase::Ph2;
         return BitPhase::Ph1;
+    
     case BitPhase::Ph2:
-        return BitPhase::Ph2;
+        break;
     }
+    return BitPhase::Ph2;
 }
-
 
 can::BitRate can::Bit::GetPhaseBitRate(BitPhase bit_phase)
 {
@@ -458,7 +460,7 @@ void can::Bit::CorrectPh2LenToNominal()
             else
                 tqIter++;
 
-        for (int i = 0; i < nominal_bit_timing->ph2_; i++)
+        for (size_t i = 0; i < nominal_bit_timing->ph2_; i++)
             time_quantas_.push_back(TimeQuanta(nominal_bit_timing->brp_, BitPhase::Ph2));
     }
 }
@@ -509,12 +511,12 @@ void can::Bit::ConstructTimeQuantas()
 
     // Construct TSEG 1
     time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Sync));
-    for (int i = 0; i < tseg1_bit_timing->prop_; i++)
+    for (size_t i = 0; i < tseg1_bit_timing->prop_; i++)
         time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Prop));
-    for (int i = 0; i < tseg1_bit_timing->ph1_; i++)
+    for (size_t i = 0; i < tseg1_bit_timing->ph1_; i++)
         time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Ph1));
 
     // Construct TSEG 2
-    for (int i = 0; i < tseg2_bit_timing->ph2_; i++)
+    for (size_t i = 0; i < tseg2_bit_timing->ph2_; i++)
         time_quantas_.push_back(TimeQuanta(tseg2_bit_timing->brp_, BitPhase::Ph2));
 }

@@ -76,7 +76,7 @@ class TestIso_7_6_20 : public test_lib::TestBase
              ****************************************************************/
 
             int iterCnt;
-            int rec, recNew;
+            int recNew;
             FrameType dataRate;
 
             if (dut_can_version == CanVersion::CanFdEnabled)
