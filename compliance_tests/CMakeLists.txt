@@ -143,6 +143,7 @@ add_library(
     TestIso_8_6_13.cpp
     TestIso_8_6_14.cpp
     TestIso_8_6_15.cpp
+    TestIso_8_6_16.cpp
 )
 
 target_link_libraries(COMPLIANCE_TESTS PUBLIC VPI_LIB)
