@@ -170,11 +170,8 @@ class TestIso_7_5_1 : public test_lib::TestBase
                     RunLowerTester(true, true);
                     CheckLowerTesterResult();
 
-                    /*
-                     * Receiver will make received frame valid on 6th bit of EOF! Therefore at point
-                     * where Error occurs, frame was already received OK and should be readable!
-                     */
                     CheckRxFrame(*golden_frm);
+                    CheckNoRxFrame(); /* Only one frame should be received */
                 }
             }
 

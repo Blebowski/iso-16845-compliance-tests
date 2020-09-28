@@ -12,7 +12,7 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 8.6.13
+ * @test ISO16845 8.6.14
  * 
  * @brief This test verifies that an IUT acting as a transmitter does not
  *        change the value of its TEC when monitoring an error flag with
