@@ -242,6 +242,11 @@ class can::BitFrame : public Frame {
         bool InsertOverloadFrame(size_t index, BitType bit_type);
 
         /**
+         * Appends 8 Suspend Transmission bits to after last bit in a frame.
+         */
+        void AppendSuspendTransmission();
+
+        /**
          * Emulates node loosing arbitration by a CAN node. All bits after 'index' bit become
          * recessive. ACK bit becomes dominant. Arbitration can be lost only on bits which
          * belong to arbitration field.

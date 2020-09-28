@@ -908,6 +908,14 @@ bool can::BitFrame::InsertOverloadFrame(size_t index, BitType bit_type)
 }
 
 
+void can::BitFrame::AppendSuspendTransmission()
+{
+    for (int i = 0; i < 8; i++)
+        AppendBit(Bit(BitType::Suspend, BitValue::Recessive,
+            &frame_flags_, nominal_bit_timing_, data_bit_timing_));
+}
+
+
 bool can::BitFrame::LooseArbitration(size_t index)
 {
     Bit *bit = GetBit(index);
