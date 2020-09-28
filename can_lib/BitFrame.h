@@ -153,6 +153,13 @@ class can::BitFrame : public Frame {
         bool RemoveBit(size_t index);
 
         /**
+         * Removes bit from frame
+         * @param index Index of bit within bit field to be removed.
+         * @param bit_type Type of bit field to remove.
+         */
+        void RemoveBit(size_t index, BitType bit_type);
+
+        /**
          * Removes bits from index till end of bit.
          * @param index Index from which to remove bits.
          * @returns true if sucesfull, false if frame has less than 'index' + 1 bits.

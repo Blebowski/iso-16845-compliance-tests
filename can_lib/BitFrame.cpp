@@ -762,6 +762,14 @@ bool can::BitFrame::RemoveBit(size_t index)
 }
 
 
+void can::BitFrame::RemoveBit(size_t index, BitType bit_type)
+{
+    Bit *bit_to_remove = GetBitOf(index, bit_type);
+    assert(bit_to_remove != NULL && "Can't remove bit which is NULL");
+
+    RemoveBit(bit_to_remove);
+}
+
 bool can::BitFrame::RemoveBitsFrom(size_t index)
 {
     if (bits_.size() <= index)
