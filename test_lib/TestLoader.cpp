@@ -50,6 +50,8 @@
 #include "../compliance_tests/TestIso_7_4_4.cpp"
 #include "../compliance_tests/TestIso_7_4_5.cpp"
 
+#include "../compliance_tests/TestIso_7_5_1.cpp"
+
 #include "../compliance_tests/TestIso_7_6_1.cpp"
 #include "../compliance_tests/TestIso_7_6_2.cpp"
 #include "../compliance_tests/TestIso_7_6_3.cpp"
@@ -224,6 +226,9 @@ std::unique_ptr<test_lib::TestBase> ConstructTestObject(std::string name)
         test_ptr = std::make_unique<TestIso_7_4_4>();
     } else if (name == "iso_7_4_5") {
         test_ptr = std::make_unique<TestIso_7_4_5>();
+
+    } else if (name == "iso_7_5_1") {
+        test_ptr = std::make_unique<TestIso_7_5_1>();
 
     } else if (name == "iso_7_6_1") {
         test_ptr = std::make_unique<TestIso_7_6_1>();
