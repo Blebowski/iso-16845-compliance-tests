@@ -167,6 +167,13 @@ class can::BitFrame : public Frame {
         bool RemoveBitsFrom(size_t index);
 
         /**
+         * Removes bits from bit index within bit field till end of bit.
+         * @param index Index from which to remove bits.
+         * @param bit_type Type of bit field to remove bits from
+         */
+        void RemoveBitsFrom(size_t index, BitType bit_type);
+
+        /**
          * Inserts Error Flag to a frame (Error Delimiter is not inserted).
          * @param index Index of a bit on which Error flag shall start.
          * @param error_flag_type Type of Error flag (active, passive)

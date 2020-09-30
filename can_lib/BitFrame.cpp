@@ -785,6 +785,10 @@ bool can::BitFrame::RemoveBitsFrom(size_t index)
     return true;
 }
 
+void can::BitFrame::RemoveBitsFrom(size_t index, BitType bit_type)
+{
+    RemoveBitsFrom(GetBitIndex(GetBitOf(index, bit_type)));
+}
 
 bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
 {
