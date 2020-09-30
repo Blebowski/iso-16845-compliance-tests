@@ -42,7 +42,7 @@ extern "C" void RunCppTest(char *test_name);
  * 
  * @param name Name of SW test object to create.
  */
-std::unique_ptr<test_lib::TestBase> ConstructTestObject(std::string name);
+test_lib::TestBase* ConstructTestObject(std::string name);
 
 
 /**

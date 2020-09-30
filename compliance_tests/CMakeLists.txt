@@ -43,6 +43,7 @@ add_library(
     TestIso_7_5_2.cpp
     TestIso_7_5_3.cpp
     TestIso_7_5_6.cpp
+    TestIso_7_5_7.cpp
 
     TestIso_7_6_1.cpp
     TestIso_7_6_2.cpp

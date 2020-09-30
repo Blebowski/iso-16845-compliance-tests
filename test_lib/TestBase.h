@@ -96,7 +96,7 @@ class test_lib::TestBase
         std::vector<TestVariant> test_variants;
 
         /**
-         * 
+         * Elementary test cases to be ran during the test.
          */
         std::vector<std::vector<ElementaryTest>> elem_tests;
 
