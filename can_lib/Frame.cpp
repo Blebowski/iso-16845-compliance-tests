@@ -106,9 +106,9 @@ void can::Frame::Randomize()
     if (randomize_identifier)
     {
         if (frame_flags().is_ide_ == IdentifierType::Extended)
-            set_identifer(rand() % (2 ^ 29));
+            set_identifer(rand() % ((int)pow(2, 29)));
         else
-            set_identifer(rand() % (2 ^ 11));
+            set_identifer(rand() % ((int)pow(2, 11)));
     }
 
     if (randomize_dlc)
