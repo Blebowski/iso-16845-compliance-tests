@@ -111,6 +111,15 @@ class can::BitFrame : public Frame {
         Bit* GetStuffBit(int index);
 
         /**
+         * Obtains a Stuff bit within a bit field at certain position.
+         * @param bit_type Type of bit field
+         * @param stuff_bit_type Type of stuff bit to find (No stuff bit, Fixed, regular)
+         * @param bit_value Consider bits of this value only
+         * @returns Pointer to the bit
+         */
+        Bit* GetStuffBit(BitType bit_type, StuffBitType stuff_bit_type, BitValue bit_value);
+
+        /**
          * Obtains stuff bit within a frame.
          * @param index Index of fixed stuff bit within frame (0 - first stuff bit, 1 - second, ...)
          * @returns Pointer to stuff bit
@@ -283,6 +292,23 @@ class can::BitFrame : public Frame {
          * ACK Slot is turned dominant.
          */
         void TurnReceivedFrame();
+
+        /**
+         * Gets number of Stuff bits in a bit field of a frame.
+         * @param bit_type Type of bit to find number of stuff bits in
+         * @param stuff_bit_type Type of stuff bit to count (No stuff bit, Fixed, regular)
+         * @returns Number of stuff bits within bit field of a frame.
+         */
+        int GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type);
+
+        /**
+         * Gets number of Stuff bits in a bit field of a frame with matching value
+         * @param bit_type Type of bit to find number of stuff bits in
+         * @param stuff_bit_type Type of stuff bit to count (No stuff bit, Fixed, regular)
+         * @param bit_value Value of bit to check
+         * @returns Number of stuff bits within bit field of a frame matching required value
+         */
+        int GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type, BitValue bit_value);
 
         /**
          * @returns CRC of frame. Real CRC is returned based on frame type (CAN 2.0 or FD)!
