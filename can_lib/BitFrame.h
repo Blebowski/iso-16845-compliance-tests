@@ -289,7 +289,8 @@ class can::BitFrame : public Frame {
 
         /**
          * Converts frame as if this frame was received frame. All bits are turned Recessive.
-         * ACK Slot is turned dominant.
+         * ACK Slot is turned dominant. In FD frame only first bit of ACK slot bit is turned to
+         * dominant since receiver shall send only one dominant ACK!
          */
         void TurnReceivedFrame();
 
@@ -357,6 +358,7 @@ class can::BitFrame : public Frame {
         uint32_t crc15_;
         uint32_t crc17_;
         uint32_t crc21_;
+        size_t crc_lenght;
 
         /* Stuff counts: unsigned and grey coded */
         uint8_t stuff_count_;

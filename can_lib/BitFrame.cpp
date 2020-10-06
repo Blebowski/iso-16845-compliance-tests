@@ -282,6 +282,8 @@ void can::BitFrame::BuildFrameBits()
     // Add CRC Delimiter, ACK and ACK Delimiter
     AppendBit(BitType::CrcDelimiter, BitValue::Recessive);
     AppendBit(BitType::Ack, BitValue::Recessive);
+    if (frame_flags_.is_fdf_ == FrameType::CanFd)
+        AppendBit(BitType::Ack, BitValue::Recessive);
     AppendBit(BitType::AckDelimiter, BitValue::Recessive);
 
     // Finalize by EOF and by Intermission
@@ -985,13 +987,12 @@ bool can::BitFrame::LooseArbitration(Bit *bit)
 
 void can::BitFrame::TurnReceivedFrame()
 {
-    std::list<Bit>::iterator bit_it;
+    for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
+        bit_it->bit_value_ = BitValue::Recessive;
 
-    for (bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
-        if (bit_it->bit_type_ == BitType::Ack)
-            bit_it->bit_value_ = BitValue::Dominant;
-        else
-            bit_it->bit_value_ = BitValue::Recessive;
+    Bit *bit = GetBitOf(0, BitType::Ack);
+    assert(bit != NULL && "No ACK bit present in frame!");
+    bit->bit_value_ = BitValue::Dominant;
 }
 
 
