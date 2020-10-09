@@ -46,6 +46,11 @@ class test_lib::TestBase
          */
         TestBase();
 
+        /**
+         * Destructor must be virtual
+         */
+        virtual ~TestBase();
+
         /**********************************************************************
          * Test configuration.
          * 

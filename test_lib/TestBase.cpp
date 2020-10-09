@@ -33,6 +33,11 @@ test_lib::TestBase::TestBase()
     this->test_result = true;
 }
 
+test_lib::TestBase::~TestBase()
+{
+    delete this->dut_ifc;
+}
+
 can::FrameType test_lib::TestBase::GetDefaultFrameType(TestVariant &variant)
 {
     switch (variant){
