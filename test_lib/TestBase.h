@@ -295,6 +295,12 @@ class test_lib::TestBase
          * TODO: Replace with unique pointers!!
          */
         void DeleteCommonObjects();
+
+        /**
+         * Forces erase of all test specific pointers. This is desirable to do
+         * each iteration.
+         */
+        void FreeTestObjects();
 };
 
 #endif

@@ -416,3 +416,13 @@ void test_lib::TestBase::DeleteCommonObjects()
     delete driver_bit_frame;
     delete monitor_bit_frame;
 }
+
+void test_lib::TestBase::FreeTestObjects()
+{
+    golden_frm.reset();
+    golden_frm_2.reset();
+    driver_bit_frm.reset();
+    driver_bit_frm_2.reset();
+    monitor_bit_frm.reset();
+    monitor_bit_frm_2.reset();
+}
