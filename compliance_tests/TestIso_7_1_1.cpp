@@ -55,6 +55,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
+#include <cmath>
 
 #include "../vpi_lib/vpiComplianceLib.hpp"
 
@@ -72,97 +73,92 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_1_1 : public test_lib::TestBase
 {
     public:
 
-        // TODO: Use approach with randomization!
-        FrameFlags frameFlags_2_0 = FrameFlags(
-            FrameType::Can2_0, IdentifierType::Base, RtrFlag::DataFrame,
-            BrsFlag::DontShift, EsiFlag::ErrorActive);
-        FrameFlags frameFlags_fd = FrameFlags(
-            FrameType::CanFd, IdentifierType::Base, RtrFlag::DataFrame,
-            BrsFlag::DontShift, EsiFlag::ErrorActive);
-
-        int idList[5];
-        uint8_t data[64];
-
-        /**
-         * Test constructor.
-         */
-        TestIso_7_1_1() : TestBase()
+        void ConfigureTest()
         {
-            idList[0] = 0x555;
-            idList[1] = 0x2AA;
-            idList[2] = 0x000;
-            idList[3] = 0x7FF;
-            idList[4] = rand() % (2 ^ 11);
-            test_result = true;
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            for (int i = 0; i < 45; i++)
+                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+            for (int i = 0; i < 80; i++)
+                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+
+            CanAgentConfigureTxToRxFeedback(true);
         }
 
-        /**
-         * 
-         */
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
+            SetupTestEnvironment();
 
-            TestMessage("Test %s : Run Entered", test_name);
-
-            /*****************************************************************
-             * CAN 2_0, FD Tolerant, FD Enabled common part.
-             ****************************************************************/
-
-            for (int id = 0; id < 5; id++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                for (uint8_t dlc = 0; dlc <= 8; dlc++)
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    // Generate random data
-                    for (int k = 0; k < 64; k++)
-                        data[k] = rand() % (2 ^ 8);
+                    PrintElemTestInfo(elem_test);
 
-                    // Create frames
-                    golden_frame = new Frame(frameFlags_2_0, dlc, idList[id], data);
-                    driver_bit_frame = new BitFrame(*golden_frame, &nominal_bit_timing,
-                                                    &data_bit_timing);
-                    monitor_bit_frame = new BitFrame(*golden_frame, &nominal_bit_timing,
-                                                    &data_bit_timing);
-
-                    TestBigMessage("Test frame:");
-                    golden_frame->Print();
-
-                    // Monitor frame as if received, driver frame must have ACK too!
-                    monitor_bit_frame->TurnReceivedFrame();
-                    driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_= BitValue::Dominant;
-
-                    // Convert frames to test sequences, push to Lower tester, run and check!
-                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-
-                    // Read received frame from DUT and compare with sent frame
-                    Frame readFrame = this->dut_ifc->ReadFrame();
-                    if (CompareFrames(*golden_frame, readFrame) == false)
+                    int can_id;
+                    switch (elem_test.index)
                     {
-                        test_result = false;
-                        TestControllerAgentEndTest(test_result);
+                        case 1:
+                            can_id = 0x555;
+                            break;
+                        case 2:
+                            can_id = 0x2AA;
+                            break;
+                        case 3:
+                            can_id = 0x000;
+                            break;
+                        case 4:
+                            can_id = 0x7FF;
+                            break;
+                        case 5:
+                            can_id = rand() % (int)pow(2, 11);
+                            break;
+                        default:
+                            can_id = 0x0;
+                            break;
                     }
 
-                    DeleteCommonObjects();
+                    uint8_t dlc = (elem_test.index - 1) / 5;
+
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    RtrFlag::DataFrame, EsiFlag::ErrorActive);
+                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
+                    RandomizeAndPrint(golden_frm.get());
+
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Turn monitored frame as if received.
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /***************************************************************************** 
+                     * Execute test
+                     *****************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+                    CheckRxFrame(*golden_frm);
+
+                    FreeTestObjects();
 
                     if (test_result == false)
                         return false;
                 }
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };
