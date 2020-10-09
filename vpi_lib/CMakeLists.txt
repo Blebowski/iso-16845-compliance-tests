@@ -16,9 +16,11 @@ add_library(
     _pli_types.h
     vpi_user.h
     vpi_utils.h
+    vpi_handle_manager.h
     SimulatorChannel.hpp
     vpiComplianceLib.hpp
     
+    vpi_handle_manager.c
     vpi_utils.c
     SimulatorChannel.cpp
     vpiComplianceLib.cpp

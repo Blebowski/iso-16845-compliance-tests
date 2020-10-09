@@ -16,6 +16,8 @@
 
 #include "../vpi_lib/vpi_user.h"
 #include "../vpi_lib/vpi_utils.h"
+#include "../vpi_lib/vpi_handle_manager.h"
+
 
 /* Test information shared with test thread */
 char test_name[128];
@@ -56,15 +58,15 @@ void sw_control_req_callback()
     /* Obtain test name. This is an ugly hack since GHDL VPI does not support
      * passing strings or custom arrays! Passed via std_logic_vector by 
      * converting each character to ASCII bit vector */
-    char testNameBinary[1024];
-    memset(testNameBinary, 0, sizeof(testNameBinary));
+    char test_name_binary[1024];
+    memset(test_name_binary, 0, sizeof(test_name_binary));
     memset(test_name, 0, sizeof(test_name));
-    vpi_read_str_value(VPI_SIGNAL_TEST_NAME_ARRAY, &(testNameBinary[0]));
-    for (size_t i = 0; i < strlen(testNameBinary); i += 8)
+    vpi_read_str_value(VPI_SIGNAL_TEST_NAME_ARRAY, &(test_name_binary[0]));
+    for (size_t i = 0; i < strlen(test_name_binary); i += 8)
     {
         char letter = 0;
         for (int j = 0; j < 8; j++)
-            if (testNameBinary[i + j] == '1')
+            if (test_name_binary[i + j] == '1')
                 letter |= 0x1 << (7 - j);
         test_name[i / 8] = letter;
     }
@@ -89,10 +91,14 @@ void vpi_clk_callback()
  */
 int register_start_of_sim_cb()
 {
-    vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
-    vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = get_net_handle(topModule, VPI_SIGNAL_CONTROL_REQ);
-    if (reqHandle == NULL)
+    fprintf(stderr, "%s A\n", VPI_TAG);
+    struct hlist_node* node = get_top_net_handle(VPI_SIGNAL_CONTROL_REQ);
+    fprintf(stderr, "Handle: %d \n", node->handle);
+    fprintf(stderr, "Size: %d \n", node->signal_size);
+    fprintf(stderr, "Name: %s \n", node->signal_name);
+    fprintf(stderr, "%s B\n", VPI_TAG);
+
+    if (node == NULL)
     {
         vpi_printf("%s Can't register request handle\n", VPI_TAG);
         fprintf(stderr, "%s Can't register request handle\n", VPI_TAG);
@@ -104,25 +110,25 @@ int register_start_of_sim_cb()
      * the callback declarations static here!
      * TODO: Why is it static?
      */
-    static s_vpi_time timeStruct = {
+    static s_vpi_time time_struct = {
         .type = vpiSimTime,
         .high = 0,
         .low = 0,
         .real = 0.0
     };
-    static s_vpi_value valueStruct = {
+    static s_vpi_value value_struct = {
         .format = vpiBinStrVal
     };
-    static s_cb_data cbDataStruct;
+    static s_cb_data cb_data_struct;
 
     // Register hook for function which gives away control of TB to SW!
-    cbDataStruct.reason = cbValueChange;
-    cbDataStruct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&sw_control_req_callback);
-    cbDataStruct.time = &timeStruct;
-    cbDataStruct.value = &valueStruct;
-    cbDataStruct.obj = reqHandle;
+    cb_data_struct.reason = cbValueChange;
+    cb_data_struct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&sw_control_req_callback);
+    cb_data_struct.time = &time_struct;
+    cb_data_struct.value = &value_struct;
+    cb_data_struct.obj = node->handle;
 
-    if (vpi_register_cb (&cbDataStruct) == NULL)
+    if (vpi_register_cb (&cb_data_struct) == NULL)
     {
         vpi_printf ("%s Cannot register cbValueChange call back\n", VPI_TAG);
         fprintf(stderr, "%s Cannot register cbValueChange call back\n", VPI_TAG);
@@ -136,16 +142,12 @@ int register_start_of_sim_cb()
  */
 int register_vpi_clk_cb()
 {
-    vpiHandle topIterator = vpi_iterate(vpiModule, NULL);
-    vpiHandle topModule = vpi_scan(topIterator);
-    vpiHandle reqHandle = get_net_handle(topModule, VPI_SIGNAL_CLOCK);
-    if (reqHandle == NULL)
+    struct hlist_node *node = get_top_net_handle(VPI_SIGNAL_CLOCK);
+
+    if (node == NULL)
     {
-        vpi_printf("%s Can't register request handle\n", VPI_TAG);
+        vpi_printf("%s Can't obtain request handle\n", VPI_TAG);
         fprintf(stderr, "%s Can't register request handle\n", VPI_TAG);
-        vpi_free_object(reqHandle);
-        vpi_free_object(topModule);
-        vpi_free_object(topIterator);
         return -1;
     }
 
@@ -153,21 +155,14 @@ int register_vpi_clk_cb()
     vpi_clk_cb_struct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&vpi_clk_callback);
     vpi_clk_cb_struct.time = &vpi_clk_time_data;
     vpi_clk_cb_struct.value = &vpi_clk_value_data;
-    vpi_clk_cb_struct.obj = reqHandle;
+    vpi_clk_cb_struct.obj = node->handle;
  
     if (vpi_register_cb(&vpi_clk_cb_struct) == NULL)
     {
         vpi_printf("%s Cannot register VPI clock callback\n", VPI_TAG);
         fprintf(stderr, "%s Cannot register VPI clock callback\n", VPI_TAG);
-        vpi_free_object(reqHandle);
-        vpi_free_object(topModule);
-        vpi_free_object(topIterator);
         return -2;
     }
-
-    vpi_free_object(reqHandle);
-    vpi_free_object(topModule);
-    vpi_free_object(topIterator);
 
     return 0;
 }
@@ -197,7 +192,7 @@ void vpi_start_of_sim(){
 /**
  * Called by simulator upon entrance to simulation (registers all handles)
  */
-void handleRegister()
+void handle_register()
 {
     s_cb_data cb_start;
   
@@ -222,6 +217,6 @@ void handleRegister()
  */
 void (*vlog_startup_routines[]) () =
 {
-  handleRegister,
+  handle_register,
   0
 };

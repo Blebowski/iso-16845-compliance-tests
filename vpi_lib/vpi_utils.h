@@ -47,18 +47,6 @@
 // Size of vpi_data_in and vpi_data out vectors
 #define VPI_DBUF_SIZE 64
 
-/**
- * @brief Obtain VPI handle to a net in Simulator.
- * 
- * @param moduleHandle Handle to a module/entity containing the signal.
- * @param netName Name of the net.
- * @returns Handle to the net.
- * 
- * @warning This function should be called only in simulator context as result
- *          of simulator callback.
- */
-vpiHandle get_top_net_handle(vpiHandle module_handle, const char *signal_name);
-
 
 /**
  * @brief Drive value to top level net in Simulator. Signal shall be logic or
