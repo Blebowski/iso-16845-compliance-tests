@@ -57,7 +57,7 @@
  * @warning This function should be called only in simulator context as result
  *          of simulator callback.
  */
-vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName);
+vpiHandle get_top_net_handle(vpiHandle module_handle, const char *signal_name);
 
 
 /**
@@ -72,7 +72,7 @@ vpiHandle get_net_handle(vpiHandle moduleHandle, const char *netName);
  * @warning This function should be called only in simulator context as result
  *          of simulator callback.
  */
-int vpi_drive_str_value(const char *signalName, const char *value);
+int vpi_drive_str_value(const char *signal_name, const char *value);
 
 
 /**
@@ -86,7 +86,7 @@ int vpi_drive_str_value(const char *signalName, const char *value);
  * @warning This function should be called only in simulator context as result
  *          of simulator callback.
  */
-int vpi_read_str_value(const char *signalName, char *retValue);
+int vpi_read_str_value(const char *signal_name, char *ret_value);
 
 
 #endif
