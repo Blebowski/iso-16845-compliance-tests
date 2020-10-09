@@ -28,7 +28,7 @@
 class can::DutInterface
 {
     public:
-        virtual ~DutInterface() = 0;
+        virtual ~DutInterface(){};
 
         /**
          * Enables DUT to operate on CAN bus. After enabling, DUT starts integrating.
