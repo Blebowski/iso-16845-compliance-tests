@@ -12,7 +12,7 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 7.1.2 (first part, CAN 2.0 frames)
+ * @test ISO16845 7.1.2
  * 
  * @brief This test verifies the behaviour of the IUT when receiving a correct
  *        data frame with different identifiers and different numbers of data
