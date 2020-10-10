@@ -959,21 +959,26 @@ bool can::BitFrame::LooseArbitration(size_t index)
         bit_type != BitType::IdentifierExtension &&
         bit_type != BitType::Rtr &&
         bit_type != BitType::Srr &&
-        bit_type != BitType::Ide)
+        bit_type != BitType::Ide &&
+
+        /* R1 is not in arbitration, but this is needed for simpler modelling in cases
+           when arbitration is lost on RTR bit against FD frames (which have R1 bit there) */
+        bit_type != BitType::R1)
     {
         std::cerr << "Can't loose arbitration on bit which is not in arbitration field" << std::endl;
         return false;
     }
 
     // Move to position where we want to loose arbitration
+    // TODO: Rewrite with lambda!
     for (size_t i = 0; i < index; i++)
         bit_it++;
 
+    /* Turn to recessive from this bit further */
     for (; bit_it != bits_.end(); bit_it++)
-        if (bit_it->bit_type_ == BitType::Ack)
-            bit_it->bit_value_ = BitValue::Dominant;
-        else
-            bit_it->bit_value_ = BitValue::Recessive;
+        bit_it->bit_value_ = BitValue::Recessive;
+
+    GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
     return true;
 }
