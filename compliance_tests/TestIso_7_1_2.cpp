@@ -6,17 +6,17 @@
  * previously aggreed with author of this text.
  * 
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 27.3.2020
+ * @date 10.10.2020
  * 
  *****************************************************************************/
 
 /******************************************************************************
  * 
- * @test ISO16845 7.1.1
+ * @test ISO16845 7.1.2 (first part, CAN 2.0 frames)
  * 
- * @brief This test verifies the behaviour of the IUT when receiving a
- * correct data frame with different identifiers and different numbers of data
- * bytes in base format frame.
+ * @brief This test verifies the behaviour of the IUT when receiving a correct
+ *        data frame with different identifiers and different numbers of data
+ *        bytes in extended format frame.
  * 
  * @version CAN FD Enabled, CAN FD Tolerant, Classical CAN
  * 
@@ -27,30 +27,29 @@
  * 
  * Elementary test cases:
  *  CAN FD Enabled, CAN FD Tolerant, Classical CAN :
- *      The CAN ID will be element of: ∈ [000 h , 7FF h]
+ *      The CAN ID shall be element of: ∈ [00000000 h , 1FFFFFFF h ]
  *          Different CAN IDs are used for test.
  *          Elementary test cases:
- *              #1 CAN ID = 555 h
- *              #2 CAN ID = 2AA h
- *              #3 CAN ID = 000 h
- *              #4 CAN ID = 7FF h
- *              #5 CAN ID = a random value
+ *              #1 CAN ID = 15555555 h
+ *              #2 CAN ID = 0AAAAAAA h
+ *              #3 CAN ID = 00000000 h
+ *              #4 CAN ID = 1FFFFFFF h
+ *              #5 CAN ID = random value
  *      Tested number of data bytes: ∈ [0, 8]
  *      Number of tests: 45
  *  
  *  CAN FD Enabled :
- *      The CAN ID will be element of: ∈ [000 h , 7FF h]
+ *      The CAN ID shall be element of: ∈ [00000000 h , 1FFFFFFF h ]
  *          Different CAN IDs are used for test.
  *          Elementary test cases:
- *              #1 CAN ID = 555 h
- *              #2 CAN ID = 2AA h
- *              #3 CAN ID = 000 h
- *              #4 CAN ID = 7FF h
- *              #5 CAN ID = a random value
+ *              #1 CAN ID = 15555555 h
+ *              #2 CAN ID = 0AAAAAAA h
+ *              #3 CAN ID = 00000000 h
+ *              #4 CAN ID = 1FFFFFFF h
+ *              #5 CAN ID = random value
  *      Tested number of data bytes:
  *          ∈ [0, 8] ∪[12] ∪ [16] ∪ [20] ∪ [24] ∪ [32] ∪ [48] ∪ [64]
  *      Number of tests: 80
- * 
  * 
  * Setup:
  *  The IUT is left in the default state.
@@ -64,6 +63,12 @@
  *  The IUT shall acknowledge the test frame.
  *  The data received by the IUT during the test state should match the data
  *  sent in the test frame.
+ * 
+ * Note:
+ *  An implementation with limited ID range may not be able to receive the
+ *  frame.
+ *  An implementation with limited payload capabilities will be tested in range
+ *  of their payload capabilities.
  * 
  *****************************************************************************/
 
@@ -90,7 +95,7 @@
 using namespace can;
 using namespace test_lib;
 
-class TestIso_7_1_1 : public test_lib::TestBase
+class TestIso_7_1_2 : public test_lib::TestBase
 {
     public:
 
@@ -121,19 +126,19 @@ class TestIso_7_1_1 : public test_lib::TestBase
                     switch (elem_test.index)
                     {
                         case 1:
-                            can_id = 0x555;
+                            can_id = 0x15555555;
                             break;
                         case 2:
-                            can_id = 0x2AA;
+                            can_id = 0x0AAAAAAA;
                             break;
                         case 3:
-                            can_id = 0x000;
+                            can_id = 0x00000000;
                             break;
                         case 4:
-                            can_id = 0x7FF;
+                            can_id = 0x1FFFFFFF;
                             break;
                         case 5:
-                            can_id = rand() % (int)pow(2, 11);
+                            can_id = rand() % (int)pow(2, 29);
                             break;
                         default:
                             can_id = 0x0;
@@ -143,7 +148,7 @@ class TestIso_7_1_1 : public test_lib::TestBase
                     uint8_t dlc = (elem_test.index - 1) / 5;
 
                     frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame);
+                                    IdentifierType::Extended, RtrFlag::DataFrame);
                     golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
                     RandomizeAndPrint(golden_frm.get());
 
