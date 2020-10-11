@@ -22,6 +22,7 @@ add_library(
     TestIso_7_1_4.cpp
     TestIso_7_1_5.cpp
     TestIso_7_1_6.cpp
+    TestIso_7_1_7.cpp
     TestIso_7_1_8.cpp
     TestIso_7_1_9.cpp
     TestIso_7_1_12.cpp
