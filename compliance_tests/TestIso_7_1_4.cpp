@@ -66,84 +66,85 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_1_4 : public test_lib::TestBase
 {
     public:
 
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::ClassicalAndFdEnabled);
+            if (elem_tests.size() > 0)
+            {
+                if (test_variants[0] == TestVariant::Can_2_0)
+                    elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+                else
+                    elem_tests[0].push_back(ElementaryTest(1, FrameType::CanFd));
+            }
+
+            CanAgentConfigureTxToRxFeedback(true);
+        }
+
         int Run()
         {
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Classical CAN part
-             ****************************************************************/
-            if (dut_can_version == CanVersion::Can_2_0)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                TestMessage("Classical CAN part of test not supporetd!");
-                TestControllerAgentEndTest(test_result);
-                // TODO: Add support for it (Protocol exception is done so should be OK)!
-                return false;
-            }
+                PrintVariantInfo(test_variants[test_variant]);
 
-            /*****************************************************************
-             * CAN FD Enabled part
-             ****************************************************************/
-            if (dut_can_version == CanVersion::CanFdEnabled)
-            {
-                TestMessage("CAN FD ENABLED part of test");
-
-                // Generate frame (Set Base ID, Data frame, randomize others)
-                FrameFlags frameFlagsFd = FrameFlags(FrameType::CanFd, IdentifierType::Base,
-                                                     RtrFlag::DataFrame);
-                golden_frame = new Frame(frameFlagsFd);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                // Convert to bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                // Force RRS bit to recessive, update frames (Stuff bits and CRC
-                // might change)!
-                driver_bit_frame->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
-                monitor_bit_frame->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
-
-                // Update frames (Stuff bits, CRC might have changed!)
-                driver_bit_frame->UpdateFrame();
-                monitor_bit_frame->UpdateFrame();
-
-                // Monitor frame as if received, driver frame must have ACK too!
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
+                    PrintElemTestInfo(elem_test);
+
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    IdentifierType::Base);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
+
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Force bit as given by elementary test to recessive.
+                     *   2. Update frames since by sending different bit value, CRC might have
+                     *      changed.
+                     *   3. Monitor frame as if received (IUT is receiving)
+                     *****************************************************************************/
+                    if (test_variants[test_variant] == TestVariant::Can_2_0)
+                    {
+                        /* When node is "Classical CAN" conformant, it shall accept recessive
+                         * R0 (FDF) and continue without protocol exception or regarding this frame
+                         * type as FD Frame!!
+                         */
+                        driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                        monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                    } else {
+                        /* R1 bit corresponds to RRS in CAN FD frames. It is bit on position of 
+                         * RTR in CAN2.0 frames!
+                         */
+                        driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                        monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    }
+
+                    driver_bit_frm->UpdateFrame();
+                    monitor_bit_frm->UpdateFrame();
+
+                    monitor_bit_frm->TurnReceivedFrame();
+
+                    /******************************************************************************* 
+                     * Execute test
+                     ******************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+                    CheckRxFrame(*golden_frm);
+
+                    FreeTestObjects();
                 }
-
-                DeleteCommonObjects();
             }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
-        }
+        return (int)FinishTest();
+    }
 };
