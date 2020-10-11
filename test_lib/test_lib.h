@@ -68,7 +68,14 @@ namespace test_lib
          * 
          * This is the most frequently used mapping between DUT version and variants!
          */
-        CommonAndFd
+        CommonAndFd,
+
+        /**
+         * Classical CAN   -> Classical CAN variant
+         * CAN FD Enabled  -> CAN FD Enabled variant
+         * CAN FD Tolerant -> No tests
+         */
+        ClassicalAndFdEnabled
     };
 
     enum class TestResult : int {

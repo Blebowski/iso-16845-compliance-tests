@@ -131,6 +131,12 @@ class can::DutInterface
          * @returns Fault confinement state of DUT.
          */
         virtual FaultConfinementState GetErrorState() = 0;
+
+        /**
+         * Configures PEX (Protocol exception).
+         * @returns True if succefull, false otherwise (e.g. protocol exception not supported)
+         */
+        virtual bool ConfigureProtocolException(bool enable) = 0;
 };
 
 #endif

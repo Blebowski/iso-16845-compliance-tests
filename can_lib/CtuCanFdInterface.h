@@ -50,6 +50,6 @@ extern "C" {
             void SetTec(int tec);
             void SetErrorState(can::FaultConfinementState errorState);
             can::FaultConfinementState GetErrorState();
+            bool ConfigureProtocolException(bool enable);
     };
-
 }
