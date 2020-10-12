@@ -145,7 +145,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x78;
                             dlc = 0x8;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             data[0] = 0x01;
                             for (int i = 1; i < 8; i++)
                                 data[i] = 0xE1;
@@ -155,7 +155,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x41F;
                             dlc = 0x1;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             data[0] = 0x00;
                             break;
 
@@ -163,7 +163,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x707;
                             dlc = 0xF;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             for (int i = 0; i < 8; i++)
                                 data[i] = 0x0F;
                             break;
@@ -172,21 +172,21 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x360;
                             dlc = 0x0;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             break;
 
                         case 5:
                             id = 0x730;
                             dlc = 0x0;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             break;
 
                         case 6:
                             id = 0x47F;
                             dlc = 0x1;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             data[0] = 0x1F;
                             break;
 
@@ -194,14 +194,14 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x758;
                             dlc = 0x0;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             break;
 
                         case 8:
                             id = 0x777;
                             dlc = 0x1;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::DataFrame);
+                                                    IdentifierType::Base, RtrFlag::DataFrame);
                             data[0] = 0x1F;
                             break;
 
@@ -209,14 +209,14 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x7EF;
                             dlc = 0x2;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::RtrFrame);
+                                                    IdentifierType::Base, RtrFlag::RtrFrame);
                             break;
 
                         case 10:
                             id = 0x3EA;
                             dlc = 0xF;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    RtrFlag::RtrFrame);
+                                                    IdentifierType::Base, RtrFlag::RtrFrame);
                         default:
                             break;
                         }
@@ -230,6 +230,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x78;
                             dlc = 0xE;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorActive);
                             data[0] = 0x01;
                             for (int i = 1; i < 64; i++)
@@ -240,6 +241,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x47C;
                             dlc = 0x8;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorActive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0x3C;
@@ -249,6 +251,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x41E;
                             dlc = 0xE;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorPassive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0x1E;
@@ -258,6 +261,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x20F;
                             dlc = 0xF;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::DontShift, EsiFlag::ErrorPassive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0x0F;
@@ -267,6 +271,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x107;
                             dlc = 0xF;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::DontShift, EsiFlag::ErrorActive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0x87;
@@ -276,6 +281,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x7C3;
                             dlc = 0x3;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::DontShift, EsiFlag::ErrorActive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0xC3;
@@ -285,6 +291,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x3E1;
                             dlc = 0x3;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorActive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0xE1;
@@ -294,6 +301,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x1F0;
                             dlc = 0x1;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorActive);
                             for (int i = 1; i < 64; i++)
                                 data[i] = 0xF0;
@@ -303,6 +311,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x000;
                             dlc = 0x0;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorActive);
                             break;
 
@@ -310,6 +319,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
                             id = 0x7FF;
                             dlc = 0x0;
                             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                                    IdentifierType::Base, RtrFlag::DataFrame,
                                                     BrsFlag::Shift, EsiFlag::ErrorPassive);
                             break;
 
