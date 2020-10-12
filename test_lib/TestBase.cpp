@@ -228,6 +228,19 @@ void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
         elem_tests.push_back(std::vector<ElementaryTest>());
         break;
     
+    case VariantMatchingType::ClassicalFdCommon:
+        if (dut_can_version == CanVersion::Can_2_0)
+            test_variants.push_back(TestVariant::Can_2_0);
+        if (dut_can_version == CanVersion::CanFdTolerant)
+            test_variants.push_back(TestVariant::CanFdTolerant);
+        elem_tests.push_back(std::vector<ElementaryTest>());
+        if (dut_can_version == CanVersion::CanFdEnabled)
+        {
+            test_variants.push_back(TestVariant::CanFdTolerant);
+            test_variants.push_back(TestVariant::CanFdEnabled);
+            elem_tests.push_back(std::vector<ElementaryTest>());
+        }
+
     default:
         break;
     }
