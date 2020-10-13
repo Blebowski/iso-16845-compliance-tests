@@ -61,12 +61,6 @@ class test_lib::TestSequence
         DriverItem *GetDriverItem(int index);
 
         /**
-         * @brief Appends monitor item to monitor sequence
-         * @param monitor_item Item to be apended.
-         */
-        void AppendMonitorItem(MonitorItem monitor_item);
-
-        /**
          * @brief Appends monitor item to driver sequence
          * @param driver_item Item to be apended.
          */

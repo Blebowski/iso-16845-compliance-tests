@@ -70,11 +70,29 @@ void test_lib::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 {
     int bit_count = monitor_frame.GetBitCount();
     can::Bit *bit;
+    can::Bit *next_bit;
 
     for (int i = 0; i < bit_count; i++)
     {
         bit = monitor_frame.GetBit(i);
-        AppendMonitorBit(bit);
+
+        // Ugly and low performing, I know, but we dont care here!
+        if (i < bit_count - 1)
+            next_bit = monitor_frame.GetBit(i + 1);
+
+        if (bit->bit_type_ == can::BitType::Brs ||
+            bit->bit_type_ == can::BitType::CrcDelimiter ||
+
+            /* Whenever we transmitt error frame, we might switch bit-rate. Even if we
+             * dont, then we calculate items as if bit-rate was switched.
+             * "appendMonitorBitWithShift" deals calculates lenghts properly based on
+             * what is inside the bit!
+             */
+            next_bit->bit_type_ == can::BitType::ActiveErrorFlag ||
+            next_bit->bit_type_ == can::BitType::PassiveErrorFlag)
+            appendMonitorBitWithShift(bit);
+        else
+            appendMonitorNotShift(bit);
     }
 }
 
@@ -133,11 +151,16 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 {
     std::chrono::nanoseconds tseg_1_duration (0);
     std::chrono::nanoseconds tseg_2_duration (0);
+
+    /* Count Tseg1 duration */
     size_t tseg_1_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Sync);
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Prop);
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph1);
+
+    /* Tseg2 duration */
     size_t tseg_2_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph2);
 
+    /* Count lenghts in nanoseconds */
     for (size_t i = 0; i < tseg_1_len; i++)
         for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
             tseg_1_duration += clock_period;
@@ -146,6 +169,7 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
         for (size_t j = 0; j < bit->GetTimeQuanta(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
             tseg_2_duration += clock_period;
 
+    /* Get sample rate for each phase! */
     size_t brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
     size_t brp_fd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
     std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
@@ -168,16 +192,6 @@ void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
     std::chrono::nanoseconds sample_rate = brp * clock_period;
 
     pushMonitorValue(duration, sample_rate, bit->bit_value_, bit->GetBitTypeName());
-}
-
-
-void test_lib::TestSequence::AppendMonitorBit(can::Bit* bit)
-{
-    if (bit->bit_type_ == can::BitType::Brs ||
-        bit->bit_type_ == can::BitType::CrcDelimiter)
-        appendMonitorBitWithShift(bit);
-    else
-        appendMonitorNotShift(bit);
 }
 
 
