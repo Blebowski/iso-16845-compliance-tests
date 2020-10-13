@@ -74,11 +74,13 @@
  *  The IUT is left in the default state.
  * 
  * Execution:
- *  Two different test frames are used for each of the two elementary tests.
+ *  A single test frame is used for each of the elementary tests.
  * 
  * Response:
  *  The IUT shall not generate any error flag during the test.
- *  The IUT shall acknowledge the test frames.
+ *  The IUT shall acknowledge the test frame.
+ *  The data received by the IUT during the test state shall match the data
+ *  sent in the test frame.
  *****************************************************************************/
 
 #include <iostream>
