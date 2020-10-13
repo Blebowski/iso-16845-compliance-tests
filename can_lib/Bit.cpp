@@ -451,7 +451,7 @@ can::BitTiming* can::Bit::GetPhaseBitTiming(BitPhase bit_phase)
 
 void can::Bit::CorrectPh2LenToNominal()
 {
-    // If bit Phase 2 is in data bit rate, then correct it to nominal
+    /* If bit Phase 2 is in data bit rate, then correct its lenght to nominal */
     if (GetPhaseBitTiming(BitPhase::Ph2) == data_bit_timing)
     {
         for (auto tqIter = time_quantas_.begin(); tqIter != time_quantas_.end();)
@@ -463,6 +463,7 @@ void can::Bit::CorrectPh2LenToNominal()
         for (size_t i = 0; i < nominal_bit_timing->ph2_; i++)
             time_quantas_.push_back(TimeQuanta(nominal_bit_timing->brp_, BitPhase::Ph2));
     }
+
 }
 
 

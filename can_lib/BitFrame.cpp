@@ -1023,6 +1023,17 @@ int can::BitFrame::GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type
     });
 }
 
+
+int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type)
+{
+    return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type](Bit bit) {
+        if (bit.stuff_bit_type == stuff_bit_type)
+            return true;
+        return false;
+    });
+}
+
+
 void can::BitFrame::Print(bool print_stuff_bits)
 {
     std::list<Bit>::iterator bit_it;

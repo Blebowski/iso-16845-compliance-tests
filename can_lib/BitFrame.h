@@ -312,6 +312,13 @@ class can::BitFrame : public Frame {
         int GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type, BitValue bit_value);
 
         /**
+         * Gets number of Stuff bits in whole frame
+         * @param stuff_bit_type Type of stuff bit to count (No stuff bit, Fixed, regular)
+         * @returns Number of stuff bits within bit field of a frame.
+         */
+        int GetNumStuffBits(StuffBitType stuff_bit_type);
+
+        /**
          * @returns CRC of frame. Real CRC is returned based on frame type (CAN 2.0 or FD)!
          */
         uint32_t crc();
