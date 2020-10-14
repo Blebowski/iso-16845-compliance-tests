@@ -143,10 +143,8 @@ class TestIso_7_2_6: public test_lib::TestBase
                      */
                     driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
 
-                    monitor_bit_frm->InsertActiveErrorFrame(
-                        monitor_bit_frm->GetBitOf(0, BitType::Ack));
-                    driver_bit_frm->InsertActiveErrorFrame(
-                        driver_bit_frm->GetBitOf(0, BitType::Ack));
+                    monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+                    driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
 
                     /******************************************************************************* 
                      * Execute test
