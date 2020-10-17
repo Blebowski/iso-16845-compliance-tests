@@ -90,7 +90,14 @@ namespace test_lib
          * CAN FD tolerant  -> CAN FD Tolerant variant
          * CAN FD enabled   -> CAN FD Tolerant + CAN FD enabled variant
          */
-        ClassicalFdCommon
+        ClassicalFdCommon,
+
+        /*
+         * Classical CAN    -> No tests
+         * CAN FD tolerant  -> No tests
+         * CAN FD Enabled   -> CAN FD Tolerant variant
+         */
+        CanFdEnabledOnly
     };
 
     enum class TestResult : int {

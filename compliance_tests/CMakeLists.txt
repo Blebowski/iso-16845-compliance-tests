@@ -12,7 +12,7 @@
 ###############################################################################
 
 add_library(
-    COMPLIANCE_TESTS OBJECT
+    COMPLIANCE_TESTS SHARED
     
     TestDemo.cpp
     TestIso_7_1_1.cpp
