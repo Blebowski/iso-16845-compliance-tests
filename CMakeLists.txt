@@ -16,6 +16,11 @@ project(CAN_FD_MODEL)
 
 add_compile_options(-fPIC -Wall -Wextra -Wpedantic -g -I -c -O0)
 
+FIND_PROGRAM(CPP_CHECK "cppcheck")
+IF (CPP_CHECK)
+    set(CMAKE_CXX_CPPCHECK "cppcheck")
+ENDIF()
+
 # Libraries
 add_subdirectory(can_lib)
 add_subdirectory(test_lib)
@@ -27,13 +32,5 @@ add_subdirectory(simulator_interface)
 # Example executable
 #add_executable(example apps/main.cpp)
 add_executable(test apps/test.cpp)
-
-#target_compile_options(example PUBLIC -Wall -g)
-#target_link_libraries(example PUBLIC CAN_LIB)
-#target_link_libraries(example PUBLIC TEST_LIB)
-#target_link_libraries(example PUBLIC VPI_LIB)
-#target_link_libraries(example PUBLIC COMPLIANCE_TESTS)
-
-#target_link_options(example PUBLIC -pthread)
 
 set (EXECUTABLE_OUTPUT_PATH bin)
