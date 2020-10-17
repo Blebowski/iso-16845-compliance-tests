@@ -11,7 +11,7 @@
 ###############################################################################
 
 add_library(
-    CAN_LIB SHARED
+    CAN_LIB OBJECT
 
     # CAN namespace
     can.h

@@ -11,7 +11,7 @@
 ###############################################################################
 
 add_library(
-    VPI_LIB SHARED
+    VPI_LIB OBJECT
 
     _pli_types.h
     vpi_user.h

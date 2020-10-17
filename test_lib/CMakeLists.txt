@@ -12,7 +12,7 @@
 ###############################################################################
 
 add_library(
-    TEST_LIB SHARED
+    TEST_LIB OBJECT
 
     # CAN namespace
     test_lib.h
