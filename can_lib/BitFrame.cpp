@@ -768,6 +768,13 @@ bool can::BitFrame::InsertBit(Bit bit, size_t index)
 }
 
 
+bool can::BitFrame::InsertBit(BitType bit_type, BitValue bit_value, size_t index)
+{
+    InsertBit(Bit(bit_type, bit_value, &frame_flags_, nominal_bit_timing_, data_bit_timing_),
+                index);
+}
+
+
 void can::BitFrame::AppendBit(Bit can_bit)
 {
     bits_.push_back(can_bit);

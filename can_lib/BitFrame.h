@@ -144,6 +144,15 @@ class can::BitFrame : public Frame {
         bool InsertBit(Bit can_bit, size_t index);
 
         /**
+         * Inserts bit to frame.
+         * @param can_bit Bit to insert
+         * @param index Position where bit shall be inserted. Bit existing on this index will be
+         *              shited to one index higher.
+         * @returns true if successfull, false otherwise.
+         */
+        bool InsertBit(BitType bit_type, BitValue bit_value, size_t index);
+
+        /**
          * Appends bit to a frame.
          * @param can_bit Bit to append
          */
