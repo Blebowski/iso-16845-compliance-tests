@@ -721,11 +721,32 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
     std::list<Bit>::iterator bit_it = bits_.begin();
     size_t i = 0;
 
-    while (i < index || bit_it != bits_.end())
-        if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit){
+    while (i <= index && bit_it != bits_.end())
+    {
+        bit_it++;
+        if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit)
             i++;
-            bit_it++;
-        }
+    }
+
+    if (bit_it == bits_.end())
+        return nullptr;
+
+    return &(*bit_it);
+}
+
+    
+can::Bit* can::BitFrame::GetFixedStuffBit(size_t index, BitValue bit_value)
+{
+    std::list<Bit>::iterator bit_it = bits_.begin();
+    size_t i = 0;
+
+    while (i <= index && bit_it != bits_.end())
+    {
+        bit_it++;
+        if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit &&
+            bit_it->bit_value_ == bit_value)
+            i++;
+    }
 
     if (bit_it == bits_.end())
         return nullptr;
@@ -1028,6 +1049,17 @@ int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type](Bit bit) {
         if (bit.stuff_bit_type == stuff_bit_type)
+            return true;
+        return false;
+    });
+}
+
+
+int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type, BitValue bit_value)
+{
+    return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type, bit_value](Bit bit) {
+        if (bit.stuff_bit_type == stuff_bit_type &&
+            bit.bit_value_ == bit_value)
             return true;
         return false;
     });

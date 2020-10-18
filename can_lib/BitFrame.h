@@ -120,11 +120,19 @@ class can::BitFrame : public Frame {
         Bit* GetStuffBit(BitType bit_type, StuffBitType stuff_bit_type, BitValue bit_value);
 
         /**
-         * Obtains stuff bit within a frame.
+         * Obtains fixed stuff bit within a frame.
          * @param index Index of fixed stuff bit within frame (0 - first stuff bit, 1 - second, ...)
          * @returns Pointer to stuff bit
          */
         Bit* GetFixedStuffBit(size_t index);
+
+        /**
+         * Obtains fixed stuff bit within a frame.
+         * @param index Index of fixed stuff bit within frame (0 - first stuff bit, 1 - second, ...)
+         * @param value Bit value to search for
+         * @returns Pointer to fixed stuff bit with matching value on index position
+         */
+        Bit* GetFixedStuffBit(size_t index, BitValue bit_value);
 
         /**
          * Inserts bit to frame.
@@ -314,9 +322,17 @@ class can::BitFrame : public Frame {
         /**
          * Gets number of Stuff bits in whole frame
          * @param stuff_bit_type Type of stuff bit to count (No stuff bit, Fixed, regular)
-         * @returns Number of stuff bits within bit field of a frame.
+         * @returns Number of stuff bits within a frame.
          */
         int GetNumStuffBits(StuffBitType stuff_bit_type);
+
+        /**
+         * Gets number of Stuff bits with given value
+         * @param stuff_bit_type Type of stuff bit to count (No stuff bit, Fixed, regular)
+         * @param bit_value Consider only bits of this value
+         * @returns Number of stuff bits within a frame.
+         */
+        int GetNumStuffBits(StuffBitType stuff_bit_type, BitValue bit_value);
 
         /**
          * @returns CRC of frame. Real CRC is returned based on frame type (CAN 2.0 or FD)!
