@@ -75,7 +75,6 @@ class TestIso_7_4_6 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 2;
             for (int i = 0; i < 2; i++)
             {
                 elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));

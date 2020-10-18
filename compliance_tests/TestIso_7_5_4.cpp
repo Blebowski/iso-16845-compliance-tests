@@ -69,7 +69,6 @@ class TestIso_7_5_4 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 3;
             elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
             elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
 
