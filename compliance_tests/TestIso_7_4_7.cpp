@@ -119,20 +119,23 @@ class TestIso_7_4_7 : public test_lib::TestBase
                     monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
                     /* 
-                     * There is already 1 intermission bit after EOF, so we have to offset intermission
-                     * index by 1. 1 -> first bit of second intermission, 2 -> second bit
+                     * There is already 1 intermission bit after EOF, so we have to offset 
+                     * intermission index by 1.
+                     * 1 -> first bit of second intermission,2 -> second bit
                      */
                     driver_bit_frm->GetBitOf(elem_test.index, BitType::Intermission)->FlipBitValue();
 
-                    driver_bit_frm->InsertPassiveErrorFrame(elem_test.index + 1, BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(elem_test.index + 1, BitType::Intermission);
+                    driver_bit_frm->InsertPassiveErrorFrame(elem_test.index + 1,
+                        BitType::Intermission);
+                    monitor_bit_frm->InsertOverloadFrame(elem_test.index + 1,
+                        BitType::Intermission);
 
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);
 
-                    /**********************************************************************************
+                    /******************************************************************************
                      * Execute test
-                     *********************************************************************************/
+                     *****************************************************************************/
                     PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
                     RunLowerTester(true, true);
                     CheckLowerTesterResult();
