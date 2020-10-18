@@ -98,8 +98,7 @@ class TestIso_7_4_6 : public test_lib::TestBase
                     PrintElemTestInfo(elem_test);
 
                     frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorPassive);
+                                    RtrFlag::DataFrame);
                     golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
                     RandomizeAndPrint(golden_frm.get());
 
