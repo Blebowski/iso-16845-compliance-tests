@@ -78,7 +78,7 @@ void SimulatorChannelClearRequest()
 void ProcessVpiClkCallback()
 {
     std::atomic<bool> req;
-    char vpi_read_data[VPI_DBUF_SIZE];
+    char vpi_read_data[2 * VPI_DBUF_SIZE];
     char vpi_ack[128];
 
     // Check if there is hanging request on SimulatorChannel!
