@@ -81,30 +81,36 @@ class TestIso_7_2_1 : public test_lib::TestBase
             {
                 PrintVariantInfo(test_variants[test_variant]);
 
-                frame_flags = std::make_unique<FrameFlags>(elem_tests[test_variant][0].frame_type);
-                golden_frm = std::make_unique<Frame>(*frame_flags);
-                RandomizeAndPrint(golden_frm.get());
+                for (auto elem_test : elem_tests[test_variant])
+                {
+                    PrintElemTestInfo(elem_test);
+                
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
 
-                driver_bit_frm = ConvertBitFrame(*golden_frm);
-                monitor_bit_frm = ConvertBitFrame(*golden_frm);
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                /**********************************************************************************
-                 * Modify test frames:
-                 *   1. Monitor frame as if received.
-                 *   2. Insert error frame to monitored/driven frame at position
-                 *      of ACK delimiter since driver does not have ACK dominant!
-                 *********************************************************************************/
-                monitor_bit_frm->TurnReceivedFrame();
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Monitor frame as if received.
+                     *   2. Insert error frame to monitored/driven frame after first ACK bit.
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
 
-                monitor_bit_frm->InsertActiveErrorFrame(0, BitType::AckDelimiter);
-                driver_bit_frm->InsertActiveErrorFrame(0, BitType::AckDelimiter);
+                    Bit *ack_bit = monitor_bit_frm->GetBitOf(0, BitType::Ack);
+                    int ack_index = monitor_bit_frm->GetBitIndex(ack_bit);
+                    monitor_bit_frm->InsertActiveErrorFrame(ack_index + 1);
+                    driver_bit_frm->InsertActiveErrorFrame(ack_index + 1);
 
-                /********************************************************************************** 
-                 * Execute test
-                 *********************************************************************************/
-                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
+                    /****************************************************************************** 
+                     * Execute test
+                     *****************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+                }
             }
 
             return (int)FinishTest();
