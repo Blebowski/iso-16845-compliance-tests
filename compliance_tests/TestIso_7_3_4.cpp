@@ -74,7 +74,6 @@ class TestIso_7_3_4 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 3;
             for (int i = 0; i < num_elem_tests; i++)
             {
                 elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
@@ -95,8 +94,8 @@ class TestIso_7_3_4 : public test_lib::TestBase
                 {
                     PrintElemTestInfo(elem_test);
 
-                    frame_flags = std::make_unique<FrameFlags>(
-                        elem_tests[test_variant][elem_test.index].frame_type, RtrFlag::DataFrame);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    RtrFlag::DataFrame);
                     golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
                     RandomizeAndPrint(golden_frm.get());
 
@@ -124,10 +123,8 @@ class TestIso_7_3_4 : public test_lib::TestBase
                     monitor_bit_frm->TurnReceivedFrame();
                     driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitor_bit_frm->InsertActiveErrorFrame(
-                        monitor_bit_frm->GetBitOf(7, BitType::Data));
-                    driver_bit_frm->InsertActiveErrorFrame(
-                        driver_bit_frm->GetBitOf(7, BitType::Data));
+                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
                     /* Force n-th bit of Error delimiter to dominant */
                     Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1,
@@ -148,10 +145,7 @@ class TestIso_7_3_4 : public test_lib::TestBase
                     PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
                     RunLowerTester(true, true);
                     CheckLowerTesterResult();
-
-                    /* Check no frame is received by DUT */
-                    if (dut_ifc->HasRxFrame())
-                        test_result = false;
+                    CheckNoRxFrame();
                 }
             }
 

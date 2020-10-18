@@ -69,7 +69,6 @@ class TestIso_7_4_2 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
             elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
             elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
         }
@@ -82,41 +81,45 @@ class TestIso_7_4_2 : public test_lib::TestBase
             {
                 PrintVariantInfo(test_variants[test_variant]);
 
-                frame_flags = std::make_unique<FrameFlags>(
-                        elem_tests[test_variant][0].frame_type);
-                golden_frm = std::make_unique<Frame>(*frame_flags);
-                RandomizeAndPrint(golden_frm.get());
+                for (auto elem_test : elem_tests[test_variant])
+                {
+                    PrintElemTestInfo(elem_test);
 
-                driver_bit_frm = ConvertBitFrame(*golden_frm);
-                monitor_bit_frm = ConvertBitFrame(*golden_frm);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
 
-                TestMessage("Forcing last bit of EOF to dominant!");
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                /**********************************************************************************
-                 * Modify test frames:
-                 *   1. Monitor frame as if received, insert ACK to driven frame.
-                 *   2. Force last bit of EOF to DOMINANT.
-                 *   3. Insert expected overload frame from first bit of Intermission.
-                 *********************************************************************************/
-                monitor_bit_frm->TurnReceivedFrame();
-                driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                    TestMessage("Forcing last bit of EOF to dominant!");
 
-                driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+                    /**********************************************************************************
+                     * Modify test frames:
+                     *   1. Monitor frame as if received, insert ACK to driven frame.
+                     *   2. Force last bit of EOF to DOMINANT.
+                     *   3. Insert expected overload frame from first bit of Intermission.
+                     *********************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-                driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+                    driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
 
-                driver_bit_frm->Print(true);
-                monitor_bit_frm->Print(true);
+                    monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+                    driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
 
-                /**********************************************************************************
-                 * Execute test
-                 *********************************************************************************/
-                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
 
-                CheckRxFrame(*golden_frm);
+                    /**********************************************************************************
+                     * Execute test
+                     *********************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+
+                    CheckRxFrame(*golden_frm);
+                }
             }
             return (int)FinishTest();
         }

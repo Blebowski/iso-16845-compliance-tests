@@ -69,7 +69,6 @@ class TestIso_7_2_1 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
             elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
             elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
         }
@@ -97,10 +96,8 @@ class TestIso_7_2_1 : public test_lib::TestBase
                  *********************************************************************************/
                 monitor_bit_frm->TurnReceivedFrame();
 
-                monitor_bit_frm->InsertActiveErrorFrame(
-                    monitor_bit_frm->GetBitOf(0, BitType::AckDelimiter));
-                driver_bit_frm->InsertActiveErrorFrame(
-                    driver_bit_frm->GetBitOf(0, BitType::AckDelimiter));
+                monitor_bit_frm->InsertActiveErrorFrame(0, BitType::AckDelimiter);
+                driver_bit_frm->InsertActiveErrorFrame(0, BitType::AckDelimiter);
 
                 /********************************************************************************** 
                  * Execute test

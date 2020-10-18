@@ -73,8 +73,7 @@ class TestIso_7_1_9 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 2;
-            for (int i = 0; i < num_elem_tests; i++)
+            for (int i = 0; i < 2; i++)
             {
                 elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
                 elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
@@ -114,10 +113,8 @@ class TestIso_7_1_9 : public test_lib::TestBase
                      **********************************************************************************/
                     if (elem_test.index == 1)
                     {
-                        driver_bit_frm->RemoveBit(
-                            driver_bit_frm->GetBitOf(2, BitType::Intermission));
-                        monitor_bit_frm->RemoveBit(
-                            monitor_bit_frm->GetBitOf(2, BitType::Intermission));
+                        driver_bit_frm->RemoveBit(2, BitType::Intermission);
+                        monitor_bit_frm->RemoveBit(2, BitType::Intermission);
                     }
 
                     monitor_bit_frm->TurnReceivedFrame();

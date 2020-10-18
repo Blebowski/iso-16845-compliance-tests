@@ -72,7 +72,6 @@ class TestIso_7_2_11 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
             elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
             elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
         }
@@ -83,42 +82,40 @@ class TestIso_7_2_11 : public test_lib::TestBase
 
             for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                frame_flags = std::make_unique<FrameFlags>(elem_tests[test_variant][0].frame_type);
-                golden_frm = std::make_unique<Frame>(*frame_flags);
-                RandomizeAndPrint(golden_frm.get());
+                for (auto elem_test : elem_tests[test_variant])
+                {
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
 
-                driver_bit_frm = ConvertBitFrame(*golden_frm);
-                monitor_bit_frm = ConvertBitFrame(*golden_frm);
-            
-                /**********************************************************************************
-                 * Modify test frames:
-                 *   1. Monitor frame as if received, insert ACK.
-                 *   2. 6-th bit of EOF forced to dominant!
-                 *   3. Insert Active Error frame from first bit of EOF!
-                 *********************************************************************************/
-                monitor_bit_frm->TurnReceivedFrame();
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+                
+                    /**********************************************************************************
+                     * Modify test frames:
+                     *   1. Monitor frame as if received, insert ACK.
+                     *   2. 6-th bit of EOF forced to dominant!
+                     *   3. Insert Active Error frame from first bit of EOF!
+                     *********************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
 
-                driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-                driver_bit_frm->GetBitOf(5, BitType::Eof)->bit_value_ = BitValue::Dominant;
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                    driver_bit_frm->GetBitOf(5, BitType::Eof)->bit_value_ = BitValue::Dominant;
 
-                monitor_bit_frm->InsertActiveErrorFrame(
-                    monitor_bit_frm->GetBitOf(6, BitType::Eof));
-                driver_bit_frm->InsertActiveErrorFrame(
-                    driver_bit_frm->GetBitOf(6, BitType::Eof));
+                    monitor_bit_frm->InsertActiveErrorFrame(6, BitType::Eof);
+                    driver_bit_frm->InsertActiveErrorFrame(6, BitType::Eof);
 
-                driver_bit_frm->Print(true);
-                monitor_bit_frm->Print(true);
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
 
-                /********************************************************************************** 
-                 * Execute test
-                 *********************************************************************************/
-                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                /* Check no frame is received by DUT */
-                if (dut_ifc->HasRxFrame())
-                    test_result = false;
+                    /********************************************************************************** 
+                     * Execute test
+                     *********************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+                    CheckNoRxFrame();
+                }
             }
 
             return (int)FinishTest();

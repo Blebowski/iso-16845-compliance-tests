@@ -71,7 +71,6 @@ class TestIso_7_1_12 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
             elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
             elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
         }
@@ -109,10 +108,8 @@ class TestIso_7_1_12 : public test_lib::TestBase
                     
                     monitor_bit_frm->TurnReceivedFrame();
                     
-                    monitor_bit_frm->InsertOverloadFrame(
-                        monitor_bit_frm->GetBitOf(0, BitType::Intermission));
-                    driver_bit_frm->InsertOverloadFrame(
-                        driver_bit_frm->GetBitOf(0, BitType::Intermission));
+                    monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+                    driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
 
                     /******************************************************************************* 
                      * Execute test

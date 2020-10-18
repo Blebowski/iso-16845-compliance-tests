@@ -71,7 +71,6 @@ class TestIso_7_3_1 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 3;
             for (int i = 0; i < num_elem_tests; i++)
             {
                 elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
@@ -93,9 +92,8 @@ class TestIso_7_3_1 : public test_lib::TestBase
                 {
                     PrintElemTestInfo(elem_test);
 
-                    frame_flags = std::make_unique<FrameFlags>(
-                        elem_tests[test_variant][elem_test.index].frame_type,
-                        RtrFlag::DataFrame);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    RtrFlag::DataFrame);
                     golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
                     RandomizeAndPrint(golden_frm.get());
 
@@ -117,10 +115,8 @@ class TestIso_7_3_1 : public test_lib::TestBase
 
                     driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitor_bit_frm->InsertActiveErrorFrame(
-                        monitor_bit_frm->GetBitOf(7, BitType::Data));
-                    driver_bit_frm->InsertActiveErrorFrame(
-                        driver_bit_frm->GetBitOf(7, BitType::Data));
+                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
                     int num_bits_to_insert;
                     if (elem_test.index == 1)
@@ -134,19 +130,15 @@ class TestIso_7_3_1 : public test_lib::TestBase
                     int drv_last_err_flg_index = driver_bit_frm->GetBitIndex(
                         driver_bit_frm->GetBitOf(5, BitType::ActiveErrorFlag));
                     for (int k = 0; k < num_bits_to_insert; k++)
-                        driver_bit_frm->InsertBit(
-                            Bit(BitType::ActiveErrorFlag, BitValue::Dominant, frame_flags.get(),
-                                &nominal_bit_timing, &data_bit_timing),
-                            drv_last_err_flg_index);
+                        driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant,
+                                                  drv_last_err_flg_index);
 
                     /* Prolong monitored frame by 1,4,7 RECESSIVE bits */
                     int mon_last_err_flg_index = monitor_bit_frm->GetBitIndex(
                         monitor_bit_frm->GetBitOf(0, BitType::ErrorDelimiter));
                     for (int k = 0; k < num_bits_to_insert; k++)
-                        monitor_bit_frm->InsertBit(
-                            Bit(BitType::ErrorDelimiter, BitValue::Recessive, frame_flags.get(),
-                                &nominal_bit_timing, &data_bit_timing),
-                            mon_last_err_flg_index);
+                        monitor_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Recessive, 
+                                                   mon_last_err_flg_index);
 
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);

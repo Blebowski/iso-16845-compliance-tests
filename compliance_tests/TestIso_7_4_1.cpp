@@ -92,8 +92,7 @@ class TestIso_7_4_1 : public test_lib::TestBase
                 {
                     PrintElemTestInfo(elem_test);
 
-                    frame_flags = std::make_unique<FrameFlags>(
-                        elem_tests[test_variant][elem_test.index - 1].frame_type);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
                     golden_frm = std::make_unique<Frame>(*frame_flags);
                     RandomizeAndPrint(golden_frm.get());
                     
@@ -114,10 +113,8 @@ class TestIso_7_4_1 : public test_lib::TestBase
                     driver_bit_frm->GetBitOf(elem_test.index - 1, BitType::Intermission)
                         ->bit_value_ = BitValue::Dominant;
 
-                    monitor_bit_frm->InsertOverloadFrame(
-                        monitor_bit_frm->GetBitOf(elem_test.index, BitType::Intermission));
-                    driver_bit_frm->InsertOverloadFrame(
-                        driver_bit_frm->GetBitOf(elem_test.index, BitType::Intermission));
+                    monitor_bit_frm->InsertOverloadFrame(elem_test.index, BitType::Intermission);
+                    driver_bit_frm->InsertOverloadFrame(elem_test.index, BitType::Intermission);
                     
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);
