@@ -34,6 +34,7 @@ add_library(
     TestIso_7_2_4.cpp
     TestIso_7_2_6.cpp
     TestIso_7_2_7.cpp
+    TestIso_7_2_8.cpp
     TestIso_7_2_9.cpp
     TestIso_7_2_10.cpp
     TestIso_7_2_11.cpp
