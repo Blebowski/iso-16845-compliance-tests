@@ -62,73 +62,44 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_6_1 : public test_lib::TestBase
 {
     public:
 
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            for (int i = 0; i < 3; i++)
+            {
+                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+            }
+        }
+
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
+            uint8_t data_byte = 0x80;
 
-            /*****************************************************************
-             * Common part of test (i=0) / CAN FD enabled part of test (i=1)
-             ****************************************************************/
-
-            int iterCnt;
-            int rec;
-            int recNew;
-            FrameType dataRate;
-            uint8_t dataByte = 0x80;
-
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    TestMessage("Common part of test!");
-                    dataRate = FrameType::Can2_0;
-                } else {
-                    TestMessage("CAN FD enabled part of test!");
-                    dataRate = FrameType::CanFd;
-                }
+                    PrintElemTestInfo(elem_test);
 
-                for (int j = 0; j < 3; j++)
-                {
-                    // CAN 2.0 / CAN FD, DLC = 1, DATA Frame, Data byte = 0x01
-                    // randomize Identifier 
-                    FrameFlags frameFlags = FrameFlags(dataRate, RtrFlag::DataFrame);
-                    golden_frame = new Frame(frameFlags, 1, &dataByte);
-                    golden_frame->Randomize();
-                    TestBigMessage("Test frame:");
-                    golden_frame->Print();
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    RtrFlag::DataFrame);
+                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+                    RandomizeAndPrint(golden_frm.get());
 
-                    // Read REC before scenario
-                    rec = dut_ifc->GetRec();
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    int bitToCorrupt;
-                    if (j == 0)
-                        bitToCorrupt = 1;
-                    else if (j == 1)
-                        bitToCorrupt = 3;
-                    else
-                        bitToCorrupt = 6;
-
-                    TestMessage("Forcing Error flag bit %d to recessive", bitToCorrupt);
-
-                    // Convert to Bit frames
-                    driver_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    monitor_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-
-                    /**
+                    /******************************************************************************
                      * Modify test frames:
                      *   1. Monitor frame as if received.
                      *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit!
@@ -136,62 +107,50 @@ class TestIso_7_6_1 : public test_lib::TestBase
                      *   3. Insert Active Error frame from 8-th bit of data frame!
                      *   4. Flip 1st, 3rd or 6th bit of Active Error flag to RECESSIVE.
                      *   5. Insert next Error frame one bit after form error in Error flag!
-                     */
-                    monitor_bit_frame->TurnReceivedFrame();
-                    driver_bit_frame->GetBitOf(6, BitType::Data)->FlipBitValue();
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
+                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitor_bit_frame->InsertActiveErrorFrame(
-                        monitor_bit_frame->GetBitOf(7, BitType::Data));
-                    driver_bit_frame->InsertActiveErrorFrame(
-                        driver_bit_frame->GetBitOf(7, BitType::Data));
+                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-                    // Force n-th bit of Active Error flag on can_rx (driver) to RECESSIVE
-                    Bit *bit = driver_bit_frame->GetBitOf(
-                        bitToCorrupt - 1, BitType::ActiveErrorFlag);
-                    int bitIndex = driver_bit_frame->GetBitIndex(bit);
+                    /* Force n-th bit of Active Error flag on can_rx (driver) to RECESSIVE */
+                    int bit_to_corrupt;
+                    if (elem_test.index == 1)
+                        bit_to_corrupt = 1;
+                    else if (elem_test.index == 2)
+                        bit_to_corrupt = 3;
+                    else
+                        bit_to_corrupt = 6;
+
+                    TestMessage("Forcing Error flag bit %d to recessive", bit_to_corrupt);
+
+                    Bit *bit = driver_bit_frm->GetBitOf(
+                        bit_to_corrupt - 1, BitType::ActiveErrorFlag);
+                    int bit_index = driver_bit_frm->GetBitIndex(bit);
                     bit->bit_value_ = BitValue::Recessive;
 
-                    // Insert new error flag from one bit further, both driver and monitor!
-                    driver_bit_frame->InsertActiveErrorFrame(bitIndex + 1);
-                    monitor_bit_frame->InsertActiveErrorFrame(bitIndex + 1);
+                    driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+                    monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
 
-                    driver_bit_frame->Print(true);
-                    monitor_bit_frame->Print(true);
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
 
-                    // Push frames to Lower tester, run and check!
-                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+                    /***************************************************************************** 
+                     * Execute test
+                     *****************************************************************************/
+                    rec_old = dut_ifc->GetRec();
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
                     RunLowerTester(true, true);
+
                     CheckLowerTesterResult();
-
-                    // Check no frame is received by DUT
-                    if (dut_ifc->HasRxFrame())
-                    {
-                        TestMessage("DUT has received frame but should not have!");
-                        test_result = false;
-                    }
-
-                    // Check that REC has incremented by 9
-                    // (1 for original error frame, 8 for next error frame)
-                    recNew = dut_ifc->GetRec();
-                    if (recNew != (rec + 9))
-                    {
-                        TestMessage("DUT REC not as expected. Expected %d, Real %d",
-                                     rec + 9, recNew);
-                        test_result = false;
-                        TestControllerAgentEndTest(test_result);
-                        return test_result;
-                    }
-
-                    DeleteCommonObjects();
+                    CheckNoRxFrame();
+                    
+                    /* (1 for original error frame, 8 for next error frame) */
+                    CheckRecChange(rec_old, +9);
                 }
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };
