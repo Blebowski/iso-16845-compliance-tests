@@ -59,102 +59,67 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_6_5 : public test_lib::TestBase
 {
     public:
 
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+        }
+
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Common part of test (i=0) / CAN FD enabled part of test (i=1)
-             ****************************************************************/
-
-            int iterCnt;
-            int rec;
-            int recNew;
-            FrameType dataRate;
-
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    TestMessage("Common part of test!");
-                    dataRate = FrameType::Can2_0;
-                } else {
-                    TestMessage("CAN FD enabled part of test!");
-                    dataRate = FrameType::CanFd;
+                    PrintElemTestInfo(elem_test);
+
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
+
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Monitor frame as if received.
+                     *   2. Do NOT insert dominant ACK to driven sequence, thus DUT will not see
+                     *      its own transmitted ACK! This is bit error in ACK.
+                     *   3. Insert expected Active error frame after first bit of ACK
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+
+                    Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitType::Ack);
+                    int bit_index = driver_bit_frm->GetBitIndex(ack_bit);
+
+                    driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+                    monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /***************************************************************************** 
+                     * Execute test
+                     ****************************************************************************/
+                    rec_old = dut_ifc->GetRec(); 
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+                    CheckRecChange(rec_old, +1);
                 }
-
-                // CAN 2.0 / CAN FD, randomize others
-                FrameFlags frameFlags = FrameFlags(dataRate);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                // Read REC before scenario
-                rec = dut_ifc->GetRec();
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Monitor frame as if received.
-                 *   2. Do NOT insert dominant ACK to driven sequence, thus
-                 *      DUT will not see its own transmitted ACK! This is
-                 *      bit error in ACK.
-                 *   3. Insert expected Active error frame from ACK Delimiter.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
-
-                driver_bit_frame->InsertActiveErrorFrame(
-                    driver_bit_frame->GetBitOf(0, BitType::AckDelimiter));
-                monitor_bit_frame->InsertActiveErrorFrame(
-                    monitor_bit_frame->GetBitOf(0, BitType::AckDelimiter));
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                recNew = dut_ifc->GetRec();
-
-                // Check that REC was incremented by 1!
-                if (recNew != (rec + 1))
-                {
-                    TestMessage("DUT REC not as expected. Expected %d, Real %d",
-                                    rec + 1, recNew);
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                    return test_result;
-                }
-                DeleteCommonObjects();
             }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };
