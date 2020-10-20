@@ -100,7 +100,6 @@ class TestIso_7_6_14 : public test_lib::TestBase
                      *   1. Monitor frame as if received.
                      *****************************************************************************/
                     monitor_bit_frm->TurnReceivedFrame();
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);

@@ -64,129 +64,85 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_6_17 : public test_lib::TestBase
 {
     public:
 
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+
+            CanAgentConfigureTxToRxFeedback(true);
+        }
+
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Common part of test (i=0) / CAN FD enabled part of test (i=1)
-             ****************************************************************/
-
-            int iterCnt;
-            int rec, recNew;
-            FrameType dataRate;
-
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    TestMessage("Common part of test!");
-                    dataRate = FrameType::Can2_0;
-                } else {
-                    TestMessage("CAN FD enabled part of test!");
-                    dataRate = FrameType::CanFd;
+                    PrintElemTestInfo(elem_test);
+
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
+
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Monitor frame as if received.
+                     *   2. Force last bit of EOF to DOMINANT.
+                     *   3. Insert expected overload frame from first bit of Intermission.
+                     *   4. Insert 7 Dominant bits to driver on can_tx and 7
+                     *      Recessive bits to monitor on can_rx from first bit
+                     *      of overload delimiter.
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
+                    
+                    driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+
+                    monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+                    driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+
+                    Bit *overload_delim = driver_bit_frm->GetBitOf(0, BitType::OverloadDelimiter);
+                    int bit_index = driver_bit_frm->GetBitIndex(overload_delim);
+
+                    for (int i = 0; i < 7; i++)
+                    {
+                        driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant,
+                                                  bit_index);
+                        monitor_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Recessive,
+                                                  bit_index);
+                    }
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /*****************************************************************************
+                     * Execute test
+                     *****************************************************************************/
+                    dut_ifc->SetRec(9);
+                    rec_old = dut_ifc->GetRec();
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    
+                    CheckLowerTesterResult();
+                    CheckRxFrame(*golden_frm);
+                    /* Only for sucesfull frame reception */
+                    CheckRecChange(rec_old, -1);
                 }
-
-                dut_ifc->SetRec(9);
-                rec = dut_ifc->GetRec();
-                if (rec != 9)
-                {
-                    TestBigMessage("REC not set properly to 9!");
-                    test_result = false;
-                }
-
-                // CAN 2.0 / CAN FD, randomize others
-                FrameFlags frameFlags = FrameFlags(dataRate);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Forcing last bit of EOF to dominant!");
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Monitor frame as if received, insert ACK to driven frame.
-                 *   2. Force last bit of EOF to DOMINANT.
-                 *   3. Insert expected overload frame from first bit of Intermission.
-                 *   4. Insert 7 Dominant bits to driver on can_tx and 7
-                 *      Recessive bits to monitor on can_rx from first bit
-                 *      of overload delimiter.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-                driver_bit_frame->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
-
-                monitor_bit_frame->InsertOverloadFrame(
-                    monitor_bit_frame->GetBitOf(0, BitType::Intermission));
-                driver_bit_frame->InsertOverloadFrame(
-                    driver_bit_frame->GetBitOf(0, BitType::Intermission));
-
-                Bit *overloadDelim = driver_bit_frame->GetBitOf(0, BitType::OverloadDelimiter);
-                int bitIndex = driver_bit_frame->GetBitIndex(overloadDelim);
-
-                for (int i = 0; i < 7; i++)
-                {
-                    driver_bit_frame->InsertBit(Bit(BitType::OverloadFlag, BitValue::Dominant,
-                        &frameFlags, &nominal_bit_timing, &data_bit_timing), bitIndex);
-                    monitor_bit_frame->InsertBit(Bit(BitType::OverloadFlag, BitValue::Recessive,
-                        &frameFlags, &nominal_bit_timing, &data_bit_timing), bitIndex);
-                }
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                // Check that REC was not incremented
-                recNew = dut_ifc->GetRec();
-                if (recNew != 8)
-                {
-                    TestMessage("DUT REC not as expected. Expected %d, Real %d",
-                                    8, recNew);
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                    return test_result;
-                }
-
-                DeleteCommonObjects();
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };
