@@ -80,6 +80,7 @@ add_library(
     TestIso_7_6_18.cpp
     TestIso_7_6_19.cpp
     TestIso_7_6_20.cpp
+    TestIso_7_6_21.cpp
 
     TestIso_7_7_1.cpp
     TestIso_7_7_3.cpp
