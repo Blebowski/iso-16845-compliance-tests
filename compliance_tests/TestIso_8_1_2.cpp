@@ -12,11 +12,11 @@
 
 /******************************************************************************
  *
- * @test ISO16845 8.1.1
+ * @test ISO16845 8.1.2
  *
- * @brief This test verifies the capacity of the IUT to transmit a frame with
- *        different identifiers and different numbers of data in a base format
- *        frame.
+ * @brief This test verifies the capacity of the IUT to transmit a data frame
+ *        with different identifiers and different numbers of data in an
+ *        extended format frame.
  *
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *
@@ -38,10 +38,10 @@
  *      The CAN ID shall be element of:
  *          ∈ [000 h , 7FF h ]
  *      Different CAN IDs are used for test.
- *          #1 CAN ID = 555 h
- *          #2 CAN ID = 2AA h
- *          #3 CAN ID = 000 h
- *          #4 CAN ID = 7FF h
+ *          #1 CAN ID = 15555555 h
+ *          #2 CAN ID = 0AAAAAAA h
+ *          #3 CAN ID = 00000000 h
+ *          #4 CAN ID = 1FFFFFFF h
  *          #5 CAN ID = a random value
  *      Tested number of data bytes:∈ [0, 8].
  *      Number of tests: 9 × selected ID
@@ -50,10 +50,10 @@
   *      The CAN ID shall be element of:
  *          ∈ [000 h , 7FF h ]
  *      Different CAN IDs are used for test.
- *          #1 CAN ID = 555 h
- *          #2 CAN ID = 2AA h
- *          #3 CAN ID = 000 h
- *          #4 CAN ID = 7FF h
+ *          #1 CAN ID = 15555555 h
+ *          #2 CAN ID = 0AAAAAAA h
+ *          #3 CAN ID = 00000000 h
+ *          #4 CAN ID = 1FFFFFFF h
  *          #5 CAN ID = a random value
  *      Tested number of data bytes:∈ [0, 8].
  *      Number of tests: 16 × selected ID
@@ -94,7 +94,7 @@
 using namespace can;
 using namespace test_lib;
 
-class TestIso_8_1_1 : public test_lib::TestBase
+class TestIso_8_1_2 : public test_lib::TestBase
 {
     public:
 
@@ -131,26 +131,26 @@ class TestIso_8_1_1 : public test_lib::TestBase
                     switch((elem_test.index - 1) % 5)
                     {
                         case 0:
-                            id = 0x555;
+                            id = 0x15555555;
                             break;
                         case 1:
-                            id = 0x2AA;
+                            id = 0x0AAAAAAA;
                             break;
                         case 2:
-                            id = 0x000;
+                            id = 0x00000000;
                             break;
                         case 3:
-                            id = 0x7FF;
+                            id = 0x1FFFFFFF;
                             break;
                         case 4:
-                            id = rand() % ((int)pow(2, 11));
+                            id = rand() % ((int)pow(2, 29));
                             break;
                         default:
                             break;
                     }
 
                     frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame,
+                                    IdentifierType::Extended, RtrFlag::DataFrame,
                                     BrsFlag::Shift, EsiFlag::ErrorActive);
                     golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id);
                     RandomizeAndPrint(golden_frm.get());
