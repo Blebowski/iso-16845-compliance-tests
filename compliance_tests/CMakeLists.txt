@@ -126,6 +126,7 @@ add_library(
     TestIso_8_1_1.cpp
     TestIso_8_1_2.cpp
     TestIso_8_1_3.cpp
+    TestIso_8_1_4.cpp
     TestIso_8_1_5.cpp
     TestIso_8_1_6.cpp
     TestIso_8_1_7.cpp
