@@ -62,100 +62,81 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_8_1_5 : public test_lib::TestBase
 {
     public:
 
+        void ConfigureTest()
+        {
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+
+            /* Basic setup for tests where IUT transmits */
+            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+            CanAgentSetWaitForMonitor(true);
+            CanAgentConfigureTxToRxFeedback(true);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+        }
+
         int Run()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            SetupTestEnvironment();
 
-            // Start monitoring when DUT starts transmitting!
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-
-            // Configure driver to wait for monitor so that LT sends ACK in right moment.
-            CanAgentSetWaitForMonitor(true);
-
-            // Enable TX/RX feedback so that DUT will see its own transmitted frame!
-            CanAgentConfigureTxToRxFeedback(true);
-
-
-            /*****************************************************************
-             * Common part of test (i=0) / CAN FD enabled part of test (i=1)
-             ****************************************************************/
-            for (int i = 0; i < 2; i++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                // CAN 2.0 Frame, Base ID only, Data frame
-                FrameFlags frameFlags;
-                
-                if (i == 0){
-                    frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base,
-                                            RtrFlag::DataFrame);
-                } else {
-                    frameFlags = FrameFlags(FrameType::CanFd, EsiFlag::ErrorActive);
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
+                {
+                    PrintElemTestInfo(elem_test);
+
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                                                EsiFlag::ErrorActive);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
+
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Turn driven frame as if received (insert ACK).
+                     *   2. Force first bit of driven frame to dominant.
+                     *   3. Insert overload flag from 2nd bit of intermission further!
+                     *   4. Insert 15 recessive bits at the end of Overload delimiter.
+                     *      This checks that DUT does not retransmitt the frame!
+                     *****************************************************************************/
+                    driver_bit_frm->TurnReceivedFrame();
+
+                    driver_bit_frm->GetBitOf(0, BitType::Intermission)
+                        ->bit_value_ = BitValue::Dominant;
+
+                    Bit *overload_start_bit = monitor_bit_frm->GetBitOf(1, BitType::Intermission);
+                    monitor_bit_frm->InsertOverloadFrame(overload_start_bit);
+
+                    Bit *overload_end_bit = monitor_bit_frm->GetBitOf(6, BitType::OverloadDelimiter);
+                    int bit_index = monitor_bit_frm->GetBitIndex(overload_end_bit);
+                    for (int i = 0; i < 15; i++)
+                        monitor_bit_frm->InsertBit(BitType::OverloadDelimiter, BitValue::Recessive,
+                                                   bit_index);
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /*****************************************************************************
+                     * Execute test
+                     ****************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    StartDriverAndMonitor();
+                    this->dut_ifc->SendFrame(golden_frm.get());
+                    WaitForDriverAndMonitor();
+                    CheckLowerTesterResult();
                 }
-
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn driven frame as if received (insert ACK).
-                 *   2. Force first bit of driven frame to dominant.
-                 *   3. Insert overload flag from 2nd bit of intermission further!
-                 *   4. Insert 15 recessive bits at the end of Overload delimiter.
-                 *      This checks that DUT does not retransmitt the frame!
-                 */
-                driver_bit_frame->TurnReceivedFrame();
-
-                driver_bit_frame->GetBitOf(0, BitType::Intermission)
-                    ->bit_value_ = BitValue::Dominant;
-
-                Bit *overloadStartBit = monitor_bit_frame->GetBitOf(1, BitType::Intermission);
-                monitor_bit_frame->InsertOverloadFrame(overloadStartBit);
-
-                Bit *overloadEndBit = monitor_bit_frame->GetBitOf(6, BitType::OverloadDelimiter);
-                int bitIndex = monitor_bit_frame->GetBitIndex(overloadEndBit);
-                for (int i = 0; i < 15; i++)
-                    monitor_bit_frame->InsertBit(Bit(BitType::OverloadDelimiter, BitValue::Recessive,
-                                                   &frameFlags, &nominal_bit_timing, &data_bit_timing),
-                                                bitIndex);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, insert to DUT, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                StartDriverAndMonitor();
-
-                TestMessage("Sending frame via DUT!");
-                this->dut_ifc->SendFrame(golden_frame);
-                TestMessage("Sent frame via DUT!");
-                
-                WaitForDriverAndMonitor();
-                CheckLowerTesterResult();
-
-                DeleteCommonObjects();
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };
