@@ -169,7 +169,7 @@ class TestIso_8_1_8 : public test_lib::TestBase
                     this->dut_ifc->SendFrame(golden_frm.get());
                     WaitForDriverAndMonitor();
                     CheckLowerTesterResult();
-                }       
+                }
             }
 
             return (int)FinishTest();
