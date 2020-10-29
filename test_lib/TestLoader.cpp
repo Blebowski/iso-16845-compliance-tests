@@ -143,6 +143,7 @@
 #include "../compliance_tests/TestIso_8_1_7.cpp"
 #include "../compliance_tests/TestIso_8_1_8.cpp"
 
+#include "../compliance_tests/TestIso_8_2_1.cpp"
 #include "../compliance_tests/TestIso_8_2_6.cpp"
 #include "../compliance_tests/TestIso_8_2_7.cpp"
 
@@ -433,6 +434,9 @@ test_lib::TestBase* ConstructTestObject(std::string name)
         test_ptr = new TestIso_8_1_7;
     } else if (name == "iso_8_1_8") {
         test_ptr = new TestIso_8_1_8;
+    
+    } else if (name == "iso_8_2_1") {
+        test_ptr = new TestIso_8_2_1;
     } else if (name == "iso_8_2_6") {
         test_ptr = new TestIso_8_2_6;
     } else if (name == "iso_8_2_7") {
@@ -528,17 +532,52 @@ test_lib::TestBase* ConstructTestObject(std::string name)
 }
 
 
-void TestMessage(std::string message, ...)
+void TestMessage(const char *fmt, ...)
 {
-    std::cout << "\033[1;92mSW test: \033[0m" << message << std::endl;
-}
+    va_list args;
+    va_start(args, fmt);
 
+    printf("\033[1;92mSW test: \033[0m");
+
+    while (*fmt != '\0')
+    {
+        if (*fmt != '%')
+        {
+            printf("%c", *fmt);
+            fmt++;
+            continue;
+        }
+
+        fmt++;
+
+        switch (*fmt)
+        {
+        case 'd':
+            printf("%d", va_arg(args, int));
+            break;
+        case 'f':
+            printf("%f", va_arg(args, double));
+            break;
+        case 's':
+            printf("%s", va_arg(args, char *));
+            break;
+        case 'c':
+            printf("%c", va_arg(args, int));
+            break;
+        default:
+            break;
+        }
+        fmt++;
+    }
+    va_end(args);
+    printf("\n");
+}
 
 void TestBigMessage(std::string message, ...)
 {
-    TestMessage(std::string(80, '*'));
-    TestMessage(message);
-    TestMessage(std::string(80, '*'));
+    TestMessage(std::string(80, '*').c_str());
+    TestMessage(message.c_str());
+    TestMessage(std::string(80, '*').c_str());
 }
 
 
@@ -552,9 +591,9 @@ int cppTestThread(char *test_name)
 
 void RunCppTest(char* test_name)
 {
-    TestMessage(std::string(80, '*'));
+    TestMessage(std::string(80, '*').c_str());
     TestMessage("Running C++ test: %s", test_name);
-    TestMessage(std::string(80, '*'));
+    TestMessage(std::string(80, '*').c_str());
 
     testThread = new std::thread(cppTestThread, test_name);
 

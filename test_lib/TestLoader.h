@@ -51,7 +51,7 @@ test_lib::TestBase* ConstructTestObject(std::string name);
  * @param message String to be printed.
  * @todo Implement support of varargs!
  */
-void TestMessage(std::string message, ...);
+void TestMessage(const char *fmt, ...);
 
 
 /**
