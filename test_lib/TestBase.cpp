@@ -506,9 +506,8 @@ void test_lib::TestBase::CheckLowerTesterResult()
 void test_lib::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
-    TestMessage("Test Name: ", test_name);
-    TestMessage("Number of variants: ", elem_tests.size());
-    TestMessage("Number of elementary tests (per-variant):", num_elem_tests);
+    TestMessage("Test Name: %s", test_name.c_str());
+    TestMessage("Number of variants: %d", elem_tests.size());
 }
 
 void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
