@@ -206,6 +206,12 @@ class test_lib::TestBase
         bool CompareFrames(can::Frame &expected_frame, can::Frame &real_frame);
 
         /**
+         * @returns random bit type within a bit field.
+         */
+        BitType GetRandomBitType(FrameType frame_type, IdentifierType ident_type,
+                                 BitField bit_field);
+
+        /**
          * Reads frame from IUT and checks that it is equal to given frame. Sets
          * 'test_result' to false if not.
          * @param golden Frame to compare with the one which is read from DUT.

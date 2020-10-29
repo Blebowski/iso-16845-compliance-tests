@@ -304,6 +304,103 @@ bool test_lib::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &r
 }
 
 
+BitType test_lib::TestBase::GetRandomBitType(FrameType frame_type, IdentifierType ident_type,
+                                            BitField bit_field)
+{
+    switch (bit_field)
+    {
+    case BitField::Sof:
+        return BitType::Sof;
+
+    case BitField::Arbitration:
+        if (ident_type == IdentifierType::Base)
+        {
+            if (rand() % 2)
+                return BitType::BaseIdentifier;
+            if (frame_type == FrameType::Can2_0)
+                return BitType::Rtr;
+            return BitType::R1;
+
+        } else {
+            switch (rand() % 5)
+            {
+            case 0:
+                return BitType::BaseIdentifier;
+            case 1:
+                return BitType::Srr;
+            case 2:
+                return BitType::Ide;
+            case 3:
+                return BitType::IdentifierExtension;
+            default:
+                if (frame_type == FrameType::Can2_0)
+                    return BitType::Rtr;
+                return BitType::R1;
+            }
+        }
+        return BitType::BaseIdentifier;
+
+    case BitField::Control:
+        if (frame_type == FrameType::Can2_0)
+        {
+            switch (rand() % 3)
+            {
+            case 0:
+                if (ident_type == IdentifierType::Base)
+                    return BitType::Ide;
+                return BitType::R1;
+            case 1:
+                return BitType::R0;
+            default:
+                return BitType::Dlc;
+            }
+
+        } else {
+            switch (rand() % 5)
+            {
+            case 0:
+                return BitType::Edl;
+            case 1:
+                return BitType::R0;
+            case 2:
+                return BitType::Brs;
+            case 3:
+                return BitType::Esi;
+            default:
+                return BitType::Dlc;
+            }
+        }
+    
+    case BitField::Data:
+        return BitType::Data;
+
+    case BitField::Crc:
+        if (frame_type == FrameType::CanFd)
+        {
+            switch (rand() % 3)
+            {
+            case 0:
+                return BitType::StuffCount;
+            case 1:
+                return BitType::StuffParity;
+            default:
+                return BitType::Crc;
+            }
+        } else {
+            return BitType::Crc;
+        }
+
+    case BitField::Ack:
+        if (rand() % 2)
+            return BitType::CrcDelimiter;
+        return BitType::AckDelimiter;
+
+    case BitField::Eof:
+        return BitType::Eof;
+    }
+    return BitType::BaseIdentifier;
+}
+
 void test_lib::TestBase::CheckRxFrame(Frame &golden_frame)
 {
     // Read received frame from DUT and compare with sent frame
@@ -408,7 +505,7 @@ void test_lib::TestBase::CheckLowerTesterResult()
 
 void test_lib::TestBase::PrintTestInfo()
 {
-    TestMessage(std::string(80, '*'));
+    TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: ", test_name);
     TestMessage("Number of variants: ", elem_tests.size());
     TestMessage("Number of elementary tests (per-variant):", num_elem_tests);
@@ -416,7 +513,10 @@ void test_lib::TestBase::PrintTestInfo()
 
 void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
 {
-    TestBigMessage("Elementary Test: ", elem_test.msg);
+    TestMessage(std::string(80, '*').c_str());
+    TestMessage("Elementary Test index: %d", elem_test.index);
+    //TestMessage("Elementary Test message: %s", elem_test.msg.c_str());
+    TestMessage(std::string(80, '*').c_str());
 }
 
 void test_lib::TestBase::PrintVariantInfo(TestVariant test_variant)

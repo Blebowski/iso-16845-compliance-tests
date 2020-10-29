@@ -95,6 +95,17 @@ namespace can {
         std::string name;
     };
 
+    enum class BitField
+    {
+        Sof,
+        Arbitration,
+        Control,
+        Data,
+        Crc,
+        Ack,
+        Eof
+    };
+
     enum class BitValue {
         Dominant = 0,
         Recessive = 1
