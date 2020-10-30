@@ -70,120 +70,82 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_8_2_6 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));            
+            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
 
-            // Start monitoring when DUT starts transmitting!
+            /* Basic settings where IUT is transmitter */
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-
-            // Configure driver to wait for monitor so that LT sends ACK in right moment.
             CanAgentSetWaitForMonitor(true);
-
-            // Enable TX/RX feedback so that DUT will see its own transmitted frame!
             CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            /*****************************************************************
-             * Common part of test (i=0), CAN FD enabled part of test(i=1)
-             ****************************************************************/
-            int iterCnt;
+        int Run()
+        {
+            SetupTestEnvironment();
 
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
-                    TestMessage("Common part of test!");
-                else
-                    TestMessage("CAN FD enabled part of test!");
+                PrintVariantInfo(test_variants[test_variant]);
 
-                FrameFlags frameFlags;
-
-                if (i == 0)
-                    frameFlags = FrameFlags(FrameType::Can2_0);
-                else
-                    frameFlags = FrameFlags(FrameType::CanFd, EsiFlag::ErrorActive);
-
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                BitFrame *secDriverBitFrame = new BitFrame(*golden_frame,
-                                                &this->nominal_bit_timing, &this->data_bit_timing);
-                BitFrame *secMonitorBitFrame = new BitFrame(*golden_frame,
-                                                &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn driven frame as received, force ACK slot recessive
-                 *      (to emulate missing ACK).
-                 *   2. Insert expected error frame. In CAN 2.0, expected from
-                 *      ACK Delimiter. In CAN FD. expect from EOF (as if ACK had
-                 *      2 bits).
-                 *   3. Append the same frame after the end of first one (to check
-                 *      retransmission)
-                 */
-                driver_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
-
-                if (i == 0)
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    monitor_bit_frame->InsertActiveErrorFrame(
-                        monitor_bit_frame->GetBitOf(0, BitType::AckDelimiter));
-                    driver_bit_frame->InsertPassiveErrorFrame(
-                        driver_bit_frame->GetBitOf(0, BitType::AckDelimiter));
-                } else {
-                    monitor_bit_frame->InsertActiveErrorFrame(
-                        monitor_bit_frame->GetBitOf(0, BitType::Eof));
-                    driver_bit_frame->InsertPassiveErrorFrame(
-                        driver_bit_frame->GetBitOf(0, BitType::Eof));
-                }
+                    PrintElemTestInfo(elem_test);
 
-                secDriverBitFrame->TurnReceivedFrame();
-                driver_bit_frame->AppendBitFrame(secDriverBitFrame);
-                monitor_bit_frame->AppendBitFrame(secMonitorBitFrame);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                                                EsiFlag::ErrorActive);
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                    RandomizeAndPrint(golden_frm.get());
 
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                // Push frames to Lower tester, insert to DUT, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                StartDriverAndMonitor();
+                    /* Second frame the same due to retransmission. */
+                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-                TestMessage("Sending frame via DUT!");
-                this->dut_ifc->SendFrame(golden_frame);
-                TestMessage("Sent frame via DUT!");
-                
-                WaitForDriverAndMonitor();
-                CheckLowerTesterResult();
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Turn driven frame as received, force ACK slot recessive to emulate
+                     *      missing ACK).
+                     *   2. Insert expected error frame. In CAN 2.0, expected from ACK Delimiter. 
+                     *      In CAN FD. expect from EOF (as if ACK had 2 bits).
+                     *   3. Append the same frame after the end of first one (to check
+                     *      retransmission)
+                     *****************************************************************************/
+                    driver_bit_frm->TurnReceivedFrame();
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
 
-                DeleteCommonObjects();                    
+                    monitor_bit_frm->InsertActiveErrorFrame(0, BitType::AckDelimiter);
+                    driver_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
+
+                    driver_bit_frm_2->TurnReceivedFrame();
+                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /***************************************************************************** 
+                     * Execute test
+                     *****************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    StartDriverAndMonitor();
+                    this->dut_ifc->SendFrame(golden_frm.get());
+                    WaitForDriverAndMonitor();
+                    CheckLowerTesterResult();
+                } 
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };
