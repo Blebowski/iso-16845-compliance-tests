@@ -137,6 +137,12 @@ class can::DutInterface
          * @returns True if succefull, false otherwise (e.g. protocol exception not supported)
          */
         virtual bool ConfigureProtocolException(bool enable) = 0;
+
+        /**
+         * Configures One-shot mode.
+         * @return True if succesfull, false otherwise (e.g. one shot mode not supported)
+         */
+        virtual bool ConfigureOneShot(bool enable) = 0;
 };
 
 #endif

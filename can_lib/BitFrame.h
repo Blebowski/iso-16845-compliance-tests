@@ -111,6 +111,14 @@ class can::BitFrame : public Frame {
         Bit* GetStuffBit(int index);
 
         /**
+         * Obtains stuff bit within a bit field of a frame
+         * @param index Index of stuff bit within frame (0 - first stuff bit, 1 - second, ...)
+         * @param bit_type Bit field to search stuff bit for
+         * @returns Pointer to stuff bit
+         */
+        Bit* GetStuffBit(int index, BitType bit_type);
+
+        /**
          * Obtains a Stuff bit within a bit field at certain position.
          * @param bit_type Type of bit field
          * @param stuff_bit_type Type of stuff bit to find (No stuff bit, Fixed, regular)

@@ -51,5 +51,6 @@ extern "C" {
             void SetErrorState(can::FaultConfinementState errorState);
             can::FaultConfinementState GetErrorState();
             bool ConfigureProtocolException(bool enable);
+            bool ConfigureOneShot(bool enable);
     };
 }

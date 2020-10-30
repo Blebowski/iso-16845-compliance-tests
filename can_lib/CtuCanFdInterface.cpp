@@ -439,3 +439,15 @@ bool can::CtuCanFdInterface::ConfigureProtocolException(bool enable)
     MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
     return true;
 }
+
+
+bool can::CtuCanFdInterface::ConfigureOneShot(bool enable)
+{
+    union ctu_can_fd_mode_settings data;
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
+    data.s.rtrle = enable;
+    data.s.rtrth = 0;
+
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    return true;
+}

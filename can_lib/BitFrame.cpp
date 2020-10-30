@@ -699,22 +699,25 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
     return &(*bit_it);
 }
 
-
-can::Bit* can::BitFrame::GetStuffBit(BitType bit_type, StuffBitType stuff_bit_type,
-                                     BitValue bit_value)
+can::Bit* can::BitFrame::GetStuffBit(int index, BitType bit_type)
 {
-    auto bit_it = std::find_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type, bit_value]
-    (Bit bit) {
-        if (bit.bit_type_ == bit_type &&
-            bit.bit_value_ == bit_value &&
-            bit.stuff_bit_type == stuff_bit_type)
-            return true;
-        return false;
-    });
+    std::list<Bit>::iterator bit_it = bits_.begin();
+    int i = 0;
+
+    while (i <= index && bit_it != bits_.end())
+    {
+        bit_it++;
+        if ((bit_it->stuff_bit_type == StuffBitType::NormalStuffBit ||
+             bit_it->stuff_bit_type == StuffBitType::FixedStuffBit) &&
+            (bit_it->bit_type_ == bit_type))
+            i++;
+    }
+
+    if (bit_it == bits_.end())
+        return nullptr;
 
     return &(*bit_it);
 }
-
 
 can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
 {
