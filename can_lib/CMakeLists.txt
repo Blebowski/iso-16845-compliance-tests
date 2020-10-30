@@ -28,8 +28,8 @@ add_library(
     FrameFlags.h
     BitTiming.h
 
-    ../../../../driver/ctu_can_fd_frame.h
-    ../../../../driver/ctu_can_fd_regs.h
+    ../../../../driver/ctucanfd_frame.h
+    ../../../../driver/ctucanfd_regs.h
 
     DutInterface.h
     CtuCanFdInterface.h
