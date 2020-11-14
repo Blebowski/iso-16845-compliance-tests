@@ -34,6 +34,12 @@ void can::CtuCanFdInterface::Enable()
     union ctu_can_fd_mode_settings data;
     data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.ena = CTU_CAN_ENABLED;
+
+    /* 
+     * By default forbid that TXT Buffer goes to TX Failed in bus-off. This allows
+     * testing reintegration time!
+     */
+    data.s.tbfbo = 0;
     MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 }
 
