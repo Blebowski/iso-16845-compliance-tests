@@ -431,6 +431,9 @@ void test_lib::TestBase::CheckRecChange(int reference_rec, int delta)
         TestMessage("DUT REC not as expected. Expected %d, Real %d",
                         rec_old + delta, rec_new);
         test_result = false;
+    } else {
+        TestMessage("DUT REC change as expected! Expected %d, Real %d",
+                        rec_old + delta, rec_new);
     }
 }
 
@@ -440,9 +443,12 @@ void test_lib::TestBase::CheckTecChange(int reference_tec, int delta)
     int tec_new = dut_ifc->GetTec();
     if (tec_new != (reference_tec + delta))
     {
-        TestMessage("DUT TEC not as expected. Expected %d, Real %d",
-                        rec_old + delta, rec_new);
+        TestMessage("DUT TEC change NOT as expected. Expected %d, Real %d",
+                        tec_old + delta, tec_new);
         test_result = false;
+    } else {
+        TestMessage("DUT TEC change as expected! Expected %d, Real %d",
+                        tec_old + delta, tec_new);
     }
 }
 

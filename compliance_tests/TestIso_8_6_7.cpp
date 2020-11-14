@@ -6,54 +6,52 @@
  * previously aggreed with author of this text.
  * 
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 21.9.2020
+ * @date 14.11.2020
  * 
  *****************************************************************************/
 
 /******************************************************************************
  * 
- * @test ISO16845 8.6.6
+ * @test ISO16845 8.6.7
  * 
  * @brief This test verifies that an IUT acting as a transmitter increases its
- *        TEC by 8 when detecting a bit error in a data frame on one of the
+ *        TEC by 8 when detecting a form error in a frame on one of the7
  *        following fields described in test variables.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
+ *      CRC Delimiter
+ *      ACK Delimiter
+ *      EOF
  *      FDF = 0
  * 
  *  CAN FD Enabled
+ *      CRC
+ *      CRC Delimiter
+ *      ACK Delimiter
+ *      EOF
+ *      DLC - to cause different CRC types
  *      FDF = 1
  * 
  * Elementary test cases:
  *   Classical CAN, CAN FD Tolerant, CAN FD Enabled
- *     There are eight elementary tests to perform.
- *     In the arbitration field, only bit error on dominant bits shall be
- *     considered.
- *          #1 SOF
- *          #2 dominant ID
- *          #3 dominant DLC
- *          #4 recessive DLC
- *          #5 dominant DATA
- *          #6 recessive DATA
- *          #7 dominant CRC
- *          #8 recessive CRC
+ *     There are five elementary tests to perform.
+ *          #1 CRC Delimiter
+ *          #2 ACK Delimiter
+ *          #3 EOF first bit
+ *          #4 EOF fourth bit
+ *          #5 EOF last bit
  *
  *   CAN FD Enabled
- *      There are 10 elementary tests to perform.
- *      In the arbitration field, only bit error on dominant bits shall be
- *      considered.
- *          #1 SOF
- *          #2 dominant ID
- *          #3 dominant DLC
- *          #4 recessive DLC
- *          #5 dominant DATA
- *          #6 recessive DATA
- *          #7 dominant CRC (17)
- *          #8 recessive CRC (17)
- *          #9 dominant CRC (21)
- *          #10 recessive CRC (21) 
+ *      There are seven elementary tests to perform.
+ *          #1 CRC Delimiter
+ *          #2 ACK Delimiter (2 dominant bit in ACK slot)
+ *          #3 EOF first bit
+ *          #4 EOF fourth bit
+ *          #5 EOF last bit
+ *          #6 Fix stuff bit in CRC 17
+ *          #7 Fix stuff bit in CRC 21
  * 
  * Setup:
  *  The IUT is left in the default state.
@@ -88,16 +86,16 @@
 using namespace can;
 using namespace test_lib;
 
-class TestIso_8_6_6 : public test_lib::TestBase
+class TestIso_8_6_7 : public test_lib::TestBase
 {
     public:
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 5; i++)
                 elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 7; i++)
                 elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
@@ -117,32 +115,16 @@ class TestIso_8_6_6 : public test_lib::TestBase
                 {
                     PrintElemTestInfo(elem_test);
 
-                    /* Repeat randomization if first data byte or if ID is zero!
-                     * This should satisfy that search for random bit will find a bit of
-                     * desired value!
-                     */
-                    do
-                    {
-                        TestBigMessage("Generating random frame...");
-                        frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                        RtrFlag::DataFrame, EsiFlag::ErrorActive);
+                    uint8_t dlc;
+                    if (elem_test.index < 7)
+                        dlc = rand() % 0x9;
+                    else
+                        dlc = (rand() % 0x4) + 11;
 
-                        uint8_t dlc;
-                        if (test_variants[test_variant] == TestVariant::CanFdEnabled)
-                        {
-                            /* To achieve CRC17 or CRC21 in elem tests 7-10 of Can FD Enabled variant */
-                            if (elem_test.index == 7 || elem_test.index == 8)
-                                dlc = (rand() % 0xA) + 1;
-                            else if (elem_test.index == 9 || elem_test.index == 10)
-                                dlc = (rand() % 5) + 0xB;
-                            else
-                                dlc = rand() % 0xF;
-                            } else {
-                                dlc = rand() % 8 + 1;
-                            }
-                            golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-                            RandomizeAndPrint(golden_frm.get());
-                    } while (golden_frm->identifier() == 0x0 && golden_frm->data(0) == 0x00);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    //IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
+                                    EsiFlag::ErrorActive);
+                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
 
                     driver_bit_frm = ConvertBitFrame(*golden_frm);
                     monitor_bit_frm = ConvertBitFrame(*golden_frm);
@@ -152,60 +134,45 @@ class TestIso_8_6_6 : public test_lib::TestBase
 
                     /******************************************************************************
                      * Modify test frames:
-                     *   1. Corrupt bit as given by elementary test case. Avoid corrupting stuff
-                     *      bits alltogether!
+                     *   1. Corrupt bit as given by elementary test case.
                      *   2. Insert active error frame to both driven and monitored frames from
                      *      next bit on.
                      *   3. Append the same frame again with ACK on driven frame. This emulates
                      *      retransmitted frame by IUT.
                      *****************************************************************************/
-                    BitType bit_type_to_corrupt;
-                    BitValue value_to_corrupt = BitValue::Dominant;
+                    Bit *bit_to_corrupt;
                     switch (elem_test.index)
                     {
                     case 1:
-                        bit_type_to_corrupt = BitType::Sof;
+                        bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
                         break;
                     case 2:
-                        bit_type_to_corrupt = BitType::BaseIdentifier;
+                        bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::AckDelimiter);
                         break;
                     case 3:
-                        bit_type_to_corrupt = BitType::Dlc;
+                        bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::Eof);
                         break;
                     case 4:
-                        bit_type_to_corrupt = BitType::Dlc;
-                        value_to_corrupt = BitValue::Recessive;
+                        bit_to_corrupt = driver_bit_frm->GetBitOf(3, BitType::Eof);
                         break;
                     case 5:
-                        bit_type_to_corrupt = BitType::Data;
+                        bit_to_corrupt = driver_bit_frm->GetBitOf(6, BitType::Eof);
                         break;
                     case 6:
-                        bit_type_to_corrupt = BitType::Data;
-                        value_to_corrupt = BitValue::Recessive;
-                        break;
                     case 7:
-                    case 9:
-                        bit_type_to_corrupt = BitType::Crc;
-                        break;
-                    case 8:
-                    case 10:
-                        bit_type_to_corrupt = BitType::Crc;
-                        value_to_corrupt = BitValue::Recessive;
+                        do {
+                            bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);
+                        } while (bit_to_corrupt->stuff_bit_type != StuffBitType::FixedStuffBit);
                         break;
                     default:
                         break;
                     }
 
-                    /* Find random bit within bitfield with value */
-                    Bit *bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
-                    while (bit_to_corrupt->bit_value_ != value_to_corrupt &&
-                           bit_to_corrupt->stuff_bit_type == StuffBitType::NoStuffBit)
-                        bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
-                    // TODO: CRC Can be all zero here, fix it!
+                    /* TX/RX feedback is disabled. We must insert ACK also to driven frame! */
+                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
                     bit_to_corrupt->FlipBitValue();
                     int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-
 
                     driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
                     monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
@@ -230,7 +197,8 @@ class TestIso_8_6_6 : public test_lib::TestBase
                     dut_ifc->SendFrame(golden_frm.get());
                     WaitForDriverAndMonitor();
                     CheckLowerTesterResult();
-                    /* +8 for error, -1 for succsefull retransmission */
+
+                    /* +8 for form error, -1 for sucesfull retransmission */
                     CheckTecChange(tec_old, 7);
                 }
             }

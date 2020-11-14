@@ -173,6 +173,7 @@ add_library(
     TestIso_8_6_4.cpp
     TestIso_8_6_5.cpp
     TestIso_8_6_6.cpp
+    TestIso_8_6_7.cpp
     TestIso_8_6_8.cpp
     TestIso_8_6_9.cpp
     TestIso_8_6_10.cpp
