@@ -143,6 +143,11 @@ class can::DutInterface
          * @return True if succesfull, false otherwise (e.g. one shot mode not supported)
          */
         virtual bool ConfigureOneShot(bool enable) = 0;
+
+        /**
+         * Issues reintegration request to DUT.
+         */
+        virtual void SendReintegrationRequest() = 0;
 };
 
 #endif

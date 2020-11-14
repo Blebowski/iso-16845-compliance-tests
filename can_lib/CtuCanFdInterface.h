@@ -52,5 +52,6 @@ extern "C" {
             can::FaultConfinementState GetErrorState();
             bool ConfigureProtocolException(bool enable);
             bool ConfigureOneShot(bool enable);
+            void SendReintegrationRequest();
     };
 }

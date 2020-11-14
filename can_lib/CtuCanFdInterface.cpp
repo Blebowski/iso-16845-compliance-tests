@@ -457,3 +457,13 @@ bool can::CtuCanFdInterface::ConfigureOneShot(bool enable)
     MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
     return true;
 }
+
+
+void can::CtuCanFdInterface::SendReintegrationRequest()
+{
+    union ctu_can_fd_command data;
+    data.u32 = 0;
+    data.s.ercrst = 1;
+
+    MemBusAgentWrite32(CTU_CAN_FD_COMMAND, data.u32);
+}
