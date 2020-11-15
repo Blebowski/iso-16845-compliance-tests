@@ -36,6 +36,15 @@ class can::BitTiming
 
         void Print();
         
+        /**
+         * @returns Overall bit length in Time quantas.
+         */
+        size_t GetBitLengthTimeQuanta();
+
+        /**
+         * @returns Overall bit length in clock cycles.
+         */
+        size_t GetBitLengthCycles();
 };
 
 #endif

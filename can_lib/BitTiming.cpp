@@ -44,3 +44,14 @@ void can::BitTiming::Print()
     std::cout << "PH2:  " << ph2_ << std::endl;
     std::cout << "SJW:  " << sjw_ << std::endl;
 }
+
+
+size_t can::BitTiming::GetBitLengthTimeQuanta()
+{
+    return prop_ + ph1_ + ph2_ + 1;
+}
+
+size_t can::BitTiming::GetBitLengthCycles()
+{
+    return GetBitLengthTimeQuanta() * brp_;
+}

@@ -121,22 +121,22 @@ class test_lib::TestBase
 
         /* Metadata and flags */
         FrameType frame_type;
-        std::unique_ptr<FrameFlags> frame_flags;
-        std::unique_ptr<FrameFlags> frame_flags_2;
+        std::unique_ptr<can::FrameFlags> frame_flags;
+        std::unique_ptr<can::FrameFlags> frame_flags_2;
 
         /* Frames used during test case. */
-        std::unique_ptr<Frame> golden_frm;
-        std::unique_ptr<Frame> golden_frm_2;
+        std::unique_ptr<can::Frame> golden_frm;
+        std::unique_ptr<can::Frame> golden_frm_2;
 
         /* Bit Frames used by driver (in most of the tests on is used) */
-        std::unique_ptr<BitFrame> driver_bit_frm;
-        std::unique_ptr<BitFrame> driver_bit_frm_2;
-        std::unique_ptr<BitFrame> driver_bit_frm_3;
+        std::unique_ptr<can::BitFrame> driver_bit_frm;
+        std::unique_ptr<can::BitFrame> driver_bit_frm_2;
+        std::unique_ptr<can::BitFrame> driver_bit_frm_3;
 
         /* Bit Frame used by monitor (in most of the tests on is used) */
-        std::unique_ptr<BitFrame> monitor_bit_frm;
-        std::unique_ptr<BitFrame> monitor_bit_frm_2;
-        std::unique_ptr<BitFrame> monitor_bit_frm_3;
+        std::unique_ptr<can::BitFrame> monitor_bit_frm;
+        std::unique_ptr<can::BitFrame> monitor_bit_frm_2;
+        std::unique_ptr<can::BitFrame> monitor_bit_frm_3;
 
         /* REC / TEC counters */
         int rec_old;
