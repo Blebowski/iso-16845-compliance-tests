@@ -67,93 +67,88 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_7_3 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
-            CanAgentConfigureTxToRxFeedback(true);
-
-            /*****************************************************************
-             * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
-             ****************************************************************/
-
-            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++)
-            {
-                // CAN 2.0 frame, Base identifier, randomize others
-                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);
-
-                // Base ID full of 1s, 5th will be dominant stuff bit!
-                int id = pow(2,11) - 1;
-                golden_frame = new Frame(frameFlags, 0x1, id);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing positive phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Prolong TSEG2 of bit before the stuff bit on 5th
-                 *      bit of identifier (delay stuff bit) by e in both
-                 *      driven and monitored frames.
-                 *   2. Force whole TSEG2 and last time quanta of TSEG1 to
-                 *      Recessive. This corresponds to shortening the bit by
-                 *      TSEG2 + 1.
-                 *   3. Insert Expected active error frame to be monitored
-                 *      on bit after stuff bit. Since also monitored bit
-                 *      before stuff bit was prolonged, error frame will be
-                 *      exactly at expected position!
-                 *      On driver, passive error frame so that it transmitts
-                 *      all recessive!
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *beforeStuffBit = driver_bit_frame->GetBitOf(4, BitType::BaseIdentifier);
-                beforeStuffBit->LengthenPhase(BitPhase::Ph2, i + 1);
-                beforeStuffBit = monitor_bit_frame->GetBitOf(4, BitType::BaseIdentifier);
-                beforeStuffBit->LengthenPhase(BitPhase::Ph2, i + 1);
-
-                Bit *stuffBit = driver_bit_frame->GetStuffBit(0);
-                for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                    stuffBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
-                BitPhase prevPhase = stuffBit->PrevBitPhase(BitPhase::Ph2);
-                stuffBit->GetLastTimeQuantaIterator(prevPhase)->ForceValue(BitValue::Recessive);
-
-                int index = driver_bit_frame->GetBitIndex(stuffBit);
-                monitor_bit_frame->InsertActiveErrorFrame(index + 1);
-                driver_bit_frame->InsertPassiveErrorFrame(index + 1);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                DeleteCommonObjects();
+            FillTestVariants(VariantMatchingType::Common);
+            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++){
+                ElementaryTest test = ElementaryTest(i + 1);
+                test.e = i + 1;
+                elem_tests[0].push_back(test);
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
+            CanAgentConfigureTxToRxFeedback(true);
+        }
+        int Run()
+        {
+            SetupTestEnvironment();
 
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            {
+                PrintVariantInfo(test_variants[test_variant]);
+
+                for (auto elem_test : elem_tests[test_variant])
+                {
+                    PrintElemTestInfo(elem_test);
+
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                                               IdentifierType::Base);
+
+                    /* Base ID full of 1s, 5th will be dominant stuff bit! */
+                    int id = pow(2,11) - 1;
+                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
+                    RandomizeAndPrint(golden_frm.get());
+
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+                    /******************************************************************************
+                     * Modify test frames:
+                     *   1. Prolong TSEG2 of bit before the stuff bit on 5th bit of identifier
+                     *      (delay stuff bit) by e in both driven and monitored frames.
+                     *   2. Force whole TSEG2 and last time quanta of TSEG1 to Recessive. This
+                     *      corresponds to shortening the bit by TSEG2 + 1.
+                     *   3. Insert Expected active error frame to be monitored on bit after stuff
+                     *      bit. Since also monitored bit before stuff bit was prolonged, error
+                     *      frame will be exactly at expected position!
+                     *      On driver, passive error frame so that it transmitts all recessive!
+                     *****************************************************************************/
+                    monitor_bit_frm->TurnReceivedFrame();
+
+                    Bit *before_stuff_bit = driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier);
+                    before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+                    before_stuff_bit = monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier);
+                    before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+
+                    Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
+                    for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
+                        stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                    BitPhase previous_phase = stuff_bit->PrevBitPhase(BitPhase::Ph2);
+                    stuff_bit->GetLastTimeQuantaIterator(previous_phase)
+                        ->ForceValue(BitValue::Recessive);
+
+                    int index = driver_bit_frm->GetBitIndex(stuff_bit);
+                    monitor_bit_frm->InsertActiveErrorFrame(index + 1);
+                    driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /***************************************************************************** 
+                     * Execute test
+                     *****************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    RunLowerTester(true, true);
+                    CheckLowerTesterResult();
+                    CheckNoRxFrame();
+                }
+            }
+
+            return (int)FinishTest();
         }
 };
