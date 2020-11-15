@@ -186,6 +186,7 @@ add_library(
     TestIso_8_6_17.cpp
     TestIso_8_6_18.cpp
     TestIso_8_6_19.cpp
+    TestIso_8_6_20.cpp
 
     TestIso_8_7_1.cpp
 )
