@@ -154,7 +154,8 @@ void can::BitFrame::AppendBit(BitType bit_type, BitValue bit_value)
 void can::BitFrame::AppendBitFrame(can::BitFrame *bit_frame)
 {
     for (size_t i = 0; i < bit_frame->GetBitCount(); i++)
-        bits_.push_back(*bit_frame->GetBit(i));
+        // We want to copy the bit, not to refer to original bit frame!
+        bits_.push_back(Bit(*bit_frame->GetBit(i)));
 }
 
 
