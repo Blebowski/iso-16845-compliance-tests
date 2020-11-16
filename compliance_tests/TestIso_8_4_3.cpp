@@ -75,141 +75,110 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_8_4_3 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            for (int i = 0; i < 2; i++)
+            {
+                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+            }
 
-            // Start monitoring when DUT starts transmitting!
+            /* Standard settings for tests where IUT is transmitter */
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-
-            // Configure driver to wait for monitor so that LT sends ACK in right moment.
             CanAgentSetWaitForMonitor(true);
-
             CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            int iterCnt;
+        int Run()
+        {
+            SetupTestEnvironment();
+            uint8_t data_byte = 0x80;
 
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            /*****************************************************************
-             * Common part of test (i=0), CAN FD enabled part of test(i=1)
-             ****************************************************************/
-            for (int i = 0; i < iterCnt; i++)
+            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
             {
-                if (i == 0)
-                    TestMessage("CAN 2.0 part of test");
-                else
-                    TestMessage("CAN FD part of test");
+                PrintVariantInfo(test_variants[test_variant]);
 
-                for (int j = 0; j < 2; j++)
+                for (auto elem_test : elem_tests[test_variant])
                 {
-                    FrameFlags frameFlags;
-                    uint8_t dataByte = 0x80;
+                    PrintElemTestInfo(elem_test);
+
                     int ids[] = {
                         0x7B,
                         0x3B
                     };
 
-                    if (i == 0)
-                        frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base,
-                                                RtrFlag::DataFrame);
-                    else
-                        frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Base,
-                                                EsiFlag::ErrorActive);
+                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                    IdentifierType::Base, RtrFlag::DataFrame, 
+                                    BrsFlag::DontShift, EsiFlag::ErrorActive);
+                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1,
+                                                         ids[elem_test.index - 1], &data_byte);
+                    RandomizeAndPrint(golden_frm.get());
 
-                    golden_frame = new Frame(frameFlags, 0x1, ids[j], &dataByte);
-                    golden_frame->Randomize();
-                    TestBigMessage("Test frame:");
-                    golden_frame->Print();
+                    driver_bit_frm = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    // Convert to Bit frames
-                    driver_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    monitor_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
+                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-                    BitFrame *secondDriverBitFrame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    BitFrame *secondMonitorBitFrame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-
-                    /**
+                    /******************************************************************************
                      * Modify test frames:
                      *  1. Turn driven frame as received.
-                     *  2. Force 7-th data bit to Dominant. This should be recessive
-                     *     stuff bit. Insert Active Error frame from next bit on, to
-                     *     monitored frame. Insert Passive Error frame to driven frame.
-                     *  3. Force 8-th bit of Error delimiter to dominant. Insert Overload
-                     *     frame from next bit on to monitored frame. Insert Passive
-                     *     Error frame to driven frame.
-                     *  4. Force third bit of intermission after overload frame to
-                     *     dominant (in driven frame).
-                     *  5. Remove SOF bit from retransmitted frame. Append retransmitted
-                     *     frame behind the first frame. Second driven frame is turned
-                     *     received.
-                     */
-                    driver_bit_frame->TurnReceivedFrame();
+                     *  2. Force 7-th data bit to Dominant. This should be recessive stuff bit.
+                     *     Insert Active Error frame from next bit on, to monitored frame. Insert
+                     *     Passive Error frame to driven frame.
+                     *  3. Force 8-th bit of Error delimiter to dominant. Insert Overload frame
+                     *     from next bit on to monitored frame. Insert Passive Error frame to
+                     *     driven frame.
+                     *  4. Force third bit of intermission after overload frame to dominant (in
+                     *     driven frame).
+                     *  5. Remove SOF bit from retransmitted frame. Append retransmitted frame
+                     *     behind the first frame. Second driven frame is turned received.
+                     *****************************************************************************/
+                    driver_bit_frm->TurnReceivedFrame();
 
-                    Bit *dataStuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
-                    dataStuffBit->bit_value_ = BitValue::Dominant;
-                    monitor_bit_frame->InsertActiveErrorFrame(
-                        monitor_bit_frame->GetBitOf(7, BitType::Data));
-                    driver_bit_frame->InsertPassiveErrorFrame(
-                        driver_bit_frame->GetBitOf(7, BitType::Data));
-
-                    Bit *endOfErrorDelim = driver_bit_frame->GetBitOf(7, BitType::ErrorDelimiter);
-                    int endOfErrorDelimIndex = driver_bit_frame->GetBitIndex(endOfErrorDelim);
-                    endOfErrorDelim->bit_value_ = BitValue::Dominant;
-                    monitor_bit_frame->InsertOverloadFrame(endOfErrorDelimIndex + 1);
-                    driver_bit_frame->InsertPassiveErrorFrame(endOfErrorDelimIndex + 1);
-
-                    Bit *thirdIntermissionBit = driver_bit_frame->GetBitOf(2, BitType::Intermission);
-                    thirdIntermissionBit->bit_value_ = BitValue::Dominant;
-
-                    secondDriverBitFrame->TurnReceivedFrame();
-                    secondDriverBitFrame->RemoveBit(secondDriverBitFrame->GetBitOf(0, BitType::Sof));
-                    secondMonitorBitFrame->RemoveBit(secondMonitorBitFrame->GetBitOf(0, BitType::Sof));
-
-                    driver_bit_frame->AppendBitFrame(secondDriverBitFrame);
-                    monitor_bit_frame->AppendBitFrame(secondMonitorBitFrame);
-
-                    driver_bit_frame->Print(true);
-                    monitor_bit_frame->Print(true);
-
-                    // Push frames to Lower tester, insert to DUT, run and check!
-                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                    StartDriverAndMonitor();
-
-                    TestMessage("Sending frame via DUT!");
-                    this->dut_ifc->SendFrame(golden_frame);
-                    TestMessage("Sent frame via DUT!");
+                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
                     
+                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+
+                    Bit *last_err_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
+                    int last_err_delim_index = driver_bit_frm->GetBitIndex(last_err_delim_bit);
+                    
+                    last_err_delim_bit->bit_value_ = BitValue::Dominant;
+                    monitor_bit_frm->InsertOverloadFrame(last_err_delim_index + 1);
+                    driver_bit_frm->InsertPassiveErrorFrame(last_err_delim_index + 1);
+
+                    Bit *third_intermission_bit = driver_bit_frm->GetBitOf(2, BitType::Intermission);
+                    third_intermission_bit->bit_value_ = BitValue::Dominant;
+
+                    driver_bit_frm_2->TurnReceivedFrame();
+                    driver_bit_frm_2->RemoveBit(driver_bit_frm_2->GetBitOf(0, BitType::Sof));
+                    monitor_bit_frm_2->RemoveBit(monitor_bit_frm_2->GetBitOf(0, BitType::Sof));
+
+                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+
+                    driver_bit_frm->Print(true);
+                    monitor_bit_frm->Print(true);
+
+                    /*****************************************************************************
+                     * Execute test
+                     *****************************************************************************/
+                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+                    StartDriverAndMonitor();
+                    this->dut_ifc->SendFrame(golden_frm.get());
                     WaitForDriverAndMonitor();
                     CheckLowerTesterResult();
-
-                    DeleteCommonObjects();
-                    delete secondDriverBitFrame;
-                    delete secondMonitorBitFrame;
                 }
             }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return (int)FinishTest();
         }
 };

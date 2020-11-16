@@ -84,6 +84,7 @@ class TestIso_7_7_3 : public test_lib::TestBase
 
             CanAgentConfigureTxToRxFeedback(true);
         }
+
         int Run()
         {
             SetupTestEnvironment();
