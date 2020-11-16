@@ -121,11 +121,14 @@ class TestIso_8_7_3 : public test_lib::TestBase
                      *      passive error frame to driven frame.
                      *   3. Shorten third bit of Intermission by Phase 2 length - IPT. Do this
                      *      in both, driven and monitored frames!
-                     *   4. In second monitored frame, turn first Time quanta recessive. This is
+                     *   4. Lengthen SYNC of the same bit by 1 TQ in monitored frame. This will
+                     *      offset SOF transmitted by next frame by 1 TQ!
+                     *   5. In second monitored frame, turn first Time quanta recessive. This is
                      *      the time quanta during which driven frame already has dominant value
                      *      transmitted!
-                     *   5. Append retransmitted frame as if received. Only SOF of driven frame
-                     *      shall be dominant.
+                     *   6. Append retransmitted frame as if received. Reduce SOF lenght in
+                     *      monitored frame by 1 TQ since in last bit of intermission, it was
+                     *      prolonged.
                      *****************************************************************************/
                     driver_bit_frm->TurnReceivedFrame();
                     driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
@@ -146,8 +149,13 @@ class TestIso_8_7_3 : public test_lib::TestBase
                     last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)->Lengthen(1);
                     last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)->Lengthen(1);
 
-                    monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->GetTimeQuanta(0)
-                        ->ForceValue(BitValue::Recessive);
+                    /* This trick needs to be done to check that IUT transmits the first TQ recessive.
+                     * During this TQ, LT still sends the hard sync edge. This corresponds to
+                     * description in "response". Using "force" functions on first time quanta of
+                     * seconds frame SOF cant be used since "force" is only used on driven bits!
+                     */
+                    last_interm_bit_mon->LengthenPhase(BitPhase::Sync, 1);
+                    monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->ShortenPhase(BitPhase::Sync, 1);
 
                     driver_bit_frm_2->TurnReceivedFrame();
                     driver_bit_frm_2->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Dominant;
