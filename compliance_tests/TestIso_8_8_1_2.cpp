@@ -75,7 +75,7 @@ class TestIso_8_8_1_2 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            elem_tests[0].push_back(ElementaryTest(1));
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
