@@ -195,6 +195,7 @@ add_library(
     TestIso_8_7_3.cpp
     TestIso_8_7_4.cpp
     TestIso_8_7_5.cpp
+    TestIso_8_7_6.cpp
     TestIso_8_7_7.cpp
     TestIso_8_7_8.cpp
     TestIso_8_7_9.cpp
