@@ -40,28 +40,32 @@ class test_lib::TestDemo : public TestBase
         void ConfigureTest()
         {
             /*
-             * Here initialize test specific variables, create test specific
-             * objects. Each test shall initialize 'elem_tests' list and fill
-             * 'test_variants'. This method will be called if
-             * 'SetupTestEnvironment' is called from "Run" method.
+             * Here initialize test specific variables, create test specific objects. Each test
+             * shall initialize 'elem_tests' list and fill 'test_variants'. This method will be
+             * called before test is Run. If elementary tests are not filled here, nothing run!
+             * 
+             * In this function, TestBase::ConfigureTest was already ran, so TB should be set up,
+             * configuration should be obtain by test environment (either from digital simulation
+             * or other master source), IUT should be enabled, Error Active and bus integration
+             * should be finished!
              */
         }
 
         /**
-         * Test execution function shall consist of following actions:
-         *  1. Call of "SetupTestEnvironment"
-         *  2. Iterating over "elem_tests" and executing elementary test for
-         *     each variant.
-         *  3. Call of "CleanupTestEnvironment" and returning what it returns
+         * Execution function for each elementary test of each test variant as filled in
+         * ConfigureTest function.
+         * 
+         * Test result can be stored to "test_result" variable.
+         * 
+         * @returns 0 if test should proceed, or 1 if test execution should be aborted.
          */
-        int Run()
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-
             /****************************************************************
              * Write your test code here!
              ***************************************************************/
-            
-            return (int)FinishTest();
+            TestMessage("%d %d", test_variant, elem_test.index);
+
+            return 0;
         }
 };

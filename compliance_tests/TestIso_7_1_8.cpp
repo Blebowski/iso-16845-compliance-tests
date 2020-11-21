@@ -79,42 +79,38 @@ class TestIso_7_1_8 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::Common);
             for (int i = 0; i < 7; i++)
-                elem_tests[0].push_back(ElementaryTest(i + 1));
+                 AddElemTest(TestVariant::Common, ElementaryTest(i + 1));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1]);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (auto elem_test : elem_tests[0])
-            {
-                PrintElemTestInfo(elem_test);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1]);
-                RandomizeAndPrint(golden_frm.get());
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received, driver frame must have ACK too (TX->RX feedback
+             *      disabled).
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-
-                driver_bit_frm = ConvertBitFrame(*golden_frm);
-                monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                /**********************************************************************************
-                 * Modify test frames:
-                 *   1. Monitor frame as if received, driver frame must have ACK too
-                 *      (TX->RX feedback disabled).
-                 **********************************************************************************/
-                monitor_bit_frm->TurnReceivedFrame();
-                driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                /********************************************************************************** 
-                 * Execute test
-                 *********************************************************************************/
-                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-                CheckRxFrame(*golden_frm);
-            }
-
-            return (int)FinishTest();
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+            
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

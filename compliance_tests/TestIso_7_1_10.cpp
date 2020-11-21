@@ -112,274 +112,265 @@ class TestIso_7_1_10 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::ClassicalFdCommon);
-            for (size_t i = 0; i < test_variants.size(); i++)
+            for (auto const &test_variant : test_variants)
                 for (size_t j = 0; j < 10; j++)
-                    elem_tests[i].push_back(ElementaryTest(j + 1));
+                    AddElemTest(test_variant, ElementaryTest(j + 1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            int id;
+            uint8_t dlc;
+            uint8_t data[64] = {};
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            /* Variants differ only in value of reserved bit! CAN 2.0 shall accept FDF recessive
+             * and CAN FD Tolerant shall go to protocol exception!
+             */
+            if (test_variant == TestVariant::Can_2_0 || test_variant == TestVariant::CanFdTolerant)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
+                switch (elem_test.index)
                 {
-                    PrintElemTestInfo(elem_test);
+                case 1:
+                    id = 0x78;
+                    dlc = 0x8;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    data[0] = 0x01;
+                    for (int i = 1; i < 8; i++)
+                        data[i] = 0xE1;
+                    break;
 
-                    int id;
-                    uint8_t dlc;
-                    uint8_t data[64] = {};
+                case 2:
+                    id = 0x41F;
+                    dlc = 0x1;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    data[0] = 0x00;
+                    break;
 
-                    /* Variants differ only in value of reserved bit! CAN 2.0 shall accept FDF
-                     * recessive and CAN FD Tolerant shall go to protocol exception!
-                     */
-                    if (test_variants[test_variant] == TestVariant::Can_2_0 ||
-                        test_variants[test_variant] == TestVariant::CanFdTolerant)
-                    {
-                        switch (elem_test.index)
-                        {
-                        case 1:
-                            id = 0x78;
-                            dlc = 0x8;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            data[0] = 0x01;
-                            for (int i = 1; i < 8; i++)
-                                data[i] = 0xE1;
-                            break;
+                case 3:
+                    id = 0x707;
+                    dlc = 0xF;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    for (int i = 0; i < 8; i++)
+                        data[i] = 0x0F;
+                    break;
 
-                        case 2:
-                            id = 0x41F;
-                            dlc = 0x1;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            data[0] = 0x00;
-                            break;
+                case 4:
+                    id = 0x360;
+                    dlc = 0x0;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    break;
 
-                        case 3:
-                            id = 0x707;
-                            dlc = 0xF;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            for (int i = 0; i < 8; i++)
-                                data[i] = 0x0F;
-                            break;
+                case 5:
+                    id = 0x730;
+                    dlc = 0x0;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    break;
 
-                        case 4:
-                            id = 0x360;
-                            dlc = 0x0;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            break;
+                case 6:
+                    id = 0x47F;
+                    dlc = 0x1;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    data[0] = 0x1F;
+                    break;
 
-                        case 5:
-                            id = 0x730;
-                            dlc = 0x0;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            break;
+                case 7:
+                    id = 0x758;
+                    dlc = 0x0;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    break;
 
-                        case 6:
-                            id = 0x47F;
-                            dlc = 0x1;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            data[0] = 0x1F;
-                            break;
+                case 8:
+                    id = 0x777;
+                    dlc = 0x1;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::DataFrame);
+                    data[0] = 0x1F;
+                    break;
 
-                        case 7:
-                            id = 0x758;
-                            dlc = 0x0;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            break;
+                case 9:
+                    id = 0x7EF;
+                    dlc = 0x2;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::RtrFrame);
+                    break;
 
-                        case 8:
-                            id = 0x777;
-                            dlc = 0x1;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::DataFrame);
-                            data[0] = 0x1F;
-                            break;
+                case 10:
+                    id = 0x3EA;
+                    dlc = 0xF;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                            IdentifierType::Base, RtrFlag::RtrFrame);
+                default:
+                    break;
+                }
 
-                        case 9:
-                            id = 0x7EF;
-                            dlc = 0x2;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::RtrFrame);
-                            break;
+            }
+            else if (test_variant == TestVariant::CanFdEnabled)
+            {
+                switch (elem_test.index)
+                {
+                case 1:
+                    id = 0x78;
+                    dlc = 0xE;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                    data[0] = 0x01;
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0xE1;
+                    break;
 
-                        case 10:
-                            id = 0x3EA;
-                            dlc = 0xF;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                                    IdentifierType::Base, RtrFlag::RtrFrame);
-                        default:
-                            break;
-                        }
+                case 2:
+                    id = 0x47C;
+                    dlc = 0x8;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0x3C;
+                    break;
 
-                    }
-                    else if (test_variants[test_variant] == TestVariant::CanFdEnabled)
-                    {
-                        switch (elem_test.index)
-                        {
-                        case 1:
-                            id = 0x78;
-                            dlc = 0xE;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorActive);
-                            data[0] = 0x01;
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0xE1;
-                            break;
+                case 3:
+                    id = 0x41E;
+                    dlc = 0xE;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorPassive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0x1E;
+                    break;
 
-                        case 2:
-                            id = 0x47C;
-                            dlc = 0x8;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorActive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0x3C;
-                            break;
+                case 4:
+                    id = 0x20F;
+                    dlc = 0xF;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::DontShift, EsiFlag::ErrorPassive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0x0F;
+                    break;
 
-                        case 3:
-                            id = 0x41E;
-                            dlc = 0xE;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorPassive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0x1E;
-                            break;
+                case 5:
+                    id = 0x107;
+                    dlc = 0xF;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0x87;
+                    break;
 
-                        case 4:
-                            id = 0x20F;
-                            dlc = 0xF;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::DontShift, EsiFlag::ErrorPassive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0x0F;
-                            break;
+                case 6:
+                    id = 0x7C3;
+                    dlc = 0x3;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0xC3;
+                    break;
 
-                        case 5:
-                            id = 0x107;
-                            dlc = 0xF;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::DontShift, EsiFlag::ErrorActive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0x87;
-                            break;
+                case 7:
+                    id = 0x3E1;
+                    dlc = 0x3;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0xE1;
+                    break;
 
-                        case 6:
-                            id = 0x7C3;
-                            dlc = 0x3;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::DontShift, EsiFlag::ErrorActive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0xC3;
-                            break;
+                case 8:
+                    id = 0x1F0;
+                    dlc = 0x1;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                    for (int i = 1; i < 64; i++)
+                        data[i] = 0xF0;
+                    break;
 
-                        case 7:
-                            id = 0x3E1;
-                            dlc = 0x3;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorActive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0xE1;
-                            break;
+                case 9:
+                    id = 0x000;
+                    dlc = 0x0;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                    break;
 
-                        case 8:
-                            id = 0x1F0;
-                            dlc = 0x1;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorActive);
-                            for (int i = 1; i < 64; i++)
-                                data[i] = 0xF0;
-                            break;
+                case 10:
+                    id = 0x7FF;
+                    dlc = 0x0;
+                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::Shift, EsiFlag::ErrorPassive);
+                    break;
 
-                        case 9:
-                            id = 0x000;
-                            dlc = 0x0;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorActive);
-                            break;
-
-                        case 10:
-                            id = 0x7FF;
-                            dlc = 0x0;
-                            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                                    BrsFlag::Shift, EsiFlag::ErrorPassive);
-                            break;
-
-                        default:
-                            break;
-                        }
-                    }
-
-                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id, data);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    /**********************************************************************************
-                     * Modify test frames:
-                     *   1. Modify some of the bits as per elementary test cases
-                     *   2. Update the frame since number of stuff bits might have changed.
-                     *   3. Turn monitored frame to received.
-                     **********************************************************************************/
-                    if (test_variants[test_variant] == TestVariant::Can_2_0)
-                    {
-                        switch(elem_test.index)
-                        {
-                        case 3:
-                        case 4:
-                        case 5:
-                        case 10:
-                            driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
-                            monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
-                        default:
-                            break;
-                        }
-                    }
-                    else if (test_variants[test_variant] == TestVariant::CanFdEnabled)
-                    {
-                        if (elem_test.index == 5)
-                        {
-                            driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
-                            monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
-                        }
-                    }
-
-                    driver_bit_frm->UpdateFrame();
-                    monitor_bit_frm->UpdateFrame();
-
-                    monitor_bit_frm->TurnReceivedFrame();
-
-                    /********************************************************************************** 
-                     * Execute test
-                     *********************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                    CheckRxFrame(*golden_frm);
+                default:
+                    break;
                 }
             }
 
-            return (int)FinishTest();
+            golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id, data);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Modify some of the bits as per elementary test cases
+             *   2. Update the frame since number of stuff bits might have changed.
+             *   3. Turn monitored frame to received.
+             *************************************************************************************/
+            if (test_variant == TestVariant::Can_2_0)
+            {
+                switch(elem_test.index)
+                {
+                case 3:
+                case 4:
+                case 5:
+                case 10:
+                    driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                default:
+                    break;
+                }
+            }
+            else if (test_variant == TestVariant::CanFdEnabled)
+            {
+                if (elem_test.index == 5)
+                {
+                    driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                }
+            }
+
+            driver_bit_frm->UpdateFrame();
+            monitor_bit_frm->UpdateFrame();
+
+            monitor_bit_frm->TurnReceivedFrame();
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

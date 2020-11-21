@@ -23,6 +23,13 @@
 #ifndef TEST_BASE
 #define TEST_BASE
 
+// TODO: Add compiler agnostic aproach for warning disabling!
+#define DISABLE_UNUSED_ARGS _Pragma("GCC diagnostic push") \
+                            _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
+
+#define ENABLE_UNUSED_ARGS _Pragma("GCC diagnostic pop")
+
+
 using namespace can;
 
 /**
@@ -180,6 +187,16 @@ class test_lib::TestBase
         virtual int Run();
 
         /**
+         * Runs single elementary test.
+         */
+        virtual int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant);
+
+        /**
+         * 
+         */
+        virtual int FinishElementaryTest();
+
+        /**
          * Cleans test environment. Notifies TestControllent (in simulation) with
          * 'test_result'. Returns value based on test result.
          * Should be called at the end of tests 'Run' method.
@@ -195,6 +212,11 @@ class test_lib::TestBase
          * Fills 'test_variants' and creates vectors for each variant in 'elem_tests'.
          */
         void FillTestVariants(VariantMatchingType match_type);
+
+        /**
+         * Adds elementary test to a test variant
+         */
+        void AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test);
 
         /**
          * 

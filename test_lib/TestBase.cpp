@@ -55,9 +55,10 @@ can::FrameType test_lib::TestBase::GetDefaultFrameType(TestVariant &variant)
     return FrameType::Can2_0;
 }
 
-int test_lib::TestBase::Run()
+
+void test_lib::TestBase::ConfigureTest()
 {
-    TestMessage("TestBase: Run Entered");    
+    TestMessage("TestBase: Configuration Entered");    
 
     TestMessage("Querying test configuration from TB:");
     this->dut_clock_period = TestControllerAgentGetCfgDutClockPeriod();
@@ -131,28 +132,64 @@ int test_lib::TestBase::Run()
 
     TestMessage("DUT ON! Test can start!");
 
-    TestMessage("TestBase: Run Exiting");
-
-    return 0;
+    TestMessage("TestBase: Configuration Exiting");
 }
 
-void test_lib::TestBase::ConfigureTest()
-{
-}
 
 void test_lib::TestBase::SetupTestEnvironment()
 {
-    TestBigMessage("Running base test...");
-    TestBase::Run();
+    TestBigMessage("Base test config...");
+    TestBase::ConfigureTest();
     TestMessage("Done");
 
-    TestBigMessage("Running test specific config...");
+    TestBigMessage("Test specific config...");
     ConfigureTest();
     TestMessage("Done");
 
     PrintTestInfo();
 
     TestBigMessage("Starting test execution: ", test_name);
+}
+
+
+int test_lib::TestBase::Run()
+{
+    SetupTestEnvironment();
+
+    int variant_index = 0;
+
+    /*
+    if (RunElemTest == 0)
+    {
+        TestBigMessage("Elementary test Run routine not defined, exiting...");
+        test_result = false;
+        return (int)FinishTest();
+    }
+    */
+
+    for (auto const &test_variant : test_variants)
+    {
+        PrintVariantInfo(test_variant);
+        for (auto const & elem_test : elem_tests[variant_index])
+        {
+            PrintElemTestInfo(elem_test);
+            if (RunElemTest(elem_test, test_variant) != 0)
+            {
+                TestBigMessage("Elementary test %d failed.", elem_test.index);
+                return (int)FinishTest();
+            }
+        }
+        variant_index++;
+    }
+    return (int)FinishTest();
+}
+
+
+int test_lib::TestBase::FinishElementaryTest()
+{
+    if (test_result)
+        return 0;
+    return 1;
 }
 
 
@@ -252,6 +289,22 @@ void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
     default:
         break;
     }
+}
+
+
+void test_lib::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test)
+{
+    int i = 0;
+    for (auto &test_variant_it : test_variants)
+    {
+        if (test_variant_it == test_variant)
+        {
+            elem_tests[i].push_back(elem_test);
+            return;
+        }
+        ++i;
+    }
+    TestMessage("Test variant not found! Ignoring elementary test.");
 }
 
 
@@ -465,6 +518,13 @@ void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame
     delete test_sequence;
 }
 
+DISABLE_UNUSED_ARGS
+int test_lib::TestBase::RunElemTest(const ElementaryTest &elem_test,
+                                    const TestVariant &test_variant)
+{
+    return 0;
+}
+ENABLE_UNUSED_ARGS
 
 void test_lib::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
 {
@@ -513,7 +573,11 @@ void test_lib::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: %s", test_name.c_str());
-    TestMessage("Number of variants: %d", elem_tests.size());
+    TestMessage("Number of variants: %d", test_variants.size());
+    int num_elem_tests = 0;
+    for (const auto &variant_tests : elem_tests)
+        num_elem_tests += variant_tests.size();
+    TestMessage("Total number of elementary tests: %d", num_elem_tests);
 }
 
 void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)

@@ -111,184 +111,176 @@ class TestIso_7_1_5 : public test_lib::TestBase
             }
 
             for (int i = 0; i < num_elem_tests; i++)
-                elem_tests[0].push_back(ElementaryTest(i + 1, frame_type));
+                AddElemTest(test_variants[0], ElementaryTest(i + 1, frame_type));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                            IdentifierType::Extended, RtrFlag::DataFrame);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Force bits per Test variant or elementary test.
+             *   2. Update frames (needed since CRC might have changed).
+             *   3. Turned monitored frame received.
+             *************************************************************************************/
+
+            if (test_variant == TestVariant::Can_2_0)
             {
-                PrintVariantInfo(test_variants[test_variant]);
+                Bit *srr_driver = driver_bit_frm->GetBitOf(0, BitType::Srr);
+                Bit *srr_monitor = monitor_bit_frm->GetBitOf(0, BitType::Srr);
+                Bit *r0_driver = driver_bit_frm->GetBitOf(0, BitType::R0);
+                Bit *r0_monitor = monitor_bit_frm->GetBitOf(0, BitType::R0);
 
-                for (auto elem_test : elem_tests[test_variant])
+                /* In CAN 2.0 Extended frame format, R1 is at position of FDF */
+                Bit *r1_driver = driver_bit_frm->GetBitOf(0, BitType::R1);
+                Bit *r1_monitor = monitor_bit_frm->GetBitOf(0, BitType::R1);
+                
+                switch (elem_test.index)
                 {
-                    PrintElemTestInfo(elem_test);
+                case 1:
+                    srr_driver->bit_value_ = BitValue::Recessive;
+                    srr_monitor->bit_value_ = BitValue::Recessive;
+                    r0_driver->bit_value_ = BitValue::Recessive;
+                    r0_monitor->bit_value_ = BitValue::Recessive;
+                    r1_driver->bit_value_ = BitValue::Recessive;
+                    r1_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 2:
+                    srr_driver->bit_value_ = BitValue::Recessive;
+                    srr_monitor->bit_value_ = BitValue::Recessive;
+                    r0_driver->bit_value_ = BitValue::Recessive;
+                    r0_monitor->bit_value_ = BitValue::Recessive;
+                    r1_driver->bit_value_ = BitValue::Dominant;
+                    r1_monitor->bit_value_ = BitValue::Dominant;
+                    break;
+                case 3:
+                    srr_driver->bit_value_ = BitValue::Recessive;
+                    srr_monitor->bit_value_ = BitValue::Recessive;
+                    r0_driver->bit_value_ = BitValue::Dominant;
+                    r0_monitor->bit_value_ = BitValue::Dominant;
+                    r1_driver->bit_value_ = BitValue::Recessive;
+                    r1_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 4:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r0_driver->bit_value_ = BitValue::Recessive;
+                    r0_monitor->bit_value_ = BitValue::Recessive;
+                    r1_driver->bit_value_ = BitValue::Recessive;
+                    r1_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 5:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r0_driver->bit_value_ = BitValue::Recessive;
+                    r0_monitor->bit_value_ = BitValue::Recessive;
+                    r1_driver->bit_value_ = BitValue::Dominant;
+                    r1_monitor->bit_value_ = BitValue::Dominant;
+                    break;
+                case 6:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r0_driver->bit_value_ = BitValue::Dominant;
+                    r0_monitor->bit_value_ = BitValue::Dominant;
+                    r1_driver->bit_value_ = BitValue::Recessive;
+                    r1_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 7:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r0_driver->bit_value_ = BitValue::Dominant;
+                    r0_monitor->bit_value_ = BitValue::Dominant;
+                    r1_driver->bit_value_ = BitValue::Dominant;
+                    r1_monitor->bit_value_ = BitValue::Dominant;
+                default:
+                    break;
+                }
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Extended, RtrFlag::DataFrame);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            } else if (test_variant == TestVariant::CanFdTolerant) {
+                Bit *srr_driver = driver_bit_frm->GetBitOf(0, BitType::Srr);
+                Bit *srr_monitor = monitor_bit_frm->GetBitOf(0, BitType::Srr);
+                Bit *r0_driver = driver_bit_frm->GetBitOf(0, BitType::R0);
+                Bit *r0_monitor = monitor_bit_frm->GetBitOf(0, BitType::R0);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+                switch (elem_test.index)
+                {
+                case 1:
+                    srr_driver->bit_value_ = BitValue::Recessive;
+                    srr_monitor->bit_value_ = BitValue::Recessive;
+                    r0_driver->bit_value_ = BitValue::Recessive;
+                    r0_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 2:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r0_driver->bit_value_ = BitValue::Recessive;
+                    r0_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 3:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r0_driver->bit_value_ = BitValue::Dominant;
+                    r0_monitor->bit_value_ = BitValue::Dominant;
+                    break;
+                default:
+                    break;
+                }
 
-                    /**********************************************************************************
-                     * Modify test frames:
-                     *   1. Force bits per Test variant or elementary test.
-                     *   2. Update frames (needed since CRC might have changed).
-                     *   3. Turned monitored frame received.
-                     **********************************************************************************/
-
-                    if (test_variants[test_variant] == TestVariant::Can_2_0)
-                    {
-                        Bit *srr_driver = driver_bit_frm->GetBitOf(0, BitType::Srr);
-                        Bit *srr_monitor = monitor_bit_frm->GetBitOf(0, BitType::Srr);
-                        Bit *r0_driver = driver_bit_frm->GetBitOf(0, BitType::R0);
-                        Bit *r0_monitor = monitor_bit_frm->GetBitOf(0, BitType::R0);
-
-                        /* In CAN 2.0 Extended frame format, R1 is at position of FDF */
-                        Bit *r1_driver = driver_bit_frm->GetBitOf(0, BitType::R1);
-                        Bit *r1_monitor = monitor_bit_frm->GetBitOf(0, BitType::R1);
-                        
-                        switch (elem_test.index)
-                        {
-                        case 1:
-                            srr_driver->bit_value_ = BitValue::Recessive;
-                            srr_monitor->bit_value_ = BitValue::Recessive;
-                            r0_driver->bit_value_ = BitValue::Recessive;
-                            r0_monitor->bit_value_ = BitValue::Recessive;
-                            r1_driver->bit_value_ = BitValue::Recessive;
-                            r1_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 2:
-                            srr_driver->bit_value_ = BitValue::Recessive;
-                            srr_monitor->bit_value_ = BitValue::Recessive;
-                            r0_driver->bit_value_ = BitValue::Recessive;
-                            r0_monitor->bit_value_ = BitValue::Recessive;
-                            r1_driver->bit_value_ = BitValue::Dominant;
-                            r1_monitor->bit_value_ = BitValue::Dominant;
-                            break;
-                        case 3:
-                            srr_driver->bit_value_ = BitValue::Recessive;
-                            srr_monitor->bit_value_ = BitValue::Recessive;
-                            r0_driver->bit_value_ = BitValue::Dominant;
-                            r0_monitor->bit_value_ = BitValue::Dominant;
-                            r1_driver->bit_value_ = BitValue::Recessive;
-                            r1_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 4:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r0_driver->bit_value_ = BitValue::Recessive;
-                            r0_monitor->bit_value_ = BitValue::Recessive;
-                            r1_driver->bit_value_ = BitValue::Recessive;
-                            r1_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 5:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r0_driver->bit_value_ = BitValue::Recessive;
-                            r0_monitor->bit_value_ = BitValue::Recessive;
-                            r1_driver->bit_value_ = BitValue::Dominant;
-                            r1_monitor->bit_value_ = BitValue::Dominant;
-                            break;
-                        case 6:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r0_driver->bit_value_ = BitValue::Dominant;
-                            r0_monitor->bit_value_ = BitValue::Dominant;
-                            r1_driver->bit_value_ = BitValue::Recessive;
-                            r1_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 7:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r0_driver->bit_value_ = BitValue::Dominant;
-                            r0_monitor->bit_value_ = BitValue::Dominant;
-                            r1_driver->bit_value_ = BitValue::Dominant;
-                            r1_monitor->bit_value_ = BitValue::Dominant;
-                        default:
-                            break;
-                        }
-
-                    } else if (test_variants[test_variant] == TestVariant::CanFdTolerant) {
-                        Bit *srr_driver = driver_bit_frm->GetBitOf(0, BitType::Srr);
-                        Bit *srr_monitor = monitor_bit_frm->GetBitOf(0, BitType::Srr);
-                        Bit *r0_driver = driver_bit_frm->GetBitOf(0, BitType::R0);
-                        Bit *r0_monitor = monitor_bit_frm->GetBitOf(0, BitType::R0);
-
-                        switch (elem_test.index)
-                        {
-                        case 1:
-                            srr_driver->bit_value_ = BitValue::Recessive;
-                            srr_monitor->bit_value_ = BitValue::Recessive;
-                            r0_driver->bit_value_ = BitValue::Recessive;
-                            r0_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 2:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r0_driver->bit_value_ = BitValue::Recessive;
-                            r0_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 3:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r0_driver->bit_value_ = BitValue::Dominant;
-                            r0_monitor->bit_value_ = BitValue::Dominant;
-                            break;
-                        default:
-                            break;
-                        }
-
-                    } else if (test_variants[test_variant] == TestVariant::CanFdEnabled) {
-                        Bit *srr_driver = driver_bit_frm->GetBitOf(0, BitType::Srr);
-                        Bit *srr_monitor = monitor_bit_frm->GetBitOf(0, BitType::Srr);
-                        /* R1 bit in CAN FD frames is RRS bit position */
-                        Bit *r1_driver = driver_bit_frm->GetBitOf(0, BitType::R1);
-                        Bit *r1_monitor = monitor_bit_frm->GetBitOf(0, BitType::R1);
-                        switch (elem_test.index)
-                        {
-                        case 1:
-                            srr_driver->bit_value_ = BitValue::Recessive;
-                            r1_driver->bit_value_ = BitValue::Recessive;
-                            srr_monitor->bit_value_ = BitValue::Recessive;
-                            srr_driver->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 2:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            r1_driver->bit_value_ = BitValue::Recessive;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r1_monitor->bit_value_ = BitValue::Recessive;
-                            break;
-                        case 3:
-                            srr_driver->bit_value_ = BitValue::Dominant;
-                            r1_driver->bit_value_ = BitValue::Dominant;
-                            srr_monitor->bit_value_ = BitValue::Dominant;
-                            r1_monitor->bit_value_ = BitValue::Dominant;
-                            break;
-                        }
-                    }
-
-                    driver_bit_frm->UpdateFrame();
-                    monitor_bit_frm->UpdateFrame();
-
-                    monitor_bit_frm->TurnReceivedFrame();
-
-                    /********************************************************************************** 
-                     * Execute test
-                     *********************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                    CheckRxFrame(*golden_frm);
+            } else if (test_variant == TestVariant::CanFdEnabled) {
+                Bit *srr_driver = driver_bit_frm->GetBitOf(0, BitType::Srr);
+                Bit *srr_monitor = monitor_bit_frm->GetBitOf(0, BitType::Srr);
+                /* R1 bit in CAN FD frames is RRS bit position */
+                Bit *r1_driver = driver_bit_frm->GetBitOf(0, BitType::R1);
+                Bit *r1_monitor = monitor_bit_frm->GetBitOf(0, BitType::R1);
+                switch (elem_test.index)
+                {
+                case 1:
+                    srr_driver->bit_value_ = BitValue::Recessive;
+                    r1_driver->bit_value_ = BitValue::Recessive;
+                    srr_monitor->bit_value_ = BitValue::Recessive;
+                    srr_driver->bit_value_ = BitValue::Recessive;
+                    break;
+                case 2:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    r1_driver->bit_value_ = BitValue::Recessive;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r1_monitor->bit_value_ = BitValue::Recessive;
+                    break;
+                case 3:
+                    srr_driver->bit_value_ = BitValue::Dominant;
+                    r1_driver->bit_value_ = BitValue::Dominant;
+                    srr_monitor->bit_value_ = BitValue::Dominant;
+                    r1_monitor->bit_value_ = BitValue::Dominant;
+                    break;
                 }
             }
 
-            return (int)FinishTest();
+            driver_bit_frm->UpdateFrame();
+            monitor_bit_frm->UpdateFrame();
+
+            monitor_bit_frm->TurnReceivedFrame();
+
+            /********************************************************************************** 
+             * Execute test
+             *********************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

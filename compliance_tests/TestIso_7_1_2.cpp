@@ -103,81 +103,70 @@ class TestIso_7_1_2 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 45; i++)
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
             for (int i = 0; i < 80; i++)
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            int can_id;
+            switch (elem_test.index)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    int can_id;
-                    switch (elem_test.index)
-                    {
-                        case 1:
-                            can_id = 0x15555555;
-                            break;
-                        case 2:
-                            can_id = 0x0AAAAAAA;
-                            break;
-                        case 3:
-                            can_id = 0x00000000;
-                            break;
-                        case 4:
-                            can_id = 0x1FFFFFFF;
-                            break;
-                        case 5:
-                            can_id = rand() % (int)pow(2, 29);
-                            break;
-                        default:
-                            can_id = 0x0;
-                            break;
-                    }
-
-                    uint8_t dlc = (elem_test.index - 1) / 5;
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Extended, RtrFlag::DataFrame);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Turn monitored frame as if received.
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                    CheckRxFrame(*golden_frm);
-
-                    FreeTestObjects();
-                    if (test_result == false)
-                        return false;
-                }
+                case 1:
+                    can_id = 0x15555555;
+                    break;
+                case 2:
+                    can_id = 0x0AAAAAAA;
+                    break;
+                case 3:
+                    can_id = 0x00000000;
+                    break;
+                case 4:
+                    can_id = 0x1FFFFFFF;
+                    break;
+                case 5:
+                    can_id = rand() % (int)pow(2, 29);
+                    break;
+                default:
+                    can_id = 0x0;
+                    break;
             }
 
-            return (int)FinishTest();
+            uint8_t dlc = (elem_test.index - 1) / 5;
+
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                            IdentifierType::Extended, RtrFlag::DataFrame);
+            golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitored frame as if received.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        
+        ENABLE_UNUSED_ARGS
 };

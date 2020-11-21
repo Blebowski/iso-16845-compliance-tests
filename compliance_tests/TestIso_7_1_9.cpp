@@ -75,66 +75,59 @@ class TestIso_7_1_9 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
+            RandomizeAndPrint(golden_frm_2.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. In first Elementary test, Intermission lasts only 2 bits -> Remove last bit of
+             *      intermission!
+             *   2. Monitor frames as if received, driver frame must have ACK too!
+             *************************************************************************************/
+            if (elem_test.index == 1)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
-                    RandomizeAndPrint(golden_frm_2.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-
-                    /**********************************************************************************
-                     * Modify test frames:
-                     *   1. In first Elementary test, Intermission lasts only 2 bits ->
-                     *      Remove last bit of intermission!
-                     *   2. Monitor frames as if received, driver frame must have ACK too!
-                     **********************************************************************************/
-                    if (elem_test.index == 1)
-                    {
-                        driver_bit_frm->RemoveBit(2, BitType::Intermission);
-                        monitor_bit_frm->RemoveBit(2, BitType::Intermission);
-                    }
-
-                    monitor_bit_frm->TurnReceivedFrame();
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    monitor_bit_frm_2->TurnReceivedFrame();
-                    driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    /********************************************************************************** 
-                     * Execute test
-                     *********************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-
-                    CheckRxFrame(*golden_frm);
-                    CheckRxFrame(*golden_frm_2);
-                }
+                driver_bit_frm->RemoveBit(2, BitType::Intermission);
+                monitor_bit_frm->RemoveBit(2, BitType::Intermission);
             }
-            return (int)FinishTest();
+
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            monitor_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            CheckRxFrame(*golden_frm);
+            CheckRxFrame(*golden_frm_2);
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
