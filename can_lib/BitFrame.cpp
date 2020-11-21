@@ -576,6 +576,17 @@ can::Bit* can::BitFrame::GetRandomBitOf(BitType bit_type)
     return &(*bit_it);
 }
 
+can::Bit* can::BitFrame::GetRandomBit(BitValue bit_value)
+{
+    Bit *bit;
+    int lenght = this->GetBitCount();
+    do
+    {
+        bit = GetBit(rand() % lenght);
+    } while (bit->bit_value_ != bit_value);
+    return bit;
+}
+
 can::Bit* can::BitFrame::GetBit(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();

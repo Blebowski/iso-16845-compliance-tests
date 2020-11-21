@@ -72,10 +72,16 @@ class can::BitFrame : public Frame {
         /**
          * Returns random bit within a Bit field
          * @param bit_type Type of bit (bit field)
-         * @returns Pointer to bit on 'index' position within 'bit_type' field, aborts if 'bit_type'
-         *          field is not existent or does not have enough bits.
+         * @returns Pointer to random bit within the bit-field.
          */
         Bit* GetRandomBitOf(BitType bit_type);
+
+        /**
+         * Returns random bit within a frame with given value
+         * @param bit_value Value of random bit
+         * @returns Pointer to random bit within given value.
+         */
+        Bit* GetRandomBit(BitValue bit_value);
 
         /**
          * Returns bit within given bit field, but skip stuff bits. This function can be used
