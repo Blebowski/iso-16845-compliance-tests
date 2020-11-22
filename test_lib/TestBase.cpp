@@ -170,15 +170,24 @@ int test_lib::TestBase::Run()
     for (auto const &test_variant : test_variants)
     {
         PrintVariantInfo(test_variant);
+
+        /* Used only in few tests with more stuff bits in single variant! */
+        stuff_bits_in_variant = 0;
+
         for (auto const & elem_test : elem_tests[variant_index])
         {
             PrintElemTestInfo(elem_test);
+
             if (RunElemTest(elem_test, test_variant) != 0)
             {
                 TestBigMessage("Elementary test %d failed.", elem_test.index);
                 return (int)FinishTest();
             }
         }
+
+        if (stuff_bits_in_variant > 0)
+            TestMessage("FINAL number of stuff bits in variant: %d", stuff_bits_in_variant);
+
         variant_index++;
     }
     return (int)FinishTest();
