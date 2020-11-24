@@ -70,50 +70,43 @@ class TestIso_7_2_7 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+        
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force CRC Delimiter to Dominant in driven frame.
+             *   3. Insert Active Error frame from ACK delimiter ON in both driven/monitored frame.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
+            
+            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-                
-                    /**********************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force CRC Delimiter to Dominant in driven frame.
-                     *   3. Insert Active Error frame from ACK delimiter ON in both
-                     *      driven/monitored frame.
-                     **********************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            /************************************************************************************** 
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
-                    
-                    monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
-                    driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
-
-                    /********************************************************************************** 
-                     * Execute test
-                     *********************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

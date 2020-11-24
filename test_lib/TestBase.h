@@ -127,6 +127,12 @@ class test_lib::TestBase
          */
         int stuff_bits_in_variant = 0;
 
+        /**
+         * Error data byte. Used in tests where error frame shall be invoked. Contains
+         * 0x80 and test shall corrupt its 7 data bit (should be recessive stuff bit).
+         */
+        uint8_t error_data = 0x80;
+
         /********************************************************************************
          * Data used during tests
          ********************************************************************************/

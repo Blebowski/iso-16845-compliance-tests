@@ -77,83 +77,76 @@ class TestIso_7_2_6: public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
-            elem_tests[1].push_back(ElementaryTest(2, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(2, FrameType::CanFd));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            uint8_t dlc;
+            if (test_variant == TestVariant::Common)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    uint8_t dlc;
-                    if (test_variant == 0)
-                    {
-                        dlc = rand() % 9;
-                    } else if (elem_test.index == 1)
-                    {
-                        if (rand() % 2)
-                            dlc = 0x9;
-                        else
-                            dlc = 0xA;
-                    } else
-                    {
-                        dlc = (rand() % 5) + 11; 
-                    }
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-                
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force random CRC bit to its opposite value
-                     *   3. Force CRC Delimiter to dominant.
-                     *   4. Insert Error frame to position of ACK!
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-
-                    int crc_index;
-                    if (test_variants[test_variant] == TestVariant::Common)
-                        crc_index = rand() % 15;
-                    else if (elem_test.index == 1)
-                        crc_index = rand() % 17;
-                    else
-                        crc_index = rand() % 21;
-
-                    TestMessage("Forcing CRC bit nr: %d", crc_index);
-                    driver_bit_frm->GetBitOfNoStuffBits(crc_index, BitType::Crc)->FlipBitValue();
-
-                    /* 
-                     * TODO: Here we should re-stuff CRC because we might have added/removed
-                     *       Stuff bit in CRC and causes length of model CRC and to be different!
-                     */
-                    driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
-
-                    monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
-                    driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
-
-                    /******************************************************************************* 
-                     * Execute test
-                     ******************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                }
+                dlc = rand() % 9;
+            }
+            else if (elem_test.index == 1)
+            {
+                if (rand() % 2)
+                    dlc = 0x9;
+                else
+                    dlc = 0xA;
+            } else
+            {
+                dlc = (rand() % 5) + 11; 
             }
 
-            return (int)FinishTest();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+        
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force random CRC bit to its opposite value
+             *   3. Force CRC Delimiter to dominant.
+             *   4. Insert Error frame to position of ACK!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            int crc_index;
+            if (test_variant == TestVariant::Common)
+                crc_index = rand() % 15;
+            else if (elem_test.index == 1)
+                crc_index = rand() % 17;
+            else
+                crc_index = rand() % 21;
+
+            TestMessage("Forcing CRC bit nr: %d", crc_index);
+            driver_bit_frm->GetBitOfNoStuffBits(crc_index, BitType::Crc)->FlipBitValue();
+
+            /* 
+             * TODO: Here we should re-stuff CRC because we might have added/removed
+             *       Stuff bit in CRC and causes length of model CRC and to be different!
+             */
+            driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
+
+            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

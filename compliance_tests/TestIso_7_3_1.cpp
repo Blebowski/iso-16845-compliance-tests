@@ -71,91 +71,78 @@ class TestIso_7_3_1 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            for (int i = 0; i < num_elem_tests; i++)
+            for (int i = 0; i < 3; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                            RtrFlag::DataFrame);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
+            RandomizeAndPrint(golden_frm.get());
 
-            uint8_t data_byte = 0x80;
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            TestMessage("Prolonging Active Error flag by: %d", (3 * (elem_test.index - 1)) + 1);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit!
+             *      This will cause stuff error!
+             *   3. Insert Active Error frame from 8-th bit of data frame!
+             *   4. Prolong Active error flag by 1,4,7 bits respectively.
+             *      Prolong Monitored error delimier by 1,4,7 Recessive bits!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    RtrFlag::DataFrame);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-                    TestMessage("Prolonging Active Error flag by: %d", (3 * (elem_test.index - 1)) + 1);
+            int num_bits_to_insert;
+            if (elem_test.index == 1)
+                num_bits_to_insert = 1;
+            else if (elem_test.index == 2)
+                num_bits_to_insert = 4;
+            else
+                num_bits_to_insert = 7;
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit!
-                     *      This will cause stuff error!
-                     *   3. Insert Active Error frame from 8-th bit of data frame!
-                     *   4. Prolong Active error flag by 1,4,7 bits respectively.
-                     *      Prolong Monitored error delimier by 1,4,7 Recessive bits!
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            /* Prolong driven frame by 1,4,7 DOMINANT bits */
+            int drv_last_err_flg_index = driver_bit_frm->GetBitIndex(
+                driver_bit_frm->GetBitOf(5, BitType::ActiveErrorFlag));
+            for (int k = 0; k < num_bits_to_insert; k++)
+                driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant,
+                                            drv_last_err_flg_index);
 
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            /* Prolong monitored frame by 1,4,7 RECESSIVE bits */
+            int mon_last_err_flg_index = monitor_bit_frm->GetBitIndex(
+                monitor_bit_frm->GetBitOf(0, BitType::ErrorDelimiter));
+            for (int k = 0; k < num_bits_to_insert; k++)
+                monitor_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Recessive, 
+                                            mon_last_err_flg_index);
 
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    int num_bits_to_insert;
-                    if (elem_test.index == 1)
-                        num_bits_to_insert = 1;
-                    else if (elem_test.index == 2)
-                        num_bits_to_insert = 4;
-                    else
-                        num_bits_to_insert = 7;
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
 
-                    /* Prolong driven frame by 1,4,7 DOMINANT bits */
-                    int drv_last_err_flg_index = driver_bit_frm->GetBitIndex(
-                        driver_bit_frm->GetBitOf(5, BitType::ActiveErrorFlag));
-                    for (int k = 0; k < num_bits_to_insert; k++)
-                        driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant,
-                                                  drv_last_err_flg_index);
-
-                    /* Prolong monitored frame by 1,4,7 RECESSIVE bits */
-                    int mon_last_err_flg_index = monitor_bit_frm->GetBitIndex(
-                        monitor_bit_frm->GetBitOf(0, BitType::ErrorDelimiter));
-                    for (int k = 0; k < num_bits_to_insert; k++)
-                        monitor_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Recessive, 
-                                                   mon_last_err_flg_index);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /********************************************************************************** 
-                     * Execute test
-                     *********************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-
-                    /* Check no frame is received by DUT */
-                    if (dut_ifc->HasRxFrame())
-                        test_result = false;
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
