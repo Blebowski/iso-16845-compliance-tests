@@ -76,71 +76,62 @@ class TestIso_7_4_7 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitored frame as received.
+             *   2. Flip first bit of intermission to dominant in driven frame.
+             *   3. Insert Overload frame from second bit of intermission further. Insert passive
+             *      error frame on monitored frame (TX/RX feedback enabled).
+             *   4. Force 1 or 2 bit of intermission after overload frame to dominant.
+             *   5. Insert next overload frame from next bit on!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-                    /**********************************************************************************
-                     * Modify test frames:
-                     *   1. Turn monitored frame as received.
-                     *   2. Flip first bit of intermission to dominant in driven frame.
-                     *   3. Insert Overload frame from second bit of intermission further. Insert
-                     *      passive error frame on monitored frame (TX/RX feedback enabled).
-                     *   4. Force 1 or 2 bit of intermission after overload frame to dominant.
-                     *   5. Insert next overload frame from next bit on!
-                     *********************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            /* 
+             * There is already 1 intermission bit after EOF, so we have to offset 
+             * intermission index by 1.
+             * 1 -> first bit of second intermission,2 -> second bit
+             */
+            driver_bit_frm->GetBitOf(elem_test.index, BitType::Intermission)->FlipBitValue();
 
-                    driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+            driver_bit_frm->InsertPassiveErrorFrame(elem_test.index + 1, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(elem_test.index + 1, BitType::Intermission);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /* 
-                     * There is already 1 intermission bit after EOF, so we have to offset 
-                     * intermission index by 1.
-                     * 1 -> first bit of second intermission,2 -> second bit
-                     */
-                    driver_bit_frm->GetBitOf(elem_test.index, BitType::Intermission)->FlipBitValue();
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(elem_test.index + 1,
-                        BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(elem_test.index + 1,
-                        BitType::Intermission);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /******************************************************************************
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                    CheckRxFrame(*golden_frm);
-                }
-            }
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

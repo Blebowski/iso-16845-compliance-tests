@@ -75,89 +75,81 @@ class TestIso_7_4_3 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                            IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
+                            EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitored frame as received.
+             *   2. Based on elementary test:
+             *      2.1 Flip 7-th bit of data byte to dominant. This should be a recessive
+             *          stuff bit. Insert active error frame from next bit on to monitored
+             *          frame. Insert passive frame to driven frame (TX/RX feedback enabled).
+             *      2.2 Flip first bit of intermission to dominant (overload flag).
+             *          Insert expected overload frame from next bit on.
+             *   3. Flip last bit of overload or error delimiter (based on previous step) to
+             *      dominant.
+             *   4. Insert expected overload frame from next bit on.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            if (elem_test.index == 1)
             {
-                PrintVariantInfo(test_variants[test_variant]);
+                driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorPassive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    /**********************************************************************************
-                     * Modify test frames:
-                     *   1. Turn monitored frame as received.
-                     *   2. Based on elementary test:
-                     *      2.1 Flip 7-th bit of data byte to dominant. This should be a recessive
-                     *          stuff bit. Insert active error frame from next bit on to monitored
-                     *          frame. Insert passive frame to driven frame (TX/RX feedback enabled).
-                     *      2.2 Flip first bit of intermission to dominant (overload flag).
-                     *          Insert expected overload frame from next bit on.
-                     *   3. Flip last bit of overload or error delimiter (based on previous step) to
-                     *      dominant.
-                     *   4. Insert expected overload frame from next bit on.
-                     *********************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-
-                    if (elem_test.index == 1)
-                    {
-                        driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
-
-                        monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                        driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    }
-                    else
-                    {
-                        driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
-
-                        monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-                        driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
-                    }
-
-                    /* Note that driver contains only passive error flags. Overload is in monitor */
-                    Bit *last_delim_bit;
-                    last_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
-                    last_delim_bit->FlipBitValue();
-
-                    int bit_index = driver_bit_frm->GetBitIndex(last_delim_bit);
-                    driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-                    monitor_bit_frm->InsertOverloadFrame(bit_index + 1);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /**********************************************************************************
-                     * Execute test
-                     *********************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-
-                    if (elem_test.index == 1)
-                        CheckNoRxFrame();
-                    else
-                        CheckRxFrame(*golden_frm);
-                }
+                monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+                driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
             }
-            return (int)FinishTest();
+            else
+            {
+                driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+
+                monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+                driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+            }
+
+            /* Note that driver contains only passive error flags. Overload is in monitor */
+            Bit *last_delim_bit;
+            last_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
+            last_delim_bit->FlipBitValue();
+
+            int bit_index = driver_bit_frm->GetBitIndex(last_delim_bit);
+            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
+            monitor_bit_frm->InsertOverloadFrame(bit_index + 1);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**********************************************************************************
+             * Execute test
+             *********************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            if (elem_test.index == 1)
+                CheckNoRxFrame();
+            else
+                CheckRxFrame(*golden_frm);
+            
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

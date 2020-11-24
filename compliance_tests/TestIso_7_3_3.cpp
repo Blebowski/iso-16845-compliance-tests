@@ -73,7 +73,7 @@ class TestIso_7_3_3 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            for (int i = 0; i < num_elem_tests; i++)
+            for (int i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
