@@ -69,78 +69,67 @@ class TestIso_7_5_4 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             dut_ifc->SetTec((rand() % 110) + 128);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Flip 7-th bit of data field to dominant. This should be recessive stuff bit
+             *      therefore causing error.
+             *   3. Insert Passive Error frame to both driven and monitored frames from next bit.
+             *   4. Repeat steps 1-3 t 8-times more and append it original frame.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+
+            monitor_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->GetBitOf(6, BitType::Data)->FlipBitValue();
+
+            driver_bit_frm_2->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm_2->InsertPassiveErrorFrame(7, BitType::Data);
+
+            for (int i = 0; i < 8; i++)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorPassive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Flip 7-th bit of data field to dominant. This should be recessive stuff
-                     *      bit therefore causing error.
-                     *   3. Insert Passive Error frame to both driven and monitored frames from
-                     *      next bit on!
-                     *   4. Repeat steps 1-3 t 8-times more and append it original frame.
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
-
-                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-
-                    monitor_bit_frm_2->TurnReceivedFrame();
-                    driver_bit_frm_2->GetBitOf(6, BitType::Data)->FlipBitValue();
-
-                    driver_bit_frm_2->InsertPassiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm_2->InsertPassiveErrorFrame(7, BitType::Data);
-
-                    for (int i = 0; i < 8; i++)
-                    {
-                        monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-                        driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    }
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                    CheckNoRxFrame();
-                }
+                monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+                driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             }
 
-            return (int)FinishTest();
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
+  
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

@@ -77,91 +77,81 @@ class TestIso_7_5_6 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             dut_ifc->SetTec((rand() % 110) + 128);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                            IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
+                            EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Flip 7-th bit of data field to dominant. This should be recessive stuff bit
+             *      therefore causing error.
+             *   3. Insert Passive Error frame to both driven and monitored frames from next bit.
+             *   4. Corrupt 2/4/7-th bit of Error delimiter to dominant on driven frame.
+             *   5. Insert next error frame from next bit on. Both driven and monitored frames
+             *      contain passive error frame.
+             *   6. Flip last bit (8-th) of error delimiter of new error frame to dominant.
+             *   7. Insert overload frame to both driven and monitored frames (TX/RX feedback is
+             *      disabled).
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorPassive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Flip 7-th bit of data field to dominant. This should be recessive stuff
-                     *      bit therefore causing error.
-                     *   3. Insert Passive Error frame to both driven and monitored frames from
-                     *      next bit on!
-                     *   4. Corrupt 2/4/7-th bit of Error delimiter to dominant on driven frame.
-                     *   5. Insert next error frame from next bit on. Both driven and
-                     *      monitored frames contain passive error frame.
-                     *   6. Flip last bit (8-th) of error delimiter of new error frame to
-                     *      dominant.
-                     *   7. Insert overload frame to both driven and monitored frames (TX/RX
-                     *      feedback is disabled).
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            int bit_to_corrupt;
+            if (elem_test.index == 1)
+                bit_to_corrupt = 1;
+            else if (elem_test.index == 2)
+                bit_to_corrupt = 3;
+            else
+                bit_to_corrupt = 6;
 
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            Bit *corrupted_bit = driver_bit_frm->GetBitOf(bit_to_corrupt,
+                                    BitType::ErrorDelimiter);
+            int bit_index = driver_bit_frm->GetBitIndex(corrupted_bit);
+            corrupted_bit->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
+            monitor_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
 
-                    int bit_to_corrupt;
-                    if (elem_test.index == 1)
-                        bit_to_corrupt = 1;
-                    else if (elem_test.index == 2)
-                        bit_to_corrupt = 3;
-                    else
-                        bit_to_corrupt = 6;
+            /* This should be last bit of second Error delimiter*/
+            driver_bit_frm->GetBit(bit_index + 14)->bit_value_ = BitValue::Dominant;
 
-                    Bit *corrupted_bit = driver_bit_frm->GetBitOf(bit_to_corrupt,
-                                            BitType::ErrorDelimiter);
-                    int bit_index = driver_bit_frm->GetBitIndex(corrupted_bit);
-                    corrupted_bit->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->InsertOverloadFrame(bit_index + 15);
+            monitor_bit_frm->InsertOverloadFrame(bit_index + 15);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-                    monitor_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /* This should be last bit of second Error delimiter*/
-                    driver_bit_frm->GetBit(bit_index + 14)->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->InsertOverloadFrame(bit_index + 15);
-                    monitor_bit_frm->InsertOverloadFrame(bit_index + 15);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                }
-            }
-
-            return (int)FinishTest();
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
+ 
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
