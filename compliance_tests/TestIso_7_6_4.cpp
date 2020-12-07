@@ -72,86 +72,77 @@ class TestIso_7_6_4 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force last bit of EOF to Dominant!
+             *   3. Insert Overload frame from first bit of Intermission.
+             *   4. Insert 16 Dominant bits directly after Overload frame (from first bit
+             *      of Overload Delimiter). These bits shall be driven on can_tx, but 16
+             *      RECESSIVE bits shall be monitored on can_tx. 
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+
+            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+
+            Bit *ovr_delim = driver_bit_frm->GetBitOf(0, BitType::OverloadDelimiter);
+            int bit_index = driver_bit_frm->GetBitIndex(ovr_delim);
+
+            for (int k = 0; k < 16; k++)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force last bit of EOF to Dominant!
-                     *   3. Insert Overload frame from first bit of Intermission.
-                     *   4. Insert 16 Dominant bits directly after Overload frame (from first bit
-                     *      of Overload Delimiter). These bits shall be driven on can_tx, but 16
-                     *      RECESSIVE bits shall be monitored on can_tx. 
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
-
-                    monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-                    driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-
-                    Bit *ovr_delim = driver_bit_frm->GetBitOf(0, BitType::OverloadDelimiter);
-                    int bit_index = driver_bit_frm->GetBitIndex(ovr_delim);
-
-                    for (int k = 0; k < 16; k++)
-                    {
-                        driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant,
-                                                  bit_index);
-                        monitor_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Recessive,
-                                                   bit_index);
-                    }
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     ****************************************************************************/
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-
-                    /*
-                     * Receiver will make received frame valid on 6th bit of EOF! Therefore at
-                     * point where Error occurs, frame was already received OK and should be
-                     * readable!
-                     */
-                    CheckRxFrame(*golden_frm);
-                    
-                    /* 
-                    * For first iteration we start from 0 so there will be no decrement on
-                    * sucessfull reception! For further increments there will be alway decrement
-                    * by 1 and increment by 2*8.
-                    */
-                    if (test_variants[test_variant] == TestVariant::Common)
-                        CheckRecChange(rec_old, +16);
-                    else
-                        CheckRecChange(rec_old, +15);
-                }
+                driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant, bit_index);
+                monitor_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Recessive, bit_index);
             }
-            return (int)FinishTest();
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            /*
+             * Receiver will make received frame valid on 6th bit of EOF! Therefore at
+             * point where Error occurs, frame was already received OK and should be
+             * readable!
+             */
+            CheckRxFrame(*golden_frm);
+            
+            /* 
+             * For first iteration we start from 0 so there will be no decrement on
+             * sucessfull reception! For further increments there will be alway decrement
+             * by 1 and increment by 2*8.
+             */
+            if (test_variant == TestVariant::Common)
+                CheckRecChange(rec_old, +16);
+            else
+                CheckRecChange(rec_old, +15);
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

@@ -79,66 +79,57 @@ class TestIso_7_6_7 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Set ACK bit to dominant in driven frame. In CAN FD Enabled variant, flip both
+             *      ACK bits to dominant!
+             *   3. Flip ACK delimiter in driven frame (on can_tx) to DOMINANT!
+             *   4. Insert expected Active error frame from first bit of EOF!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            if (test_variant == TestVariant::CanFdEnabled)
+                driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->GetBitOf(0, BitType::AckDelimiter)->bit_value_ = BitValue::Dominant;
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Set ACK bit to dominant in driven frame.
-                     *      In CAN FD Enabled variant, flip both ACK bits to dominant!
-                     *   3. Flip ACK delimiter in driven frame (on can_tx) to DOMINANT!
-                     *   4. Insert expected Active error frame from first bit of EOF!
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
+            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
 
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-                    if (test_variants[test_variant] == TestVariant::CanFdEnabled)
-                        driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm->GetBitOf(0, BitType::AckDelimiter)
-                        ->bit_value_ = BitValue::Dominant;
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            /* Dont use extra frame, but preset REC directly -> Simpler */
+            dut_ifc->SetRec(9);
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            
+            CheckLowerTesterResult();
+            CheckRecChange(rec_old, +0);
 
-                    driver_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
-                    monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     ****************************************************************************/
-                    /* Dont use extra frame, but preset REC directly -> Simpler */
-                    dut_ifc->SetRec(9);
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    
-                    CheckLowerTesterResult();
-                    CheckRecChange(rec_old, +0);
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
