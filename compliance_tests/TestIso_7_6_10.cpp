@@ -88,84 +88,74 @@ class TestIso_7_6_10 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             for (int i = 0; i < 2; i++)
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            if (test_variant == TestVariant::Common)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                               RtrFlag::DataFrame);
-                    if (test_variants[test_variant] == TestVariant::Common)
-                    {
-                        golden_frm = std::make_unique<Frame>(*frame_flags);
-                    } else {
-                        uint8_t dlc;
-                        if (elem_test.index == 1)
-                            dlc = rand() % 0xB;
-                        else
-                            dlc = (rand() % 0x4) + 0xB;
-                        golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-                    }
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received. Force ACK low in monitored frame since
-                     *      IUT shall not send ACK then!
-                     *   2. Choose random bit of CRC which is not stuff bit and flip is value.
-                     *      (TODO: This can have a problem in CRC15 if we modify a bit which is
-                     *             part of sequence of consecutive bits after which stuff bit is
-                     *             inserted! Then this can change IUTs interpretation of CRC field
-                     *             lenght).
-                     *   3. Insert Active Error flag from first bit of EOF.
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-                    monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
-
-                    int crc_bit_index;
-                    Bit *crc_bit;
-                    do {
-                        crc_bit_index = rand() % driver_bit_frm->GetFieldLength(BitType::Crc);
-                        crc_bit = driver_bit_frm->GetBitOf(crc_bit_index, BitType::Crc);
-                    } while (crc_bit->stuff_bit_type != StuffBitType::NoStuffBit);
-                    crc_bit->FlipBitValue();
-
-                    driver_bit_frm->InsertPassiveErrorFrame(0, BitType::Eof);
-                    monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    
-                    CheckLowerTesterResult();
-                    CheckNoRxFrame();
-                    CheckRecChange(rec_old, +1);
-                }
+                golden_frm = std::make_unique<Frame>(*frame_flags);
+            } else {
+                uint8_t dlc;
+                if (elem_test.index == 1)
+                    dlc = rand() % 0xB;
+                else
+                    dlc = (rand() % 0x4) + 0xB;
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
             }
+            RandomizeAndPrint(golden_frm.get());
 
-            return (int)FinishTest();
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received. Force ACK low in monitored frame since IUT shall
+             *      not send ACK then!
+             *   2. Choose random bit of CRC which is not stuff bit and flip is value.
+             *      (TODO: This can have a problem in CRC15 if we modify a bit which is part of
+             *             sequence of consecutive bits after which stuff bit is inserted! Then
+             *             this can change IUTs interpretation of CRC field lenght).
+             *   3. Insert Active Error flag from first bit of EOF.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+
+            int crc_bit_index;
+            Bit *crc_bit;
+            do {
+                crc_bit_index = rand() % driver_bit_frm->GetFieldLength(BitType::Crc);
+                crc_bit = driver_bit_frm->GetBitOf(crc_bit_index, BitType::Crc);
+            } while (crc_bit->stuff_bit_type != StuffBitType::NoStuffBit);
+            crc_bit->FlipBitValue();
+
+            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::Eof);
+            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
+            CheckRecChange(rec_old, +1);
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
