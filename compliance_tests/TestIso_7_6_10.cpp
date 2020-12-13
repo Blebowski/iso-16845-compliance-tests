@@ -120,7 +120,7 @@ class TestIso_7_6_10 : public test_lib::TestBase
              * Modify test frames:
              *   1. Monitor frame as if received. Force ACK low in monitored frame since IUT shall
              *      not send ACK then!
-             *   2. Choose random bit of CRC which is not stuff bit and flip is value.
+             *   2. Choose random bit of CRC which is not stuff bit and flip its value.
              *      (TODO: This can have a problem in CRC15 if we modify a bit which is part of
              *             sequence of consecutive bits after which stuff bit is inserted! Then
              *             this can change IUTs interpretation of CRC field lenght).

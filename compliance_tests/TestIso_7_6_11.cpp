@@ -71,79 +71,66 @@ class TestIso_7_6_11 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /*************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit! This will
+             *      cause stuff error!
+             *   3. Insert Active Error frame from 8-th bit of data frame!
+             *   4. Insert Dominant bit on first bit of Error delimiter. This Will shift error
+             *      delimiter by 1 bit since DUT shall wait for monitoring Recessive bit!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                RtrFlag::DataFrame);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            /* 
+             * Insert Dominant bit before first bit of Error delimiter!
+             * On monitor, this bit shall be recessive!
+             */
+            Bit *bit = driver_bit_frm->GetBitOf(0, BitType::ErrorDelimiter);
+            int bit_index = driver_bit_frm->GetBitIndex(bit);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force 7-th bit of Data frame to opposite, this should be
-                     *      stuff bit! This will cause stuff error!
-                     *   3. Insert Active Error frame from 8-th bit of data frame!
-                     *   4. Insert Dominant bit on first bit of Error delimiter. This
-                     *      Will shift error delimiter by 1 bit since DUT shall wait
-                     *      for monitoring Recessive bit!
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Dominant, bit_index);
+            monitor_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Recessive, bit_index);
 
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /* 
-                     * Insert Dominant bit before first bit of Error delimiter!
-                     * On monitor, this bit shall be recessive!
-                     */
-                    Bit *bit = driver_bit_frm->GetBitOf(0, BitType::ErrorDelimiter);
-                    int bit_index = driver_bit_frm->GetBitIndex(bit);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
+            
+            /* 1 for original error frame, 8 for dominant bit after error flag */
+            CheckRecChange(rec_old, +9);
 
-                    driver_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Dominant,
-                                                bit_index);
-                    monitor_bit_frm->InsertBit(BitType::ErrorDelimiter, BitValue::Recessive,
-                                                bit_index);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /*****************************************************************************
-                     * Execute test
-                     *****************************************************************************/
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    
-                    CheckLowerTesterResult();
-                    CheckNoRxFrame();
-                    
-                    /* 1 for original error frame, 8 for dominant bit after error flag */
-                    CheckRecChange(rec_old, +9);
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

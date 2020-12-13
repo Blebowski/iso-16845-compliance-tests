@@ -74,81 +74,70 @@ class TestIso_7_6_12 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-       int Run()
-       {
-            SetupTestEnvironment();
-            uint8_t data_byte = 0x80;
+        DISABLE_UNUSED_ARGS
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
+            RandomizeAndPrint(golden_frm.get());
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                RtrFlag::DataFrame);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit! This will
+             *      cause stuff error!
+             *   3. Insert Active Error frame from 8-th bit of data frame!
+             *   4. Flip 2nd or 7th bit of Error delimiter to dominant!
+             *   5. Insert next active error frame from 3-rd or 8-th bit of Error delimiter!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force 7-th bit of Data frame to opposite, this should be stuff bit!
-                     *      This will cause stuff error!
-                     *   3. Insert Active Error frame from 8-th bit of data frame!
-                     *   4. Flip 2nd or 7th bit of Error delimiter to dominant!
-                     *   5. Insert next active error frame from 3-rd or 8-th bit of Error delimiter!
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            /* Force n-th bit of Error Delimiter to dominant! */
+            int bit_to_corrupt;
+            if (elem_test.index == 1)
+                bit_to_corrupt = 2;
+            else
+                bit_to_corrupt = 7;
 
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            TestMessage("Forcing Error delimiter bit %d to Dominant", bit_to_corrupt);
+            Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitType::ErrorDelimiter);
+            bit->bit_value_ = BitValue::Dominant;
 
-                    /* Force n-th bit of Error Delimiter to dominant! */
-                    int bit_to_corrupt;
-                    if (elem_test.index == 1)
-                        bit_to_corrupt = 2;
-                    else
-                        bit_to_corrupt = 7;
+            monitor_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::ErrorDelimiter);
+            driver_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::ErrorDelimiter);
 
-                    TestMessage("Forcing Error delimiter bit %d to Dominant",
-                                    bit_to_corrupt);
-                    Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitType::ErrorDelimiter);
-                    bit->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::ErrorDelimiter);
-                    driver_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::ErrorDelimiter);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
+            /* 1 stuff error in data field, 1 form error in error delimiter! */
+            CheckRecChange(rec_old, +2);
 
-                    /*****************************************************************************
-                     * Execute test
-                     *****************************************************************************/
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-
-                    /* 1 stuff error in data field, 1 form error in error delimiter! */
-                    CheckRecChange(rec_old, +2);
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
