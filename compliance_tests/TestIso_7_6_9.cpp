@@ -90,11 +90,10 @@ class TestIso_7_6_9 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 8;
             for (int i = 0; i < 8; i++)
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
             for (int i = 0; i < 6; i++)
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -182,7 +181,7 @@ class TestIso_7_6_9 : public test_lib::TestBase
                 else
                     value = BitValue::Dominant;
 
-            } else {
+            } else if (test_variant == TestVariant::CanFdEnabled) {
                 assert(elem_test.index > 0 && elem_test.index < 7);
                 switch (elem_test.index)
                 {
@@ -209,24 +208,50 @@ class TestIso_7_6_9 : public test_lib::TestBase
                     value = BitValue::Dominant;
             }
 
-            printf("A\n");
+            /* Corrupting dominant stuff bit in control field is special! We need to make sure that
+             * there will be such stuff bit!
+             * For frame with FDF = 0:
+             *  All DLC bits recessive, force r0 recessive
+             * For frame with FDF = 1:
+             *  All DLC bits recessive, BRS = 1, ESI = 1
+             */
+            if (test_variant == TestVariant::Common && elem_test.index == 6) {
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                                            IdentifierType::Extended);
+            } else if (test_variant == TestVariant::CanFdEnabled && elem_test.index == 5) {
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, BrsFlag::Shift,
+                                                            EsiFlag::ErrorPassive);
+            } else {
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            }
+
+            /* Search for stuff bit of desired value in field as given by elementary test.
+             * If not succefull, then generate the frame again.
+             */
             int num_stuff_bits = 0;
+            TestMessage("Searching for: %d\n", field);
+            TestMessage("Value: %d\n", value);
+
             while (num_stuff_bits == 0){
-                std::cout << "Trying to generate again...\n";
-                
-                golden_frm = std::make_unique<Frame>(*frame_flags);
-                RandomizeAndPrint(golden_frm.get());
-                
-                printf("Searching for: %x\n", field);
-                printf("Value: %x\n", value);
-                printf("Elem test index: %d\n", elem_test.index);
-                std::cout << "Identifier: " << std::bitset<29>(golden_frm->identifier()).to_string() << std::endl;
+                std::cout << "Generating frame...\n";
+
+                /* Again, special treament of dominant stuff bit in control field */
+                if ((test_variant == TestVariant::Common && elem_test.index == 6) ||
+                    (test_variant == TestVariant::CanFdEnabled && elem_test.index == 5)) {
+                    golden_frm = std::make_unique<Frame>(*frame_flags, 0xF);
+                } else {
+                    golden_frm = std::make_unique<Frame>(*frame_flags);
+                }
+                golden_frm->Randomize();
+
+                // std::cout << "Identifier: " <<
+                // std::bitset<29>(golden_frm->identifier()).to_string() << std::endl;
 
                 driver_bit_frm = ConvertBitFrame(*golden_frm);
 
                 /* To have recessive DLC stuff bit possible by randomization,
-                 * R0, R1 bits must be forced to dominant!*/
-                if (field == BitType::Dlc && value == BitValue::Dominant)
+                 * R0 bit must be forced to dominant for CAN 2.0 frame */
+                if (test_variant == TestVariant::Common && elem_test.index == 6)
                 {
                     driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
                     driver_bit_frm->UpdateFrame();
@@ -234,80 +259,66 @@ class TestIso_7_6_9 : public test_lib::TestBase
 
                 num_stuff_bits = driver_bit_frm->GetNumStuffBits(field,
                                     StuffBitType::NormalStuffBit, value);
-                printf("Number of searched stuff bits: %d\n", num_stuff_bits);
-                driver_bit_frm->Print(true);
+                TestMessage("Number of matching stuff bits: %d\n", num_stuff_bits);
             }
-            printf("B\n");
+            TestBigMessage("Found frame with required stuff-bits!");
 
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
             return driver_bit_frm->GetBitIndex(
                         driver_bit_frm->GetStuffBit(field, StuffBitType::NormalStuffBit, value));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            /* Generate frame takes care of frame creation */
+            int bit_to_corrupt = GenerateFrame(test_variant, elem_test);
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            /* For now skip elementary test number 6 of CAN 2.0 variant!
+             * This is because if we want to achive dominant stuff bit in control field
+             * of CAN 2.0 frame, we have to force R0 bit to recessive to have enough
+             * of equal consecutive recessive bits! If we do it, the IUT interprets this
+             * r0 bit which comes right after IDE as EDL and goes to r0 of FD frame. There
+             * it detects recessive and files erro so IUT must have protocol exception
+             * configured! Alternative is to manufacture TC which will be RTR with Extended
+             * ID ending with 4 recessive bits! Then first bit of Control field will be
+             * a dominant stuff bit! This is TODO!
+             */
+            //if ((test_variant == TestVariant::Common && elem_test.index == 6)
+            //    ||
+            //    (test_variant == TestVariant::CanFdEnabled && elem_test.index == 5))
+            //    return 0;
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Force Stuff bit within it field as given by elementary test to opposite value.
+             *   3. Insert Active Error flag from next bit on to monitored frame. Insert passive
+             *      frame to driven frame (TX/RX feedback enabled).
+             **************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBit(bit_to_corrupt)->FlipBitValue();
 
-                    /* Generate frame takes care of frame creation */
-                    frame_flags = std::make_unique<FrameFlags>(
-                                    elem_test.frame_type, RtrFlag::DataFrame);
-                    int bit_to_corrupt = GenerateFrame(test_variants[test_variant], elem_test);
-                    printf("C\n");
+            driver_bit_frm->InsertPassiveErrorFrame(bit_to_corrupt + 1);
+            monitor_bit_frm->InsertActiveErrorFrame(bit_to_corrupt + 1);
 
-                    /* For now skip elementary test number 6 of CAN 2.0 variant!
-                     * This is because if we want to achive dominant stuff bit in control field
-                     * of CAN 2.0 frame, we have to force R0 bit to recessive to have enough
-                     * of equal consecutive recessive bits! If we do it, the IUT interprets this
-                     * r0 bit which comes right after IDE as EDL and goes to r0 of FD frame. There
-                     * it detects recessive and files erro so IUT must have protocol exception
-                     * configured! Alternative is to manufacture TC which will be RTR with Extended
-                     * ID ending with 4 recessive bits! Then first bit of Control field will be
-                     * a dominant stuff bit! This is TODO!
-                     */
-                    if ((test_variants[test_variant] == TestVariant::Common && elem_test.index == 6)
-                        ||
-                        (test_variants[test_variant] == TestVariant::CanFdEnabled && elem_test.index == 5))
-                        continue;
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Force Stuff bit within it field as given by elementary test to
-                     *      opposite value.
-                     *   3. Insert Active Error flag from next bit on to monitored frame. Insert
-                     *      passive frame to driven frame (TX/RX feedback enabled).
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
-                    printf("D\n");
-                    driver_bit_frm->GetBit(bit_to_corrupt)->FlipBitValue();
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
+            CheckRecChange(rec_old, +1);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(bit_to_corrupt + 1);
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_to_corrupt + 1);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    
-                    CheckLowerTesterResult();
-                    CheckNoRxFrame();
-                    CheckRecChange(rec_old, +1);
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
