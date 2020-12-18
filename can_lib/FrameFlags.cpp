@@ -35,6 +35,19 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
     RandomizeDisableAll();
 }
 
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
+                             RtrFlag is_rtr, EsiFlag is_esi)
+{
+    is_fdf_ = is_fdf;
+    is_ide_ = is_ide;
+    is_rtr_ = is_rtr;
+    is_esi_ = is_esi;
+
+    CorrectFlags();
+    RandomizeDisableAll();
+    randomize_brs = true;
+}
+
 can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi)
 {
     SetDefaultValues();

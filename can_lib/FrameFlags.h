@@ -60,6 +60,11 @@ class can::FrameFlags
                    EsiFlag is_esi);
 
         /**
+         * BRS only is randomized
+         */
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr, EsiFlag is_esi);
+
+        /**
          * IDE is randomized only
          */
         FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi);
