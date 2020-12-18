@@ -217,12 +217,14 @@ class TestIso_7_1_3 : public test_lib::TestBase
             }
             
             /* For IUT */
-            frame_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag);
+            frame_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag,
+                                                        EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, iut_id);
             RandomizeAndPrint(golden_frm.get());
 
             /* For LT */
-            frame_flags_2 = std::make_unique<FrameFlags>(lt_frame_type, lt_id_type, lt_rtr_flag);
+            frame_flags_2 = std::make_unique<FrameFlags>(lt_frame_type, lt_id_type, lt_rtr_flag,
+                                                        EsiFlag::ErrorActive);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x0, lt_id);
             RandomizeAndPrint(golden_frm_2.get());
 

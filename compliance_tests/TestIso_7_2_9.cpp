@@ -89,22 +89,17 @@ class TestIso_7_2_9 : public test_lib::TestBase
              * Modify test frames:
              *   1. Monitor frame as if received.
              *   2. CAN 2.0 Variant -> Force ACK Delimiter DOMINANT
-             *      CAN FD Variant  -> Force first bit of ACK to dominant
-             *                      -> Add second ACK bit, driven dominant, monitored recessive
+             *      CAN FD Variant  -> Force second ACK bit DOMINANT
+             *                      -> Force ACK Delimiter DOMINANT
              *   3. Insert Active Error frame from first bit of EOF!
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
 
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->GetBitOf(0, BitType::AckDelimiter)->bit_value_ = BitValue::Dominant;
-
             if (test_variant == TestVariant::CanFdEnabled)
-            {
-                Bit *ack_delim_bit = driver_bit_frm->GetBitOf(0, BitType::AckDelimiter);
-                int ack_delim_index = driver_bit_frm->GetBitIndex(ack_delim_bit);
-                driver_bit_frm->InsertBit(BitType::Ack, BitValue::Dominant, ack_delim_index);
-                monitor_bit_frm->InsertBit(BitType::Ack, BitValue::Recessive, ack_delim_index);
-            }
+                driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            driver_bit_frm->GetBitOf(0, BitType::AckDelimiter)->bit_value_ = BitValue::Dominant;
 
             monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
             driver_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
