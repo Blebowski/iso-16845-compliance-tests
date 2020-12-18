@@ -390,11 +390,17 @@ class can::BitFrame : public Frame {
         void Print(bool print_stuff_bits);
 
         /**
-         * Recalculates all fields of frame (CRC, stuff bits, stuff count) which depend on
-         * frame metadata (Data, Identifier, DLC, etc...). This method can be used to udpate
-         * frame to have valid CRC after e.g. data bit was flipped.
+         * Updates frame. Following is done:
+         *  1. Stuff bits are updated
+         *  2. CRC is recalculated (if allowed).
+         * 
+         * This function can be used to update the frame to have valid CRC after a bit
+         * was changed in it. Alternatively, it can be used to only re-stuff the frame
+         * after CRC was corrupted.
+         * 
+         * @param recalc_crc When true, CRC will be recalculated.
          */
-        void UpdateFrame();
+        void UpdateFrame(bool recalc_crc = true);
 
     private:
         /* Bits within a frame */

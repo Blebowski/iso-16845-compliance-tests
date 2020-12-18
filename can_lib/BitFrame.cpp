@@ -1133,7 +1133,7 @@ void can::BitFrame::Print(bool print_stuff_bits)
 }
 
 
-void can::BitFrame::UpdateFrame()
+void can::BitFrame::UpdateFrame(bool recalc_crc)
 {
     // First remove all stuff bits!
     for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
@@ -1143,8 +1143,10 @@ void can::BitFrame::UpdateFrame()
 
     // Recalculate CRC and add stuff bits!
     if (frame_flags().is_fdf_ == FrameType::Can2_0){
-        CalculateCrc();
-        UpdateCrcBits();
+        if (recalc_crc) {
+            CalculateCrc();
+            UpdateCrcBits();
+        }
 
         // We must set CRC before Stuff bits are inserted because in CAN 2.0
         // frames regular stuff bits are inserted also to CRC!
@@ -1154,8 +1156,10 @@ void can::BitFrame::UpdateFrame()
         SetStuffCount();
         SetStuffParity();
         InsertStuffCountStuffBits();
-        CalculateCrc();
-        UpdateCrcBits();
+        if (recalc_crc) {
+            CalculateCrc();
+            UpdateCrcBits();
+        }
         InsertCrcFixedStuffBits();
     }
 }
