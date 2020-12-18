@@ -16,7 +16,7 @@
  * 
  * @brief The purpose of this test is to verify the sample point of an IUT
  *        acting as a transmitter on bit position “res” bit.
- * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
+ * @version CAN FD enabled
  * 
  * Test variables:
  *  CAN FD enabled

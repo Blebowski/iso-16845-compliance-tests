@@ -204,6 +204,7 @@ add_library(
     TestIso_8_8_1_1.cpp
     TestIso_8_8_1_2.cpp
     TestIso_8_8_1_3.cpp
+    TestIso_8_8_1_4.cpp
 )
 
 target_link_libraries(COMPLIANCE_TESTS PUBLIC VPI_LIB)
