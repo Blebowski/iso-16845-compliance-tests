@@ -120,19 +120,13 @@ class TestIso_8_5_5 : public test_lib::TestBase
 
                 driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                monitor_bit_frm->InsertPassiveErrorFrame(
-                    monitor_bit_frm->GetBitOf(7, BitType::Data));
-                driver_bit_frm->InsertPassiveErrorFrame(
-                    driver_bit_frm->GetBitOf(7, BitType::Data));
+                monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+                driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
                 for (int i = 0; i < 8; i++)
                 {
-                    driver_bit_frm->AppendBit(
-                        Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                        &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
-                    monitor_bit_frm->AppendBit(
-                        Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                        &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
+                    driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                    monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
                 }
 
                 driver_bit_frm_2->TurnReceivedFrame();

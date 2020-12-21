@@ -133,10 +133,8 @@ class TestIso_8_6_18 : public test_lib::TestBase
                     {
                         int index = driver_bit_frm->GetBitIndex(
                             driver_bit_frm->GetBitOf(0, BitType::Ack));
-                        driver_bit_frm->InsertBit(Bit(BitType::Ack, BitValue::Recessive,
-                                    frame_flags.get(), &nominal_bit_timing, &data_bit_timing), index);
-                        monitor_bit_frm->InsertBit(Bit(BitType::Ack, BitValue::Recessive,
-                                    frame_flags.get(), &nominal_bit_timing, &data_bit_timing), index);
+                        driver_bit_frm->InsertBit(BitType::Ack, BitValue::Recessive, index);
+                        monitor_bit_frm->InsertBit(BitType::Ack, BitValue::Recessive, index);
                     }
 
                     driver_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);

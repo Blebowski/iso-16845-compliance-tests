@@ -167,10 +167,8 @@ class TestIso_8_3_1 : public test_lib::TestBase
 
                     for (int k = 0; k < bitsToInsert; k++)
                     {
-                        driver_bit_frame->InsertBit(Bit(BitType::ActiveErrorFlag, BitValue::Dominant,
-                            &frameFlags, &nominal_bit_timing, &data_bit_timing), firstErrDelimIndex);
-                        monitor_bit_frame->InsertBit(Bit(BitType::PassiveErrorFlag, BitValue::Recessive,
-                            &frameFlags, &nominal_bit_timing, &data_bit_timing), firstErrDelimIndex);
+                        driver_bit_frame->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, firstErrDelimIndex);
+                        monitor_bit_frame->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, firstErrDelimIndex);
                     }
 
                     secondDriverBitFrame->TurnReceivedFrame();

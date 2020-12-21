@@ -18,12 +18,13 @@
 #include "Bit.h"
 
 
-can::Bit::Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
+can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
               BitTiming* nominal_bit_timing, BitTiming* data_bit_timing)
 {
     this->bit_type_ = bit_type;
     this->bit_value_ = bit_value;
     this->stuff_bit_type = StuffBitType::NoStuffBit;
+    parent_ = parent;
 
     this->frame_flags = frame_flags;
     this->nominal_bit_timing = nominal_bit_timing;
@@ -33,14 +34,15 @@ can::Bit::Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
 }
 
 
-can::Bit::Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
+can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
               BitTiming* nominal_bit_timing, BitTiming* data_bit_timing,
               StuffBitType stuff_bit_type)
 {
     this->bit_type_ = bit_type;
     this->bit_value_ = bit_value;
     this->stuff_bit_type = stuff_bit_type;
-    
+    parent_ = parent;
+
     this->frame_flags = frame_flags;
     this->nominal_bit_timing = nominal_bit_timing;
     this->data_bit_timing = data_bit_timing;
@@ -237,7 +239,7 @@ void can::Bit::LengthenPhase(BitPhase bit_phase, size_t num_time_quanta)
 
     for (size_t i = 0; i < num_time_quanta; i++)
         time_quantas_.insert(time_quanta_iterator,
-                             TimeQuanta(bit_timing->brp_, bit_phase));
+                             TimeQuanta(this, bit_timing->brp_, bit_phase));
 }
 
 
@@ -466,7 +468,7 @@ void can::Bit::CorrectPh2LenToNominal()
                 tqIter++;
 
         for (size_t i = 0; i < nominal_bit_timing->ph2_; i++)
-            time_quantas_.push_back(TimeQuanta(nominal_bit_timing->brp_, BitPhase::Ph2));
+            time_quantas_.push_back(TimeQuanta(this, nominal_bit_timing->brp_, BitPhase::Ph2));
     }
 
 }
@@ -516,13 +518,13 @@ void can::Bit::ConstructTimeQuantas()
         tseg2_bit_timing = data_bit_timing;
 
     // Construct TSEG 1
-    time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Sync));
+    time_quantas_.push_back(TimeQuanta(this, tseg1_bit_timing->brp_, BitPhase::Sync));
     for (size_t i = 0; i < tseg1_bit_timing->prop_; i++)
-        time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Prop));
+        time_quantas_.push_back(TimeQuanta(this, tseg1_bit_timing->brp_, BitPhase::Prop));
     for (size_t i = 0; i < tseg1_bit_timing->ph1_; i++)
-        time_quantas_.push_back(TimeQuanta(tseg1_bit_timing->brp_, BitPhase::Ph1));
+        time_quantas_.push_back(TimeQuanta(this, tseg1_bit_timing->brp_, BitPhase::Ph1));
 
     // Construct TSEG 2
     for (size_t i = 0; i < tseg2_bit_timing->ph2_; i++)
-        time_quantas_.push_back(TimeQuanta(tseg2_bit_timing->brp_, BitPhase::Ph2));
+        time_quantas_.push_back(TimeQuanta(this, tseg2_bit_timing->brp_, BitPhase::Ph2));
 }

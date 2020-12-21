@@ -15,20 +15,20 @@
 #include "can.h"
 #include "CycleBitValue.h"
 
-can::CycleBitValue::CycleBitValue()
+can::CycleBitValue::CycleBitValue(TimeQuanta *parent)
 {
     has_default_value_ = true;
     // bitValue is effectively don't care, initialize it just for correctness!
     bit_value_ = BitValue::Recessive;
+    parent_ = parent;
 }
 
-
-can::CycleBitValue::CycleBitValue(BitValue bit_value)
+can::CycleBitValue::CycleBitValue(TimeQuanta *parent, BitValue bit_value)
 {
     has_default_value_ = false;
     bit_value_ = bit_value;
+    parent_ = parent;
 }
-
 
 void can::CycleBitValue::ForceValue(BitValue bit_value)
 {

@@ -129,9 +129,6 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
                 d *= 2;
             driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
-
             /* Following way of forcing "original PH2 of res/R0 bit" is shitty preformance-wise!
              * For each cycle of driven PH2 of R0, we search cycle which is "d" cycles back.
              * First "MoveCyclesBack", finds TQ and bit, in which 'orig' cycle is (redundantly

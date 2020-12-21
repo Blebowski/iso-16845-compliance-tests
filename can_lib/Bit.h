@@ -38,12 +38,13 @@
 class can::Bit {
 
     public:
-        Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
-            BitTiming* nominal_bit_timing, BitTiming* data_bit_timing);
+        Bit(BitFrame *bit_frame, BitType bit_type, BitValue bit_value,
+            FrameFlags* frame_flags, BitTiming* nominal_bit_timing,
+            BitTiming* data_bit_timing);
 
-        Bit(BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
-            BitTiming* nominal_bit_timing, BitTiming* data_bit_timing,
-            StuffBitType stuff_bit_type);
+        Bit(BitFrame *bit_frame, BitType bit_type, BitValue bit_value,
+            FrameFlags* frame_flags, BitTiming* nominal_bit_timing,
+            BitTiming* data_bit_timing, StuffBitType stuff_bit_type);
 
         /* Type of bit: SOF, Base Identifier, CRC, ACK, etc... */
         BitType bit_type_;
@@ -317,6 +318,11 @@ class can::Bit {
          * Time quantas within the bit.
          */
         std::list<TimeQuanta> time_quantas_;
+
+        /**
+         * Parent frame which contains this bit
+         */
+        BitFrame *parent_;
 
         /**
          * Constructs time quantas from timing information. Called upon bit creation.

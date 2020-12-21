@@ -125,12 +125,8 @@ class TestIso_8_6_13 : public test_lib::TestBase
                     {
                         int bit_index = driver_bit_frm->GetBitIndex(
                             driver_bit_frm->GetBitOf(0, BitType::OverloadDelimiter));
-                        driver_bit_frm->InsertBit(Bit(BitType::OverloadFlag, BitValue::Dominant,
-                            frame_flags.get(), &nominal_bit_timing, &data_bit_timing),
-                            bit_index);
-                        monitor_bit_frm->InsertBit(Bit(BitType::OverloadDelimiter, BitValue::Recessive,
-                            frame_flags.get(), &nominal_bit_timing, &data_bit_timing),
-                            bit_index);
+                        driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant, bit_index);
+                        monitor_bit_frm->InsertBit(BitType::OverloadDelimiter, BitValue::Recessive, bit_index);
                     }
 
                     driver_bit_frm->Print(true);

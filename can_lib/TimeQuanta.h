@@ -35,14 +35,14 @@ class can::TimeQuanta
          *  @param brp Baud rate prescaler (number of cycles within Time quanta)
          *  @param bit_phase Phase of bit to which this time quanta belongs
          */
-        TimeQuanta(int brp, BitPhase bit_phase);
+        TimeQuanta(Bit *parent, int brp, BitPhase bit_phase);
 
         /**
          * @param brp Baud rate prescaler (number of cycles within Time quanta)
          * @param bit_phase Phase of bit to which this time quanta belongs
          * @param bit_value Bit value of each cycle in time quanta (set as non default value)
          */
-        TimeQuanta(int brp, BitPhase bit_phase, BitValue bit_value);
+        TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue bit_value);
 
         /**
          * @returns true if any of cycles in this Time quanta contain non-default values.
@@ -115,7 +115,11 @@ class can::TimeQuanta
         BitPhase bit_phase;
 
     private:
+        /* Cycle bit values within time quanta */
         std::list<CycleBitValue> cycle_bit_values_;
+
+        /* Parent Bit which contains this Time Quanta*/
+        Bit *parent_;
 };
 
 #endif

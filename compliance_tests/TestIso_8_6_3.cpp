@@ -129,12 +129,8 @@ class TestIso_8_6_3 : public test_lib::TestBase
                     {
                         int bit_index = driver_bit_frm->GetBitIndex(
                                             driver_bit_frm->GetBitOf(5, BitType::PassiveErrorFlag));
-                        driver_bit_frm->InsertBit(Bit(BitType::ActiveErrorFlag, BitValue::Dominant,
-                                                        frame_flags.get(), &nominal_bit_timing,
-                                                        &data_bit_timing),
-                                                    bit_index + 1);
-                        monitor_bit_frm->InsertBit(Bit(BitType::PassiveErrorFlag, BitValue::Recessive,
-                            frame_flags.get(), &nominal_bit_timing, &data_bit_timing), bit_index + 1);
+                        driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, bit_index + 1);
+                        monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, bit_index + 1);
                     }
 
                     driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;

@@ -168,12 +168,8 @@ class TestIso_8_5_9 : public test_lib::TestBase
                         case 3:
                             for (int i = 0; i < 7; i++)
                             {
-                                driver_bit_frm->AppendBit(
-                                    Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                                    &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
-                                monitor_bit_frm->AppendBit(
-                                    Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                                    &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
+                                driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                                monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
                             }
                             break;
                         default:
@@ -192,16 +188,9 @@ class TestIso_8_5_9 : public test_lib::TestBase
                     driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
                     monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-                    /* Append extra intermission */
-                    for (int i = 0; i < 8; i++)
-                    {
-                        driver_bit_frm->AppendBit(
-                            Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                            &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
-                        monitor_bit_frm->AppendBit(
-                            Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                            &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
-                    }
+                    /* Append Suspend transmission */
+                    driver_bit_frm->AppendSuspendTransmission();
+                    monitor_bit_frm->AppendSuspendTransmission();
 
                     driver_bit_frm->Print(true);
                     monitor_bit_frm->Print(true);

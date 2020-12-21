@@ -138,10 +138,8 @@ class TestIso_8_5_3 : public test_lib::TestBase
 
                     driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitor_bit_frm->InsertPassiveErrorFrame(
-                        monitor_bit_frm->GetBitOf(7, BitType::Data));
-                    driver_bit_frm->InsertPassiveErrorFrame(
-                        driver_bit_frm->GetBitOf(7, BitType::Data));
+                    monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
                     int bits_to_insert;
                     switch (elem_test.index)
@@ -164,14 +162,8 @@ class TestIso_8_5_3 : public test_lib::TestBase
                         Bit *err_delim_bit = driver_bit_frm->GetBitOf(0, BitType::ErrorDelimiter);
                         int err_delim_index = driver_bit_frm->GetBitIndex(err_delim_bit);
 
-                        driver_bit_frm->InsertBit(
-                            Bit(BitType::ActiveErrorFlag, BitValue::Dominant, frame_flags.get(),
-                            &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit),
-                            err_delim_index);
-                        monitor_bit_frm->InsertBit(
-                            Bit(BitType::PassiveErrorFlag, BitValue::Recessive, frame_flags.get(),
-                            &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit),
-                            err_delim_index);
+                        driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, err_delim_index);
+                        monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, err_delim_index);
                     }
 
                     driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());

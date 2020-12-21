@@ -17,18 +17,18 @@
 #include "CycleBitValue.h"
 
 
-can::TimeQuanta::TimeQuanta(int brp, BitPhase bit_phase)
+can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase)
 {
     for (int i = 0; i < brp; i++)
-        cycle_bit_values_.push_back(CycleBitValue());
+        cycle_bit_values_.push_back(CycleBitValue(this));
     this->bit_phase = bit_phase;
 }
 
 
-can::TimeQuanta::TimeQuanta(int brp, BitPhase bit_phase, BitValue bit_value)
+can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue bit_value)
 {
     for (int i = 0; i < brp; i++)
-        cycle_bit_values_.push_back(CycleBitValue(bit_value));
+        cycle_bit_values_.push_back(CycleBitValue(this, bit_value));
     this->bit_phase = bit_phase;
 }
 
@@ -74,14 +74,14 @@ can::CycleBitValue* can::TimeQuanta::getCycleBitValue(size_t index)
 void can::TimeQuanta::Lengthen(size_t by_cycles)
 {
     for (size_t i = 0; i < by_cycles; i++)
-        cycle_bit_values_.push_back(CycleBitValue());
+        cycle_bit_values_.push_back(CycleBitValue(this));
 }
 
 
 void can::TimeQuanta::Lengthen(size_t by_cycles, BitValue bit_value)
 {
     for (size_t i = 0; i < by_cycles; i++)
-        cycle_bit_values_.push_back(CycleBitValue(bit_value));
+        cycle_bit_values_.push_back(CycleBitValue(this, bit_value));
 }
 
 

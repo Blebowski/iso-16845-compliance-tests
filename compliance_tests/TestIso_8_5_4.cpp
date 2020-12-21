@@ -144,12 +144,8 @@ class TestIso_8_5_4 : public test_lib::TestBase
 
                     for (int i = 0; i < num_suspend_bits; i++)
                     {
-                        driver_bit_frm->AppendBit(
-                            Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                            &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
-                        monitor_bit_frm->AppendBit(
-                            Bit(BitType::Suspend, BitValue::Recessive, frame_flags.get(),
-                            &nominal_bit_timing, &data_bit_timing, StuffBitType::NoStuffBit));
+                        driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                        monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
                     }
 
                     driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());

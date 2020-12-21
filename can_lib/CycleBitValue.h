@@ -30,12 +30,12 @@ class can::CycleBitValue
         /**
          * Default value for given cycle.
          */
-        CycleBitValue();
+        CycleBitValue(TimeQuanta *parent);
 
         /**
          * Forced value for given cycle.
          */
-        CycleBitValue(BitValue bit_value);
+        CycleBitValue(TimeQuanta *parent, BitValue bit_value);
 
         /**
          * Forces value within a cycle
@@ -53,6 +53,10 @@ class can::CycleBitValue
 
         /* If has_default_value_ = false, then cycle has this value */
         BitValue bit_value_;
+    
+    protected:
+        /* Time quanta which contains this cycle */
+        TimeQuanta *parent_;
 };
 
 #endif

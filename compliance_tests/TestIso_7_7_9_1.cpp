@@ -111,10 +111,8 @@ class TestIso_7_7_9_1 : public test_lib::TestBase
             
             for (int i = 0; i < 9; i++)
             {
-                monitor_bit_frame->InsertBit(Bit(BitType::Sof, BitValue::Recessive,
-                    &frameFlags, &nominal_bit_timing, &data_bit_timing), 1);
-                driver_bit_frame->InsertBit(Bit(BitType::Sof, BitValue::Recessive,
-                    &frameFlags, &nominal_bit_timing, &data_bit_timing), 1);
+                monitor_bit_frame->InsertBit(BitType::Sof, BitValue::Recessive, 1);
+                driver_bit_frame->InsertBit(BitType::Sof, BitValue::Recessive, 1);
             }
 
             driver_bit_frame->Print(true);

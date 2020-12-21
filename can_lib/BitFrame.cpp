@@ -146,7 +146,7 @@ void can::BitFrame::AppendBit(BitType bit_type, uint8_t bit_val)
 
 void can::BitFrame::AppendBit(BitType bit_type, BitValue bit_value)
 {
-    bits_.push_back(Bit(bit_type, bit_value, &frame_flags_, nominal_bit_timing_,
+    bits_.push_back(Bit(this, bit_type, bit_value, &frame_flags_, nominal_bit_timing_,
                         data_bit_timing_));
 }
 
@@ -340,7 +340,7 @@ size_t can::BitFrame::InsertNormalStuffBits()
                 continue;
             }
 
-            Bit bit = Bit(bit_it->bit_type_, bit_it->GetOppositeValue(),
+            Bit bit = Bit(this, bit_it->bit_type_, bit_it->GetOppositeValue(),
                           &frame_flags_, nominal_bit_timing_, data_bit_timing_,
                           StuffBitType::NormalStuffBit);
             bit_it++;
@@ -369,7 +369,7 @@ void can::BitFrame::InsertStuffCountStuffBits()
     stuff_bit_value = bit_it->GetOppositeValue();
     bit_it++;
 
-    Bit bit = Bit(BitType::StuffCount, stuff_bit_value, &frame_flags_,
+    Bit bit = Bit(this, BitType::StuffCount, stuff_bit_value, &frame_flags_,
                   nominal_bit_timing_, data_bit_timing_, StuffBitType::FixedStuffBit);
     bit_it = bits_.insert(bit_it, bit);
     bit_it++;
@@ -381,7 +381,7 @@ void can::BitFrame::InsertStuffCountStuffBits()
     bit_it->GetOppositeValue();
     bit_it++;
 
-    Bit bit_2 = Bit(BitType::StuffParity, stuff_bit_value, &frame_flags_,
+    Bit bit_2 = Bit(this, BitType::StuffParity, stuff_bit_value, &frame_flags_,
                     nominal_bit_timing_, data_bit_timing_, StuffBitType::FixedStuffBit);
     bit_it = bits_.insert(bit_it, bit_2);
 }
@@ -401,7 +401,7 @@ void can::BitFrame::InsertCrcFixedStuffBits()
         same_bits++;
         if ((same_bits % 4) == 0)
         {
-            Bit bit = Bit(BitType::Crc, bit_it->GetOppositeValue(),
+            Bit bit = Bit(this, BitType::Crc, bit_it->GetOppositeValue(),
                           &frame_flags_, nominal_bit_timing_, data_bit_timing_,
                           StuffBitType::FixedStuffBit);
             bit_it = bits_.insert(++bit_it, bit);
@@ -799,8 +799,8 @@ bool can::BitFrame::InsertBit(Bit bit, size_t index)
 
 bool can::BitFrame::InsertBit(BitType bit_type, BitValue bit_value, size_t index)
 {
-    return InsertBit(Bit(bit_type, bit_value, &frame_flags_, nominal_bit_timing_, data_bit_timing_),
-                            index);
+    return InsertBit(Bit(this, bit_type, bit_value, &frame_flags_, nominal_bit_timing_,
+                         data_bit_timing_), index);
 }
 
 
@@ -998,7 +998,7 @@ bool can::BitFrame::InsertOverloadFrame(size_t index, BitType bit_type)
 void can::BitFrame::AppendSuspendTransmission()
 {
     for (int i = 0; i < 8; i++)
-        AppendBit(Bit(BitType::Suspend, BitValue::Recessive,
+        AppendBit(Bit(this, BitType::Suspend, BitValue::Recessive,
             &frame_flags_, nominal_bit_timing_, data_bit_timing_));
 }
 
