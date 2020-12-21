@@ -68,6 +68,13 @@ class can::TimeQuanta
         CycleBitValue *getCycleBitValue(size_t index);
 
         /**
+         * Gets value of cycle
+         * @param index Position of cycle within Time Quanta.
+         * @returns Iterator pointing to cycle bit value
+         */
+        std::list<CycleBitValue>::iterator GetCycleBitValueIterator(size_t index);
+
+        /**
          * Lengthens time quanta (appends cycles at the end).
          * @param by_cycles number of cycles to lengthen by
          */
@@ -91,16 +98,10 @@ class can::TimeQuanta
          * Forces value of a one cycle.
          * @param cycle_index Index of cycle to force.
          * @param bit_value Value of cycle to force.
+         * 
+         * Function crashes if cycle_index is larger than number of cycles in Time Quanta.
          */
-        bool ForceCycleValue(size_t cycle_index, BitValue bit_value);
-
-        /**
-         * Forces value of range of cycles.
-         * @param cycle_index_from Index from which cycle value shall be forced.
-         * @param cycle_index_to Index to which cycle value shall be forced.
-         * @param bit_value Value to be forced.
-         */
-        bool ForceCycleValue(size_t cycle_index_from, size_t cycle_index_to, BitValue bit_value);
+        void ForceCycleValue(size_t cycle_index, BitValue bit_value);
 
         /**
          * Forces value of each cycle within time quanta

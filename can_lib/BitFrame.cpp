@@ -1165,6 +1165,67 @@ void can::BitFrame::UpdateFrame(bool recalc_crc)
 }
 
 
+can::CycleBitValue* can::BitFrame::MoveCyclesBack(CycleBitValue *from, size_t move_by)
+{
+    std::list<can::Bit>::iterator curr_bit;
+    std::list<can::TimeQuanta>::iterator curr_time_quanta;
+    std::list<can::CycleBitValue>::iterator curr_cycle;
+
+    /* Search for the TQ and bit which contains the cycle */
+    //std::cout << "STARTING SEARCH" << std::endl;
+    int bit_index = 0;
+    for (curr_bit = bits_.begin(); curr_bit != bits_.end(); curr_bit++)
+    {
+        size_t tq_index = 0;
+        for (curr_time_quanta = curr_bit->GetTimeQuantaIterator(0);; curr_time_quanta++)
+        {
+            size_t cycle_index = 0;
+            for (curr_cycle = curr_time_quanta->GetCycleBitValueIterator(0);; curr_cycle++)
+            {
+                if (&(*curr_cycle) == from)
+                    goto found;
+
+                if (cycle_index == (curr_time_quanta->getLengthCycles() - 1))
+                    break;
+                cycle_index++;
+            }
+            if (tq_index == (curr_bit->GetLengthTimeQuanta() - 1))
+                break;
+            tq_index++;
+        }
+        bit_index++;
+    }
+    assert("Input cycle should be part of frame" && false);
+
+found:
+    /* Iterate back for required amount of cycles */
+    size_t cnt = 0;
+    do {
+        if (curr_cycle == curr_time_quanta->GetCycleBitValueIterator(0)) {
+            if (curr_time_quanta == curr_bit->GetTimeQuantaIterator(0)) {
+                if (curr_bit == bits_.begin()) {
+                    assert("Hit start of frame! Cant move so far!" && false);
+                } else {
+                    curr_bit--;
+                    curr_time_quanta = curr_bit->GetLastTimeQuantaIterator(BitPhase::Ph2);
+                    curr_cycle = curr_time_quanta->GetCycleBitValueIterator(
+                                curr_time_quanta->getLengthCycles() - 1);
+                }
+            } else {
+                curr_time_quanta--;
+                curr_cycle = curr_time_quanta->GetCycleBitValueIterator(
+                                curr_time_quanta->getLengthCycles() - 1);
+            }
+        } else {
+            curr_cycle--;
+        }
+        cnt++;
+    } while (cnt != move_by);
+
+    return &(*curr_cycle);
+}
+
+
 void can::BitFrame::PrintSingleBitField(std::list<Bit>::iterator& bit_it,
                                         std::string *vals,
                                         std::string *names,

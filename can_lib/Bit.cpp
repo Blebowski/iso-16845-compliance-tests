@@ -241,14 +241,19 @@ void can::Bit::LengthenPhase(BitPhase bit_phase, size_t num_time_quanta)
 }
 
 
-can::TimeQuanta* can::Bit::GetTimeQuanta(size_t index)
+std::list<can::TimeQuanta>::iterator can::Bit::GetTimeQuantaIterator(size_t index)
 {
     assert(index < time_quantas_.size() && "Bit does not have so many time quantas");
 
     auto time_quanta_iterator = time_quantas_.begin();
     std::advance(time_quanta_iterator, index);
+    return time_quanta_iterator;
+}
 
-    return &(*time_quanta_iterator);
+
+can::TimeQuanta* can::Bit::GetTimeQuanta(size_t index)
+{
+    return &(*GetTimeQuantaIterator(index));
 }
 
 

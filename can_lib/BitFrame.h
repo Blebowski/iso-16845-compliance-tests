@@ -402,6 +402,19 @@ class can::BitFrame : public Frame {
          */
         void UpdateFrame(bool recalc_crc = true);
 
+        /**
+         * Moves back in frame in units of Cycle bit values (smallest fractions from which
+         * TIme Quanta is built).
+         * @param from Starting cycle to move from.
+         * @param move_by Number of cycles to move by.
+         * @returns Pointer to cycle which is 'move_by' before in frame, than 'from'.
+         * 
+         * E.g. if 'from' is first cycle of first bit of base id, and 'move_by' is equal to
+         *      number of clock cycles per-bit time, then pointer to first cycle of SOF
+         *      will be returned.
+         */
+        CycleBitValue *MoveCyclesBack(CycleBitValue *from, size_t move_by);
+
     private:
         /* Bits within a frame */
         std::list<Bit> bits_;

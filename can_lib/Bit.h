@@ -166,6 +166,14 @@ class can::Bit {
         TimeQuanta* GetTimeQuanta(size_t index);
 
         /**
+         * @param index Index of time quanta to return (starting with 0)
+         * @return Iterator to bit's time quanta on 'index' position.
+         * 
+         * If there are less time quantas within a bit than 'index', aborts.
+         */
+        std::list<TimeQuanta>::iterator GetTimeQuantaIterator(size_t index);
+
+        /**
          * Gets Time Quanta within a bit phase.
          * @param bit_phase phase whose Time Quantas shall be returned
          * @param index Index of time quanta (within bit phase) to return (starting with 0)
