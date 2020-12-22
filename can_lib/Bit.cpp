@@ -420,14 +420,12 @@ can::BitRate can::Bit::GetPhaseBitRate(BitPhase bit_phase)
         case BitType::Brs:
             if (bit_phase == BitPhase::Ph2)
                 return BitRate::Data;
-            else
-                return BitRate::Nominal;
+            return BitRate::Nominal;
 
         case BitType::CrcDelimiter:
             if (bit_phase == BitPhase::Ph2)
                 return BitRate::Nominal;
-            else
-                return BitRate::Data;
+            return BitRate::Data;
 
         case BitType::Esi:
         case BitType::Dlc:
