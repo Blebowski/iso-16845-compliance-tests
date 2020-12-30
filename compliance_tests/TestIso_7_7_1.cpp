@@ -69,83 +69,74 @@ class TestIso_7_7_1 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::Common, ElementaryTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            /* Base ID full of 1s */
+            int id = pow(2,11) - 1;
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
+            RandomizeAndPrint(golden_frm.get());
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                               IdentifierType::Base);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Monitor frame as if received.
+             *   2. Shorten 6-th bit (1st stuff bit) of driven frame by PhaseSeg2.
+             *   3. Shorten 12-th bit (2nd stuff bit) of driven frame still in Base ID by
+             *      PhaseSeg2 + 1.
+             *   4. Correct lenght of one of the monitored bits since second stuff bit causes
+             *      negative re-synchronization.
+             *   5. Insert Error frame from 12-th bit of Identifier (5 + Stuff + 5 + Stuff).
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-                    /* Base ID full of 1s */
-                    int id = pow(2,11) - 1;
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
-                    RandomizeAndPrint(golden_frm.get());
+            Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
+            first_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            Bit *second_stuff_bit = driver_bit_frm->GetStuffBit(1);
+            second_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            BitPhase previous_phase = second_stuff_bit->PrevBitPhase(BitPhase::Ph2);
+            second_stuff_bit->ShortenPhase(previous_phase, 1);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Monitor frame as if received.
-                     *   2. Shorten 6-th bit (1st stuff bit) of driven frame by PhaseSeg2.
-                     *   3. Shorten 12-th bit (2nd stuff bit) of driven frame still
-                     *      in Base ID by PhaseSeg2 + 1.
-                     *   4. Correct lenght of one of the monitored bits since second
-                     *      stuff bit causes negative re-synchronization.
-                     *****************************************************************************/
-                    monitor_bit_frm->TurnReceivedFrame();
+            /* Compensate the monitored frame as if negative resynchronisation happend.
+             * This is due to first bit being shortened by PH2.
+             */
+            size_t resync_amount = nominal_bit_timing.ph2_;
+            if (nominal_bit_timing.sjw_ < resync_amount)
+                resync_amount = nominal_bit_timing.sjw_;
+            monitor_bit_frm->GetBitOf(11, BitType::BaseIdentifier)
+                ->ShortenPhase(BitPhase::Ph2, resync_amount);
 
-                    Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
-                    first_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            /* 
+             * Expected error frame on monitor (from start of bit after stuff bit)
+             * Driver will have passive error frame -> transmitt all recessive
+             */
+            monitor_bit_frm->InsertActiveErrorFrame(12, BitType::BaseIdentifier);
+            driver_bit_frm->InsertPassiveErrorFrame(12, BitType::BaseIdentifier);
 
-                    Bit *second_stuff_bit = driver_bit_frm->GetStuffBit(1);
-                    second_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-                    BitPhase previous_phase = second_stuff_bit->PrevBitPhase(BitPhase::Ph2);
-                    second_stuff_bit->ShortenPhase(previous_phase, 1);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /* Compensate the monitored frame as if negative resynchronisation
-                     * happend
-                     */
-                    size_t resync_amount = nominal_bit_timing.ph2_;
-                    if (nominal_bit_timing.sjw_ < resync_amount)
-                        resync_amount = nominal_bit_timing.sjw_;
-                    monitor_bit_frm->GetBitOf(11, BitType::BaseIdentifier)->ShortenPhase(
-                        BitPhase::Ph2, resync_amount);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckNoRxFrame();
 
-                    /* 5 + Stuff + 5 + Stuff = 12 bits. We need to insert error frame
-                    from 13-th bit on! */
-                    int bit_index = driver_bit_frm->GetBitIndex(
-                                    driver_bit_frm->GetBitOf(12, BitType::BaseIdentifier));
-
-                    /* Expected error frame on monitor (from start of bit after stuff bit)
-                     * Driver will have passive error frame -> transmitt all recessive */
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_index);
-                    driver_bit_frm->InsertPassiveErrorFrame(bit_index);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    RunLowerTester(true, true);
-                    CheckLowerTesterResult();
-                }
-            }
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
