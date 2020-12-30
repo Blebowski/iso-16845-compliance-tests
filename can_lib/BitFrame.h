@@ -313,6 +313,16 @@ class can::BitFrame : public Frame {
          * Emulates node loosing arbitration by a CAN node. All bits after 'index' bit become
          * recessive. ACK bit becomes dominant. Arbitration can be lost only on bits which
          * belong to arbitration field.
+         * @param index Index within field at which arbitration shall be lost.
+         * @param bit_type Bit field at which arbitration shall be lost
+         * @returns true if succesfull, false otherwise
+         */
+        bool LooseArbitration(size_t index, BitType bit_type);
+
+        /**
+         * Emulates node loosing arbitration by a CAN node. All bits after 'index' bit become
+         * recessive. ACK bit becomes dominant. Arbitration can be lost only on bits which
+         * belong to arbitration field.
          * @param can_bit Pointer to bit at which arbitration shall be lost.
          * @returns true if succesfull, false otherwise 
          */

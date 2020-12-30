@@ -81,8 +81,8 @@ class TestIso_8_1_8 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -92,86 +92,66 @@ class TestIso_8_1_8 : public test_lib::TestBase
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base);
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            int gold_ids[] = {
+                0x7B,
+                0x3B
+            };
+            int lt_ids[] = {
+                0x7A,
+                0x3A
+            };
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, gold_ids[elem_test.index - 1]);
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags, 0x0, lt_ids[elem_test.index - 1]);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                               IdentifierType::Base);
+            driver_bit_frm = ConvertBitFrame(*golden_frm_2);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    int golden_ids[] = {
-                        0x7B,
-                        0x3B
-                    };
-                    int lt_ids[] = {
-                        0x7A,
-                        0x3A
-                    };
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x0,
-                                                         golden_ids[elem_test.index - 1]);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Loose arbitration on last bit of ID.
+             *   2. Force last bit of driven frame intermission to dominant. This emulates LT
+             *      sending SOF after 2 bits of intermission.
+             *   3. Append the same frame to driven and monitored frame. On driven frame, turn
+             *      second frame as if received.
+             *   4. Remove SOF from 2nd monitored frame.
+             *************************************************************************************/
+            monitor_bit_frm->LooseArbitration(10, BitType::BaseIdentifier);
 
-                    golden_frm_2 = std::make_unique<Frame>(*frame_flags, 0x0,
-                                                           lt_ids[elem_test.index - 1]);
+            driver_bit_frm->GetBitOf(2, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            
+            driver_bit_frm_2->TurnReceivedFrame();
 
-                    // TODO: Add randomization. At the moment do not randomize since this can
-                    //       yield frames of different lenghts, therefore having shifts between
-                    //       driven and monitored frame!
-                    //RandomizeAndPrint(golden_frm.get());
-                    //RandomizeAndPrint(golden_frm_2.get());
+            monitor_bit_frm_2->RemoveBit(0, BitType::Sof);
+            driver_bit_frm_2->RemoveBit(0, BitType::Sof);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm_2);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Loose arbitration on last bit of ID.
-                     *   2. TODO: Compensation due to randomization! 
-                     *   3. Force last bit of driven frame intermission to dominant.
-                     *      This emulates LT sending SOF after 2 bits of intermission.
-                     *   4. Append the same frame to driven and monitored frame.
-                     *      On driven frame, turn second frame as if received.
-                     *   5. Remove SOF from 2nd monitored frame.
-                     *****************************************************************************/
-                    monitor_bit_frm->LooseArbitration(
-                        monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier));
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            this->dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->GetBitOf(2, BitType::Intermission)
-                        ->bit_value_ = BitValue::Dominant;
-                    
-                    driver_bit_frm_2->TurnReceivedFrame();
-
-                    monitor_bit_frm_2->RemoveBit(0, BitType::Sof);
-                    driver_bit_frm_2->RemoveBit(0, BitType::Sof);
-
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /*****************************************************************************
-                     * Execute test
-                     ****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    this->dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-                }
-            }
-
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

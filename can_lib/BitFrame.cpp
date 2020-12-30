@@ -1047,6 +1047,12 @@ bool can::BitFrame::LooseArbitration(Bit *bit)
 }
 
 
+bool can::BitFrame::LooseArbitration(size_t index, BitType bit_type)
+{
+    return LooseArbitration(GetBitOf(index, bit_type));
+}
+
+
 void can::BitFrame::TurnReceivedFrame()
 {
     for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
