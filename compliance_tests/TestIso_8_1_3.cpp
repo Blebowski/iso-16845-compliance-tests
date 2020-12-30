@@ -86,8 +86,8 @@ class TestIso_8_1_3 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 11; i++){
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -97,81 +97,79 @@ class TestIso_8_1_3 : public test_lib::TestBase
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            uint8_t dlc = 0x1;
+            int id_iut;
+            int id_lt;
+            /* We match bit position to be flipped with test index */
+            if (elem_test.index == 7)
+                id_iut = 0x010;
+            else
+                id_iut = 0x7EF; 
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            /* LT must have n-th bit of ID set to dominant */
+            id_lt = id_iut;
+            id_lt &= ~(1 << (11 - elem_test.index));
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /* In this test, we MUST NOT shift bit-rate! After loosing arbitration, IUT will
+             * resynchronize in data bit-rate if granularity of data bit-rate is higher than
+             * of nominal bit-rate! This would result in slightly shifted monitored frame
+             * compared to IUT!
+             */
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
+            RandomizeAndPrint(golden_frm.get());
+            
+            /* This frame is actually given to IUT to send it */
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags, dlc, id_iut);
+            RandomizeAndPrint(golden_frm_2.get());
 
-                    uint8_t dlc = 0x1;
-                    int id_iut;
-                    int id_lt;
-                    /* We match bit position to be flipped with test index */
-                    if (elem_test.index == 7)
-                        id_iut = 0x010;
-                    else
-                        id_iut = 0x7EF; 
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    /* LT must have n-th bit of ID set to dominant */
-                    id_lt = id_iut;
-                    id_lt &= ~(1 << (11 - elem_test.index));
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                IdentifierType::Base, RtrFlag::DataFrame,
-                                                BrsFlag::Shift, EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
-                    RandomizeAndPrint(golden_frm.get());
-                    
-                    /* This frame is actually given to IUT to send it */
-                    golden_frm_2 = std::make_unique<Frame>(*frame_flags, dlc, id_iut);
-                    RandomizeAndPrint(golden_frm_2.get());
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Force n-th bit of monitored frame to recessive. Monitored frame is created from
+             *      golden_frame which has n-th bit dominant, but IUT is requested to send frame
+             *      with this bit recessive (golden_frm_2). Therefore this bit shall be expected
+             *      recessive.
+             *   2. Loose arbitration on n-th bit of base identifier in monitored frame. Skip stuff
+             *      bits!
+             *   3. Append second frame as if retransmitted by IUT. This one must be created from
+             *      frame which was actually issued to IUT
+             *************************************************************************************/
+            Bit *loosing_bit =  monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index - 1,
+                                                    BitType::BaseIdentifier);
+            loosing_bit->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->LooseArbitration(loosing_bit);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Force n-th bit of monitored frame to recessive. Monitored frame is
-                     *      created from golden_frame which has n-th bit dominant, but IUT is
-                     *      requested to send frame with this bit recessive (golden_frm_2). Therefore this bit
-                     *      shall be expected recessive
-                     *   2. Loose arbitration on n-th bit of base identifier in monitored frame. 
-                     *      Skip stuff bits!
-                     *   3. Append second frame as if retransmitted by IUT. This one must be
-                     *      created from frame which was actually issued to IUT
-                     *****************************************************************************/
-                    Bit *loosing_bit =  monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index - 1,
-                                                            BitType::BaseIdentifier);
-                    loosing_bit->bit_value_ = BitValue::Recessive;
-                    monitor_bit_frm->LooseArbitration(loosing_bit);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            this->dut_ifc->SendFrame(golden_frm_2.get());                    
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
 
-                    driver_bit_frm_2->TurnReceivedFrame();
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /*****************************************************************************
-                     * Execute test
-                     ****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    this->dut_ifc->SendFrame(golden_frm_2.get());                    
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-                    CheckRxFrame(*golden_frm);
-                }
-            }
-            return (int)FinishTest();
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+      
+        ENABLE_UNUSED_ARGS
 };
