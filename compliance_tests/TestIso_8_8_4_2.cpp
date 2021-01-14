@@ -12,40 +12,40 @@
 
 /******************************************************************************
  * 
- * @test ISO16845 8.8.4.1
+ * @test ISO16845 8.8.4.2
  * 
- * @brief The purpose of this test is to verify that there is no synchronization
- *        within 1 bit time if there are two recessive to dominant edges between
- *        two sample points where the first edge comes before the
- *        synchronization segment.
+ * @brief The purpose of this test is to verify that there is no synchroni-
+ *        zation within 1 bit time if there are two recessive to dominant
+ *        edges between two sample points where the first edge comes before
+ *        the synchronization segment.
  * @version CAN FD enabled
  * 
  * Test variables:
  *  CAN FD enabled
  * 
  *  Sampling_Point(D) and SJW(D) configuration as available by IUT.
- *      ESI = 1
+ *      Sampling_Point(D) and SJW(D) configuration as available by IUT.
+ *      DATA field
  *      FDF = 1
  * 
  * Elementary test cases:
- *  There is one elementary test to perform for at least 1 bit rate configuration.
+ *  There is one elementary test to perform for at least 1 bit rate
+ *  configuration.
  * 
  *  Refer to 6.2.3.
  * 
  * Setup:
  *  The IUT is left in the default state.
- *  The LT force the IUT to passive state.
  * 
  * Execution:
  *  The LT causes the IUT to transmit a frame.
- *  The LT forces the last TQ of Phase_Seg2(D) of BRS bit to dominant.
- *  The LT forces the ESI bit to dominant from the 2nd TQ(D) for
- *  [Prop_Seg(D) + Phase_Seg1(D) − TQ(D)].
- * 
+ *  The LT forces the last TQ of Phase_Seg2(D) of a recessive bit to dominant.
+ *  The LT forces a following recessive bit to dominant from sync-segment up to
+    Sync_Seg(D) + Prop_Seg(D) + Phase_Seg1(D) − 1TQ(D).
+
  * Response:
- *  The modified ESI bit shall be sampled as recessive.
- *  The frame is valid.
- *  No error flag shall occur.
+ *  The modified data bit shall be sampled as recessive.
+ *  The frame is valid. No error flag shall occur
  *****************************************************************************/
 
 #include <iostream>
@@ -70,14 +70,13 @@
 using namespace can;
 using namespace test_lib;
 
-class TestIso_8_8_4_1 : public test_lib::TestBase
+class TestIso_8_8_4_2 : public test_lib::TestBase
 {
     public:
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
@@ -90,9 +89,9 @@ class TestIso_8_8_4_1 : public test_lib::TestBase
 
         int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                        EsiFlag::ErrorPassive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, RtrFlag::DataFrame,
+                                                        BrsFlag::Shift, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0xF);
             RandomizeAndPrint(golden_frm.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
@@ -104,21 +103,29 @@ class TestIso_8_8_4_1 : public test_lib::TestBase
             /**************************************************************************************
              * Modify test frames:
              *   1. Insert ACK to driven frame.
-             *   2. Force last TQ of BRS to dominant.
-             *   3. Force ESI bit to dominant from 2nd TQ to one TQ before sample point.
-             *   4. Append suspend transmission.
+             *   2. Pick random recessive bit in data field which is followed by recessive bit.
+             *   3. Force last TQ of picked bit to dominant.
+             *   4. Force next bit from 2nd time quanta till one time quanta before sample point
+             *      to dominant.
              *************************************************************************************/
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-            Bit *brs = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            brs->ForceTimeQuanta(data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitValue::Dominant);
+            Bit *random_bit;
+            Bit *next_bit;
+            do {
+                random_bit = driver_bit_frm->GetRandomBitOf(BitType::Data);
+                int bit_index = driver_bit_frm->GetBitIndex(random_bit);
+                next_bit = driver_bit_frm->GetBit(bit_index + 1);
+            } while (! (random_bit->bit_value_ == BitValue::Recessive &&
+                        next_bit->bit_value_ == BitValue::Recessive));
 
-            Bit *esi = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            random_bit->ForceTimeQuanta(data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitValue::Dominant);
+
+            // Note: ISO here says that this bit should be forced from SYNC. But that is clearly
+            //       an error, because then there would not be two recessive to dominant edges!
+            //       This should be reported to ISO!
             for (size_t i = 1; i < data_bit_timing.prop_ + data_bit_timing.ph1_; i++)
-                esi->ForceTimeQuanta(i, BitValue::Dominant);
-
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+                next_bit->ForceTimeQuanta(i, BitValue::Dominant);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
@@ -126,7 +133,6 @@ class TestIso_8_8_4_1 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            dut_ifc->SetRec(150); /* To make sure IUT is error passive */
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());
