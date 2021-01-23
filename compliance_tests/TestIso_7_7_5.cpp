@@ -68,87 +68,74 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_7_5 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
-            CanAgentConfigureTxToRxFeedback(true);
-            
-            /*****************************************************************
-             * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
-             ****************************************************************/
-
-            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++)
-            {
-                // CAN 2.0 frame, Base identifier, randomize others
-                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);
-
-                // Base ID full of 1s, 5th will be dominant stuff bit!
-                int id = pow(2,11) - 1;
-                golden_frame = new Frame(frameFlags, 0x1, id);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing negative phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Shorten TSEG2 of bit before first stuff bit by e.
-                 *      Shorten both in driven and monitored frame!
-                 *   2. Set bit value of Dominant stuff bit to Recessive
-                 *      apart from 1 TQ in the beginning of the bit for
-                 *      driven frame!
-                 *   3. Insert expected error frame one bit after first
-                 *      stuff bit! Insert passive error frame on driver so
-                 *      that it transmitts all recessive!
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                driver_bit_frame->GetBitOf(4, BitType::BaseIdentifier)
-                    ->ShortenPhase(BitPhase::Ph2, i + 1);
-                monitor_bit_frame->GetBitOf(4, BitType::BaseIdentifier)
-                    ->ShortenPhase(BitPhase::Ph2, i + 1);
-
-                Bit *stuffBit = driver_bit_frame->GetStuffBit(0);
-                stuffBit->bit_value_ = BitValue::Recessive;
-                stuffBit->GetTimeQuanta(0)->ForceValue(BitValue::Dominant);
-
-                int index = driver_bit_frame->GetBitIndex(stuffBit);
-                monitor_bit_frame->InsertActiveErrorFrame(index + 1);
-                driver_bit_frame->InsertPassiveErrorFrame(index + 1);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                DeleteCommonObjects();
+            FillTestVariants(VariantMatchingType::Common);
+            for (size_t i = 1; i <= nominal_bit_timing.sjw_; i++){
+                ElementaryTest test = ElementaryTest(i);
+                test.e = i;
+                elem_tests[0].push_back(test);
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            CanAgentConfigureTxToRxFeedback(true);
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+
+            // Base ID full of 1s, 5th will be dominant stuff bit!
+            int id = pow(2,11) - 1;
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Shorten TSEG2 of bit before first stuff bit by e. Shorten both in driven and
+             *      monitored frame!
+             *   2. Set bit value of Dominant stuff bit to Recessive apart from 1 TQ in the
+             *      beginning of the bit for driven frame!
+             *   3. Insert expected error frame one bit after first stuff bit! Insert passive error
+             *      frame on driver so that it transmitts all recessive!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+
+            Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
+            stuff_bit->bit_value_ = BitValue::Recessive;
+            stuff_bit->GetTimeQuanta(0)->ForceValue(BitValue::Dominant);
+
+            int index = driver_bit_frm->GetBitIndex(stuff_bit);
+            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
+            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing negative phase error: %d", elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
