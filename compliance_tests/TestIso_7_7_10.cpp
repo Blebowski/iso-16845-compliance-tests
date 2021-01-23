@@ -67,82 +67,68 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_7_10 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-            
-            // Enable TX to RX feedback
+            FillTestVariants(VariantMatchingType::Common);
+            AddElemTest(TestVariant::Common, ElementaryTest(1));
+
             CanAgentConfigureTxToRxFeedback(true);
-            
-            /*****************************************************************
-             * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
-             ****************************************************************/
-            
-            // CAN 2.0 frame, Base identifier, randomize others
-            FrameFlags frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Base);
+        }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
 
             // Base ID - first 5 bits recessive, next 6 dominant
             // this gives ID with dominant bits after first stuff bit!
             int id = 0b11111000000;
-            golden_frame = new Frame(frameFlags, 0x1, id);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
+            RandomizeAndPrint(golden_frm.get());
 
-            TestMessage("Testing glitch filtering on negative phase error!");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Monitor frame as if received!
              *   2. Flip NTQ - Ph2 + 1 time quanta of first stuff bit to recessive.
              *   3. Flip second stuff bit to dominant!
-             *   4. Insert Active Error flag one bit after 2nd stuff bit!
-             *      Insert Passive Error flag to driver so that it transmitts all
-             *      recessive!
-             */
-            monitor_bit_frame->TurnReceivedFrame();
+             *   4. Insert Active Error flag one bit after 2nd stuff bit! Insert Passive Error
+             *      flag to driver so that it transmitts all recessive!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-            Bit *firstStuffBit = driver_bit_frame->GetStuffBit(0);
-            int tqPosition = firstStuffBit->GetLengthTimeQuanta() -
-                             nominal_bit_timing.ph2_ + 1;
-            firstStuffBit->GetTimeQuanta(tqPosition - 1)->ForceValue(BitValue::Recessive);
+            Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
+            int tq_position = first_stuff_bit->GetLengthTimeQuanta() - nominal_bit_timing.ph2_ + 1;
+            first_stuff_bit->GetTimeQuanta(tq_position - 1)->ForceValue(BitValue::Recessive);
 
-            Bit *secondStuffBit = driver_bit_frame->GetStuffBit(1);
-            secondStuffBit->bit_value_ = BitValue::Dominant;
-            int index = driver_bit_frame->GetBitIndex(secondStuffBit);
+            Bit *second_stuff_bit = driver_bit_frm->GetStuffBit(1);
+            second_stuff_bit->bit_value_ = BitValue::Dominant;
+            int index = driver_bit_frm->GetBitIndex(second_stuff_bit);
 
-            monitor_bit_frame->InsertActiveErrorFrame(index + 1);
-            driver_bit_frame->InsertPassiveErrorFrame(index + 1);
+            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
+            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing glitch filtering on negative phase error!");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
 
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

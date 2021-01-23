@@ -67,92 +67,73 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_7_11 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            /*****************************************************************
-             * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
-             ****************************************************************/
-
-            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++)
+            FillTestVariants(VariantMatchingType::Common);
+            for (size_t i = 1; i <= nominal_bit_timing.sjw_; i++)
             {
-                // CAN 2.0 frame, randomize others
-                FrameFlags frameFlags = FrameFlags(FrameType::Can2_0);
-
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing ACK negative phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Shorten PH2 phase of CRC Delimiter by e. Shorten in
-                 *      both driven and monitored frame since DUT shall re-sync!
-                 *   3. Force PH2 of ACK to recessive.
-                 * 
-                 * Note: This is not exactly sequence as described in ISO,
-                 *       there bits are not shortened but flipped, but overall
-                 *       effect is the same!
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *crcDelimiter = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-                crcDelimiter->ShortenPhase(BitPhase::Ph2, i + 1);
-                crcDelimiter = monitor_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-                crcDelimiter->ShortenPhase(BitPhase::Ph2, i + 1);
-
-                Bit *ack = driver_bit_frame->GetBitOf(0, BitType::Ack);
-                ack->bit_value_ = BitValue::Dominant;
-
-                ack->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-
-                // Shorten monitored ACK by 1 TQ since DUT will re-synchronise
-                // with SYNC segment completed!
-                Bit *ackMon = monitor_bit_frame->GetBitOf(0, BitType::Ack);
-                ackMon->ShortenPhase(BitPhase::Ph1, 1);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
+                ElementaryTest test = ElementaryTest(i);
+                test.e = i;
+                AddElemTest(TestVariant::Common, std::move(test));
             }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Shorten PH2 phase of CRC Delimiter by e. Shorten in both driven and monitored
+             *      frame since DUT shall re-sync!
+             *   3. Force PH2 of ACK to recessive.
+             * 
+             * Note: This is not exactly sequence as described in ISO, there bits are not shortened
+             *       but flipped, but overall effect is the same!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+
+            Bit *ack = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            ack->bit_value_ = BitValue::Dominant;
+
+            ack->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+
+            // Shorten monitored ACK by 1 TQ since DUT will re-synchronise with SYNC segment ended!
+            Bit *ack_mon = monitor_bit_frm->GetBitOf(0, BitType::Ack);
+            ack_mon->ShortenPhase(BitPhase::Ph1, 1);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing ACK negative phase error: %d", elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+            
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
