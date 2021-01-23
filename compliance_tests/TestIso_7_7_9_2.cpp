@@ -73,54 +73,47 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_7_9_2 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::Common);
+            AddElemTest(TestVariant::Common, ElementaryTest(1));
+        }
 
-            /*****************************************************************
-             * Classical CAN / CAN FD Enabled / CAN FD Tolerant are equal
-             ****************************************************************/
+        DISABLE_UNUSED_ARGS
 
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
             // CAN 2.0 frame, randomize others
-            FrameFlags frameFlags = FrameFlags(FrameType::Can2_0);
-            golden_frame = new Frame(frameFlags);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            TestMessage("Glitch filtering in idle state - single glitch");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Remove all bits but first 6 from driven frame.
-             *   2. Set value of first 5 bits to be corresponding to glitches.
-             *      Modify length of bits to each correspond to one glitch/
-             *      space between.
+             *   2. Set value of first 5 bits to be corresponding to glitches. Modify length of
+             *      bits to each correspond to one glitch space between.
              *   3. Remove all bits but first from monitored frame.
              *   4. Insert 9 recessive bits to monitor.
-             */
-            driver_bit_frame->RemoveBitsFrom(6);
+             *************************************************************************************/
+            driver_bit_frm->RemoveBitsFrom(6);
 
             // Set values
-            driver_bit_frame->GetBit(0)->bit_value_ = BitValue::Dominant;
-            driver_bit_frame->GetBit(1)->bit_value_ = BitValue::Recessive;
-            driver_bit_frame->GetBit(2)->bit_value_ = BitValue::Dominant;
-            driver_bit_frame->GetBit(3)->bit_value_ = BitValue::Recessive;
-            driver_bit_frame->GetBit(4)->bit_value_ = BitValue::Dominant;
-            driver_bit_frame->GetBit(5)->bit_value_ = BitValue::Recessive;
+            driver_bit_frm->GetBit(0)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBit(1)->bit_value_ = BitValue::Recessive;
+            driver_bit_frm->GetBit(2)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBit(3)->bit_value_ = BitValue::Recessive;
+            driver_bit_frm->GetBit(4)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBit(5)->bit_value_ = BitValue::Recessive;
 
             // Set glitch lengths
 
@@ -128,47 +121,43 @@ class TestIso_7_7_9_2 : public test_lib::TestBase
             for (int i = 0; i < 5; i++)
             {
                 printf("Setting bit %d\n", i);
-                driver_bit_frame->GetBit(i)->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-                driver_bit_frame->GetBit(i)->ShortenPhase(BitPhase::Ph1, nominal_bit_timing.ph2_);
-                driver_bit_frame->GetBit(i)->ShortenPhase(BitPhase::Prop, nominal_bit_timing.ph2_);
+                driver_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+                driver_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Ph1, nominal_bit_timing.ph2_);
+                driver_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Prop, nominal_bit_timing.ph2_);
             }
 
             // Now set to length as in description. SYNC already has length of one!
-            driver_bit_frame->GetBit(0)->LengthenPhase(BitPhase::Sync,
+            driver_bit_frm->GetBit(0)->LengthenPhase(BitPhase::Sync,
                 (nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 2) / 2 - 1);
             
-            driver_bit_frame->GetBit(1)->LengthenPhase(BitPhase::Sync, 1);
+            driver_bit_frm->GetBit(1)->LengthenPhase(BitPhase::Sync, 1);
             
-            driver_bit_frame->GetBit(2)->LengthenPhase(BitPhase::Sync,
+            driver_bit_frm->GetBit(2)->LengthenPhase(BitPhase::Sync,
                 (nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 2) / 2 - 1);
-            driver_bit_frame->GetBit(2)->GetTimeQuanta(0)->Shorten(1);
+            driver_bit_frm->GetBit(2)->GetTimeQuanta(0)->Shorten(1);
 
-            driver_bit_frame->GetBit(3)->GetTimeQuanta(0)->Lengthen(2);
+            driver_bit_frm->GetBit(3)->GetTimeQuanta(0)->Lengthen(2);
             
-            driver_bit_frame->GetBit(4)->LengthenPhase(BitPhase::Sync,
+            driver_bit_frm->GetBit(4)->LengthenPhase(BitPhase::Sync,
                 nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 3);
 
             // Passive error frame consists of all recessive so this monitors unit
             // will not start transmitting active error frame!
-            monitor_bit_frame->GetBit(0)->bit_value_ = BitValue::Recessive;
-            monitor_bit_frame->InsertPassiveErrorFrame(monitor_bit_frame->GetBit(1));
+            monitor_bit_frm->GetBit(0)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->InsertPassiveErrorFrame(monitor_bit_frm->GetBit(1));
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Glitch filtering in idle state - single glitch");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
 
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
