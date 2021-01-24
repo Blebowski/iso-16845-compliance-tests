@@ -78,108 +78,80 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_1_2 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            for (size_t i = 0; i < 2; i++) {
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
             }
-
-            // To avoid stuff bits in data field.
-            uint8_t dataByteRecessiveSampled = 0x55;
-            uint8_t dataByteDominantSampled = 0x15;
-
-            /*****************************************************************
-             * BRS sampled Recessive (Shift) / BRS sample dominant (no shift)
-             ****************************************************************/
-
-            for (int i = 0; i < 2; i++)
-            {
-                // CAN FD frame, shift bit rate
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
-
-                // In 2nd iteration dominant bit will be sampled at second bit
-                // position of data field! We must expect this in golden frame
-                // so that it will be compared correctly with received frame!
-                if (i == 0)
-                    golden_frame = new Frame(frameFlags, 1, &dataByteRecessiveSampled);
-                else
-                    golden_frame = new Frame(frameFlags, 1, &dataByteDominantSampled);
-
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                if (i == 0)
-                    TestMessage("Testing Data bit sampled Recessive");
-                else
-                    TestMessage("Testing Data bit sampled Dominant");
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Modify 2nd bit of data field. Since data is 0x55
-                 *      this bit is recessive. Flip its TSEG - 1 (i == 0)
-                 *      or TSEG1 (i == 1) to dominant.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                Bit *dataBit = driver_bit_frame->GetBitOf(1, BitType::Data);
-                dataBit->bit_value_ = BitValue::Recessive;
-
-                int domPulseLength;
-                if (i == 0)
-                    domPulseLength = data_bit_timing.prop_ + data_bit_timing.ph1_;
-                else
-                    domPulseLength = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
-
-                for (int j = 0; j < domPulseLength; j++)
-                    dataBit->ForceTimeQuanta(j, BitValue::Dominant);    
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
-            }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            // To avoid stuff bits in data field.
+            uint8_t data_byte_recessive_sampled = 0x55;
+            uint8_t data_byte_dominant_sampled = 0x15;
+
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+
+            // In 2nd iteration dominant bit will be sampled at second bit position of data field!
+            // We must expect this in golden frame so that it will be compared correctly with
+            // received frame!
+            if (elem_test.index == 1)
+                golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte_recessive_sampled);
+            else
+                golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte_dominant_sampled);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received.
+             *   2. Modify 2nd bit of data field. Since data is 0x55 this bit is recessive. Flip
+             *      its TSEG - 1 (elem test 1) or TSEG1 (elem test 2) to dominant.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            Bit *data_bit = driver_bit_frm->GetBitOf(1, BitType::Data);
+            data_bit->bit_value_ = BitValue::Recessive;
+
+            int dominant_pulse_length;
+            if (elem_test.index == 1)
+                dominant_pulse_length = data_bit_timing.prop_ + data_bit_timing.ph1_;
+            else
+                dominant_pulse_length = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
+
+            for (int j = 0; j < dominant_pulse_length; j++)
+                data_bit->ForceTimeQuanta(j, BitValue::Dominant);    
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            if (elem_test.index == 1)
+                TestMessage("Testing Data bit sampled Recessive");
+            else
+                TestMessage("Testing Data bit sampled Dominant");
+
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+            
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };

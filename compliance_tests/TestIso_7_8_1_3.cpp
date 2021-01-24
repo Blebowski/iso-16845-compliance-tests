@@ -79,107 +79,82 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_1_3 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            for (size_t i = 0; i < 2; i++) {
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
+            }
 
-            // Enable TX to RX feedback
             CanAgentConfigureTxToRxFeedback(true);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
-            /*****************************************************************
-             * CRC Delimiter sampled Recessive (OK) /
-             * CRC Delimiter sampled Dominant (Error frame)
-             ****************************************************************/
-            for (int i = 0; i < 2; i++)
-            {
-                // CAN FD frame
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                if (i == 0)
-                    TestMessage("Testing CRC delimiter bit sampled Recessive");
-                else
-                    TestMessage("Testing CRC delimiter bit sampled Dominant");
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Modify CRC Delimiter, flip TSEG1 - 1 (i == 0) or TSEG1
-                 *      (i == 1) to dominant!
-                 *   3. For i == 1, insert active error frame right after CRC
-                 *      delimiter! Insert passive error frame to driver to send
-                 *      all recessive (TX to RX feedback is turned ON)!
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *crcDelim = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-                int bitIndex = driver_bit_frame->GetBitIndex(crcDelim);
-                int domPulseLength;
-
-                if (i == 0)
-                    domPulseLength = data_bit_timing.prop_ + data_bit_timing.ph1_;
-                else
-                    domPulseLength = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
-
-                for (int j = 0; j < domPulseLength; j++)
-                    crcDelim->ForceTimeQuanta(j, BitValue::Dominant);    
-
-                if (i == 1)
-                {
-                    driver_bit_frame->InsertPassiveErrorFrame(bitIndex + 1);
-                    monitor_bit_frame->InsertActiveErrorFrame(bitIndex + 1);
-                }
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                // (for i==0 only, i==1 ends with error frame)
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if ((i == 0) && (CompareFrames(*golden_frame, readFrame) == false))
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
-            }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Modify CRC Delimiter, flip TSEG1 - 1 (elementary test 1) or TSEG1 (elementary
+             *      test 2) to dominant!
+             *   3. For elementary test 2, insert active error frame right after CRC
+             *      delimiter! Insert passive error frame to driver to send
+             *      all recessive (TX to RX feedback is turned ON)!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+            int bit_index = driver_bit_frm->GetBitIndex(crc_delim);
+            int dominant_pulse_lenght;
+
+            if (elem_test.index == 1)
+                dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_;
+            else
+                dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
+
+            for (int j = 0; j < dominant_pulse_lenght; j++)
+                crc_delim->ForceTimeQuanta(j, BitValue::Dominant);    
+
+            if (elem_test.index == 2)
+            {
+                driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
+                monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            }
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            if (elem_test.index == 1)
+                TestMessage("Testing CRC delimiter bit sampled Recessive");
+            else
+                TestMessage("Testing CRC delimiter bit sampled Dominant");
+
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            // Read received frame from DUT and compare with sent frame
+            // (first elementary test only, second one ends with error frame)
+            if (elem_test.index == 1)
+                CheckRxFrame(*golden_frm);
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
