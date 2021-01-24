@@ -72,94 +72,72 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_2_1 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            size_t num_elem_tests = nominal_bit_timing.GetBitLengthTimeQuanta() -
+                                    nominal_bit_timing.ph2_ -
+                                    nominal_bit_timing.sjw_ -
+                                    1;
+            for (size_t i = 1; i <= num_elem_tests; i++)
+            {
+                ElementaryTest test = ElementaryTest(i);
+                test.e = nominal_bit_timing.sjw_ + i;
+                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            }
 
-            // Enable TX to RX feedback
             CanAgentConfigureTxToRxFeedback(true);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
-            /*****************************************************************
-             * CRC Delimiter sampled Recessive (OK) /
-             * CRC Delimiter sampled Dominant (Error frame)
-             ****************************************************************/
-            int highTh = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 1;
-            for (int i = nominal_bit_timing.sjw_ + 1; i < highTh; i++)
-            {
-                // CAN FD frame
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing 'res' bit hard-sync with phase error: %d", i);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Prolong FDF/EDL bit by e (both driven and monitored
-                 *      frame since DUT shall execute hard sync).
-                 *   3. Set first Prop+Phase1 TQ of BRS to Dominant.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *edlBitDriver = driver_bit_frame->GetBitOf(0, BitType::Edl);
-                Bit *edlBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Edl);
-                Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
-
-                edlBitDriver->LengthenPhase(BitPhase::Ph2, i);
-                edlBitMonitor->LengthenPhase(BitPhase::Ph2, i);
-
-                for (size_t j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
-                    brsBit->GetTimeQuanta(j)->ForceValue(BitValue::Dominant);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
-            }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);        
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Prolong FDF/EDL bit by e (both driven and monitored frame since DUT shall
+             *      execute hard sync).
+             *   3. Set first Prop+Phase1 TQ of BRS to Dominant.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            Bit *edl_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Edl);
+            Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Edl);
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
+
+            edl_bit_driver->LengthenPhase(BitPhase::Ph2, elem_test.e);
+            edl_bit_monitor->LengthenPhase(BitPhase::Ph2, elem_test.e);
+
+            for (size_t j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
+                brs_bit->GetTimeQuanta(j)->ForceValue(BitValue::Dominant);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing 'res' bit hard-sync with phase error: %d", elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };

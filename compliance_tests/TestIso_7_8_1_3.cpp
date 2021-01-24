@@ -101,7 +101,8 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
         {
             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
-
+            RandomizeAndPrint(golden_frm.get());
+            
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
