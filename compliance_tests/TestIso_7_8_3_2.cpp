@@ -71,98 +71,85 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_3_2 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
+            {
+                ElementaryTest test = ElementaryTest(i);
+                test.e = i;
+                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            }
 
-            // Enable TX to RX feedback
             CanAgentConfigureTxToRxFeedback(true);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
-            for (size_t i = 0; i < data_bit_timing.sjw_; i++)
-            {
-                // CAN FD frame with bit rate shift
-                uint8_t dataByte = 0x7F; // 7th data bit is dominant stuff bit!
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
-                golden_frame = new Frame(frameFlags, 1, &dataByte);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing Data byte positive resynchronisation with phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Lengthen bit before stuff bit by e in monitored frame!
-                 *      (This covers DUT re-synchronisation).
-                 *   3. Force first e TQ D of dominant stuff bit of driven
-                 *      frame to recessive (this creates phase error of e and
-                 *      shifts sample point by e).
-                 *   4. Force last PH2 - e - 1 TQ of dominant stuff bit to
-                 *      recessive on driven bit. Since Recessive value was set
-                 *      to one before sample point (sample point shifted by e),
-                 *      this shall be bit error!
-                 *   5. Insert active error frame on monitor from next frame!
-                 *      Insert passive by driver to send all recessive.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *beforeStuff = monitor_bit_frame->GetBitOf(5, BitType::Data);
-                beforeStuff->LengthenPhase(BitPhase::Ph2, i + 1);
-
-                // 7-th bit should be stuff bit
-                Bit *driverStuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
-                int bitIndex = driver_bit_frame->GetBitIndex(driverStuffBit);
-                for (size_t j = 0; j < i + 1; j++)
-                    driverStuffBit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);
-
-                //driverStuffBit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
-
-                for (size_t j = i; j < data_bit_timing.ph2_; j++)
-                    driverStuffBit->GetTimeQuanta(BitPhase::Ph2, j)
-                        ->ForceValue(BitValue::Recessive);
-
-                driver_bit_frame->InsertPassiveErrorFrame(bitIndex + 2);
-                monitor_bit_frame->InsertActiveErrorFrame(bitIndex + 1);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                DeleteCommonObjects();
-            }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            uint8_t data_byte = 0x7F; // 7th data bit is dominant stuff bit!
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Lengthen bit before stuff bit by e in monitored frame!
+             *      (This covers DUT re-synchronisation).
+             *   3. Force first e TQ D of dominant stuff bit of driven
+             *      frame to recessive (this creates phase error of e and
+             *      shifts sample point by e).
+             *   4. Force last PH2 - e - 1 TQ of dominant stuff bit to
+             *      recessive on driven bit. Since Recessive value was set
+             *      to one before sample point (sample point shifted by e),
+             *      this shall be bit error!
+             *   5. Insert active error frame on monitor from next frame!
+             *      Insert passive by driver to send all recessive.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            Bit *before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
+            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+
+            // 7-th bit should be stuff bit
+            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
+            int bit_index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
+            for (int j = 0; j < elem_test.e; j++)
+                driver_stuff_bit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);
+
+            //driver_stuff_bit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
+
+            for (size_t j = elem_test.e - 1; j < data_bit_timing.ph2_; j++)
+                driver_stuff_bit->GetTimeQuanta(BitPhase::Ph2, j)
+                    ->ForceValue(BitValue::Recessive);
+
+            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 2);
+            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing Data byte positive resynchronisation with phase error: %d",
+                        elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };

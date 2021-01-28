@@ -68,89 +68,67 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_3_1 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
+            {
+                ElementaryTest test = ElementaryTest(i);
+                test.e = i;
+                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            }
 
-            // Enable TX to RX feedback
             CanAgentConfigureTxToRxFeedback(true);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
-            for (size_t i = 0; i < data_bit_timing.sjw_; i++)
-            {
-                // CAN FD frame with bit rate shift, set
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
-                                                    EsiFlag::ErrorPassive);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing ESI positive resynchronisation with phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Lengthen SYNC phase of ESI by e (both driven and monitored
-                 *      frame).
-                 *   3. Force Prop + PH1 TQ after initial e TQ to dominant!
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *esiBitDriver = driver_bit_frame->GetBitOf(0, BitType::Esi);
-                Bit *esiBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Esi);
-
-                esiBitDriver->LengthenPhase(BitPhase::Sync, i + 1);
-                esiBitMonitor->LengthenPhase(BitPhase::Sync, i + 1);
-
-                for (size_t j = 0; j < data_bit_timing.prop_ + data_bit_timing.ph1_; j++)
-                    esiBitDriver->ForceTimeQuanta(i + j + 1, BitValue::Dominant);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
-            }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
+                                                        EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);  
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Lengthen SYNC phase of ESI by e (both driven and monitored frame).
+             *   3. Force Prop + PH1 TQ after initial e TQ to dominant!
+             **************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            Bit *esi_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *esi_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Esi);
+
+            esi_bit_driver->LengthenPhase(BitPhase::Sync, elem_test.e);
+            esi_bit_monitor->LengthenPhase(BitPhase::Sync, elem_test.e);
+
+            for (size_t j = 0; j < data_bit_timing.prop_ + data_bit_timing.ph1_; j++)
+                esi_bit_driver->ForceTimeQuanta(elem_test.e + j, BitValue::Dominant);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing ESI positive resynchronisation with phase error: %d", elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
