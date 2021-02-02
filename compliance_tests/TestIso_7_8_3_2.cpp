@@ -105,17 +105,15 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
             /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Lengthen bit before stuff bit by e in monitored frame!
-             *      (This covers DUT re-synchronisation).
-             *   3. Force first e TQ D of dominant stuff bit of driven
-             *      frame to recessive (this creates phase error of e and
-             *      shifts sample point by e).
-             *   4. Force last PH2 - e - 1 TQ of dominant stuff bit to
-             *      recessive on driven bit. Since Recessive value was set
-             *      to one before sample point (sample point shifted by e),
-             *      this shall be bit error!
-             *   5. Insert active error frame on monitor from next frame!
-             *      Insert passive by driver to send all recessive.
+             *   2. Lengthen bit before stuff bit by e in monitored frame! (This covers DUT
+             *      re-synchronisation).
+             *   3. Force first e TQ D of dominant stuff bit of driven frame to recessive
+             *      (this creates phase error of e and shifts sample point by e).
+             *   4. Force last PH2 - e - 1 TQ of dominant stuff bit to recessive on driven bit.
+             *      Since Recessive value was set to one before sample point (sample point shifted
+             *      by e), this shall be bit error!
+             *   5. Insert active error frame on monitor from next bit, Insert passive by driver
+             *      to send all recessive.
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
 
@@ -124,6 +122,7 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
 
             // 7-th bit should be stuff bit
             Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
+            assert(driver_stuff_bit->bit_value_ == BitValue::Dominant);
             int bit_index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
             for (int j = 0; j < elem_test.e; j++)
                 driver_stuff_bit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);

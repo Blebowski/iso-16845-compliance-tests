@@ -85,6 +85,9 @@ class TestIso_7_8_3_1 : public test_lib::TestBase
             }
 
             CanAgentConfigureTxToRxFeedback(true);
+
+            assert(nominal_bit_timing.brp_ == data_bit_timing.brp_ &&
+                   "TQ(N) shall equal TQ(D) for this test due to test architecture!");
         }
 
         DISABLE_UNUSED_ARGS
