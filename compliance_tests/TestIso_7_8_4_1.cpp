@@ -98,7 +98,6 @@ class TestIso_7_8_4_1 : public test_lib::TestBase
                    "TQ(N) shall equal TQ(D) for this test due to test architecture!");
         }
 
-
         DISABLE_UNUSED_ARGS
 
         int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)

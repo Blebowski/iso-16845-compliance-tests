@@ -76,101 +76,80 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_4_3 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            for (size_t i = data_bit_timing.sjw_ + 1;
+                 i <= data_bit_timing.GetBitLengthTimeQuanta() - data_bit_timing.ph2_ - 1;
+                 i++)
+            {
+                ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
+                test.e = i;
+                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            }
 
-            // Enable TX to RX feedback
             CanAgentConfigureTxToRxFeedback(true);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
-            int upperTh = data_bit_timing.ph1_ + data_bit_timing.prop_ + 1;
-
-            for (int i = data_bit_timing.sjw_ + 1; i < upperTh; i++)
-            {
-                // CAN FD frame with bit rate shift, Base ID only and
-                uint8_t dataByte = 0x55;
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Base,
-                                                   RtrFlag::DataFrame, BrsFlag::Shift,
-                                                   EsiFlag::ErrorActive);
-                // Frame was empirically debugged to have last bit of CRC in 1!
-                golden_frame = new Frame(frameFlags, 0x1, 50, &dataByte);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing CRC delimiter positive resynchronisation with phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Force CRC delimiter to dominant value on driven frame.
-                 *   3. Force first e TQs of CRC delimiter to Recessive.
-                 *   4. Shorten PH2 of CRC Delimiter to 0 since this-one
-                 *      is in multiples of nominal Time quanta. Lengthen
-                 *      PH1 (still in data time quanta), by SJW - 1. This
-                 *      has equal effect as forcing the bit to Recessive
-                 *      SJW - 1 after sample point. Next bit is ACK which
-                 *      is transmitted recessive by driver so this will act
-                 *      as remaining recessive part of CRC delimiter!
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *crcDelimiter = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-                crcDelimiter->bit_value_ = BitValue::Dominant;
-
-                for (int j = 0; j < i; j++)
-                    crcDelimiter->ForceTimeQuanta(j, BitValue::Recessive);
-
-                crcDelimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-                BitPhase phase = crcDelimiter->PrevBitPhase(BitPhase::Ph2);
-                crcDelimiter->LengthenPhase(phase, data_bit_timing.sjw_ - 1);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
-            }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            // CAN FD frame with bit rate shift, Base ID only and
+            uint8_t data_byte = 0x55;
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
+                                                       RtrFlag::DataFrame, BrsFlag::Shift,
+                                                       EsiFlag::ErrorActive);
+            // Frame was empirically debugged to have last bit of CRC in 1!
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 50, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Force CRC delimiter to dominant value on driven frame.
+             *   3. Force first e TQs of CRC delimiter to Recessive.
+             *   4. Shorten PH2 of CRC Delimiter to 0 since this-one is in multiples of nominal
+             *      Time quanta. Lengthen PH1 (still in data time quanta), by SJW - 1. This has
+             *      equal effect as forcing the bit to Recessive SJW - 1 after sample point. Next
+             *      bit is ACK which is transmitted recessive by driver so this will act as
+             *      remaining recessive part of CRC delimiter!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+            crc_delimiter->bit_value_ = BitValue::Dominant;
+
+            for (int j = 0; j < elem_test.e; j++)
+                crc_delimiter->ForceTimeQuanta(j, BitValue::Recessive);
+
+            crc_delimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            BitPhase phase = crc_delimiter->PrevBitPhase(BitPhase::Ph2);
+            crc_delimiter->LengthenPhase(phase, data_bit_timing.sjw_ - 1);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing CRC delimiter positive resynchronisation with phase error: %d",
+                        elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
