@@ -69,107 +69,72 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_5_1 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
-            CanAgentConfigureTxToRxFeedback(true);
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
             {
-                // CAN FD frame with bit rate shift, ESI = Dominant
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift,
-                                                    EsiFlag::ErrorActive);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing ESI negative resynchronisation with phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Shorten PH2 of BRS by e.
-                 *   3. Force ESI to Recessive from Sync+Prop+Phase1-e till the
-                 *      end of bit.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-
-                Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
-                Bit *esiBit = driver_bit_frame->GetBitOf(0, BitType::Esi);
-                Bit *brsBitMonitor = monitor_bit_frame->GetBitOf(0, BitType::Brs);
-
-
-                /**************************************************************
-                 * These modifications are how I think this was meant!!
-                 **************************************************************/
-                brsBit->ShortenPhase(BitPhase::Ph2, i);
-                brsBitMonitor->ShortenPhase(BitPhase::Ph2, i);
-
-                for (size_t j = 0; j < data_bit_timing.ph2_; j++)
-                    esiBit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
-
-
-                /**************************************************************
-                 * This is exactly how TC describes it in ISO16845-1 2016 and I
-                 * think it is wrong!!!
-                 **************************************************************/
-                // Shorten BRS by e
-                // brsBit->shortenPhase(PH2_PHASE, i);
-
-                //int startTq = 1 + dataBitTiming.prop + dataBitTiming.ph1 - i;
-                //for (int j = startTq; j < brsBit->getLenTimeQuanta(); j++)
-                //    esiBit->ForceTimeQuanta(j, RECESSIVE);
-
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
+                ElementaryTest test = ElementaryTest(i);
+                test.e = i;
+                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            CanAgentConfigureTxToRxFeedback(true);
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
+                                                       EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *  1. Turn monitor frame as if received!
+             *  2. Shorten PH2 of BRS by e.
+             *  3. Force ESI to Recessive from Sync+Prop+Phase1-e till the end of bit.
+             *     Note: e is negative, therefore this step will actually force Recessive only
+             *           in Phase2! This compenstates 'e' of shortening!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
+            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *brs_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Brs);
+
+            brs_bit->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            brs_bit_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e);
+
+            int start_tq = 1 + data_bit_timing.prop_ + data_bit_timing.ph1_ + elem_test.e;
+            for (size_t j = start_tq; j < brs_bit->GetLengthTimeQuanta(); j++)
+                esi_bit->ForceTimeQuanta(j, BitValue::Recessive);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing ESI negative resynchronisation with phase error: %d",
+                         elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
