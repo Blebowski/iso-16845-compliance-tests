@@ -177,7 +177,8 @@ class TestIso_8_1_6 : public test_lib::TestBase
                     
                     case 10:
                         frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame);
+                                            IdentifierType::Base, RtrFlag::DataFrame,
+                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
                         break;
                     default:
                         break;
