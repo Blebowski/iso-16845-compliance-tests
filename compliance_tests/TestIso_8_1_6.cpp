@@ -307,8 +307,7 @@ class TestIso_8_1_6 : public test_lib::TestBase
              * Modify test frames:
              *   1. Turn driven frame as if received (insert ACK).
              * 
-             * No other modifications are needed as correct stuff generation is
-             * verified by model!
+             * No other modifications are needed as correct stuff generation is verified by model!
              **************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
 

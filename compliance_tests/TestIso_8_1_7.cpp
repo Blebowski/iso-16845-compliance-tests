@@ -84,252 +84,235 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_8_1_7 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
+            FillTestVariants(VariantMatchingType::CommonAndFd);
+            for (int i = 0; i < 3; i++)
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+            for (int i = 0; i < 10; i++)
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
-            // Start monitoring when DUT starts transmitting!
+            /* Basic setup for tests where IUT transmits */
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-
-            // Configure driver to wait for monitor so that LT sends ACK in right moment.
             CanAgentSetWaitForMonitor(true);
-
-            // Enable TX/RX feedback so that DUT will see its own transmitted frame!
             CanAgentConfigureTxToRxFeedback(true);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+        }
 
-            /*****************************************************************
-             * Common part of test (i=0), CAN FD enabled part of test(i=1)
-             ****************************************************************/
-            int iterCnt;
+        DISABLE_UNUSED_ARGS
 
-            if (dut_can_version == CanVersion::CanFdEnabled)
-                iterCnt = 2;
-            else
-                iterCnt = 1;
-
-            for (int i = 0; i < iterCnt; i++)
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            if (test_variant == TestVariant::Common)
             {
-                int numElemTests;
-                if (i == 0)
+                 frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
+                                        IdentifierType::Extended, RtrFlag::DataFrame);
+
+                // Data, dlcs and identifiers for each iteration
+                uint8_t data[3][8] = {
+                    {0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C},
+                    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                    {0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+                };
+                uint8_t dlcs[] = {
+                    0x8, 0x1, 0x1
+                };
+                int ids[] = {
+                    0x07C30F0F, 0x07C30F0F, 0x1FB80000
+                };
+
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1],
+                                ids[elem_test.index - 1], data[elem_test.index - 1]);
+
+            // CAN FD enabled variant
+            } else {
+                
+                // Flags based on elementary test
+                switch(elem_test.index)
                 {
-                    TestMessage("Common part of test!");
-                    numElemTests = 3;
+                    case 1:
+                    case 2:
+                    case 7:
+                    case 8:
+                    case 9:
+                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                        IdentifierType::Extended, RtrFlag::DataFrame,
+                                        BrsFlag::Shift, EsiFlag::ErrorActive);
+                        break;
+
+                    case 3:
+                    case 10:
+                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                        IdentifierType::Extended, RtrFlag::DataFrame,
+                                        BrsFlag::Shift, EsiFlag::ErrorPassive);
+                        break;
+
+                    case 4:
+                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                        IdentifierType::Extended, RtrFlag::DataFrame,
+                                        BrsFlag::DontShift, EsiFlag::ErrorPassive);
+                        break;
+            
+                    case 5:
+                    case 6:
+                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
+                                        IdentifierType::Extended, RtrFlag::DataFrame,
+                                        BrsFlag::DontShift, EsiFlag::ErrorActive);
+                        break;
+
+                    default:
+                        assert(false && " We should never get here!");
+                        break;
                 }
+
+                // DUT must be set to error passive state when ErrorPassive
+                // is expected! Otherwise, it would transmitt ESI_ERROR_ACTIVE
+                if (elem_test.index == 3 || elem_test.index == 4 || elem_test.index == 10)
+                    dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
                 else
-                {
-                    TestMessage("CAN FD enabled part of test!");
-                    numElemTests = 10;
-                }
+                    dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
 
-                for (int j = 0; j < numElemTests; j++)
-                {
-                    FrameFlags frameFlags;
+                int ids[] = {
+                    0x01E38787, 0x11F3C3C3, 0x1079C1E1, 0x083DF0F0, 0x041EF878,
+                    0x1F0C3C3C, 0x0F861E1E, 0x07C30F0F, 0x1FFC0000, 0x0003FFFF
+                };
 
-                    // Common part
-                    if (i == 0)
+                // Data based on elementary test
+                uint8_t data[10][64] = {
                     {
-                        frameFlags = FrameFlags(FrameType::Can2_0, IdentifierType::Extended,
-                                                RtrFlag::DataFrame);
-
-                        // Data, dlcs and identifiers for each iteration
-                        uint8_t data[3][8] = {
-                            {0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C},
-                            {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-                            {0xA0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-                        };
-                        uint8_t dlcs[] = {
-                            0x8, 0x1, 0x1
-                        };
-                        int ids[] = {
-                            0x07C30F0F, 0x07C30F0F, 0x1FB80000
-                        };
-
-                        golden_frame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
-
-                    // CAN FD enabled part
-                    } else {
-                        
-                        // Flags based on elementary test
-                        if (j == 0 || j == 1 || j == 6 || j == 7 || j == 8) {
-                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
-                                                    RtrFlag::DataFrame, BrsFlag::Shift,
-                                                    EsiFlag::ErrorActive);
-                        } else if (j == 2 || j == 9){
-                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
-                                                    RtrFlag::DataFrame, BrsFlag::Shift,
-                                                    EsiFlag::ErrorPassive);
-                        } else if (j == 3) {
-                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
-                                                    RtrFlag::DataFrame, BrsFlag::DontShift,
-                                                    EsiFlag::ErrorPassive);
-                        } else if (j == 4 || j == 5) {
-                            frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Extended,
-                                                    RtrFlag::DataFrame, BrsFlag::DontShift,
-                                                    EsiFlag::ErrorActive);
-                        }
-
-                        // DUT must be set to error passive state when ErrorPassive
-                        // is expected! Otherwise, it would transmitt ESI_ERROR_ACTIVE
-                        if (j == 2 || j == 3 || j == 9)
-                            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
-                        else
-                            dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
-
-                        int ids[] = {
-                            0x01E38787, 0x11F3C3C3, 0x1079C1E1, 0x083DF0F0, 0x041EF878,
-                            0x1F0C3C3C, 0x0F861E1E, 0x07C30F0F, 0x1FFC0000, 0x0003FFFF
-                        };
-
-                        // Data based on elementary test
-                        uint8_t data[10][64] = {
-                            {
-                              0xF8, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 
-                              0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
-                              0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
-                              0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
-                              0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
-                              0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            },
-                            {
-                              0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            },
-                            {
-                              0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
-                              0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
-                              0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
-                              0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
-                              0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
-                              0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            },
-                            {
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F,
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F,
-                              0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F
-                            },
-                            {
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
-                              0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87
-                            },
-                            {
-                              0xC3, 0xC3, 0xC3, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            },
-                            {
-                              0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            },
-                            { // Dont care since DLC = 0
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            },
-                            { // Dont care since DLC = 0
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                            }
-                        };
-
-                        uint8_t dlcs[] = {
-                            0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, 0x0
-                        };
-                        golden_frame = new Frame(frameFlags, dlcs[j], ids[j], data[j]);
+                        0xF8, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 
+                        0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
+                        0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
+                        0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
+                        0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
+                        0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78, 0x78,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                    },
+                    {
+                        0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 0x3C, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                    },
+                    {
+                        0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
+                        0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
+                        0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
+                        0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
+                        0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
+                        0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 0x1E, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                    },
+                    {
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F,
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F,
+                        0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F
+                    },
+                    {
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 
+                        0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87, 0x87
+                    },
+                    {
+                        0xC3, 0xC3, 0xC3, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                    },
+                    {
+                        0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                    },
+                    { // Dont care since DLC = 0
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+                    },
+                    { // Dont care since DLC = 0
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
                     }
+                };
 
-                    TestBigMessage("Test frame:");
-                    golden_frame->Print();
-
-                    // Convert to Bit frames
-                    driver_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-                    monitor_bit_frame = new BitFrame(*golden_frame,
-                        &this->nominal_bit_timing, &this->data_bit_timing);
-
-                    /**
-                     * Modify test frames:
-                     *   1. Turn driven frame as if received (insert ACK).
-                     * 
-                     * No other modifications are needed as correct stuff generation is
-                     * verified by model!
-                     */
-                    driver_bit_frame->TurnReceivedFrame();
-
-                    driver_bit_frame->Print(true);
-                    monitor_bit_frame->Print(true);
-
-                    // Push frames to Lower tester, insert to DUT, run and check!
-                    PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                    StartDriverAndMonitor();
-
-                    TestMessage("Sending frame via DUT!");
-                    this->dut_ifc->SendFrame(golden_frame);
-                    TestMessage("Sent frame via DUT!");
-                    
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    DeleteCommonObjects();
-                }
+                uint8_t dlcs[] = {
+                    0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, 0x0
+                };
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1],
+                                    ids[elem_test.index - 1], data[elem_test.index - 1]);
             }
 
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
+            /* Randomize will have no effect since everything is specified */
+            RandomizeAndPrint(golden_frm.get());
 
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn driven frame as if received (insert ACK).
+             * 
+             * No other modifications are needed as correct stuff generation is verified by model!
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            this->dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
+
+            FreeTestObjects();
+            return FinishElementaryTest();
         }
+    
+        ENABLE_UNUSED_ARGS
 };
