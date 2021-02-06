@@ -85,7 +85,7 @@ void test_lib::TestBase::ConfigureTest()
     TestMessage("Nominal Bit Timing configuration from TB:");
     this->nominal_bit_timing.Print();
     TestMessage("Data Bit Timing configuration from TB:");
-    this->nominal_bit_timing.Print();
+    this->data_bit_timing.Print();
     
     TestMessage("Configuring Reset agent, executing reset");
     ResetAgentPolaritySet(0);
