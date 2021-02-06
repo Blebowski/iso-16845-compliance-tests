@@ -71,90 +71,67 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_8_2 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            
             CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
+        DISABLE_UNUSED_ARGS
 
-            // CAN FD frame with bit rate shift
-            uint8_t dataByte = 0x7F;
-            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
-            golden_frame = new Frame(frameFlags, 0x1, &dataByte);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            uint8_t data_byte = 0x7F;
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-            TestMessage("Testing data byte glitch filtering on negative phase error");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Shorten 6-th bit of data field (bit before dominant stuff
-             *      bit) by 1 TQ in both driven and monitored frame!
-             *   3. Force 2nd time quanta of 7-th bit of data field to Recessive.
-             *      This should be a stuff bit.
+             *   2. Shorten 6-th bit of data field (bit before dominant stuff bit) by 1 TQ in both
+             *      driven and monitored frame!
+             *   3. Force 2nd time quanta of 7-th bit of data field to Recessive. This should be 
+             *      stuff bit.
              *   4. Force PH2 of 7-th bit of data field to Recessive. 
-             */
-            monitor_bit_frame->TurnReceivedFrame();
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-            Bit *driverBeforeStuffBit = driver_bit_frame->GetBitOf(5, BitType::Data);
-            Bit *monitorBeforeStuffBit = monitor_bit_frame->GetBitOf(5, BitType::Data);
-            Bit *driverStuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
+            Bit *driver_before_stuff_bit = driver_bit_frm->GetBitOf(5, BitType::Data);
+            Bit *monitor_before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
+            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
 
-            driverBeforeStuffBit->ShortenPhase(BitPhase::Ph2, 1);
-            monitorBeforeStuffBit->ShortenPhase(BitPhase::Ph2, 1);
+            driver_before_stuff_bit->ShortenPhase(BitPhase::Ph2, 1);
+            monitor_before_stuff_bit->ShortenPhase(BitPhase::Ph2, 1);
 
-            driverStuffBit->ForceTimeQuanta(1, BitValue::Recessive);
-            driverStuffBit->ForceTimeQuanta(0, data_bit_timing.ph2_ - 1,
-                                            BitPhase::Ph2, BitValue::Recessive);
+            driver_stuff_bit->ForceTimeQuanta(1, BitValue::Recessive);
+            driver_stuff_bit->ForceTimeQuanta(0, data_bit_timing.ph2_ - 1,
+                                              BitPhase::Ph2, BitValue::Recessive);
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing data byte glitch filtering on negative phase error");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
 
-            // Read received frame from DUT and compare with sent frame
-            Frame readFrame = this->dut_ifc->ReadFrame();
-            if (CompareFrames(*golden_frame, readFrame) == false)
-            {
-                test_result = false;
-                TestControllerAgentEndTest(test_result);
-            }
-
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

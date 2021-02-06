@@ -70,82 +70,63 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_9_3 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
-            CanAgentConfigureTxToRxFeedback(true);
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
             
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
+            CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            // CAN FD frame with bit rate shift, Base ID only and
-            uint8_t dataByte = 0x49;
-            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, IdentifierType::Base,
-                                                RtrFlag::DataFrame, BrsFlag::Shift,
-                                                EsiFlag::ErrorActive);
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            uint8_t data_byte = 0x49;
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
+                                                       RtrFlag::DataFrame, BrsFlag::Shift,
+                                                       EsiFlag::ErrorActive);
             // Frame was empirically debugged to have last bit of CRC in 1!
-            golden_frame = new Frame(frameFlags, 0x1, 50, &dataByte);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 50, &data_byte);
+            golden_frm->Print();
 
-            TestMessage("DontShift synchronisation after dominant bit sampled on CRC delimiter bit!");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Force CRC delimiter bit to dominant from 2nd TQ till beginning
-             *      of Phase Segment 2.
-             *   3. Insert Active error frame to monitor from ACK bit further.
-             *      Insert Passive error frame to driver bit from ACK bit further.
-             */
-            monitor_bit_frame->TurnReceivedFrame();
+             *   2. Force CRC delimiter bit to dominant from 2nd TQ till beginning of Ph2.
+             *   3. Insert Active error frame to monitor from ACK bit further. Insert Passive error
+             *      frame to driver bit from ACK bit further.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-            Bit *crcDelimiter = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-            crcDelimiter->ForceTimeQuanta(1, data_bit_timing.ph1_ + data_bit_timing.prop_,
-                                          BitValue::Dominant);
+            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+            crc_delimiter->ForceTimeQuanta(1, data_bit_timing.ph1_ + data_bit_timing.prop_,
+                                           BitValue::Dominant);
 
-            driver_bit_frame->InsertPassiveErrorFrame(
-                driver_bit_frame->GetBitOf(0, BitType::Ack));
-            monitor_bit_frame->InsertActiveErrorFrame(
-                monitor_bit_frame->GetBitOf(0, BitType::Ack));
+            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::Ack);
+            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("DontShift synchronisation after dominant bit sampled on CRC delimiter bit!");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
 
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

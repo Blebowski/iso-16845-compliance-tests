@@ -69,92 +69,68 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_9_1 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            
             CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
+        DISABLE_UNUSED_ARGS
 
-            // CAN FD frame with bit rate shift, Dont shift bit rate
-            // Here we have to set Bit rate dont shift because we intend to
-            // get BRS dominant, so bit rate should not be shifted!
-            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::DontShift);
-            golden_frame = new Frame(frameFlags);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            // Here we have to set Bit rate dont shift because we intend to get BRS dominant,
+            // so bit rate should not be shifted!
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::DontShift);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            TestMessage("No synchronisation after dominant bit sampled on BRS bit!");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
              *   2. Flip BRS value to dominant.
-             *   3. Force first two TQ of BRS and Phase 2 of BRS to
-             *      Recessive. This should cause resynchronisation edge
-             *      with phase error 2, but DUT shall ignore it and not
+             *   3. Force first two TQ of BRS and Phase 2 of BRS to Recessive. This should cause
+             *      resynchronisation edge with phase error 2, but DUT shall ignore it and not
              *      resynchronize because previous bit (r0) was Dominant!
-             */
-            monitor_bit_frame->TurnReceivedFrame();
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-            Bit *brsBit = driver_bit_frame->GetBitOf(0, BitType::Brs);
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
             
-            brsBit->bit_value_ = BitValue::Dominant;
+            brs_bit->bit_value_ = BitValue::Dominant;
             
-            brsBit->ForceTimeQuanta(0, BitValue::Recessive);
-            brsBit->ForceTimeQuanta(1, BitValue::Recessive);
+            brs_bit->ForceTimeQuanta(0, BitValue::Recessive);
+            brs_bit->ForceTimeQuanta(1, BitValue::Recessive);
 
-            // Force all TQ of PH2 as if no shift occured (this is what frame
-            // was generated with)
-            brsBit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                    BitPhase::Ph2, BitValue::Recessive);
+            // Force all TQ of PH2 as if no shift occured (this is what frame was generated with)
+            brs_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
+                                     BitPhase::Ph2, BitValue::Recessive);
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("No synchronisation after dominant bit sampled on BRS bit!");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
+
             CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
 
-            // Read received frame from DUT and compare with sent frame
-            Frame readFrame = this->dut_ifc->ReadFrame();
-            if (CompareFrames(*golden_frame, readFrame) == false)
-            {
-                test_result = false;
-                TestControllerAgentEndTest(test_result);
-            }
-
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };

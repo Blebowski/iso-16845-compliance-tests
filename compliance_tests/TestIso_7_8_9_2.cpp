@@ -70,82 +70,63 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_9_2 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            
             CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
+        DISABLE_UNUSED_ARGS
 
-            // CAN FD frame with bit rate shift.
-            FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
 
             // Recessive stuff bit on 7-th data bit!
-            uint8_t dataByte = 0x80;
-            golden_frame = new Frame(frameFlags, 0x1, &dataByte);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+            uint8_t data_byte = 0x80;
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-            TestMessage("DontShift synchronisation after dominant bit sampled on Data field bit!");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Force 7-th bit of data field to Dominant from 2nd time quanta
-             *      till beginning of PH2.
-             *   3. Insert expected active error frame on monitored frame from
-             *      8-th bit of data field. Insert passive error frame on driven
-             *      frame!
-             */
-            monitor_bit_frame->TurnReceivedFrame();
+             *   2. Force 7-th bit of data field to Dominant from 2nd time quanta till beginning
+             *      of PH2.
+             *   3. Insert expected active error frame on monitored frame from 8-th bit of data
+             *      field. Insert passive error frame on driven frame!
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
-            Bit *stuffBit = driver_bit_frame->GetBitOf(6, BitType::Data);
-            stuffBit->ForceTimeQuanta(1, data_bit_timing.prop_ + data_bit_timing.ph1_,
-                                      BitValue::Dominant);
+            Bit *stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
+            stuff_bit->ForceTimeQuanta(1, data_bit_timing.prop_ + data_bit_timing.ph1_,
+                                       BitValue::Dominant);
 
-            driver_bit_frame->InsertPassiveErrorFrame(
-                driver_bit_frame->GetBitOf(7, BitType::Data));
-            monitor_bit_frame->InsertActiveErrorFrame(
-                monitor_bit_frame->GetBitOf(7, BitType::Data));
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("DontShift synchronisation after dominant bit sampled on Data field bit!");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
 
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
