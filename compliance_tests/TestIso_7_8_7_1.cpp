@@ -67,81 +67,58 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_7_1 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Enable TX to RX feedback
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            
             CanAgentConfigureTxToRxFeedback(true);
+        }
 
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
+        DISABLE_UNUSED_ARGS
 
-            // CAN FD frame with bit rate shift
-            FrameFlags frameFlags = FrameFlags(FrameType::CanFd);
-            golden_frame = new Frame(frameFlags);
-            golden_frame->Randomize();
-            TestBigMessage("Test frame:");
-            golden_frame->Print();
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            TestMessage("Glitch filtering test for positive phase error on res bit");
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            // Convert to Bit frames
-            driver_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-            monitor_bit_frame = new BitFrame(*golden_frame,
-                &this->nominal_bit_timing, &this->data_bit_timing);
-
-            /**
+            /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
              *   2. Force second TQ of res bit to recessive.
              *   3. Force Phase2 of res bit to recessive.
-             */
-            monitor_bit_frame->TurnReceivedFrame();
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
 
             // Res post EDL in model we mark r0 as in original CAN FD 1.0 by Bosch.
-            Bit *resBit = driver_bit_frame->GetBitOf(0, BitType::R0);
-            resBit->ForceTimeQuanta(1, BitValue::Recessive);
-            resBit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                    BitPhase::Ph2, BitValue::Recessive);
+            Bit *res_bit = driver_bit_frm->GetBitOf(0, BitType::R0);
+            res_bit->ForceTimeQuanta(1, BitValue::Recessive);
+            res_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
+                                     BitPhase::Ph2, BitValue::Recessive);
 
-            driver_bit_frame->Print(true);
-            monitor_bit_frame->Print(true);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-            // Push frames to Lower tester, run and check!
-            PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Glitch filtering test for positive phase error on res bit");
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
 
-            // Read received frame from DUT and compare with sent frame
-            Frame readFrame = this->dut_ifc->ReadFrame();
-            if (CompareFrames(*golden_frame, readFrame) == false)
-            {
-                test_result = false;
-                TestControllerAgentEndTest(test_result);
-            }
-
-            DeleteCommonObjects();
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            return FinishElementaryTest();
         }
+        ENABLE_UNUSED_ARGS
 };
