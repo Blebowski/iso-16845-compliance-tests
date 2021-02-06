@@ -72,95 +72,74 @@
 #include "../can_lib/BitTiming.h"
 
 using namespace can;
+using namespace test_lib;
 
 class TestIso_7_8_6_3 : public test_lib::TestBase
 {
     public:
 
-        int Run()
+        void ConfigureTest()
         {
-            // Run Base test to setup TB
-            TestBase::Run();
-            TestMessage("Test %s : Run Entered", test_name);
-
-            // Note: We cant enable TX to RX feedback here since DUT would
-            //       screw us modified bits by transmitting dominant ACK!
-
-            // CAN FD enabled only!
-            if (dut_can_version == CanVersion::Can_2_0 ||
-                dut_can_version == CanVersion::CanFdTolerant)
-            {
-                test_result = false;
-                return false;
-            }
-
+            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = nominal_bit_timing.sjw_ + 1; i <= nominal_bit_timing.ph2_; i++)
             {
-                // CAN FD frame with bit rate shift
-                FrameFlags frameFlags = FrameFlags(FrameType::CanFd, BrsFlag::Shift);
-                golden_frame = new Frame(frameFlags);
-                golden_frame->Randomize();
-                TestBigMessage("Test frame:");
-                golden_frame->Print();
-
-                TestMessage("Testing ACK negative resynchronisation with phase error: %d", i + 1);
-
-                // Convert to Bit frames
-                driver_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-                monitor_bit_frame = new BitFrame(*golden_frame,
-                    &this->nominal_bit_timing, &this->data_bit_timing);
-
-                /**
-                 * Modify test frames:
-                 *   1. Turn monitor frame as if received!
-                 *   2. Force last e time quanta of CRC delimiter to Dominant on
-                 *      driven frame.
-                 *   3. Shorten CRC delimiter of monitored frame by nominal SJW
-                 *      (this corresponds to DUTs expected resynchronisation).
-                 *   4. Force PH2 of ACK bit to Recessive.
-                 */
-                monitor_bit_frame->TurnReceivedFrame();
-                driver_bit_frame->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                Bit *crcDelimiterDriver = driver_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-                Bit *crcDelimiterMonitor = monitor_bit_frame->GetBitOf(0, BitType::CrcDelimiter);
-                Bit *ackDriver = driver_bit_frame->GetBitOf(0, BitType::Ack);
-
-                for (size_t j = 0; j < i; j++)
-                    crcDelimiterDriver->ForceTimeQuanta(
-                        nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2, BitValue::Dominant);
-
-                crcDelimiterMonitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
-
-                for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                    ackDriver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
-
-                driver_bit_frame->Print(true);
-                monitor_bit_frame->Print(true);
-
-                // Push frames to Lower tester, run and check!
-                PushFramesToLowerTester(*driver_bit_frame, *monitor_bit_frame);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
-
-                // Read received frame from DUT and compare with sent frame
-                Frame readFrame = this->dut_ifc->ReadFrame();
-                if (CompareFrames(*golden_frame, readFrame) == false)
-                {
-                    test_result = false;
-                    TestControllerAgentEndTest(test_result);
-                }
-
-                DeleteCommonObjects();
+                ElementaryTest test = ElementaryTest(i - nominal_bit_timing.sjw_);
+                test.e = i;
+                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
-
-            TestControllerAgentEndTest(test_result);
-            TestMessage("Test %s : Run Exiting", test_name);
-            return test_result;
-
-            /*****************************************************************
-             * Test sequence end
-             ****************************************************************/
+            
+            CanAgentConfigureTxToRxFeedback(true);
         }
+
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        {
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn monitor frame as if received!
+             *   2. Force last e time quanta of CRC delimiter to Dominant in driven frame.
+             *   3. Shorten CRC delimiter of monitored frame by nominal SJW (this corresponds to
+             *      DUTs expected resynchronisation).
+             *   4. Force PH2 of ACK bit to Recessive.
+             *************************************************************************************/
+            monitor_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            Bit *crc_delimiter_driver = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+            Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+            Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitType::Ack);
+
+            for (int j = 0; j < elem_test.e; j++)
+                crc_delimiter_driver->ForceTimeQuanta(nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
+                                                      BitValue::Dominant);
+
+            crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+
+            for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
+                ack_driver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            TestMessage("Testing ACK negative resynchronisation with phase error: %d",
+                         elem_test.e);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            RunLowerTester(true, true);
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm);
+
+            return FinishElementaryTest();
+        }
+        ENABLE_UNUSED_ARGS
 };
