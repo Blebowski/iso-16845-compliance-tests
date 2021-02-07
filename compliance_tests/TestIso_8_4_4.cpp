@@ -82,90 +82,82 @@ class TestIso_8_4_4 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             /* Standard settings for tests where IUT is transmitter */
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
-            /* Dont enable TX to RX feedback beacuse we need to force Dominant
-             * overload flag to be received as Recessive!
+            /* Dont enable TX to RX feedback beacuse we need to force Dominant overload flag to
+             * be received as Recessive!
              */
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *  1. Force ACK low in driven frame (TX/RX feedback not enabled!)
+             *  2. Force first bit of Intermission to Dominant (Overload condition).
+             *  3. Insert Overload frame from second bit of Intermission to monitored frame.
+             *  4. Force 1, 2, 6-th bit of Overload flag to Recessive.
+             *  5. Insert Active Error frame from next bit to driven frame. Insert Active Error
+             *     frame to monitored frame.
+             *
+             *  Note: Don't insert retransmitted frame after first frame, since error happened in
+             *        overload frame which was transmitted due to Overload condition in
+             *        Intermission. At this point frame has already been validated by transmitter!
+             *        This is valid according to spec. since for transmitter frame vaidation shall
+             *        occur at the end of EOF!
+             *************************************************************************************/
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                                               EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+            first_interm_bit->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *  1. Force ACK low in driven frame (TX/RX feedback not enabled!)
-                     *  2. Force first bit of Intermission to Dominant (Overload condition).
-                     *  3. Insert Overload frame from second bit of Intermission to monitored frame.
-                     *  4. Force 1, 2, 6-th bit of Overload flag to Recessive.
-                     *  5. Insert Active Error frame from next bit to driven frame.
-                     *     Insert Active Error frame to monitored frame.
-                     *
-                     *  Note: Don't insert retransmitted frame after first frame, since error
-                     *        happened in overload frame which was transmitted due to Overload
-                     *        condition in Intermission. At this point frame has already been
-                     *        validated by transmitter! This is valid according to spec. since for
-                     *        transmitter frame vaidation shall occur at the end of EOF!
-                     ******************************************************************************/
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
-                    first_interm_bit->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-
-                    Bit *bit_to_corrupt;
-                    if (elem_test.index == 1){
-                        bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::OverloadFlag);
-                    } else if (elem_test.index == 2){
-                        bit_to_corrupt = driver_bit_frm->GetBitOf(1, BitType::OverloadFlag);
-                    } else {
-                        bit_to_corrupt = driver_bit_frm->GetBitOf(5, BitType::OverloadFlag);
-                    }
-
-                    int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-                    bit_to_corrupt->bit_value_ = BitValue::Recessive;
-
-                    driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /*****************************************************************************
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    this->dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-                }
+            Bit *bit_to_corrupt;
+            if (elem_test.index == 1){
+                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::OverloadFlag);
+            } else if (elem_test.index == 2){
+                bit_to_corrupt = driver_bit_frm->GetBitOf(1, BitType::OverloadFlag);
+            } else {
+                bit_to_corrupt = driver_bit_frm->GetBitOf(5, BitType::OverloadFlag);
             }
-            return (int)FinishTest();
+
+            int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
+            bit_to_corrupt->bit_value_ = BitValue::Recessive;
+
+            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            this->dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
+
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

@@ -79,8 +79,8 @@ class TestIso_8_4_2 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             /* Standard settings for tests where IUT is transmitter */
@@ -96,103 +96,95 @@ class TestIso_8_4_2 : public test_lib::TestBase
             dut_ifc->SetTec(200);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
             uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame,
+                                                       EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *  1. Turn driven frame as received.
+             *  2. In first elementary test, force 7-th data bit (should be recessive stuff bit) to
+             *     dominant. In second elementary test, force first bit of intermission to dominant.
+             *     Insert Error Frame (first elementary test) or Overload frame (second elementary
+             *     test) from next bit on monitored frame. Insert passive Error frame also to
+             *     driven frame.
+             *  3. Force last bit of Error delimiter (first elementary test), Overload delimiter
+             *     (second elementary test) to dominant.
+             *  4. Insert Overload frame from next bit on monitored frame. Insert Passive Error
+             *     frame on driven frame so that LT does not affect IUT.
+             *  5. Insert 8-more bits after intermission (behin 2-nd overload frame). This emulates
+             *     suspend transmission.
+             *  6. In first elemenary test, append the same frame after first frame because frame
+             *     shall be retransmitted (due to error frame). This frame should immediately
+             *     follow last bit of suspend. In second elementary test, frame shall not be
+             *     re-transmitted, because there were only overload frames, so append only dummy
+             *     bits to check that unit does not retransmitt (there were only overload frames)!
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
+
+            if (elem_test.index == 1)
             {
-                PrintVariantInfo(test_variants[test_variant]);
+                Bit *data_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
+                data_stuff_bit->bit_value_ = BitValue::Dominant;
+                monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+                driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            }
+            else
+            {
+                Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+                first_interm_bit->bit_value_ = BitValue::Dominant;
+                monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+                driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+            }
 
-                for (auto elem_test : elem_tests[test_variant])
+            Bit *last_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
+            int last_delim_index = driver_bit_frm->GetBitIndex(last_delim_bit);
+            last_delim_bit->bit_value_ = BitValue::Dominant;
+
+            monitor_bit_frm->InsertOverloadFrame(last_delim_index + 1);
+            driver_bit_frm->InsertPassiveErrorFrame(last_delim_index + 1);
+
+            driver_bit_frm->AppendSuspendTransmission();
+            monitor_bit_frm->AppendSuspendTransmission();
+
+            if (elem_test.index == 1){
+                driver_bit_frm_2->TurnReceivedFrame();
+                driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+                monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            } else {
+                for (int k = 0; k < 15; k++)
                 {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    RtrFlag::DataFrame, EsiFlag::ErrorPassive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *  1. Turn driven frame as received.
-                     *  2. In first elementary test, force 7-th data bit (should be recessive stuff
-                     *     bit) to dominant. In second elementary test, force first bit of
-                     *     intermission to dominant. Insert Error Frame (first elementary test)
-                     *     or Overload frame (second elementary test) from next bit on monitored
-                     *     frame. Insert passive Error frame also to driven frame.
-                     *  3. Force last bit of Error delimiter (first elementary test), Overload
-                     *     delimiter (second elementary test) to dominant.
-                     *  4. Insert Overload frame from next bit on monitored frame. Insert Passive
-                     *     Error frame on driven frame so that LT does not affect IUT.
-                     *  5. Insert 8-more bits after intermission (behin 2-nd overload frame). This
-                     *     emulates suspend transmission.
-                     *  6. In first elemenary test, append the same frame after first frame because
-                     *     frame shall be retransmitted (due to error frame). This frame should
-                     *     immediately follow last bit of suspend. In second elementary test, frame
-                     *     shall not be re-transmitted, because there were only overload frames, so
-                     *     append only dummy bits to check that unit does not retransmitt
-                     *     (there were only overload frames)!
-                     *****************************************************************************/
-                    driver_bit_frm->TurnReceivedFrame();
-
-                    if (elem_test.index == 1)
-                    {
-                        Bit *data_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
-                        data_stuff_bit->bit_value_ = BitValue::Dominant;
-                        monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                        driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    }
-                    else
-                    {
-                        Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
-                        first_interm_bit->bit_value_ = BitValue::Dominant;
-                        monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-                        driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
-                    }
-
-                    Bit *last_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
-                    int last_delim_index = driver_bit_frm->GetBitIndex(last_delim_bit);
-                    last_delim_bit->bit_value_ = BitValue::Dominant;
-
-                    monitor_bit_frm->InsertOverloadFrame(last_delim_index + 1);
-                    driver_bit_frm->InsertPassiveErrorFrame(last_delim_index + 1);
-
-                    driver_bit_frm->AppendSuspendTransmission();
-                    monitor_bit_frm->AppendSuspendTransmission();
-
-                    if (elem_test.index == 1){
-                        driver_bit_frm_2->TurnReceivedFrame();
-                        driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                        monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-                    } else {
-                        for (int k = 0; k < 15; k++)
-                        {
-                            driver_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
-                            monitor_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
-                        }
-                    }
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    this->dut_ifc->SendFrame(golden_frm.get());                    
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
+                    driver_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
+                    monitor_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
                 }
             }
-            return (int)FinishTest();
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /***************************************************************************** 
+             * Execute test
+             *****************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            this->dut_ifc->SendFrame(golden_frm.get());                    
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
+
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };
