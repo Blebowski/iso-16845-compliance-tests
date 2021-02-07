@@ -83,7 +83,7 @@ class TestIso_8_2_8 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (int i = 0; i < 1008; i++)
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
@@ -92,129 +92,118 @@ class TestIso_8_2_8 : public test_lib::TestBase
             one_shot_enabled = dut_ifc->ConfigureOneShot(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            uint8_t data[64] = {};
+            uint8_t data_first;
+            uint8_t data_rest;
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            int stuff_bit_index;
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    uint8_t data[64] = {};
-                    uint8_t data_first;
-                    uint8_t data_rest;
-
-                    int stuff_bit_index;
-
-                    if (elem_test.index < 127) {
-                        data_first = 0x10;
-                        data_rest = 0x78;
-                        stuff_bit_index = elem_test.index - 1;
-                    } else if (elem_test.index < 253){
-                        data_first = 0x78;
-                        data_rest = 0x3C;
-                        stuff_bit_index = elem_test.index - 127;
-                    } else if (elem_test.index < 379){
-                        data_first = 0x34;
-                        data_rest = 0x1E;
-                        stuff_bit_index = elem_test.index - 253;
-                    } else if (elem_test.index < 505){
-                        data_first = 0x12;
-                        data_rest = 0x0F;
-                        stuff_bit_index = elem_test.index - 379;
-                    } else if (elem_test.index < 631){
-                        data_first = 0x0F;
-                        data_rest = 0x87;
-                        stuff_bit_index = elem_test.index - 505;
-                    } else if (elem_test.index < 757){
-                        data_first = 0x17;
-                        data_rest = 0xC3;
-                        stuff_bit_index = elem_test.index - 631;
-                    } else if (elem_test.index < 883){
-                        data_first = 0x43;
-                        data_rest = 0xE1;
-                        stuff_bit_index = elem_test.index - 757;
-                    } else {
-                        stuff_bit_index = elem_test.index - 883;
-                        data_first = 0x21;
-                        data_rest = 0xF0;
-                    }
-
-                    data[0] = data_first;
-                    for (int i = 1; i < 64; i++)
-                        data[i] = data_rest;
-
-                    frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                                IdentifierType::Base, RtrFlag::DataFrame,
-                                                BrsFlag::Shift, EsiFlag::ErrorActive);
-
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, 0x555, data);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Choose stuff bit as given by elementary test. Description of elementary
-                     *      tests should match number of stuff bits (e.g. in first frame 126 stuff
-                     *      bits)!
-                     *   2. Corrupt stuff bit from point 1 to opposite value.
-                     *   3. Insert Active Error frame from next bit on.
-                     *   4. Append retransmitted frame if one shot mode is not enabled. If it
-                     *      is enabled, IUT will not retransmitt the frame. This serves to shorten
-                     *      the test time!
-                     *****************************************************************************/
-                    int num_stuff_bits = driver_bit_frm->GetNumStuffBits(BitType::Data,
-                                            StuffBitType::NormalStuffBit);
-                    Bit *stuff_bit;
-
-                    /* It can be that last bit is right after last bit of data!! */
-                    if (num_stuff_bits > stuff_bit_index)
-                        stuff_bit = driver_bit_frm->GetStuffBit(stuff_bit_index, BitType::Data);
-                    else
-                        stuff_bit = driver_bit_frm->GetStuffBit(0, BitType::StuffCount);
-
-                    stuff_bit->FlipBitValue();
-                    int bit_index = driver_bit_frm->GetBitIndex(stuff_bit);
-
-                    driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-
-                    if (!one_shot_enabled)
-                    {
-                        driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-                        driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                        monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-                    }
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /*****************************************************************************
-                     * Execute test
-                     ****************************************************************************/
-                    dut_ifc->SetTec(0);
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    driver_bit_frm.reset();
-                    monitor_bit_frm.reset();
-                    driver_bit_frm_2.reset();
-                    monitor_bit_frm_2.reset();
-                }
+            if (elem_test.index < 127) {
+                data_first = 0x10;
+                data_rest = 0x78;
+                stuff_bit_index = elem_test.index - 1;
+            } else if (elem_test.index < 253){
+                data_first = 0x78;
+                data_rest = 0x3C;
+                stuff_bit_index = elem_test.index - 127;
+            } else if (elem_test.index < 379){
+                data_first = 0x34;
+                data_rest = 0x1E;
+                stuff_bit_index = elem_test.index - 253;
+            } else if (elem_test.index < 505){
+                data_first = 0x12;
+                data_rest = 0x0F;
+                stuff_bit_index = elem_test.index - 379;
+            } else if (elem_test.index < 631){
+                data_first = 0x0F;
+                data_rest = 0x87;
+                stuff_bit_index = elem_test.index - 505;
+            } else if (elem_test.index < 757){
+                data_first = 0x17;
+                data_rest = 0xC3;
+                stuff_bit_index = elem_test.index - 631;
+            } else if (elem_test.index < 883){
+                data_first = 0x43;
+                data_rest = 0xE1;
+                stuff_bit_index = elem_test.index - 757;
+            } else {
+                stuff_bit_index = elem_test.index - 883;
+                data_first = 0x21;
+                data_rest = 0xF0;
             }
 
-            return (int)FinishTest();
+            data[0] = data_first;
+            for (int i = 1; i < 64; i++)
+                data[i] = data_rest;
+
+            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
+                                        RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
+
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, 0x555, data);
+            RandomizeAndPrint(golden_frm.get());
+
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Choose stuff bit as given by elementary test. Description of elementary tests
+             *      should match number of stuff bits (e.g. in first frame 126 stuff bits)!
+             *   2. Corrupt stuff bit from point 1 to opposite value.
+             *   3. Insert Active Error frame from next bit on.
+             *   4. Append retransmitted frame if one shot mode is not enabled. If it is enabled,
+             *      IUT will not retransmitt the frame. This serves to shorten the test time!
+             *************************************************************************************/
+            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(BitType::Data,
+                                    StuffBitType::NormalStuffBit);
+            Bit *stuff_bit;
+
+            /* It can be that last bit is right after last bit of data!! */
+            if (num_stuff_bits > stuff_bit_index)
+                stuff_bit = driver_bit_frm->GetStuffBit(stuff_bit_index, BitType::Data);
+            else
+                stuff_bit = driver_bit_frm->GetStuffBit(0, BitType::StuffCount);
+
+            stuff_bit->FlipBitValue();
+            int bit_index = driver_bit_frm->GetBitIndex(stuff_bit);
+
+            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+
+            if (!one_shot_enabled)
+            {
+                driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+                monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            }
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /*****************************************************************************
+             * Execute test
+             ****************************************************************************/
+            dut_ifc->SetTec(0);
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
+
+            driver_bit_frm.reset();
+            monitor_bit_frm.reset();
+            driver_bit_frm_2.reset();
+            monitor_bit_frm_2.reset();
+
+            return FinishElementaryTest();
         }
+    
+        ENABLE_UNUSED_ARGS
 };
