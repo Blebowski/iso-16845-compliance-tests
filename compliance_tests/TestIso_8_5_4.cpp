@@ -76,8 +76,8 @@ class TestIso_8_5_4 : public test_lib::TestBase
             num_elem_tests = 3;
             for (int i = 0; i < num_elem_tests; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1 , FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1 , FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
@@ -88,86 +88,79 @@ class TestIso_8_5_4 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            /* ESI needed for CAN FD variant */
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                                                       EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            frame_flags_2 = std::make_unique<FrameFlags>();
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm_2.get());
+
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn driven frame as if received.
+             *   2. Insert suspend field to both driven and monitored frames (it is not inserted by
+             *      default frame construction). Insert only necessary portion of field to emulate
+             *      start of next frame in the middle of it!
+             *   3. Append next frame to driven frame. Append next frame as if received to
+             *      monitored frame.
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
+
+            int num_suspend_bits;
+            switch (elem_test.index)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    EsiFlag::ErrorPassive); /* ESI needed for CAN FD variant */
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    frame_flags_2 = std::make_unique<FrameFlags>();
-                    golden_frm_2 = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm_2.get());
-
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Turn driven frame as if received.
-                     *   2. Insert suspend field to both driven and monitored frames (it is not
-                     *      inserted by default frame construction). Insert only necessary portion
-                     *      of field to emulate start of next frame in the middle of it!
-                     *   3. Append next frame to driven frame. Append next frame as if received to
-                     *      monitored frame.
-                     *****************************************************************************/
-                    driver_bit_frm->TurnReceivedFrame();
-
-                    int num_suspend_bits;
-                    switch (elem_test.index)
-                    {
-                        case 1:
-                            num_suspend_bits = 0;
-                            break;
-                        case 2:
-                            num_suspend_bits = 3;
-                            break;
-                        case 3:
-                            num_suspend_bits = 7;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    for (int i = 0; i < num_suspend_bits; i++)
-                    {
-                        driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
-                        monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
-                    }
-
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm_2->TurnReceivedFrame();
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    CheckRxFrame(*golden_frm_2);
-                }
+                case 1:
+                    num_suspend_bits = 0;
+                    break;
+                case 2:
+                    num_suspend_bits = 3;
+                    break;
+                case 3:
+                    num_suspend_bits = 7;
+                    break;
+                default:
+                    break;
             }
 
-            return (int)FinishTest();
+            for (int i = 0; i < num_suspend_bits; i++)
+            {
+                driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+            }
+
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm_2->TurnReceivedFrame();
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /***************************************************************************** 
+             * Execute test
+             *****************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+
+            CheckLowerTesterResult();
+            CheckRxFrame(*golden_frm_2);
+
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };
