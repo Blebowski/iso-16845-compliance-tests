@@ -81,8 +81,8 @@ class TestIso_8_6_1 : public test_lib::TestBase
             num_elem_tests = 3;
             for (int i = 0; i < 3; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
@@ -90,85 +90,76 @@ class TestIso_8_6_1 : public test_lib::TestBase
             CanAgentSetWaitForMonitor(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
             uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /* Second frame the same due to retransmission. */
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Force 7-th data bit to dominant to cause stuff error.
+             *   2. Insert Active Error frame from next bit on.
+             *   3. Corrupt 1,3,6 th bit of Active Error flag, flip to opposite value!
+             *   4. Insert next Active Error frame from next bit on.
+             *   5. Append the same frame after the first frame since IUT will retransmitt the
+             *      frame. Force ACK low on driven frame.
+             *************************************************************************************/
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-                    /* Second frame the same due to retransmission. */
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            int bit_index_to_corrupt;
+            if (elem_test.index == 1)
+                bit_index_to_corrupt = 0;
+            else if (elem_test.index == 2)
+                bit_index_to_corrupt = 2;
+            else
+                bit_index_to_corrupt = 5;
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Force 7-th data bit to dominant to cause stuff error.
-                     *   2. Insert Active Error frame from next bit on.
-                     *   3. Corrupt 1,3,6 th bit of Active Error flag, flip to opposite value!
-                     *   4. Insert next Active Error frame from next bit on.
-                     *   5. Append the same frame after the first frame since IUT will retransmitt
-                     *      the frame. Force ACK low on driven frame.
-                     *****************************************************************************/
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
+                                                            BitType::ActiveErrorFlag);
+            bit_to_corrupt->bit_value_ = BitValue::Recessive;
+            
+            int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
+            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
 
-                    driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    int bit_index_to_corrupt;
-                    if (elem_test.index == 1)
-                        bit_index_to_corrupt = 0;
-                    else if (elem_test.index == 2)
-                        bit_index_to_corrupt = 2;
-                    else
-                        bit_index_to_corrupt = 5;
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-                    Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
-                                                                    BitType::ActiveErrorFlag);
-                    bit_to_corrupt->bit_value_ = BitValue::Recessive;
-                    
-                    int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-                    driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            tec_old = dut_ifc->GetTec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            /* 8 for first Error frame, 8 for next one, - 1 for succesfull retransmission */
+            CheckTecChange(tec_old, 15);
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    tec_old = dut_ifc->GetTec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    /* 8 for first Error frame, 8 for next one, - 1 for succesfull retransmission */
-                    CheckTecChange(tec_old, 15);
-                }
-            }
-
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

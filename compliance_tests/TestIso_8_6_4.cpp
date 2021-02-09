@@ -85,8 +85,8 @@ class TestIso_8_6_4 : public test_lib::TestBase
             num_elem_tests = 5;
             for (int i = 0; i < 5; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
@@ -95,117 +95,108 @@ class TestIso_8_6_4 : public test_lib::TestBase
             CanAgentSetWaitForMonitor(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
             uint8_t data_byte = 0x80;
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /* Second frame the same due to retransmission. */
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Force 7-th data bit to dominant to cause stuff error.
+             *   2. Insert Passive Error frame from next bit on to monitored frame. Insert Passive
+             *      Error frame to driven frame.
+             *   3. 1,6,8,9,16 dominant bits after passive error flag to driven frame! Insert the
+             *      same amount of recessive bits to monitored frame.
+             *   4. Append suspend transmission
+             *   5. Append retransmitted frame!
+             *************************************************************************************/
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+
+            int num_bits_to_insert;
+            switch (elem_test.index)
             {
-                PrintVariantInfo(test_variants[test_variant]);
-
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
-
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                                    EsiFlag::ErrorPassive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
-
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-                    /* Second frame the same due to retransmission. */
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Force 7-th data bit to dominant to cause stuff error.
-                     *   2. Insert Passive Error frame from next bit on to monitored frame.
-                     *      Insert Passive Error frame to driven frame.
-                     *   3. 1,6,8,9,16 dominant bits after passive error flag to driven frame!
-                     *      Insert the same amount of recessive bits to monitored frame.
-                     *   4. Append suspend transmission
-                     *   5. Append retransmitted frame!
-                     *****************************************************************************/
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
-
-                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-
-                    int num_bits_to_insert;
-                    switch (elem_test.index)
-                    {
-                    case 1:
-                        num_bits_to_insert = 1;
-                        break;
-                    case 2:
-                        num_bits_to_insert = 6;
-                        break;
-                    case 3:
-                        num_bits_to_insert = 8;
-                        break;
-                    case 4:
-                        num_bits_to_insert = 9;
-                        break;
-                    case 5:
-                        num_bits_to_insert = 16;
-                        break;
-                    default:
-                        break;
-                    }
-
-                    for (int i = 0; i < num_bits_to_insert; i++)
-                    {
-                        int bit_index = driver_bit_frm->GetBitIndex(
-                                            driver_bit_frm->GetBitOf(5, BitType::PassiveErrorFlag));
-                        driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, bit_index + 1);
-                        monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, bit_index + 1);
-                    }
-
-                    for (int i = 0; i < 8; i++)
-                    {
-                        driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
-                        monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
-                    }
-
-                    driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    dut_ifc->SetTec(130); // Preset each time to avoid going bus-off
-                    tec_old = dut_ifc->GetTec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    /* Based on number of inserted bits:
-                     *  1,6 bits -> 8 bits not reached. Only +8 for first error frame
-                     *  8,9 bits -> 8 bits reached. +16 (first error frame and +8)
-                     *  16 bits  -> 2 * 8 bits reached (+24, first error frame and 2 * 8 bits)
-                     *  -1 always decrement for succesfull retransmission
-                     */
-                    if (elem_test.index == 1 || elem_test.index == 2)
-                        CheckTecChange(tec_old, 7);
-                    else if (elem_test.index == 3 || elem_test.index == 4)
-                        CheckTecChange(tec_old, 15);
-                    else
-                        CheckTecChange(tec_old, 23);
-                }
+            case 1:
+                num_bits_to_insert = 1;
+                break;
+            case 2:
+                num_bits_to_insert = 6;
+                break;
+            case 3:
+                num_bits_to_insert = 8;
+                break;
+            case 4:
+                num_bits_to_insert = 9;
+                break;
+            case 5:
+                num_bits_to_insert = 16;
+                break;
+            default:
+                break;
             }
 
-            return (int)FinishTest();
+            for (int i = 0; i < num_bits_to_insert; i++)
+            {
+                int bit_index = driver_bit_frm->GetBitIndex(
+                                    driver_bit_frm->GetBitOf(5, BitType::PassiveErrorFlag));
+                driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, bit_index + 1);
+                monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, bit_index + 1);
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+            }
+
+            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
+
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            dut_ifc->SetTec(130); // Preset each time to avoid going bus-off
+            tec_old = dut_ifc->GetTec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
+
+            /* Based on number of inserted bits:
+             *  1,6 bits -> 8 bits not reached. Only +8 for first error frame
+             *  8,9 bits -> 8 bits reached. +16 (first error frame and +8)
+             *  16 bits  -> 2 * 8 bits reached (+24, first error frame and 2 * 8 bits)
+             *  -1 always decrement for succesfull retransmission
+             */
+            if (elem_test.index == 1 || elem_test.index == 2)
+                CheckTecChange(tec_old, 7);
+            else if (elem_test.index == 3 || elem_test.index == 4)
+                CheckTecChange(tec_old, 15);
+            else
+                CheckTecChange(tec_old, 23);
+
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };
