@@ -74,11 +74,10 @@ class TestIso_8_6_10 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 2;
             for (int i = 0; i < 2; i++)
             {
-                elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
-                elem_tests[1].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
@@ -87,77 +86,67 @@ class TestIso_8_6_10 : public test_lib::TestBase
             CanAgentSetWaitForMonitor(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn driven frame as if received.
+             *   2. Flip first bit of intermission to dominant (Overload condition)
+             *   3. Insert Overload frame from next bit on to monitored frame. Insert Passive Error
+             *      frame to driven frame (TX/RX feedback enabled)
+             *   4. Flip 2 or 7-th bit of overload delimiter to dominant.
+             *   5. Insert next Error frame from next bit on.
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Turn driven frame as if received.
-                     *   2. Flip first bit of intermission to dominant (Overload condition)
-                     *   3. Insert Overload frame from next bit on to monitored frame. Insert
-                     *      Passive Error frame to driven frame (TX/RX feedback enabled)
-                     *   4. Flip 2 or 7-th bit of overload delimiter to dominant.
-                     *   5. Insert next Error frame from next bit on.
-                     *****************************************************************************/
-                    driver_bit_frm->TurnReceivedFrame();
+            int bit_to_flip;
+            if (elem_test.index == 1)
+                bit_to_flip = 1;
+            else
+                bit_to_flip = 6;
+            int bit_index = driver_bit_frm->GetBitIndex(
+                driver_bit_frm->GetBitOf(bit_to_flip, BitType::ErrorDelimiter));
+            driver_bit_frm->GetBit(bit_index)->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
+            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    int bit_to_flip;
-                    if (elem_test.index == 1)
-                        bit_to_flip = 1;
-                    else
-                        bit_to_flip = 6;
-                    int bit_index = driver_bit_frm->GetBitIndex(
-                        driver_bit_frm->GetBitOf(bit_to_flip, BitType::ErrorDelimiter));
-                    driver_bit_frm->GetBit(bit_index)->bit_value_ = BitValue::Dominant;
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            tec_old = dut_ifc->GetTec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
 
-                    driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-                    monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
+            // +8 for error, -1 for retransmission. In firt elem test, TEC is 0, no retransmission!
+            if (test_variant == TestVariant::Common && elem_test.index == 1)
+                CheckTecChange(tec_old, 8);
+            else
+                CheckTecChange(tec_old, 7);
 
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    tec_old = dut_ifc->GetTec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    /* +8 for error, -1 for retransmission. In firt elem test, TEC is 0, no r
-                     * retransmission!
-                     */
-                    if (test_variant == 0 && elem_test.index == 1)
-                        CheckTecChange(tec_old, 8);
-                    else
-                        CheckTecChange(tec_old, 7);
-                }
-            }
-
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

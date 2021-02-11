@@ -72,9 +72,8 @@ class TestIso_8_6_19 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
@@ -84,67 +83,59 @@ class TestIso_8_6_19 : public test_lib::TestBase
             dut_ifc->SetTec(8);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                                                       EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x400);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x400);
-                    RandomizeAndPrint(golden_frm.get());
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn driven frame as if received.
+             *   2. Flip 7-th identifier bit to dominant. This should be recessive stuff bit and it
+             *      should cause stuff error!
+             *   3. Insert Active Error frame to monitored frame. Insert Passive Error  frame to
+             *      driven frame since TX/RX feedback is enabled.
+             *   4. Append Retransmitted frame.
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->GetBitOf(6, BitType::BaseIdentifier)->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::BaseIdentifier);
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::BaseIdentifier);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Turn driven frame as if received.
-                     *   2. Flip 7-th identifier bit to dominant. This should be recessive stuff
-                     *      bit and it should cause stuff error!
-                     *   3. Insert Active Error frame to monitored frame. Insert Passive Error 
-                     *      frame to driven frame since TX/RX feedback is enabled.
-                     *   4. Append Retransmitted frame.
-                     *****************************************************************************/
-                    driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-                    driver_bit_frm->GetBitOf(6, BitType::BaseIdentifier)
-                        ->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::BaseIdentifier);
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::BaseIdentifier);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            tec_old = dut_ifc->GetTec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
 
-                    driver_bit_frm_2->TurnReceivedFrame();
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            CheckLowerTesterResult();
+            /* +0 for stuff error during arbitration, -1 for succesfull retransmission */
+            CheckTecChange(tec_old, -1);
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    tec_old = dut_ifc->GetTec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    CheckTecChange(tec_old, +0);
-                }
-            }
-
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

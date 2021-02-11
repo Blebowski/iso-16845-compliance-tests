@@ -72,9 +72,8 @@ class TestIso_8_6_17 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
@@ -84,80 +83,60 @@ class TestIso_8_6_17 : public test_lib::TestBase
             dut_ifc->SetTec((rand() % 125) + 130);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorPassive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    EsiFlag::ErrorPassive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn driven frame as if received.
+             *   2. Force ACK to recessive value.
+             *   3. Insert Passive Error Frame to both driven and monitored frames from ACK deli-
+             *      miter further.
+             *   4. Append suspend transmission since IUT is Error passive!
+             *   5. Insert retransmitted frame, but with ACK set.
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
+            monitor_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
 
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->AppendSuspendTransmission();
+            monitor_bit_frm->AppendSuspendTransmission();
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Turn driven frame as if received.
-                     *   2. Force ACK to recessive value.
-                     *   3. Insert next ACK for CAN FD variant since in CAN FD nodes, IUT shall
-                     *      tolerate up to 1 recessive ACK and detect error only upon second
-                     *      recessive bit
-                     *   4. Insert Passive Error Frame to both driven and monitored frames from
-                     *      ACK delimiter further.
-                     *   5. Append suspend transmission since IUT is Error passive!
-                     *   6. Insert retransmitted frame, but with ACK set.
-                     *****************************************************************************/
-                    driver_bit_frm->TurnReceivedFrame();
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-                    if (test_variants[test_variant] == TestVariant::CanFdEnabled)
-                    {
-                        int index = driver_bit_frm->GetBitIndex(
-                            driver_bit_frm->GetBitOf(0, BitType::Ack));
-                        driver_bit_frm->InsertBit(BitType::Ack, BitValue::Recessive, index);
-                        monitor_bit_frm->InsertBit(BitType::Ack, BitValue::Recessive, index);
-                    }
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
-                    monitor_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            tec_old = dut_ifc->GetTec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
 
-                    driver_bit_frm->AppendSuspendTransmission();
-                    monitor_bit_frm->AppendSuspendTransmission();
+            CheckLowerTesterResult();
+            /* +0 for ACK Error, -1 for succesfull retransmission! */
+            CheckTecChange(tec_old, -1);
 
-                    driver_bit_frm_2->TurnReceivedFrame();
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    tec_old = dut_ifc->GetTec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    /* +0 for ACK Error, -1 for succesfull retransmission! */
-                    CheckTecChange(tec_old, -1);
-                }
-            }
-
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

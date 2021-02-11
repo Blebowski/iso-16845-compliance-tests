@@ -73,8 +73,8 @@ class TestIso_8_6_21 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
@@ -84,89 +84,80 @@ class TestIso_8_6_21 : public test_lib::TestBase
             dut_ifc->SetTec(8);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
             uint8_t data_byte = 0x80;
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            /* Sent by LT */
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x50, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /* Sent by IUT */
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0x51, &data_byte);
+            RandomizeAndPrint(golden_frm_2.get());
 
-                    /* Sent by LT */
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                    BrsFlag::DontShift, EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x50, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            /* Since IUT will loose arbitration, do both driven and monitored frames as the ones
+             * from IUT, correct the last bit later
+             */
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                    /* Sent by IUT */
-                    frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    IdentifierType::Base, RtrFlag::DataFrame,
-                                    BrsFlag::DontShift, EsiFlag::ErrorActive);
-                    golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0x51, &data_byte);
-                    RandomizeAndPrint(golden_frm_2.get());
+            /* In retransmitted frame, there will be no arbitration lost */
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
 
-                    /* Since IUT will loose arbitration, do both driven and monitored frames
-                     * as the ones from IUT, correct the last bit later
-                     */
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Flip last bit of base id of monitored frame to recessive since IUT actually
+             *      sends ID ending with 1.
+             *   2. Loose arbitration in monitored frame on last bit of Base id.
+             *   3. Flip 7-th bit of data field to dominant. This should cauase stuff error.
+             *   4. Insert active error frame to monitored frame from next bit. Insert passive
+             *      error frame to driven frame (TX/RX feedback enabled).
+             *   5. Append retransmitted frame by IUT.
+             *************************************************************************************/
+            Bit *last_base_id = monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier);
+            last_base_id->bit_value_ = BitValue::Dominant;
 
-                    /* In retransmitted frame, there will be no arbitration lost */
-                    driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-                    monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            monitor_bit_frm->LooseArbitration(last_base_id);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Flip last bit of base id of monitored frame to recessive since IUT
-                     *      actually sends ID ending with 1.
-                     *   2. Loose arbitration in monitored frame on last bit of Base id.
-                     *   3. Flip 7-th bit of data field to dominant. This should cauase stuff error.
-                     *   4. Insert active error frame to monitored frame from next bit. Insert
-                     *      passive error frame to driven frame (TX/RX feedback enabled).
-                     *   5. Append retransmitted frame by IUT.
-                     *****************************************************************************/
-                    Bit *last_base_id = monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier);
-                    last_base_id->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-                    monitor_bit_frm->LooseArbitration(last_base_id);
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-                    driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());                    
 
-                    driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-                    monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm_2->TurnReceivedFrame();
-                    driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                    monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());                    
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            tec_old = dut_ifc->GetTec();
+            rec_old = dut_ifc->GetRec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm_2.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
+            /* TODO: ISO says there should be 0 change here! But due to retransmission,
+             *       there shall be -1 here IMHO! This is ISO error and shall be reported!
+             */
+            CheckTecChange(tec_old, -1);
+            CheckRecChange(rec_old, +1);
 
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    tec_old = dut_ifc->GetTec();
-                    rec_old = dut_ifc->GetRec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm_2.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    /* TODO: ISO says there should be 0 change here! But due to retransmission,
-                     *       there shall be -1 here IMHO!
-                     */
-                    CheckTecChange(tec_old, -1);
-                    CheckRecChange(rec_old, +1);
-                }
-            }
-
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

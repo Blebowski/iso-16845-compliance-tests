@@ -75,9 +75,8 @@ class TestIso_8_6_15 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            num_elem_tests = 1;
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
-            elem_tests[1].push_back(ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
@@ -87,64 +86,55 @@ class TestIso_8_6_15 : public test_lib::TestBase
             dut_ifc->SetTec(8);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Turn driven frame as if received.
+             *   2. Force first bit of Interframe to dominant (overload flag)
+             *   3. Insert Expected overload frame from second bit of intermission.
+             *   4. Force last bit of overload delimiter (8-th) to dominant.
+             *   5. Insert next expected overload frame!
+             *************************************************************************************/
+            driver_bit_frm->TurnReceivedFrame();
 
-                    frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
-                                    EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Turn driven frame as if received.
-                     *   2. Force first bit of Interframe to dominant (overload flag)
-                     *   3. Insert Expected overload frame from second bit of intermission.
-                     *   4. Force last bit of overload delimiter (8-th) to dominant.
-                     *   5. Insert next expected overload frame!
-                     *****************************************************************************/
-                    driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->GetBitOf(7, BitType::OverloadDelimiter)->FlipBitValue();
 
-                    driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+            /* Next bit is 2nd intermission bit overally! */
+            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-                    driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm->GetBitOf(7, BitType::OverloadDelimiter)->FlipBitValue();
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            tec_old = dut_ifc->GetTec();
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
 
-                    /* Next bit is 2nd intermission bit overally! */
-                    driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-                    monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            CheckLowerTesterResult();
+            CheckTecChange(tec_old, -1);
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    tec_old = dut_ifc->GetTec();
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-
-                    CheckTecChange(tec_old, -1);
-                }
-            }
-
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };
