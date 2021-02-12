@@ -317,24 +317,6 @@ class TestIso_8_2_3 : public test_lib::TestBase
 
             int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffBitType::NormalStuffBit);
 
-            /* In FD enabled variant, if last bit of data field is stuff bit, but model has this bit
-             * as fixed stuff bit before Stuff count. So count in also each fixed stuff bit even
-             * if last bit of data is NOT regular stuff bit. Then total number of stuff bits within
-             * FD enabled variant will be higher than in ISO 16845, but this does not mind!
-             */
-            if (test_variant == TestVariant::CanFdEnabled)
-            {
-                Bit *bit = driver_bit_frm->GetBitOf(0, BitType::StuffCount);
-                int index = driver_bit_frm->GetBitIndex(bit);
-                BitValue value = driver_bit_frm->GetBit(index - 1)->bit_value_;
-                if ((value == driver_bit_frm->GetBit(index - 2)->bit_value_) &&
-                    (value == driver_bit_frm->GetBit(index - 3)->bit_value_) &&
-                    (value == driver_bit_frm->GetBit(index - 4)->bit_value_) &&
-                    (value == driver_bit_frm->GetBit(index - 5)->bit_value_))
-                    num_stuff_bits++;
-            }
-
-
             /*****************************************************************************
              * Execute test
              ****************************************************************************/
