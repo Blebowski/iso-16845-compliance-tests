@@ -76,72 +76,94 @@ using namespace test_lib;
 class TestIso_8_7_8 : public test_lib::TestBase
 {
     public:
+        BitTiming test_nom_bit_timing;
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            elem_tests[0].push_back(ElementaryTest(1, FrameType::Can2_0));
+
+            // Elementary test for each possible positon of sample point, restrict to shortest
+            // possible PROP = 2, shortest possible PH2 = 1, PH1 always 0. Together we test
+            // TQ(N) - 3 tests!
+            for (size_t i = 1; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+            
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetWaitForMonitor(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            // Calculate new bit-rate from configured one. Have same bit-rate, but
+            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
+            // end.
+            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
+            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
+            test_nom_bit_timing.ph1_ = 0;
+            test_nom_bit_timing.prop_ = elem_test.index;
+            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
+            
+            /* Re-configure bit-timing for this test so that frames are generated with it! */
+            this->nominal_bit_timing = test_nom_bit_timing;
+
+            // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
+            dut_ifc->Disable();
+            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
+            dut_ifc->Enable();
+            TestMessage("Waiting till DUT is error active!");
+            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+                usleep(100000);
+
+            TestMessage("Nominal bit timing for this elementary test:");
+            test_nom_bit_timing.Print();
+            
             uint8_t data_byte = 0x55;
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, RtrFlag::DataFrame,
+                                                       EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
-            {
-                PrintVariantInfo(test_variants[test_variant]);
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Insert ACK to driven frame.
+             *   2. Shorten PH2 of second bit of data field by SJW in both driven and monitored
+             *      frames. This corresponds to by how much the IUT shall resynchronize.
+             *   3. Force all remaining time quantas of PH2 of this bit to 0 in driven frame.
+             *      Together with step 2, this achvies shortening by whole PH2 of received frame,
+             *      but following bit length is effectively lengthened for IUT, so that IUT will
+             *      not have remaining phase error to synchronize away during next bits.
+             *************************************************************************************/
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                        RtrFlag::DataFrame, EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(1, BitType::Data)
+                ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+            monitor_bit_frm->GetBitOf(1, BitType::Data)
+                ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            Bit *drv_bit = driver_bit_frm->GetBitOf(1, BitType::Data);
+            for (size_t i = 0; i < drv_bit->GetPhaseLenTimeQuanta(BitPhase::Ph2); i++)
+                drv_bit->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Dominant);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Insert ACK to driven frame.
-                     *   2. Shorten PH2 of second bit of data field by SJW in both driven and
-                     *      monitored frames. This corresponds to by how much the IUT shall
-                     *      resynchronize.
-                     *   3. Force all remaining time quantas of PH2 of this bit to 0 in driven
-                     *      frame. Together with step 2, this achvies shortening by whole PH2
-                     *      of received frame, but following bit length is effectively lengthened
-                     *      for IUT, so that IUT will not have remaining phase error to synchronize
-                     *      away during next bits.
-                     *****************************************************************************/
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    driver_bit_frm->GetBitOf(1, BitType::Data)
-                        ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
-                    monitor_bit_frm->GetBitOf(1, BitType::Data)
-                        ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
 
-                    Bit *drv_bit = driver_bit_frm->GetBitOf(1, BitType::Data);
-                    for (size_t i = 0; i < drv_bit->GetPhaseLenTimeQuanta(BitPhase::Ph2); i++)
-                        drv_bit->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Dominant);
+            CheckLowerTesterResult();
 
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-                }
-            }
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };

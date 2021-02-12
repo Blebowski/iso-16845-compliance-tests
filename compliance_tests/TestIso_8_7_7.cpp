@@ -76,8 +76,9 @@ class TestIso_8_7_7 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
+
             // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 2, shortest possible PH2 = 1, PH1 always 0. Together we test
+            // possible PROP = 2, shortest possible PH2 = 2, PH1 always 0. Together we test
             // TQ(N) - 4 tests!
             for (size_t i = 1; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 3; i++)
                 AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
