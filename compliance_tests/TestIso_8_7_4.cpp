@@ -86,72 +86,64 @@ class TestIso_8_7_4 : public test_lib::TestBase
             {
                 ElementaryTest test = ElementaryTest(i + 1);
                 test.e = i + 1;
-                elem_tests[0].push_back(test);
+                AddElemTest(TestVariant::Common, std::move(test));
             }
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
         }
 
-        int Run()
+        DISABLE_UNUSED_ARGS
+
+        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
-            SetupTestEnvironment();
+            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
+            golden_frm = std::make_unique<Frame>(*frame_flags);
+            RandomizeAndPrint(golden_frm.get());
 
-            for (size_t test_variant = 0; test_variant < test_variants.size(); test_variant++)
+            driver_bit_frm = ConvertBitFrame(*golden_frm);
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+
+            /**************************************************************************************
+             * Modify test frames:
+             *   1. Choose random recessive bit in arbitration field which is followed by dominant
+             *      bit.
+             *   2. Shorten PH2 of this bit by e. Shorten in both driven and monitored frames.
+             *   3. Insert ACK to driven frame.
+             * 
+             * Note: TX/RX feedback must be disabled, since we modify driven frame.
+             *************************************************************************************/
+            Bit *bit_to_shorten;
+            Bit *next_bit;
+            int bit_index;
+            do
             {
-                PrintVariantInfo(test_variants[test_variant]);
+                bit_to_shorten = driver_bit_frm->GetRandomBitOf(BitType::BaseIdentifier);
+                bit_index = driver_bit_frm->GetBitIndex(bit_to_shorten);
+                next_bit = driver_bit_frm->GetBit(bit_index + 1);
+            } while (!(bit_to_shorten->bit_value_ == BitValue::Recessive &&
+                        next_bit->bit_value_ == BitValue::Dominant));
 
-                for (auto elem_test : elem_tests[test_variant])
-                {
-                    PrintElemTestInfo(elem_test);
+            bit_to_shorten->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e);
 
-                    frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                    EsiFlag::ErrorActive);
-                    golden_frm = std::make_unique<Frame>(*frame_flags);
-                    RandomizeAndPrint(golden_frm.get());
+            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-                    driver_bit_frm = ConvertBitFrame(*golden_frm);
-                    monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            driver_bit_frm->Print(true);
+            monitor_bit_frm->Print(true);
 
-                    /******************************************************************************
-                     * Modify test frames:
-                     *   1. Choose random recessive bit in arbitration field which is followed by
-                     *      dominant bit.
-                     *   2. Shorten PH2 of this bit by e. Shorten in both driven and monitored
-                     *      frames.
-                     *   3. Insert ACK to driven frame.
-                     * 
-                     * Note: TX/RX feedback must be disabled, since we modify driven frame.
-                     *****************************************************************************/
-                    Bit *bit_to_shorten;
-                    Bit *next_bit;
-                    int bit_index;
-                    do
-                    {
-                        bit_to_shorten = driver_bit_frm->GetRandomBitOf(BitType::BaseIdentifier);
-                        bit_index = driver_bit_frm->GetBitIndex(bit_to_shorten);
-                        next_bit = driver_bit_frm->GetBit(bit_index + 1);
-                    } while (!(bit_to_shorten->bit_value_ == BitValue::Recessive &&
-                               next_bit->bit_value_ == BitValue::Dominant));
+            /**************************************************************************************
+             * Execute test
+             *************************************************************************************/
+            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
+            StartDriverAndMonitor();
+            dut_ifc->SendFrame(golden_frm.get());
+            WaitForDriverAndMonitor();
+            CheckLowerTesterResult();
 
-                    bit_to_shorten->ShortenPhase(BitPhase::Ph2, elem_test.e);
-                    monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e);
-
-                    driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-
-                    driver_bit_frm->Print(true);
-                    monitor_bit_frm->Print(true);
-
-                    /***************************************************************************** 
-                     * Execute test
-                     *****************************************************************************/
-                    PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                    StartDriverAndMonitor();
-                    dut_ifc->SendFrame(golden_frm.get());
-                    WaitForDriverAndMonitor();
-                    CheckLowerTesterResult();
-                }
-            }
-            return (int)FinishTest();
+            return FinishElementaryTest();
         }
+
+        ENABLE_UNUSED_ARGS
 };
