@@ -111,28 +111,29 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            /******************************************************************************
+            /**************************************************************************************
              * Modify test frames:
              *   1. Delay received sequence by d data bit times:
              *          Elem test 1,2 : d = 1
              *          Elem test 3,4 : d = 2
              *      This is done by prolonging SOF of driven frame.
-             *   2. Driven sequence is now delayed by d. We need to search TQs in driven
-             *      frame, which correspond to PH2 of res bit. These shall be forced to
-             *      recessive. If IUT is using SSP, it will sample later than regular SP
-             *      and detect bit error. If it is using regular SP, it will sample res
-             *      correctly as dominant just before it changes to recessive.
+             *   2. Driven sequence is now delayed by d. We need to search TQs in driven frame,
+             *      which correspond to PH2 of res bit. These shall be forced to recessive. If IUT
+             *      is using SSP, it will sample later than regular SP and detect bit error. If it
+             *      is using regular SP, it will sample res correctly as dominant just before it
+             *      changes to recessive.
              *   3. Insert ACK to driven frame.
-             *****************************************************************************/
+             *************************************************************************************/
             int d = data_bit_timing.GetBitLengthCycles();
             if (elem_test.index == 3 || elem_test.index == 4)
                 d *= 2;
             driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
 
             /* Following way of forcing "original PH2 of res/R0 bit" is shitty preformance-wise!
-             * For each cycle of driven PH2 of R0, we search cycle which is "d" cycles back.
-             * First "MoveCyclesBack", finds TQ and bit, in which 'orig' cycle is (redundantly
-             * multiple times), then it iterates back through bit until it moved for d cycles.
+             * For each cycle of driven PH2 of R0, we search cycle which is "d" cycles back within
+             * whole frame. First "MoveCyclesBack", finds TQ and bit, in which 'orig' cycle is
+             * (redundantly multiple times), then it iterates back through bit until it moved
+             * for d cycles.
              * 
              * I am aware of the shittines of the solution, but I decided to live with it as
              * the penalty is just not so big!
@@ -156,9 +157,9 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /**************************************************************************************
              * Execute test
-             *****************************************************************************/
+             *************************************************************************************/
 
             /* Reconfigure SSP: Test 1, 3 -> Measured + Offset, Test 2, 4 -> Offset only */
             dut_ifc->Disable();

@@ -73,23 +73,66 @@ using namespace test_lib;
 class TestIso_8_8_1_4 : public test_lib::TestBase
 {
     public:
+        BitTiming test_nom_bit_timing;
+        BitTiming test_data_bit_timing;
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+
+            // Elementary test for each possible positon of sample point between: (2, NTQ-1)
+            // Note that this test verifies BRS bit, so we need to alternate also data bit timing!
+            // This will then affect overall bit-rate!
+            for (size_t i = 0; i < data_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
+
+            assert(data_bit_timing.brp_ > 2 &&
+                   "TQ(D) shall bigger than 2 for this test due to test architecture!");
         }
 
         DISABLE_UNUSED_ARGS
 
         int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
+            // Calculate new bit-rate from configured one. Modify PROP + PH2 of data bit rate.
+            // Modify only PH2 of nominal bit-rate. This should be sufficient for various sample
+            // point positions within CRC delimiter.
+            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
+            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
+            test_nom_bit_timing.ph1_ = 0;
+            test_nom_bit_timing.prop_ = nominal_bit_timing.prop_;
+            test_nom_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
+            
+            test_data_bit_timing.brp_ = data_bit_timing.brp_;
+            test_data_bit_timing.sjw_ = data_bit_timing.sjw_;
+            test_data_bit_timing.ph1_ = 0;
+            test_data_bit_timing.prop_ = elem_test.index;
+            test_data_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
+
+            /* Re-configure bit-timing for this test so that frames are generated with it! */
+            this->nominal_bit_timing = test_nom_bit_timing;
+            this->data_bit_timing = test_data_bit_timing;
+
+            // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
+            dut_ifc->Disable();
+            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, test_data_bit_timing);
+            dut_ifc->Enable();
+            TestMessage("Waiting till DUT is error active!");
+            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+                usleep(100000);
+
+            TestMessage("Nominal bit timing for this elementary test:");
+            test_nom_bit_timing.Print();
+            TestMessage("Data bit timing for this elementary test:");
+            test_data_bit_timing.Print();
+
+
             uint8_t data = 0x55;
             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
                                     RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
@@ -100,13 +143,13 @@ class TestIso_8_8_1_4 : public test_lib::TestBase
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            /******************************************************************************
+            /**************************************************************************************
              * Modify test frames:
              *   1. Insert ACK to driven frame.
              *   2. Force CRC Delimiter to Dominant.
-             *   3. Force last TQ of phase before PH2 to recessive. Force fircst BRP(DBT)
-             *      of PH2 to recessive.
-             *****************************************************************************/
+             *   3. Force last TQ of phase before PH2 to recessive. Force fircst BRP(DBT) of PH2
+             *      to recessive.
+             *************************************************************************************/
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
             Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
@@ -116,13 +159,6 @@ class TestIso_8_8_1_4 : public test_lib::TestBase
             auto it = crc_delim->GetLastTimeQuantaIterator(prev_phase);
             it->ForceValue(BitValue::Recessive);
 
-//          Test does not work due to input delay caused by resynchronization! This needs
-//          to be resolved!
-//          it--;
-//          it->ForceValue(BitValue::Recessive);
-//          it--;
-//          it->ForceValue(BitValue::Recessive);
-
             TimeQuanta *first_ph2_tq = crc_delim->GetTimeQuanta(BitPhase::Ph2, 0);
             for (size_t i = 0; i < data_bit_timing.brp_; i++)
                 first_ph2_tq->ForceCycleValue(i, BitValue::Recessive);
@@ -130,9 +166,9 @@ class TestIso_8_8_1_4 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /**************************************************************************************
              * Execute test
-             *****************************************************************************/
+             *************************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());

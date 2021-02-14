@@ -114,6 +114,9 @@ class TestIso_8_8_2_3 : public test_lib::TestBase
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
+
+            assert(data_bit_timing.brp_ > 2 &&
+                   "TQ(D) shall bigger than 2 for this test due to test architecture!");
         }
 
         DISABLE_UNUSED_ARGS
@@ -167,9 +170,9 @@ class TestIso_8_8_2_3 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /**************************************************************************************
              * Execute test
-             *****************************************************************************/
+             *************************************************************************************/
 
             /* Reconfigure SSP: Test 1, 3 -> Measured + Offset, Test 2, 4 -> Offset only */
             dut_ifc->Disable();

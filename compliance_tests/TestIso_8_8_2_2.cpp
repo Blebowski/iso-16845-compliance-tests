@@ -112,18 +112,17 @@ class TestIso_8_8_2_2 : public test_lib::TestBase
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
-            /******************************************************************************
+            /**************************************************************************************
              * Modify test frames:
              *   1. Delay received sequence by d data bit times:
              *          Elem test 1,2 : d = 1
              *          Elem test 3,4 : d = 2
              *      This is done by prolonging SOF of driven frame.
-             *   2. Force BRS in shifted frame to dominant for Sync + Prop + PH1 - d.
-             *      Note that d is measured in cycles, not time quantas, therefore we must
-             *      count cycle by cycle!
+             *   2. Force BRS in shifted frame to dominant for Sync + Prop + PH1 - d. Note that d
+             *      is measured in cycles, not time quantas, therefore we must count cycle by cycle!
              *   3. Insert Active Error frame to monitored and driven frames from ESI bit!
              *   4. Append retransmitted frame by IUT!
-             *****************************************************************************/
+             *************************************************************************************/
             int d = data_bit_timing.GetBitLengthCycles();
             if (elem_test.index == 3 || elem_test.index == 4)
                 d *= 2;
@@ -158,9 +157,9 @@ class TestIso_8_8_2_2 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /**************************************************************************************
              * Execute test
-             *****************************************************************************/
+             *************************************************************************************/
 
             /* Reconfigure SSP: Test 1, 3 -> Measured + Offset, Test 2, 4 -> Offset only */
             dut_ifc->Disable();
