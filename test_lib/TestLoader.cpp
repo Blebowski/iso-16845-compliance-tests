@@ -229,6 +229,7 @@
 #include "../compliance_tests/TestIso_8_8_5_2.cpp"
 
 #include "../compliance_tests/TestIso_9_6_1.cpp"
+#include "../compliance_tests/TestIso_9_6_2.cpp"
 
 
 /******************************************************************************
@@ -640,6 +641,8 @@ test_lib::TestBase* ConstructTestObject(std::string name)
 
     } else if (name == "iso_9_6_1") {
         test_ptr = new TestIso_9_6_1;
+    } else if (name == "iso_9_6_2") {
+        test_ptr = new TestIso_9_6_2;
 
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
