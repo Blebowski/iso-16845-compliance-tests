@@ -13,7 +13,7 @@
 add_library(
     SIMULATOR_INTERFACE_LIB SHARED
 
-    simulator_interface.c
+    ghdl_vpi_interface.c
 
     $<TARGET_OBJECTS:VPI_LIB>
     $<TARGET_OBJECTS:CAN_LIB>
