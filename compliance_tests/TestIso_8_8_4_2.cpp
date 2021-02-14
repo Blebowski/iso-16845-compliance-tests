@@ -83,6 +83,9 @@ class TestIso_8_8_4_2 : public test_lib::TestBase
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
+
+            assert(data_bit_timing.brp_ > 2 &&
+                   "TQ(D) shall bigger than 2 for this test due to test architecture!");
         }
 
         DISABLE_UNUSED_ARGS
@@ -123,7 +126,7 @@ class TestIso_8_8_4_2 : public test_lib::TestBase
 
             // Note: ISO here says that this bit should be forced from SYNC. But that is clearly
             //       an error, because then there would not be two recessive to dominant edges!
-            //       This should be reported to ISO!
+            //       This should be reported to ISO! It should be forces from first bit of 
             for (size_t i = 1; i < data_bit_timing.prop_ + data_bit_timing.ph1_; i++)
                 next_bit->ForceTimeQuanta(i, BitValue::Dominant);
 

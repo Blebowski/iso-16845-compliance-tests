@@ -89,6 +89,9 @@ class TestIso_8_8_3_1 : public test_lib::TestBase
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
+
+            assert(data_bit_timing.brp_ > 2 &&
+                   "TQ(D) shall bigger than 2 for this test due to test architecture!");
         }
 
         DISABLE_UNUSED_ARGS
