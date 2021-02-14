@@ -220,12 +220,15 @@
 #include "../compliance_tests/TestIso_8_8_2_1.cpp"
 #include "../compliance_tests/TestIso_8_8_2_2.cpp"
 #include "../compliance_tests/TestIso_8_8_2_3.cpp"
+#include "../compliance_tests/TestIso_8_8_2_4.cpp"
 #include "../compliance_tests/TestIso_8_8_3_1.cpp"
 #include "../compliance_tests/TestIso_8_8_3_2.cpp"
 #include "../compliance_tests/TestIso_8_8_4_1.cpp"
 #include "../compliance_tests/TestIso_8_8_4_2.cpp"
 #include "../compliance_tests/TestIso_8_8_5_1.cpp"
 #include "../compliance_tests/TestIso_8_8_5_2.cpp"
+
+#include "../compliance_tests/TestIso_9_6_1.cpp"
 
 
 /******************************************************************************
@@ -620,6 +623,8 @@ test_lib::TestBase* ConstructTestObject(std::string name)
         test_ptr = new TestIso_8_8_2_2;
     } else if (name == "iso_8_8_2_3") {
         test_ptr = new TestIso_8_8_2_3;
+    } else if (name == "iso_8_8_2_4") {
+        test_ptr = new TestIso_8_8_2_4;
     } else if (name == "iso_8_8_3_1") {
         test_ptr = new TestIso_8_8_3_1;
     } else if (name == "iso_8_8_3_2") {
@@ -632,6 +637,9 @@ test_lib::TestBase* ConstructTestObject(std::string name)
         test_ptr = new TestIso_8_8_5_1;
     } else if (name == "iso_8_8_5_2") {
         test_ptr = new TestIso_8_8_5_2;
+
+    } else if (name == "iso_9_6_1") {
+        test_ptr = new TestIso_9_6_1;
 
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;

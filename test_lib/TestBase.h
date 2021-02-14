@@ -150,11 +150,13 @@ class test_lib::TestBase
         std::unique_ptr<can::BitFrame> driver_bit_frm;
         std::unique_ptr<can::BitFrame> driver_bit_frm_2;
         std::unique_ptr<can::BitFrame> driver_bit_frm_3;
+        std::unique_ptr<can::BitFrame> driver_bit_frm_4;
 
         /* Bit Frame used by monitor (in most of the tests on is used) */
         std::unique_ptr<can::BitFrame> monitor_bit_frm;
         std::unique_ptr<can::BitFrame> monitor_bit_frm_2;
         std::unique_ptr<can::BitFrame> monitor_bit_frm_3;
+        std::unique_ptr<can::BitFrame> monitor_bit_frm_4;
 
         /* REC / TEC counters */
         int rec_old;
