@@ -157,9 +157,9 @@ class TestIso_7_1_6 : public test_lib::TestBase
             }
             RandomizeAndPrint(golden_frm.get());
 
-            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::Can2_0);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::CanFd);
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
+            RandomizeAndPrint(golden_frm_2.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
@@ -202,6 +202,7 @@ class TestIso_7_1_6 : public test_lib::TestBase
              *************************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
+
             CheckLowerTesterResult();
             CheckRxFrame(*golden_frm_2);
 
