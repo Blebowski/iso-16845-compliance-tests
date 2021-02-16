@@ -109,8 +109,12 @@ class TestIso_8_8_1_2 : public test_lib::TestBase
             test_data_bit_timing.brp_ = data_bit_timing.brp_;
             test_data_bit_timing.sjw_ = data_bit_timing.sjw_;
             test_data_bit_timing.ph1_ = 0;
-            test_data_bit_timing.prop_ = elem_test.index;
-            test_data_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
+            
+            // If we have BRP_FD = 1, then with index 1, TSEG1 is only 2 which is not enough, and it
+            // is below minimal possible bit-rate for Data bit time! Therefore we demand +1 for PROP,
+            // therefore having TSEG1 min in DBT = 3 TQ!
+            test_data_bit_timing.prop_ = elem_test.index + 1;
+            test_data_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index;
 
             /* Re-configure bit-timing for this test so that frames are generated with it! */
             this->nominal_bit_timing = test_nom_bit_timing;
