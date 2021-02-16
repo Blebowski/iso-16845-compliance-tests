@@ -113,12 +113,12 @@ class TestIso_7_7_6 : public test_lib::TestBase
              *      be at exact position as DUT should transmit it! Insert Passive Error frame to
              *      driver so that it sends all recessive values!
              *************************************************************************************/
-            monitor_bit_frame->TurnReceivedFrame();
+            monitor_bit_frm->TurnReceivedFrame();
 
             driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
                 ->ShortenPhase(BitPhase::Ph2, elem_test.e);
             monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+                ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
 
             Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
             stuff_bit->bit_value_ = BitValue::Recessive;
