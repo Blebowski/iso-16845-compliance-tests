@@ -125,7 +125,8 @@ class TestIso_8_1_8 : public test_lib::TestBase
              *      second frame as if received.
              *   4. Remove SOF from 2nd monitored frame.
              *************************************************************************************/
-            monitor_bit_frm->LooseArbitration(10, BitType::BaseIdentifier);
+            Bit *last_id_bit = monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier);
+            monitor_bit_frm->LooseArbitration(last_id_bit);
 
             driver_bit_frm->GetBitOf(2, BitType::Intermission)->bit_value_ = BitValue::Dominant;
             
