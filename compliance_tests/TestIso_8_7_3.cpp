@@ -83,8 +83,8 @@ class TestIso_8_7_3 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::Common);
             // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 1, shortest possible PH2 = 1. Together we test TQ(N) - 2 tests!
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
+            // possible PROP = 1, shortest possible PH2 = 1. Together we test TQ(N) - 3 tests!
+            for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 3; i++)
                 AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
@@ -158,10 +158,10 @@ class TestIso_8_7_3 : public test_lib::TestBase
             last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_ - 1);
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_ - 1);
             
-            last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)->Shorten(nominal_bit_timing.brp_ - 1);
-            last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)->Shorten(nominal_bit_timing.brp_ - 1);
-            last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)->Lengthen(1);
-            last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)->Lengthen(1);
+            // IPT of CTU CAN FD is 2
+            // TODO: Generalize IPT as parameter !!
+            last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)->Shorten(nominal_bit_timing.brp_ - 2);
+            last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)->Shorten(nominal_bit_timing.brp_ - 2);
 
             /* This trick needs to be done to check that IUT transmits the first TQ recessive.
              * During this TQ, LT still sends the hard sync edge. This corresponds to
