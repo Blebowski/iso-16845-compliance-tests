@@ -87,8 +87,6 @@ class TestIso_8_5_1 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
-
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
@@ -101,15 +99,19 @@ class TestIso_8_5_1 : public test_lib::TestBase
         {
             uint8_t data_byte = 0x80;
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            // Since there is one frame received in between, IUT will resynchronize and
+            // mismatches in data bit rate can occur. Dont shift bit-rate due to this
+            // reason.
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
-
-            frame_flags_2 = std::make_unique<FrameFlags>();
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags);
+        
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm_2.get());
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
@@ -134,10 +136,8 @@ class TestIso_8_5_1 : public test_lib::TestBase
 
             driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-            monitor_bit_frm->InsertPassiveErrorFrame(
-                monitor_bit_frm->GetBitOf(7, BitType::Data));
-            driver_bit_frm->InsertPassiveErrorFrame(
-                driver_bit_frm->GetBitOf(7, BitType::Data));
+            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
             int bit_to_corrupt;
             if (elem_test.index == 1)
@@ -169,6 +169,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
             /***************************************************************************** 
              * Execute test
              *****************************************************************************/
+            dut_ifc->SetTec(160);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());
