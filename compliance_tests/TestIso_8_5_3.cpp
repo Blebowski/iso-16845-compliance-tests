@@ -97,14 +97,18 @@ class TestIso_8_5_3 : public test_lib::TestBase
         int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+
+            // Since there is one frame received in between first and third frame, 
+            // IUT will resynchronize and mismatches in data bit rate can occur. Dont shift
+            // bit-rate due to this reason. Alternative is to demand BRP=BRP_FD
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            frame_flags_2 = std::make_unique<FrameFlags>();
             golden_frm_2 = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm_2.get());
 
