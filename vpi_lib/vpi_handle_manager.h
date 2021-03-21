@@ -47,3 +47,9 @@ struct hlist_node {
  * @returns Pointer to handle entry in list of handles.
  */
 struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name);
+
+/**
+ * @brief Should be called at the end of simulation to perform cleanup
+ *        (free cached handles)
+ */
+void hman_cleanup();

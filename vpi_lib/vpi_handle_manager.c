@@ -66,7 +66,7 @@ vpiHandle hman_get_ctu_vip_handle()
     /* Search upon first request and cache the handle */
     if (ctu_vip_handle == NULL)
     {
-        fprintf(stderr, "%s Searching for CTU CAN FD VIP module: %s\n", VPI_TAG, CTU_VIP_HIERARCHICAL_PATH);
+        vpi_printf("%s Searching for CTU CAN FD VIP module: %s\n", VPI_TAG, CTU_VIP_HIERARCHICAL_PATH);
         char *top_name = strtok(ctu_vip_path, "/");
 
         /* Finds the handle and assigns to "ctu_vip_handle" */
@@ -76,7 +76,7 @@ vpiHandle hman_get_ctu_vip_handle()
         vpi_free_object(top_mod_it);
     }
 
-    fprintf(stderr, "Found CTU CAN FD VIP is: %s\n", vpi_get_str(vpiFullName, ctu_vip_handle));
+    vpi_printf("Found CTU CAN FD VIP is: %s\n", vpi_get_str(vpiFullName, ctu_vip_handle));
     return ctu_vip_handle;
 }
 
@@ -185,10 +185,26 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
     if (list_entry == NULL)
     {
         vpiHandle new_signal_handle = hman_create_ctu_vip_handle(signal_name);
-        fprintf(stderr, "%s Caching signal handle of: %s\n", VPI_TAG,
+        vpi_printf("%s Caching signal handle of: %s\n", VPI_TAG,
                     vpi_get_str(vpiFullName, new_signal_handle));
         list_entry = hman_add_handle_to_list(new_signal_handle, signal_name);
     }
 
     return list_entry;
+}
+
+
+void hman_cleanup()
+{
+    vpi_printf("%s Handle manager cleanup\n", VPI_TAG);
+
+    struct hlist_node *current = list_head;
+    struct hlist_node *next;
+
+    while (current)
+    {
+        next = current->next;
+        free(current);
+        current = next;
+    }
 }

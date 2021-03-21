@@ -162,6 +162,7 @@ int register_start_of_sim_cb()
     return 0;
 }
 
+
 /**
  * Registers VPI clock callback.
  */
@@ -196,8 +197,8 @@ int register_vpi_clk_cb()
 /**
  * Callback upon start of simulation.
  */
-void vpi_start_of_sim(){
-
+void vpi_start_of_sim()
+{
     vpi_printf("%s Simulation start callback\n", VPI_TAG);
 
     vpi_printf("%s Registring callback for control to SW\n", VPI_TAG);
@@ -211,6 +212,15 @@ void vpi_start_of_sim(){
     vpi_printf("%s Done\n", VPI_TAG);
 
     return;
+}
+
+/**
+ * Callback upon end of simulation
+ */
+void vpi_end_of_sim()
+{
+    vpi_printf("%s End of simulation callback SW\n", VPI_TAG);
+    hman_cleanup();
 }
 
 
@@ -228,8 +238,21 @@ void handle_register()
     cb_start.user_data = NULL;
     if (vpi_register_cb (&cb_start) == NULL)
     {
-        vpi_printf ("%s Cannot register cbStartOfSimulation call back\n", VPI_TAG);
-        fprintf(stderr, "%s Cannot register cbStartOfSimulation call back\n", VPI_TAG);
+        vpi_printf ("%s Cannot register cbStartOfSimulation callback\n", VPI_TAG);
+        fprintf(stderr, "%s Cannot register cbStartOfSimulation callback\n", VPI_TAG);
+        return;
+    }
+    vpi_printf("%s Done\n", VPI_TAG);
+
+    /* End of simulation hook */
+    vpi_printf("%s Registering end of simulation callback...\n", VPI_TAG);
+    cb_start.reason = cbEndOfSimulation;
+    cb_start.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&vpi_end_of_sim);
+    cb_start.user_data = NULL;
+    if (vpi_register_cb (&cb_start) == NULL)
+    {
+        vpi_printf ("%s Cannot register cbEndOfSimulation callback\n", VPI_TAG);
+        fprintf(stderr, "%s Cannot register cbEndOfSimulation callback\n", VPI_TAG);
         return;
     }
     vpi_printf("%s Done\n", VPI_TAG);
