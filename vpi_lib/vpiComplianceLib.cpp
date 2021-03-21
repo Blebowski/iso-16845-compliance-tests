@@ -367,20 +367,6 @@ void MemBusAgentSetXModeHold(std::chrono::nanoseconds hold)
 }
 
 
-void MemBusAgentSetPeriod(std::chrono::nanoseconds period)
-{
-    unsigned long long timeVal = period.count() * 1000000;
-
-    simulator_channel.read_access = false;
-    simulator_channel.use_msg_data = false;
-    simulator_channel.vpi_dest = std::string(VPI_DEST_MEM_BUS_AGENT);
-    simulator_channel.vpi_cmd = std::string(VPI_MEM_BUS_AGNT_SET_PERIOD);
-    simulator_channel.vpi_data_in = std::bitset<VPI_DBUF_SIZE>(timeVal).to_string();
-    
-    SimulatorChannelProcessRequest();
-}
-
-
 void MemBusAgentSetOutputDelay(std::chrono::nanoseconds delay)
 {
     unsigned long long timeVal = delay.count() * 1000000;
