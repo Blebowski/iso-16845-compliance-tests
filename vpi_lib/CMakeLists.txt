@@ -26,4 +26,4 @@ add_library(
     vpiComplianceLib.cpp
 )
 
-add_compile_options(VPI_LIB -fPIC -Wall -O0 -g -I -c -shared)
+add_compile_options(VPI_LIB -shared)

@@ -33,5 +33,3 @@ add_library(
     TestBase.cpp
     ElementaryTest.cpp
 )
-
-add_compile_options(TEST_LIB -g -fPIC -Wall -O0)

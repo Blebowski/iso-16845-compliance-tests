@@ -49,5 +49,4 @@ add_library(
 
 )
 
-add_compile_options(CAN_LIB -g -fPIC -Wall -O0)
 target_compile_definitions(CAN_LIB PUBLIC -D__LITTLE_ENDIAN_BITFIELD)
