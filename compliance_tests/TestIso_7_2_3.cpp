@@ -110,7 +110,7 @@ class TestIso_7_2_3 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::ClassicalFdCommon);
             for (const auto &test_variant : test_variants)
             {
-                int num_elem_tests;
+                int num_elem_tests = 0;
                 if (test_variant == TestVariant::Can_2_0 ||
                     test_variant == TestVariant::CanFdTolerant)
                     num_elem_tests = 8;

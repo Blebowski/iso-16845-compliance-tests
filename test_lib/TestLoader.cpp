@@ -646,6 +646,7 @@ test_lib::TestBase* ConstructTestObject(std::string name)
 
     } else {
         std::cerr << "Unknown test name: " << name << std::endl;
+        return nullptr;
     }
 
     test_ptr->test_name = name;
