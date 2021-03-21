@@ -22,26 +22,25 @@
 #define VPI_TAG "\033[1;33mVPI: \033[0m"
 
 // Testbench control interface
-#define VPI_SIGNAL_CLOCK "vpi_clk"
-#define VPI_SIGNAL_CONTROL_REQ "vpi_control_req"
-#define VPI_SIGNAL_CONTROL_GNT "vpi_control_gnt"
-#define VPI_SIGNAL_ALLOW_TIME_FLOW "vpi_allow_time_flow"
-#define VPI_SIGNAL_TEST_END "vpi_test_end"
-#define VPI_SIGNAL_TEST_RESULT "vpi_test_result"
+#define VPI_SIGNAL_CLOCK "pli_clk"
+#define VPI_SIGNAL_CONTROL_REQ "pli_control_req"
+#define VPI_SIGNAL_CONTROL_GNT "pli_control_gnt"
+#define VPI_SIGNAL_TEST_END "pli_test_end"
+#define VPI_SIGNAL_TEST_RESULT "pli_test_result"
 
-#define VPI_SIGNAL_TEST_NAME_LENGHT "vpi_test_name_lenght"
-#define VPI_SIGNAL_TEST_NAME_ARRAY "vpi_test_name_array"
+#define VPI_SIGNAL_TEST_NAME_LENGHT "pli_test_name_lenght"
+#define VPI_SIGNAL_TEST_NAME_ARRAY "pli_test_name_array"
 
 // Communication interface
-#define VPI_SIGNAL_REQ "vpi_req"
-#define VPI_SIGNAL_ACK "vpi_ack"
-#define VPI_SIGNAL_CMD "vpi_cmd"
-#define VPI_SIGNAL_DEST "vpi_dest"
-#define VPI_SIGNAL_DATA_IN "vpi_data_in"
-#define VPI_SIGNAL_DATA_IN_2 "vpi_data_in_2"
-#define VPI_SIGNAL_DATA_OUT "vpi_data_out"
+#define VPI_SIGNAL_REQ "pli_req"
+#define VPI_SIGNAL_ACK "pli_ack"
+#define VPI_SIGNAL_CMD "pli_cmd"
+#define VPI_SIGNAL_DEST "pli_dest"
+#define VPI_SIGNAL_DATA_IN "pli_data_in"
+#define VPI_SIGNAL_DATA_IN_2 "pli_data_in_2"
+#define VPI_SIGNAL_DATA_OUT "pli_data_out"
 
-#define VPI_STR_BUF_IN "vpi_str_buf_in"
+#define VPI_STR_BUF_IN "pli_str_buf_in"
 #define VPI_STR_BUF_SIZE 64  // Each character is 8 bit vector
 
 // Size of vpi_data_in and vpi_data out vectors
@@ -49,8 +48,7 @@
 
 
 /**
- * @brief Drive value to top level net in Simulator. Signal shall be logic or
- *        logic vector.
+ * @brief Drive value to net in Simulator. Signal shall be logic or logic vector.
  * 
  * @param signalName Name of the signal/net to be driven.
  * @param value Value to be driven to the signal. String shall have format:
@@ -64,8 +62,7 @@ int vpi_drive_str_value(const char *signal_name, const char *value);
 
 
 /**
- * @brief Read value from top level net in Simulator. Signal shall be logic or
- *        logic vector.
+ * @brief Read value from net in Simulator. Signal shall be logic or logic vector.
  * 
  * @param signalName Name of the signal/net to read value from.
  * @param value Value read from the signal.

@@ -8,6 +8,40 @@
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
  * 
+ * @brief VPI interface for GHDL.
+ * 
+ * @details Simulator <-> Library communication is done like so:
+ *      - GHDL calls "handle_register" because it detects library to be linked
+ *        to VPI.
+ *      - "handle_register" registers "vpi_start_of_sim", which is called by
+ *         GHDL at simulation start (after all analysis and elaboration).
+ *      - Simulation starts and GHDL calls "vpi_start_of_sim" at time 0.
+ *        This function registers:
+ *          - PLI clock callback for synchronous communication between simulator
+ *            and compliance library contexts (register_vpi_clk_cb)
+ *          - Callback for transfering control over TB to compliance library
+ *            (register_start_of_sim_cb, signal pli_control_req)
+ *      - Simulation starts running and HDL side sets "pli_control_req", causing
+ *         "sw_control_req_callback" to be called. This callback obtains test name
+ *        to be by compliance test library (set by HDL on "pli_test_name" signal).
+ *        It calls "RunCppTest" function which forks of test-thread and returns,
+ *        letting simulator proceed further with simulation.
+ * 
+ *      Since this moment on, two contexts live:
+ *          - Simulator context (in which simulator runs)
+ *          - Test context (in which compliance test lib runs)
+ * 
+ *      These two communicate over shared memory interface. Test context controls
+ *      the simulation (Agents and DUT) and when it is done running the test, it
+ *      signals this back to simulator context ("pli_test_end" signal).
+ *      Simulator then ends the simulation.
+ * 
+ *      Each request from Test context to simulator is put to shared memory
+ *      interface and it is picked up by Simulator context due to callbacks on
+ *      "pli_clk" signal. Passing requests guarantees data consistency by
+ *      using memory barriers (SW side) and hand-shake like operation (TB side)
+ *      of this protocol.
+ * 
  *****************************************************************************/
 
 #include <stdio.h>
@@ -23,7 +57,7 @@
 char test_name[128];
 
 /**
- * Function imported from C++
+ * Functions imported from C++
  */
 void RunCppTest(char* test_name);
 void ProcessVpiClkCallback();
@@ -91,12 +125,8 @@ void vpi_clk_callback()
  */
 int register_start_of_sim_cb()
 {
-    fprintf(stderr, "%s A\n", VPI_TAG);
-    struct hlist_node* node = get_top_net_handle(VPI_SIGNAL_CONTROL_REQ);
-    fprintf(stderr, "Handle: %d \n", node->handle);
-    fprintf(stderr, "Size: %d \n", node->signal_size);
-    fprintf(stderr, "Name: %s \n", node->signal_name);
-    fprintf(stderr, "%s B\n", VPI_TAG);
+    fprintf(stderr, "%s Registering callback for control request...\n", VPI_TAG);
+    struct hlist_node* node = hman_get_ctu_vip_net_handle(VPI_SIGNAL_CONTROL_REQ);
 
     if (node == NULL)
     {
@@ -105,23 +135,18 @@ int register_start_of_sim_cb()
         return -1;
     }
 
-    /* 
-     * This function should be called only once, it should not matter we make
-     * the callback declarations static here!
-     * TODO: Why is it static?
-     */
-    static s_vpi_time time_struct = {
+    s_vpi_time time_struct = {
         .type = vpiSimTime,
         .high = 0,
         .low = 0,
         .real = 0.0
     };
-    static s_vpi_value value_struct = {
+    s_vpi_value value_struct = {
         .format = vpiBinStrVal
     };
-    static s_cb_data cb_data_struct;
+    s_cb_data cb_data_struct;
 
-    // Register hook for function which gives away control of TB to SW!
+    /* Register hook for function which gives away control of TB to SW! */
     cb_data_struct.reason = cbValueChange;
     cb_data_struct.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&sw_control_req_callback);
     cb_data_struct.time = &time_struct;
@@ -142,7 +167,7 @@ int register_start_of_sim_cb()
  */
 int register_vpi_clk_cb()
 {
-    struct hlist_node *node = get_top_net_handle(VPI_SIGNAL_CLOCK);
+    struct hlist_node *node = hman_get_ctu_vip_net_handle(VPI_SIGNAL_CLOCK);
 
     if (node == NULL)
     {
@@ -196,7 +221,7 @@ void handle_register()
 {
     s_cb_data cb_start;
   
-    // Start of simulation hook
+    /* Start of simulation hook */
     vpi_printf("%s Registering start of simulation callback...\n", VPI_TAG);
     cb_start.reason = cbStartOfSimulation;
     cb_start.cb_rtn = (PLI_INT32 (*)(struct t_cb_data*cb))(&vpi_start_of_sim);

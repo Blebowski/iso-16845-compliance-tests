@@ -27,3 +27,5 @@ add_library(
 )
 
 add_compile_options(VPI_LIB -shared)
+target_compile_definitions(VPI_LIB PUBLIC -DCTU_VIP_HIERARCHICAL_PATH=\"${CTU_VIP_HIERARCHICAL_PATH}\")
+

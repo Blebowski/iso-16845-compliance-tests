@@ -22,7 +22,7 @@
 
 int vpi_drive_str_value(const char *signal_name, const char *value)
 {
-    struct hlist_node* node = get_top_net_handle(signal_name);
+    struct hlist_node* node = hman_get_ctu_vip_net_handle(signal_name);
 
     if (node == NULL)
         return -1;
@@ -47,7 +47,7 @@ int vpi_drive_str_value(const char *signal_name, const char *value)
 
 int vpi_read_str_value(const char *signal_name, char *ret_value)
 {
-    struct hlist_node* node = get_top_net_handle(signal_name);
+    struct hlist_node* node = hman_get_ctu_vip_net_handle(signal_name);
 
     if (node == NULL)
         return -1;
