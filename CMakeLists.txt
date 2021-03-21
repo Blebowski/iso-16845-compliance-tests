@@ -23,19 +23,17 @@ SET (CTU_VIP_HIERARCHICAL_PATH "tb_top_ctu_can_fd/ctu_can_fd_vip_inst")
 MESSAGE("Build type: " CMAKE_BUILD_TYPE)
 add_compile_options(-fPIC -Wall -Wextra -Wpedantic -I -c)
 
-
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g -O0)
+    add_definitions("-DDEBUG_BUILD")
 ELSEIF (CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_options(-O3)
 ENDIF()
-
 
 FIND_PROGRAM(CPP_CHECK "cppcheck")
 IF (CPP_CHECK)
     set(CMAKE_CXX_CPPCHECK "cppcheck")
 ENDIF()
-
 
 # Libraries
 add_subdirectory(can_lib)
