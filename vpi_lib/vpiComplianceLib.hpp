@@ -433,20 +433,6 @@ void memBusAgentSetXModeSetup(std::chrono::nanoseconds setup);
  */
 void MemBusAgentSetXModeHold(std::chrono::nanoseconds hold);
 
-
-/**
- * @ingroup memBusAgent
- * 
- * @brief Set Memory Bus agent period.
- * @param period Memory Bus Agent period.
- * 
- * Memory Bus agent period must be set to the same value as period of clock
- * on input clock of Memory Bus agent! This is required to properly calculate
- * setup and hold constraints by Memory bus agent.
- */
-void MemBusAgentSetPeriod(std::chrono::nanoseconds period);
-
-
 /**
  * @ingroup memBusAgent
  * 

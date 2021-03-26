@@ -100,7 +100,6 @@ void test_lib::TestBase::ConfigureTest()
 
     TestMessage("Configuring Memory bus agent");
     MemBusAgentXModeStart();
-    MemBusAgentSetPeriod(std::chrono::nanoseconds(this->dut_clock_period));
     memBusAgentSetXModeSetup(std::chrono::nanoseconds(2));
     MemBusAgentSetXModeHold(std::chrono::nanoseconds(2));
     MemBusAgentSetOutputDelay(std::chrono::nanoseconds(4));
