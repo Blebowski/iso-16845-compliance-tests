@@ -74,9 +74,8 @@ class TestIso_7_7_1 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
 
@@ -138,5 +137,4 @@ class TestIso_7_7_1 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

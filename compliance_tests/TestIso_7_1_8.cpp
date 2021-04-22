@@ -82,9 +82,8 @@ class TestIso_7_1_8 : public test_lib::TestBase
                  AddElemTest(TestVariant::Common, ElementaryTest(i + 1));
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1]);
@@ -112,5 +111,4 @@ class TestIso_7_1_8 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

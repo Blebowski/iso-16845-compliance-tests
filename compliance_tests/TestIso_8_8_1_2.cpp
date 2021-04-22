@@ -93,9 +93,8 @@ class TestIso_8_8_1_2 : public test_lib::TestBase
                    "TQ(N) shall bigger than 2 for this test due to test architecture!");
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             // Calculate new bit-rate from configured one. Modify PROP and PH2 of Nominal bit-rate
             // Modify only PH2 of data bit-rate! This will keep the same nominal bit-rate but
@@ -168,5 +167,4 @@ class TestIso_8_8_1_2 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

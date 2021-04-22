@@ -92,9 +92,8 @@ class TestIso_8_7_3 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             // Calculate new bit-rate from configured one. Have same bit-rate, but
             // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
@@ -191,5 +190,4 @@ class TestIso_8_7_3 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

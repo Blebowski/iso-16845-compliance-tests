@@ -105,9 +105,8 @@ class TestIso_8_6_6 : public test_lib::TestBase
             CanAgentSetWaitForMonitor(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Repeat randomization if first data byte or if ID is zero! This should satisfy that
              * search for random bit will find a bit of desired value!
@@ -226,5 +225,4 @@ class TestIso_8_6_6 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

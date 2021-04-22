@@ -92,9 +92,8 @@ class TestIso_8_2_8 : public test_lib::TestBase
             one_shot_enabled = dut_ifc->ConfigureOneShot(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data[64] = {};
             uint8_t data_first;
@@ -205,5 +204,4 @@ class TestIso_8_2_8 : public test_lib::TestBase
             return FinishElementaryTest();
         }
     
-        ENABLE_UNUSED_ARGS
 };

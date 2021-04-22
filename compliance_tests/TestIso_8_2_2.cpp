@@ -101,9 +101,8 @@ class TestIso_8_2_2 : public test_lib::TestBase
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Choose frame field per elementary test */
             BitField bit_field_to_corrupt;
@@ -308,5 +307,4 @@ class TestIso_8_2_2 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

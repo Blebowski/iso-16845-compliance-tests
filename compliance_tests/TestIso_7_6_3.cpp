@@ -76,9 +76,8 @@ class TestIso_7_6_3 : public test_lib::TestBase
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
                             RtrFlag::DataFrame);
@@ -137,5 +136,4 @@ class TestIso_7_6_3 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };
