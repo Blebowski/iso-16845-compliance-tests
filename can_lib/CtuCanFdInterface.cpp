@@ -408,6 +408,9 @@ void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
     case FaultConfinementState::BusOff:
         ctr_pres.s.ctpv = 260;
         break;
+
+    default:
+        break; 
     }
 
     MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
@@ -421,18 +424,16 @@ can::FaultConfinementState can::CtuCanFdInterface::GetErrorState()
 
     printf("READ FAULT VALUE: 0x%x\n", data.u32);
     // HW should signal always only one state!
-    //uint8_t stateBits = data.u32 & 0x7;
-    //assert(stateBits == 1 || stateBits == 2 || stateBits == 4);
 
     if (data.s.bof == 1)
         return FaultConfinementState::BusOff;
     if (data.s.era == 1)
         return FaultConfinementState::ErrorActive;
     if (data.s.erp == 1)
-        return FaultConfinementState::BusOff;
+        return FaultConfinementState::ErrorPassive;
 
-    // We should never get here!
-    assert(false && "Code execution should NOT get here!");
+    // If we get here, something is wrong with HW!
+    return FaultConfinementState::Invalid;
 }
 
 
