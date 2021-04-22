@@ -146,8 +146,8 @@ class TestIso_7_6_9 : public test_lib::TestBase
          */
         int GenerateFrame(TestVariant test_variant, ElementaryTest elem_test)
         {
-            BitType field;
-            BitValue value;
+            BitType field = BitType::Sof;
+            BitValue value = BitValue::Dominant;
 
             if (test_variant == TestVariant::Common)
             {

@@ -118,7 +118,7 @@ class TestIso_8_5_4 : public test_lib::TestBase
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
 
-            int num_suspend_bits;
+            int num_suspend_bits = 0;
             switch (elem_test.index)
             {
                 case 1:

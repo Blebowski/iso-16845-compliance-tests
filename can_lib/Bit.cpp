@@ -261,7 +261,7 @@ can::TimeQuanta* can::Bit::GetTimeQuanta(size_t index)
 
 can::TimeQuanta* can::Bit::GetTimeQuanta(BitPhase bit_phase, size_t index)
 {
-    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
+    [[maybe_unused]] size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
 
     assert(phase_len > 0 && "Bit phase does not exist");
     assert(index < phase_len && "Bit does not have so many time quantas");

@@ -135,7 +135,7 @@ class TestIso_8_3_3 : public test_lib::TestBase
                 bit_index_to_flip = 1;
             else if (elem_test.index == 2)
                 bit_index_to_flip = 4;
-            else if (elem_test.index == 3)
+            else
                 bit_index_to_flip = 6;
 
             Bit *bit_to_flip = driver_bit_frm->GetBitOf(bit_index_to_flip - 1,

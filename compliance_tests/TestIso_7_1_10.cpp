@@ -209,7 +209,10 @@ class TestIso_7_1_10 : public test_lib::TestBase
                     dlc = 0xF;
                     frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
                                             IdentifierType::Base, RtrFlag::RtrFrame);
+                    break;
+
                 default:
+                    TestMessage("Invalid Elementary test index: %d", elem_test.index);
                     break;
                 }
 

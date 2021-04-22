@@ -106,8 +106,8 @@ class TestIso_8_2_1 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Choose frame field per elementary test */
-            BitField bit_field_to_corrupt;
-            BitValue bit_value_to_corrupt;
+            BitField bit_field_to_corrupt = BitField::Sof;
+            BitValue bit_value_to_corrupt = BitValue::Dominant;
             switch (elem_test.index)
             {
             case 1:

@@ -148,7 +148,7 @@ class TestIso_8_6_6 : public test_lib::TestBase
              *   3. Append the same frame again with ACK on driven frame. This emulates retransmi-
              *      tted frame by IUT.
              *************************************************************************************/
-            BitType bit_type_to_corrupt;
+            BitType bit_type_to_corrupt = BitType::Sof;
             BitValue value_to_corrupt = BitValue::Dominant;
             switch (elem_test.index)
             {

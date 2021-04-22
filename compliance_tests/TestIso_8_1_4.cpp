@@ -196,6 +196,10 @@ class TestIso_8_1_4 : public test_lib::TestBase
             /* Elementary test 31 - loose on IDE */
             } else if (elem_test.index == 31){
                 loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
+            
+            } else {
+                loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
+                TestMessage("Invalid Elementary test index: %d", elem_test.index);
             }
 
             loosing_bit->bit_value_ = BitValue::Recessive;

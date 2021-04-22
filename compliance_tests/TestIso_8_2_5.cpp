@@ -193,6 +193,9 @@ class TestIso_8_2_5 : public test_lib::TestBase
             case 18:
                 bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 12);
                 break;
+            default:
+                TestMessage("Invalid Elementary test index: %d", elem_test.index);
+                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 12);
             }
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);

@@ -133,7 +133,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
             driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
-            int bits_to_insert;
+            int bits_to_insert = 0;
             switch (elem_test.index)
             {
                 case 1:
