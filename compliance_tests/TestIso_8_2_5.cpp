@@ -103,9 +103,8 @@ class TestIso_8_2_5 : public test_lib::TestBase
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Choose DLC based on elementary test */
             uint8_t dlc;
@@ -194,6 +193,9 @@ class TestIso_8_2_5 : public test_lib::TestBase
             case 18:
                 bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 12);
                 break;
+            default:
+                TestMessage("Invalid Elementary test index: %d", elem_test.index);
+                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 12);
             }
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
@@ -223,5 +225,4 @@ class TestIso_8_2_5 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

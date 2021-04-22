@@ -88,9 +88,8 @@ class TestIso_8_3_4 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80; // 7-th data bit will be recessive stuff bit
 
@@ -131,7 +130,7 @@ class TestIso_8_3_4 : public test_lib::TestBase
                 bit_index_to_flip = 2;
             else if (elem_test.index == 2)
                 bit_index_to_flip = 4;
-            else if (elem_test.index == 3)
+            else
                 bit_index_to_flip = 7;
 
             Bit *bitToFlip = driver_bit_frm->GetBitOf(bit_index_to_flip - 1,
@@ -161,5 +160,4 @@ class TestIso_8_3_4 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

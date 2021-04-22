@@ -136,7 +136,8 @@ namespace can {
     {
         ErrorActive,
         ErrorPassive,
-        BusOff
+        BusOff,
+        Invalid
     };
 
     enum class SspType {

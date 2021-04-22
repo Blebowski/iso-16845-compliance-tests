@@ -117,12 +117,11 @@ class TestIso_7_2_2 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
-            int id;
-            uint8_t dlc;
+            int id = 0;
+            uint8_t dlc = 0;
             uint8_t data[64] = {};
 
             /* Variants differ only in value of reserved bit! CAN 2.0 shall accept FDF recessive
@@ -414,5 +413,4 @@ class TestIso_7_2_2 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

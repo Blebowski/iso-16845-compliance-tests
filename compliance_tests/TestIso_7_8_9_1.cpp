@@ -83,9 +83,8 @@ class TestIso_7_8_9_1 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             // Here we have to set Bit rate dont shift because we intend to get BRS dominant,
             // so bit rate should not be shifted!
@@ -132,5 +131,4 @@ class TestIso_7_8_9_1 : public test_lib::TestBase
 
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

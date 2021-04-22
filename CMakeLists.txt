@@ -14,6 +14,9 @@ cmake_minimum_required(VERSION 3.5)
 
 project(ISO16845_COMPLIANCE_TESTS)
 
+SET (CMAKE_CXX_STANDARD 17)
+SET (CMAKE_CXX_STANDARD_REQUIRED ON)
+
 ###############################################################################
 # Configure hierarchical path of CTU CAN FD VIP instantiated in HDL simulation.
 # Use '/' as hierarchy delimiter.
@@ -43,7 +46,5 @@ add_subdirectory(compliance_tests)
 
 add_subdirectory(simulator_interface)
 
-# Example executable
-add_executable(test apps/test.cpp)
 
 set (EXECUTABLE_OUTPUT_PATH bin)

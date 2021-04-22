@@ -146,8 +146,8 @@ class TestIso_7_6_9 : public test_lib::TestBase
          */
         int GenerateFrame(TestVariant test_variant, ElementaryTest elem_test)
         {
-            BitType field;
-            BitValue value;
+            BitType field = BitType::Sof;
+            BitValue value = BitValue::Dominant;
 
             if (test_variant == TestVariant::Common)
             {
@@ -268,9 +268,8 @@ class TestIso_7_6_9 : public test_lib::TestBase
                         driver_bit_frm->GetStuffBit(field, StuffBitType::NormalStuffBit, value));
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Generate frame takes care of frame creation */
             int bit_to_corrupt = GenerateFrame(test_variant, elem_test);
@@ -320,5 +319,4 @@ class TestIso_7_6_9 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

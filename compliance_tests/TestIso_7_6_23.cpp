@@ -111,9 +111,8 @@ class TestIso_7_6_23 : public test_lib::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             /******************************************************************************
              * First configure bit rate. Take configured bit rate for CAN FD and multiply
@@ -216,5 +215,4 @@ class TestIso_7_6_23 : public test_lib::TestBase
 
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

@@ -23,13 +23,6 @@
 #ifndef TEST_BASE
 #define TEST_BASE
 
-// TODO: Add compiler agnostic aproach for warning disabling!
-#define DISABLE_UNUSED_ARGS _Pragma("GCC diagnostic push") \
-                            _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"")
-
-#define ENABLE_UNUSED_ARGS _Pragma("GCC diagnostic pop")
-
-
 using namespace can;
 
 /**

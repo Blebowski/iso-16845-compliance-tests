@@ -85,9 +85,8 @@ class TestIso_7_5_3 : public test_lib::TestBase
             dut_ifc->SetTec((rand() % 110) + 128);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
                             RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
@@ -160,5 +159,4 @@ class TestIso_7_5_3 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        ENABLE_UNUSED_ARGS
 };

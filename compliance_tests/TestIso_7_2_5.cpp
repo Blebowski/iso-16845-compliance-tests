@@ -144,9 +144,8 @@ class TestIso_7_2_5 : public test_lib::TestBase
             monitor_bit_frm->UpdateFrame(false);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             int id = rand() % (int)pow(2, 11);
             uint8_t dlc;
@@ -242,5 +241,4 @@ class TestIso_7_2_5 : public test_lib::TestBase
             return FinishElementaryTest();
         }
         
-        ENABLE_UNUSED_ARGS
 };

@@ -103,9 +103,8 @@ class TestIso_8_6_7 : public test_lib::TestBase
             CanAgentSetWaitForMonitor(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc;
             if (elem_test.index < 7)
@@ -156,6 +155,8 @@ class TestIso_8_6_7 : public test_lib::TestBase
                 } while (bit_to_corrupt->stuff_bit_type != StuffBitType::FixedStuffBit);
                 break;
             default:
+                bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);
+                TestMessage("Invalid Elementary test index: %d", elem_test.index);
                 break;
             }
 
@@ -195,5 +196,4 @@ class TestIso_8_6_7 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

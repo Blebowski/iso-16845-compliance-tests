@@ -94,9 +94,8 @@ class TestIso_8_6_4 : public test_lib::TestBase
             CanAgentSetWaitForMonitor(true);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
@@ -126,7 +125,7 @@ class TestIso_8_6_4 : public test_lib::TestBase
             driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
             monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
-            int num_bits_to_insert;
+            int num_bits_to_insert = 0;
             switch (elem_test.index)
             {
             case 1:
@@ -197,5 +196,4 @@ class TestIso_8_6_4 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

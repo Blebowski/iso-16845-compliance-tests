@@ -87,9 +87,8 @@ class TestIso_8_5_14 : public test_lib::TestBase
             dut_ifc->SetTec(160);
         }
 
-        DISABLE_UNUSED_ARGS
-
-        int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant)
+        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                        [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
@@ -157,5 +156,4 @@ class TestIso_8_5_14 : public test_lib::TestBase
             return FinishElementaryTest();
         }
 
-        ENABLE_UNUSED_ARGS
 };

@@ -526,13 +526,11 @@ void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame
     delete test_sequence;
 }
 
-DISABLE_UNUSED_ARGS
-int test_lib::TestBase::RunElemTest(const ElementaryTest &elem_test,
-                                    const TestVariant &test_variant)
+int test_lib::TestBase::RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+                                    [[maybe_unused]] const TestVariant &test_variant)
 {
     return 0;
 }
-ENABLE_UNUSED_ARGS
 
 void test_lib::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
 {
