@@ -65,6 +65,11 @@ void test_lib::TestBase::ConfigureTest()
     TestMessage("DUT clock period:");
     std::cout << this->dut_clock_period.count() << " ns" << std::endl;
 
+    // TODO: Query input delay from TB, and eventually from VIP configuration !!!
+    this->dut_input_delay = 2;
+    TestMessage("DUT input delay:");
+    std::cout << "2 clock cycles" << std::endl;
+
     this->nominal_bit_timing.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
     this->nominal_bit_timing.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
     this->nominal_bit_timing.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");

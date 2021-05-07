@@ -1232,6 +1232,36 @@ found:
 }
 
 
+void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
+{
+    [[maybe_unused]] Bit *prev_bit = GetBit(GetBitIndex(from) - 1);
+
+    //std::cout << "CCCC\n";
+
+    assert(from->bit_value_ == BitValue::Dominant &&
+           "Input delay compensation shall end at Dominant bit");    
+    assert(prev_bit->bit_value_ == BitValue::Recessive &&
+           "Input delay compensation shall start at Recessive bit");
+
+    CycleBitValue *cycle = from->GetFirstTimeQuantaIterator(BitPhase::Sync)->getCycleBitValue(0);
+    //std::cout << "DDDD\n";
+    for (int i = 0; i < input_delay; i++)
+    {
+        CycleBitValue *compensated_cycle = MoveCyclesBack(cycle, i + 1);
+        compensated_cycle->ForceValue(BitValue::Dominant);
+    }
+    //std::cout << "EEEE\n";
+}
+
+
+void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
+{
+    bit->FlipBitValue();
+    if (bit->bit_value_ == BitValue::Dominant)
+        CompensateEdgeForInputDelay(bit, input_delay);
+}
+
+
 void can::BitFrame::PrintSingleBitField(std::list<Bit>::iterator& bit_it,
                                         std::string *vals,
                                         std::string *names,

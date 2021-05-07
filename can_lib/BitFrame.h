@@ -425,6 +425,35 @@ class can::BitFrame : public Frame {
          */
         CycleBitValue *MoveCyclesBack(CycleBitValue *from, size_t move_by);
 
+        /**
+         * Compensates recessive to dominat transition within a bit to account for input delay
+         * of IUT.
+         * 
+         * Rationale is following:
+         *  If LT applies dominant bit exactly at start of bit, as is transmitted by IUT,
+         *  then IUT will see this bit only 'input delay' later. If prescaler is small
+         *  enough, this will cause synchronization edge to be seen by IUT already after
+         *  SYNC segment. IUT will therefore execute positive resynchronization.
+         *  Due to this, all subsequent monitored values will be shifted by an amount of
+         *  this "parasitic" resynchronisation.
+         * 
+         *  To avoid this effect, N last cycles of previous bit need to be forced to dominant
+         *  (N being IUTs input delay), so that IUT will see synchronization edge right
+         *  in SYNC segment.
+         * 
+         * @param from Starting bit which must be transmitted Dominant by IUT.
+         * @param input_delay Input delay of DUT in clock cycles.
+         */
+        void CompensateEdgeForInputDelay(Bit *from, int input_delay);
+
+        /**
+         * Flips bit value. If bit was flipped from Recessive to Dominant,then compensates
+         * input delay of IUT.
+         * @param bit Bit to be flipped
+         * @param input_delay Input delay of iUT in clock cycles
+         */
+        void FlipBitAndCompensate(Bit *bit, int input_delay);
+
     private:
         /* Bits within a frame */
         std::list<Bit> bits_;

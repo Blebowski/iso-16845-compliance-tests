@@ -67,6 +67,19 @@ class test_lib::TestBase
         std::chrono::nanoseconds dut_clock_period;
 
         /**
+         * Input delay of DUT. Corresponds to time it takes to signal from can_rx
+         * to be processed by CAN protocol controller. This delay typically includes
+         * delay to resynchronize digital signal (two flops = two cycles). Also,
+         * if long wiring leads to DUT from IUT, signal propagation through CAN RX
+         * from point where IUT, to input of DUT shall be included.
+         * 
+         * Should be set in unit of IUTs clock cycle. E.g. if clock cycle is 5 ns,
+         * and IUTs input delay is 15 ns, put 3 here. Value rounds down.
+         * TODO: Check rounding down is OK!
+         */
+        int dut_input_delay;
+
+        /**
          * CAN bus Bit timing setting for nominal/data bit rate.
          */
         BitTiming nominal_bit_timing;
@@ -80,7 +93,6 @@ class test_lib::TestBase
         /**
          * Pointer to DUT Interface object. Object created when TestBase object
          * is created. Used to access DUT by tests.
-         * TODO: Replace with unique pointer!
          */
         can::DutInterface* dut_ifc;
 
@@ -116,7 +128,9 @@ class test_lib::TestBase
         int seed;
 
         /** 
-         * TODO
+         * Number of Stuff bits within one Test variant. Used during tests which
+         * contain single elementary test, with clause like: "each stuff bit will be
+         * tested"
          */
         int stuff_bits_in_variant = 0;
 
@@ -225,7 +239,8 @@ class test_lib::TestBase
         void AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test);
 
         /**
-         * 
+         * Generates bit sequence (bit representation) of CAN frame from frame.
+         * Standard bit sequence contains ACK recessive (as if frame was transmitted).
          */
         std::unique_ptr<BitFrame> ConvertBitFrame(Frame &golden_frame);
 
