@@ -98,7 +98,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
             CanAgentSetWaitForMonitor(true);
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
         }
@@ -150,13 +150,15 @@ class TestIso_8_2_5 : public test_lib::TestBase
 
             /**************************************************************************************
              * Modify test frames:
-             *   1. Insert dominant ACK so that IUT does not detect ACk Error!
+             *   1. Insert dominant ACK so that IUT does not detect ACK Error!
              *   2. Flip bit as given by elementary test cases.
              *   3. Insert Active error frame from next bit to both driven and monitored frames
              *      (TX/RX feedback disabled)
              *   4. Append retransmitted frame
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            Bit *ack = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            ack->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->CompensateEdgeForInputDelay(ack, this->dut_input_delay);
 
             Bit *bit_to_corrupt;
             switch (elem_test.index)
@@ -199,7 +201,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
             }
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-            bit_to_corrupt->FlipBitValue();
+            driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
             driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
             monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
