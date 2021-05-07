@@ -53,5 +53,8 @@ extern "C" {
             bool ConfigureProtocolException(bool enable);
             bool ConfigureOneShot(bool enable);
             void SendReintegrationRequest();
+
+            /* Number of TXT buffers. Read by "Enable" */
+            int num_txt_buffers;
     };
 }

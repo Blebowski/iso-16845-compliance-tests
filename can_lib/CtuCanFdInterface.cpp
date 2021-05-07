@@ -41,6 +41,9 @@ void can::CtuCanFdInterface::Enable()
      */
     data.s.tbfbo = 0;
     MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+
+    /** Read number of TXT buffers to do buffer rotation by TX routine correctly! */
+    num_txt_buffers = (int)MemBusAgentRead16(CTU_CAN_FD_TXTB_INFO);
 }
 
 
@@ -152,12 +155,12 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
 
     /* Iterate TXT Buffers */
     static unsigned int txt_buf_nr;
-    txt_buf_nr = ((txt_buf_nr + 1) % 4) + 1;
+    txt_buf_nr = ((txt_buf_nr + 1) % num_txt_buffers) + 1;
 
-    assert(txt_buf_nr >= 1 && txt_buf_nr <= 4);
+    assert(txt_buf_nr >= 1 && txt_buf_nr <= num_txt_buffers);
 
     /* TXT Buffer address */
-    int txt_buffer_address;
+    int txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
     switch (txt_buf_nr)
     {
     case 1:
@@ -171,6 +174,18 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
         break;
     case 4:
         txt_buffer_address = CTU_CAN_FD_TXTB4_DATA_1;
+        break;
+    case 5:
+        txt_buffer_address = CTU_CAN_FD_TXTB5_DATA_1;
+        break;
+    case 6:
+        txt_buffer_address = CTU_CAN_FD_TXTB6_DATA_1;
+        break;
+    case 7:
+        txt_buffer_address = CTU_CAN_FD_TXTB7_DATA_1;
+        break;
+    case 8:
+        txt_buffer_address = CTU_CAN_FD_TXTB8_DATA_1;
         break;
     default:
         break;
