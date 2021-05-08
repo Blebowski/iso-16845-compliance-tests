@@ -143,14 +143,14 @@ class TestIso_8_4_2 : public test_lib::TestBase
             else
             {
                 Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
-                first_interm_bit->bit_value_ = BitValue::Dominant;
+                driver_bit_frm->FlipBitAndCompensate(first_interm_bit, dut_input_delay);
                 monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
                 driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
             }
 
             Bit *last_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
             int last_delim_index = driver_bit_frm->GetBitIndex(last_delim_bit);
-            last_delim_bit->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->FlipBitAndCompensate(last_delim_bit, dut_input_delay);
 
             monitor_bit_frm->InsertOverloadFrame(last_delim_index + 1);
             driver_bit_frm->InsertPassiveErrorFrame(last_delim_index + 1);

@@ -117,8 +117,8 @@ class TestIso_8_4_1 : public test_lib::TestBase
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
             
-            driver_bit_frm->GetBitOf(elem_test.index - 1, BitType::Intermission)
-                ->bit_value_ = BitValue::Dominant;
+            Bit *interm_bit = driver_bit_frm->GetBitOf(elem_test.index - 1, BitType::Intermission);
+            driver_bit_frm->FlipBitAndCompensate(interm_bit, dut_input_delay);
             monitor_bit_frm->InsertOverloadFrame(elem_test.index, BitType::Intermission);
             driver_bit_frm->InsertPassiveErrorFrame(elem_test.index, BitType::Intermission);
 
