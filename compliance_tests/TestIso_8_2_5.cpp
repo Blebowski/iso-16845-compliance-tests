@@ -156,9 +156,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
              *      (TX/RX feedback disabled)
              *   4. Append retransmitted frame
              *************************************************************************************/
-            Bit *ack = driver_bit_frm->GetBitOf(0, BitType::Ack);
-            ack->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->CompensateEdgeForInputDelay(ack, this->dut_input_delay);
+            driver_bit_frm->PutAcknowledge(dut_input_delay);
 
             Bit *bit_to_corrupt;
             switch (elem_test.index)

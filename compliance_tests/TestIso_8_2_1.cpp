@@ -97,7 +97,7 @@ class TestIso_8_2_1 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
             CanAgentSetWaitForMonitor(true);
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
         }
@@ -222,7 +222,7 @@ class TestIso_8_2_1 : public test_lib::TestBase
              *   4. Insert Active Error flag from next bit on in both driven and monitored frames!
              *   5. Append the same frame after first frame as if retransmitted by IUT!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->PutAcknowledge(dut_input_delay);
 
             /* Choose random Bit type within some bit field */
             BitType bit_type = GetRandomBitType(elem_test.frame_type, IdentifierType::Base,
@@ -273,16 +273,13 @@ class TestIso_8_2_1 : public test_lib::TestBase
                 }
             }
 
-
-            
-
             TestMessage("Corrupting bit type: %s", bit_to_corrupt->GetBitTypeName().c_str());
             TestMessage("Index in bit field: %d", index_in_bitfield);
             TestMessage("Value to be corrupted: %d", (int)bit_to_corrupt->bit_value_);
 
-            int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-            bit_to_corrupt->FlipBitValue();
+            driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
+            int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
             monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
 

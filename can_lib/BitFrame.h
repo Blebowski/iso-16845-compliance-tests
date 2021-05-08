@@ -454,6 +454,17 @@ class can::BitFrame : public Frame {
          */
         void FlipBitAndCompensate(Bit *bit, int input_delay);
 
+        /**
+         * Acknowledges the frame (forces ACK low).
+         */
+        void PutAcknowledge();
+
+        /**
+         * Acknowledges the frame (forces ACK low), and compensates IUTs input delay
+         * on ACK bit.
+         */
+        void PutAcknowledge(int input_delay);
+
     private:
         /* Bits within a frame */
         std::list<Bit> bits_;
