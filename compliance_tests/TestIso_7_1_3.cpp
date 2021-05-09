@@ -104,7 +104,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
             CanAgentSetWaitForMonitor(true);
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -236,7 +236,12 @@ class TestIso_7_1_3 : public test_lib::TestBase
              *   1. Loose arbitration in monitored frame on bit according to elementary test cases.
              *      Correct monitored bit value to expect value which corresponds to what was sent
              *      by IUT!
-             *   2. Append retransmitted frame. This second frame is the frame sent by IUT. On
+             *   2. Compensate input delay of IUT. If Recessive to Dominant edge of bit on which
+             *      arbitration is lost, is sent by LT exactly at SYNC, then due to input delay, 
+             *      it will be seen slightly later by IUT. If prescaler is smaller than input
+             *      delay, this will create undesirable resynchronisation by IUT. This needs to
+             *      be compensated by lenghtening monitored bit!
+             *   3. Append retransmitted frame. This second frame is the frame sent by IUT. On
              *      driven frame as if received, on monitored as if transmitted by IUT. Use the
              *      frame which is issued to IUT for sending!
              *************************************************************************************/
@@ -299,6 +304,9 @@ class TestIso_7_1_3 : public test_lib::TestBase
              */
             bit_to_loose_arb->bit_value_ = BitValue::Recessive;
             monitor_bit_frm->LooseArbitration(bit_to_loose_arb);
+
+            /* Compensate input delay, lenghten bit on which arbitration was lost */
+            bit_to_loose_arb->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);

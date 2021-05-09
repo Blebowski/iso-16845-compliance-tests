@@ -120,15 +120,16 @@ class TestIso_8_5_2 : public test_lib::TestBase
 
             driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
-            monitor_bit_frm->InsertPassiveErrorFrame(
-                monitor_bit_frm->GetBitOf(7, BitType::Data));
-            driver_bit_frm->InsertActiveErrorFrame(
-                driver_bit_frm->GetBitOf(7, BitType::Data));
+            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-            driver_bit_frm->RemoveBit(driver_bit_frm->GetBitOf(2, BitType::Intermission));
-            monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(2, BitType::Intermission));
+            driver_bit_frm->RemoveBit(2, BitType::Intermission);
+            monitor_bit_frm->RemoveBit(2, BitType::Intermission);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
+            // SOF on second frame is second SOF overall.
+            driver_bit_frm->CompensateEdgeForInputDelay(
+                driver_bit_frm->GetBitOf(1, BitType::Sof), dut_input_delay);
             monitor_bit_frm_2->TurnReceivedFrame();
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
