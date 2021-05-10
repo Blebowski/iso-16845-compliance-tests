@@ -256,7 +256,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     }
 
     // Give command to chosen buffer
-    MemBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txt_buf_nr + 7)));
+    MemBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txt_buf_nr + 8)));
 }
 
 
