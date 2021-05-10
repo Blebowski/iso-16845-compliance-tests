@@ -91,7 +91,8 @@ class TestIso_8_5_2 : public test_lib::TestBase
         {
             uint8_t data_byte = 0x80;
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame, 
+                                                        EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -99,7 +100,7 @@ class TestIso_8_5_2 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             frame_flags_2 = std::make_unique<FrameFlags>();
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags);
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
             RandomizeAndPrint(golden_frm_2.get());
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
@@ -127,10 +128,11 @@ class TestIso_8_5_2 : public test_lib::TestBase
             monitor_bit_frm->RemoveBit(2, BitType::Intermission);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            // SOF on second frame is second SOF overall.
-            driver_bit_frm->CompensateEdgeForInputDelay(
-                driver_bit_frm->GetBitOf(1, BitType::Sof), dut_input_delay);
+            
             monitor_bit_frm_2->TurnReceivedFrame();
+            /* IUT will resynchronize due to input delay. Compensate it*/
+            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)
+                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
             /* Append the original frame, retransmitted by DUT after 2nd frame! */
