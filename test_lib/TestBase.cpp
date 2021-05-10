@@ -156,6 +156,14 @@ void test_lib::TestBase::SetupTestEnvironment()
 }
 
 
+void test_lib::TestBase::SetupMonitorTxTests()
+{
+    CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+    CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+    CanAgentSetWaitForMonitor(true);
+}
+
+
 int test_lib::TestBase::Run()
 {
     SetupTestEnvironment();

@@ -202,6 +202,15 @@ class test_lib::TestBase
         void SetupTestEnvironment();
 
         /**
+         * Setup VIP monitor (in HDL simulation) for simulations where IUT starts as
+         * transmitter (8.x tests). This includes following:
+         *   1. Trigger on CAN_TX falling edge.
+         *   2. 0 ns input delay of monitor after triggering.
+         *   3. Wait for monitor item.
+         */
+        void SetupMonitorTxTests();
+
+        /**
          * Runs test.
          */
         virtual int Run();
