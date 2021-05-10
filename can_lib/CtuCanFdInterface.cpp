@@ -24,8 +24,8 @@
  * Directly reference generated C headers in CTU CAN FD main repo!
  */
 extern "C" {
-    #include "../../../../driver/ctucanfd_frame.h"
-    #include "../../../../driver/ctucanfd_regs.h"
+    #include "../../../../../driver/ctucanfd_frame.h"
+    #include "../../../../../driver/ctucanfd_regs.h"
 }
 
 
@@ -153,38 +153,39 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     union ctu_can_fd_frame_format_w frame_format_word;
     union ctu_can_fd_identifier_w identifier_word;
 
-    /* Iterate TXT Buffers */
+    /* Iterate TXT Buffers - Indexed from 0 */
     static unsigned int txt_buf_nr;
-    txt_buf_nr = ((txt_buf_nr + 1) % num_txt_buffers) + 1;
+    txt_buf_nr += 1;
+    txt_buf_nr %= num_txt_buffers;
 
-    assert(txt_buf_nr >= 1 && txt_buf_nr <= num_txt_buffers);
+    assert(txt_buf_nr >= 0 && txt_buf_nr < num_txt_buffers);
 
     /* TXT Buffer address */
     int txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
     switch (txt_buf_nr)
     {
-    case 1:
+    case 0:
         txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
         break;
-    case 2:
+    case 1:
         txt_buffer_address = CTU_CAN_FD_TXTB2_DATA_1;
         break;
-    case 3:
+    case 2:
         txt_buffer_address = CTU_CAN_FD_TXTB3_DATA_1;
         break;
-    case 4:
+    case 3:
         txt_buffer_address = CTU_CAN_FD_TXTB4_DATA_1;
         break;
-    case 5:
+    case 4:
         txt_buffer_address = CTU_CAN_FD_TXTB5_DATA_1;
         break;
-    case 6:
+    case 5:
         txt_buffer_address = CTU_CAN_FD_TXTB6_DATA_1;
         break;
-    case 7:
+    case 6:
         txt_buffer_address = CTU_CAN_FD_TXTB7_DATA_1;
         break;
-    case 8:
+    case 7:
         txt_buffer_address = CTU_CAN_FD_TXTB8_DATA_1;
         break;
     default:
