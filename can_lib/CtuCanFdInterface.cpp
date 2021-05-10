@@ -44,6 +44,9 @@ void can::CtuCanFdInterface::Enable()
 
     /** Read number of TXT buffers to do buffer rotation by TX routine correctly! */
     num_txt_buffers = (int)MemBusAgentRead16(CTU_CAN_FD_TXTB_INFO);
+
+    /** Set-up TXT Buffer 1 to be used by default */
+    txt_buf_nr = 0;
 }
 
 
@@ -153,13 +156,6 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     union ctu_can_fd_frame_format_w frame_format_word;
     union ctu_can_fd_identifier_w identifier_word;
 
-    /* Iterate TXT Buffers - Indexed from 0 */
-    static unsigned int txt_buf_nr;
-    txt_buf_nr += 1;
-    txt_buf_nr %= num_txt_buffers;
-
-    assert(txt_buf_nr >= 0 && txt_buf_nr < num_txt_buffers);
-
     /* TXT Buffer address */
     int txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
     switch (txt_buf_nr)
@@ -257,6 +253,16 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
 
     // Give command to chosen buffer
     MemBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txt_buf_nr + 8)));
+
+    // Iterate TXT Buffers - Indexed from 0 - Move to next buffer
+    // txt_buf_nr is set by Enable function to 0 (TXT Buffer 0), so that first call to SendFrame
+    // will send frame via TXT Buffer 0, which is by default highest priority. Therefore even if
+    // two frames are sent at once, they are always transmitted by DUT in order in which SendFrame
+    // has been called!
+    txt_buf_nr += 1;
+    txt_buf_nr %= num_txt_buffers;
+
+    assert(txt_buf_nr >= 0 && txt_buf_nr < num_txt_buffers);
 }
 
 
