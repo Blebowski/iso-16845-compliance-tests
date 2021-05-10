@@ -83,7 +83,7 @@ class TestIso_8_5_4 : public test_lib::TestBase
             dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
             CanAgentSetWaitForMonitor(true);
             CanAgentConfigureTxToRxFeedback(true);
         }

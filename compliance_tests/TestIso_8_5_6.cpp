@@ -15,7 +15,7 @@
  * @test ISO16845 8.5.6
  * 
  * @brief The purpose of this test is to verify that a passive state IUT being
- *        transmitted does not transmit any data frame before the end of the
+ *        transmitter does not transmit any data frame before the end of the
  *        suspend transmission following an overload frame.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
  * 
@@ -111,7 +111,8 @@ class TestIso_8_5_6 : public test_lib::TestBase
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
 
-            driver_bit_frm->GetBitOf(0, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+            driver_bit_frm->FlipBitAndCompensate(first_interm_bit, dut_input_delay);
 
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
             driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
