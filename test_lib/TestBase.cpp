@@ -91,7 +91,7 @@ void test_lib::TestBase::ConfigureTest()
     this->nominal_bit_timing.Print();
     TestMessage("Data Bit Timing configuration from TB:");
     this->data_bit_timing.Print();
-    
+
     TestMessage("Configuring Reset agent, executing reset");
     ResetAgentPolaritySet(0);
     ResetAgentAssert();
@@ -115,7 +115,11 @@ void test_lib::TestBase::ConfigureTest()
     CanAgentMonitorFlush();
     CanAgentDriverStop();
     CanAgentMonitorStop();
-    CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(20));
+
+    // Default Monitor delay (used for RX tests), must correspond to IUTs input delay!
+    // Then if driver starts at time T, monitor will start at proper time t + x, where
+    // x corresponds to input delay. Due to this, monitor will be in sync with IUT exactly!
+    CanAgentSetMonitorInputDelay(dut_input_delay * dut_clock_period);
 
     // Most of TCs use driver and monitor simultaneously, therefore there is no
     // need to configure Trigger in each of them!
