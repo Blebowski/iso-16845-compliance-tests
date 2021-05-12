@@ -82,9 +82,7 @@ class TestIso_8_5_4 : public test_lib::TestBase
 
             dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -113,11 +111,12 @@ class TestIso_8_5_4 : public test_lib::TestBase
              *   2. Insert suspend field to both driven and monitored frames (it is not inserted by
              *      default frame construction). Insert only necessary portion of field to emulate
              *      start of next frame in the middle of it!
-             *   3. Append next frame to driven frame. Append next frame as if received to
+             *   3. Prolong SOF of second monitored frame to account for input delay of IUT.
+             *   4. Append next frame to driven frame. Append next frame as if received to
              *      monitored frame.
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
-
+            
             int num_suspend_bits = 0;
             switch (elem_test.index)
             {
@@ -142,6 +141,8 @@ class TestIso_8_5_4 : public test_lib::TestBase
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm_2->TurnReceivedFrame();
+            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)
+                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
             driver_bit_frm->Print(true);

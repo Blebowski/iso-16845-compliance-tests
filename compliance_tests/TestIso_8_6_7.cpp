@@ -98,9 +98,7 @@ class TestIso_8_6_7 : public test_lib::TestBase
             for (int i = 0; i < 7; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -161,15 +159,15 @@ class TestIso_8_6_7 : public test_lib::TestBase
             }
 
             /* TX/RX feedback is disabled. We must insert ACK also to driven frame! */
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->PutAcknowledge(dut_input_delay);
 
-            bit_to_corrupt->FlipBitValue();
+            driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
 
             driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
             monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->PutAcknowledge(dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

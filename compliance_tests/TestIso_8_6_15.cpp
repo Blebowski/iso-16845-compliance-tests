@@ -78,10 +78,8 @@ class TestIso_8_6_15 : public test_lib::TestBase
             AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
+            CanAgentConfigureTxToRxFeedback(true);            
 
             dut_ifc->SetTec(8);
         }
@@ -106,12 +104,14 @@ class TestIso_8_6_15 : public test_lib::TestBase
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
 
-            driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+            driver_bit_frm->FlipBitAndCompensate(
+                driver_bit_frm->GetBitOf(0, BitType::Intermission), dut_input_delay);
 
             driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-            driver_bit_frm->GetBitOf(7, BitType::OverloadDelimiter)->FlipBitValue();
+            driver_bit_frm->FlipBitAndCompensate(
+                driver_bit_frm->GetBitOf(7, BitType::OverloadDelimiter), dut_input_delay);
 
             /* Next bit is 2nd intermission bit overally! */
             driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);

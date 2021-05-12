@@ -80,10 +80,8 @@ class TestIso_8_6_9 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetWaitForMonitor(true);
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -122,14 +120,15 @@ class TestIso_8_6_9 : public test_lib::TestBase
                 bit_to_flip = 3;
             else
                 bit_to_flip = 6;
-            int bit_index = driver_bit_frm->GetBitIndex(
-                driver_bit_frm->GetBitOf(bit_to_flip, BitType::ErrorDelimiter));
-            driver_bit_frm->GetBit(bit_index)->bit_value_ = BitValue::Dominant;
+
+            Bit *bit = driver_bit_frm->GetBitOf(bit_to_flip, BitType::ErrorDelimiter);
+            int bit_index = driver_bit_frm->GetBitIndex(bit);
+            driver_bit_frm->FlipBitAndCompensate(bit, dut_input_delay);
 
             driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
             monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->PutAcknowledge(dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

@@ -88,10 +88,8 @@ class TestIso_8_6_4 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetWaitForMonitor(true);
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -154,6 +152,10 @@ class TestIso_8_6_4 : public test_lib::TestBase
                 driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, bit_index + 1);
                 monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, bit_index + 1);
             }
+
+            // Compensate first dominant driven by to account for IUTs input delay
+            driver_bit_frm->CompensateEdgeForInputDelay(
+                driver_bit_frm->GetBitOf(0, BitType::ActiveErrorFlag), dut_input_delay);
 
             for (int i = 0; i < 8; i++)
             {

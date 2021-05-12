@@ -80,9 +80,7 @@ class TestIso_8_5_15 : public test_lib::TestBase
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             /* Basic settings where IUT is transmitter */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             /* 
              * TX/RX feedback cant be enabled since we corrupt dominant
              * transmitted bits to recessive.

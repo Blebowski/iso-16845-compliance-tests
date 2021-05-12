@@ -81,9 +81,7 @@ class TestIso_8_5_12 : public test_lib::TestBase
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             /* Basic settings where IUT is transmitter */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
             /* To be error passive */
@@ -128,6 +126,10 @@ class TestIso_8_5_12 : public test_lib::TestBase
                 driver_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Dominant);
                 monitor_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Recessive);
             }
+
+            // Compensate IUTs resynchronisation on first dominant bit caused by its input delay.
+            monitor_bit_frm->GetBitOf(0, BitType::PassiveErrorFlag)
+                ->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             for (int i = 0; i < 5; i++)
             {

@@ -87,9 +87,7 @@ class TestIso_8_4_4 : public test_lib::TestBase
             }
 
             /* Standard settings for tests where IUT is transmitter */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             /* Dont enable TX to RX feedback beacuse we need to force Dominant overload flag to
              * be received as Recessive!
              */

@@ -82,9 +82,7 @@ class TestIso_8_4_1 : public test_lib::TestBase
             }
 
             /* Standard settings for tests where IUT is transmitter */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
             /* 

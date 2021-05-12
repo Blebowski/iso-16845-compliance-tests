@@ -82,9 +82,7 @@ class TestIso_8_6_2 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -104,9 +102,10 @@ class TestIso_8_6_2 : public test_lib::TestBase
              *   3. Corrupt 1,3,6-th bit of overload flag.
              *   4. Insert Active error frame from one bit further.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->PutAcknowledge(dut_input_delay);
 
-            driver_bit_frm->GetBitOf(0, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->FlipBitAndCompensate(
+                driver_bit_frm->GetBitOf(0, BitType::Intermission), dut_input_delay);
 
             driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);

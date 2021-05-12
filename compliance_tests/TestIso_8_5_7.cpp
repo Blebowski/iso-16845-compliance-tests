@@ -80,9 +80,7 @@ class TestIso_8_5_7 : public test_lib::TestBase
 
             dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -112,6 +110,8 @@ class TestIso_8_5_7 : public test_lib::TestBase
              *   3. Append next frame.
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->CompensateEdgeForInputDelay(
+                driver_bit_frm->GetBitOf(0, BitType::Ack), dut_input_delay);
 
             driver_bit_frm->AppendSuspendTransmission();
             monitor_bit_frm->AppendSuspendTransmission();

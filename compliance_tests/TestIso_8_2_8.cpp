@@ -85,9 +85,7 @@ class TestIso_8_2_8 : public test_lib::TestBase
             for (int i = 0; i < 1008; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
             one_shot_enabled = dut_ifc->ConfigureOneShot(true);
         }
