@@ -116,6 +116,7 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
             brs_bit->ShortenPhase(BitPhase::Ph2, elem_test.e);
             brs_bit_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e);
 
+            // In test, e is negative, we have abs(e), so we need to add, not subract.
             int start_tq = 1 + data_bit_timing.prop_ + data_bit_timing.ph1_ + elem_test.e;
             for (size_t j = start_tq; j < brs_bit->GetLengthTimeQuanta(); j++)
                 esi_bit->ForceTimeQuanta(j, BitValue::Recessive);
