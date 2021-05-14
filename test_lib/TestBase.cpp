@@ -640,13 +640,6 @@ void test_lib::TestBase::RandomizeAndPrint(Frame *frame)
     frame->Print();
 }
 
-void test_lib::TestBase::DeleteCommonObjects()
-{
-    delete golden_frame;
-    delete driver_bit_frame;
-    delete monitor_bit_frame;
-}
-
 void test_lib::TestBase::FreeTestObjects()
 {
     golden_frm.reset();

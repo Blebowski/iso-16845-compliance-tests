@@ -171,16 +171,6 @@ class test_lib::TestBase
         int tec_old;
         int tec_new;
 
-        /*********************************************************************************
-         * THESE ARE LEGACY AND WILL BE DELETED when all tests are cleaned to use uniques!
-         ********************************************************************************/
-        can::Frame *golden_frame;
-        can::BitFrame *driver_bit_frame;
-        can::BitFrame *monitor_bit_frame;
-        can::BitFrame *driver_bit_frame_2;
-        can::BitFrame *monitor_bit_frame_2;
-
-
         /** 
          * Obtains frame type based on test variant.
          */
@@ -327,7 +317,7 @@ class test_lib::TestBase
         void CheckLowerTesterResult();
 
         /**********************************************************************
-         * Print functions. To be used during test
+         * Print functions.
          *********************************************************************/
 
         /**
@@ -349,12 +339,6 @@ class test_lib::TestBase
          * Randomizes and prints 
          */
         void RandomizeAndPrint(Frame *frame);
-
-        /**
-         * Deletes: golden frame, driver bit frame and monitor bit frame
-         * TODO: Replace with unique pointers!!
-         */
-        void DeleteCommonObjects();
 
         /**
          * Forces erase of all test specific pointers. This is desirable to do
