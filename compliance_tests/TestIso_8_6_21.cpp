@@ -124,6 +124,10 @@ class TestIso_8_6_21 : public test_lib::TestBase
 
             monitor_bit_frm->LooseArbitration(last_base_id);
 
+            // Compensate IUTs input delay, since it will resynchronize due to bits which are
+            // further sent by LT.
+            last_base_id->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+
             driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
             driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
