@@ -82,47 +82,25 @@ using namespace test_lib;
 class TestIso_8_7_2 : public test_lib::TestBase
 {
     public:
-        BitTiming test_nom_bit_timing;
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-
-            // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 1, shortest possible PH2 = 1. Together we test TQ(N) - 2 tests!
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
+
+            assert((nominal_bit_timing.brp_ > 1 &&
+                    "BRP Nominal must be bigger than 1 in this test due to test architecture!"));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Have same bit-rate, but
-            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
-            // end.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
-            
-            /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
-
-            // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
-            dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
-            dut_ifc->Enable();
-            TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
-                usleep(100000);
-
-            TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, backup_nominal_bit_timing);
+            ReconfigureDutBitTiming();
+            WaitDutErrorActive();
 
             uint8_t data_byte = 0x80;
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
@@ -166,14 +144,18 @@ class TestIso_8_7_2 : public test_lib::TestBase
             Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitType::Intermission);
             Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitType::Intermission);
 
-            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);                    
+            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             BitPhase prev_phase_drv = last_interm_bit_drv->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_drv->ShortenPhase(prev_phase_drv, 1);
+            // TODO: Fix quering here, if we have TSEG1 = 1, we actually erase whole byte which
+            //       causes crash!
             last_interm_bit_drv->GetLastTimeQuantaIterator(prev_phase_drv)->Shorten(1);
-            
+
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);                    
             BitPhase prev_phase_mon = last_interm_bit_mon->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_mon->ShortenPhase(prev_phase_mon, 1);
+            // TODO: Fix quering here, if we have TSEG1 = 1, we actually erase whole byte which
+            //       causes crash!
             last_interm_bit_mon->GetLastTimeQuantaIterator(prev_phase_mon)->Shorten(1);
 
             driver_bit_frm_2->TurnReceivedFrame();

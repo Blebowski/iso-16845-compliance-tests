@@ -89,6 +89,9 @@ class TestIso_8_7_6 : public test_lib::TestBase
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetWaitForMonitor(true);
+
+            assert((nominal_bit_timing.brp_ > 2 &&
+                    "BRP Nominal must be bigger than 2 in this test due to test architecture!"));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
