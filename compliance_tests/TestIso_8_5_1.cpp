@@ -87,9 +87,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -138,23 +136,35 @@ class TestIso_8_5_1 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
             driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
-            int bit_to_corrupt;
+            int bit_index_to_corrupt;
             if (elem_test.index == 1)
-                bit_to_corrupt = 0;
+                bit_index_to_corrupt = 0;
             else if (elem_test.index == 2)
-                bit_to_corrupt = 2;
+                bit_index_to_corrupt = 2;
             else
-                bit_to_corrupt = 5;
-            int bit_index = driver_bit_frm->GetBitIndex(driver_bit_frm->GetBitOf(
-                                bit_to_corrupt, BitType::PassiveErrorFlag));
+                bit_index_to_corrupt = 5;
+
+            Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
+                                    BitType::PassiveErrorFlag);
+            int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             TestMessage("Inserting Active Error flag to Passive Error flag bit %d to dominant",
-                        bit_to_corrupt + 1);
+                        bit_index_to_corrupt + 1);
+            
             driver_bit_frm->InsertActiveErrorFrame(bit_index);
             monitor_bit_frm->InsertPassiveErrorFrame(bit_index);
+            driver_bit_frm->CompensateEdgeForInputDelay(
+                driver_bit_frm->GetBitOf(0, BitType::ActiveErrorFlag), dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm_2->TurnReceivedFrame();
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+
+            // Here we need compensation of the second frame which is transmitted by LT
+            // from SOF on. This is overally second SOF bit (first is in the first frame)!
+            // Since LT starts transmitting the frame now, it will take input delay since
+            // edge is seen by IUT, therefore IUT will execute positive resynchronization!
+            monitor_bit_frm->GetBitOf(1, BitType::Sof)
+                ->GetLastTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);

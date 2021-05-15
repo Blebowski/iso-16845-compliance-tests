@@ -97,9 +97,7 @@ class TestIso_8_5_10 : public test_lib::TestBase
             AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -137,7 +135,7 @@ class TestIso_8_5_10 : public test_lib::TestBase
              *      monitored frames).
              *   4. Insert 112 dominant bits to driven frame and 112 recessive bits to monitored
              *      frame. Then Insert 8 + 3 + 8 (Error delimiter + intermission + Suspend) to
-             *      recessive frames.
+             *      recessive frames. Compensate first monitored bit.
              *   5. Insert second frame as if transmitted by DUT. Append the same frame on driven
              *      frame since TX/RX feedback is disabled! This is the same frame as before
              *      because it is retransmitted by DUT!
@@ -184,6 +182,12 @@ class TestIso_8_5_10 : public test_lib::TestBase
                 driver_bit_frm->AppendBit(BitType::ActiveErrorFlag, BitValue::Dominant);
                 monitor_bit_frm->AppendBit(BitType::ActiveErrorFlag, BitValue::Recessive);
             }
+            
+            // Compensate IUTs resynchronization caused by input delay due to first of 112
+            // applied dominant bits. Recessive -> Dominant edge is applied right at SYNC,
+            // due to input delay IUT will perceive this later and positively resynchronize.
+            monitor_bit_frm->GetBitOf(16, BitType::ActiveErrorFlag)
+                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
 
             for (int i = 0; i < 8; i++)
             {

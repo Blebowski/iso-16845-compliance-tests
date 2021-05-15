@@ -56,5 +56,8 @@ extern "C" {
 
             /* Number of TXT buffers. Read by "Enable" */
             int num_txt_buffers;
+
+            /* Currently used TXT buffer */
+            unsigned int txt_buf_nr;
     };
 }

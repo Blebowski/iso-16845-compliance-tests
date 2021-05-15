@@ -83,9 +83,7 @@ class TestIso_8_3_3 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             
             // Note: In this test we cant enable TX/RX feedback, since we want to corrupt DOMINANT
             //       active error flag! This is not possible when DUT transmitts dominant. We

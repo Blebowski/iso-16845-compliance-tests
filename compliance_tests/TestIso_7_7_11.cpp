@@ -97,28 +97,36 @@ class TestIso_7_7_11 : public test_lib::TestBase
             /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitor frame as if received!
-             *   2. Shorten PH2 phase of CRC Delimiter by e. Shorten in both driven and monitored
-             *      frame since DUT shall re-sync!
-             *   3. Force PH2 of ACK to recessive.
+             *   2. Force last e TQ of PH2 phase of CRC Delimiter by e in driven frame.
+             *   3. Shorten monitored bit of CRC delimiter by e, this is by how much IUT should
+             *      resynchronize!
+             *   4. Force last PH2 + e of ACK to recessive in driven frame.
              * 
              * Note: This is not exactly sequence as described in ISO, there bits are not shortened
              *       but flipped, but overall effect is the same!
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
 
-            driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            auto tq_it = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+                            ->GetLastTimeQuantaIterator(BitPhase::Ph2);
+            for (int i = 0; i < elem_test.e; i++)
+            {
+                tq_it->ForceValue(BitValue::Dominant);
+                tq_it--;
+            }
+
             monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
                 ->ShortenPhase(BitPhase::Ph2, elem_test.e);
 
             Bit *ack = driver_bit_frm->GetBitOf(0, BitType::Ack);
             ack->bit_value_ = BitValue::Dominant;
 
-            ack->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-
-            // Shorten monitored ACK by 1 TQ since DUT will re-synchronise with SYNC segment ended!
-            Bit *ack_mon = monitor_bit_frm->GetBitOf(0, BitType::Ack);
-            ack_mon->ShortenPhase(BitPhase::Ph1, 1);
+            tq_it = ack->GetLastTimeQuantaIterator(BitPhase::Ph2);
+            for (size_t i = 0; i < elem_test.e + nominal_bit_timing.ph2_; i++)
+            {
+                tq_it->ForceValue(BitValue::Recessive);
+                tq_it--;
+            }
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

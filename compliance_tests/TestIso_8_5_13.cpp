@@ -86,9 +86,7 @@ class TestIso_8_5_13 : public test_lib::TestBase
             }
 
             /* Basic settings where IUT is transmitter */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
             /* To be error passive */
@@ -144,7 +142,8 @@ class TestIso_8_5_13 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(global_index + 1);
             driver_bit_frm->InsertPassiveErrorFrame(global_index + 1);
 
-            driver_bit_frm->GetBitOf(0, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->FlipBitAndCompensate(
+                driver_bit_frm->GetBitOf(0, BitType::Intermission), dut_input_delay);
 
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
             driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);

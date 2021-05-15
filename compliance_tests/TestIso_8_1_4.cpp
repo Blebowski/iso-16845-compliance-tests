@@ -94,10 +94,8 @@ class TestIso_8_1_4 : public test_lib::TestBase
             }
 
             /* Basic setup for tests where IUT transmits */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -178,6 +176,8 @@ class TestIso_8_1_4 : public test_lib::TestBase
              *      tests are in base identifier, next 18 are in Identifier extension.
              *   2. Loose arbitration on n-th bit of base identifier in monitored frame. Skip stuff
              *      bits!
+             *   3. Compensate IUTs input delay which will cause positive resynchronisation due
+             *      to dominant bit being transmitted by IUT at bit in which IUT loses arbitration.
              *   3. Append second frame as if retransmitted by IUT. This one must be created from
              *      frame which was actually issued to IUT
              *************************************************************************************/
@@ -203,8 +203,9 @@ class TestIso_8_1_4 : public test_lib::TestBase
             }
 
             loosing_bit->bit_value_ = BitValue::Recessive;
-
             monitor_bit_frm->LooseArbitration(loosing_bit);
+
+            loosing_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             /* On elementary test 30, IUT shall loose on SRR bit, therefore we must send this bit
              * dominant by LT, so we flip it

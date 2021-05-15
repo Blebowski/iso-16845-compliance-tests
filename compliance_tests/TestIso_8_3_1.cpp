@@ -82,9 +82,7 @@ class TestIso_8_3_1 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 

@@ -136,6 +136,7 @@ class TestIso_7_6_23 : public test_lib::TestBase
             /******************************************************************************
              * Generate frames!
              *****************************************************************************/
+            // Approriate Frame type is generated in ConfigureTest!
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
 
             if (elem_test.index == 1)
@@ -164,7 +165,7 @@ class TestIso_7_6_23 : public test_lib::TestBase
 
             frame_flags_2 = std::make_unique<FrameFlags>(FrameType::Can2_0);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            RandomizeAndPrint(golden_frm_2.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);

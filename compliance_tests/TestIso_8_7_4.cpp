@@ -89,9 +89,11 @@ class TestIso_8_7_4 : public test_lib::TestBase
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
+            SetupMonitorTxTests();
             CanAgentSetWaitForMonitor(true);
+
+            assert((nominal_bit_timing.brp_ > 2 &&
+                    "BRP Nominal must be bigger than 2 in this test due to test architecture!"));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -108,8 +110,15 @@ class TestIso_8_7_4 : public test_lib::TestBase
              * Modify test frames:
              *   1. Choose random recessive bit in arbitration field which is followed by dominant
              *      bit.
-             *   2. Shorten PH2 of this bit by e. Shorten in both driven and monitored frames.
-             *   3. Insert ACK to driven frame.
+             *   2. Shorten PH2 of this bit by e in driven frame.
+             *   3. In Monitored frame, shorten PH2 of the same bit by e - 1. Shorten SYNC seg of
+             *      next bit by 1.
+             *      Rationale:
+             *          If edge arrives in last TQ of TSEG2, actual duration of PH2 will
+             *          NOT be changed! Only sub-sequent TSEG1 will last one clock cycle less!!
+             *          This corresponds to "effect of resync. is the same as of hard sync if
+             *          magnitude of phase error is smaller than SJW"!!!
+             *   4. Insert ACK to driven frame.
              * 
              * Note: TX/RX feedback must be disabled, since we modify driven frame.
              *************************************************************************************/
@@ -125,7 +134,9 @@ class TestIso_8_7_4 : public test_lib::TestBase
                         next_bit->bit_value_ == BitValue::Dominant));
 
             bit_to_shorten->ShortenPhase(BitPhase::Ph2, elem_test.e);
-            monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e);
+
+            monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e - 1);
+            monitor_bit_frm->GetBit(bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
 
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 

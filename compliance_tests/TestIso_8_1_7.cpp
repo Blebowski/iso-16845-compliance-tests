@@ -99,10 +99,8 @@ class TestIso_8_1_7 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
 
             /* Basic setup for tests where IUT transmits */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,

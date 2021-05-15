@@ -77,9 +77,7 @@ class TestIso_7_6_21 : public test_lib::TestBase
             AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -116,7 +114,12 @@ class TestIso_7_6_21 : public test_lib::TestBase
             loosing_bit->bit_value_ = BitValue::Dominant;
             int bit_index = driver_bit_frm->GetBitIndex(loosing_bit);
 
+            // Compensate IUTs input delay - lenghten IUTs monitored bit by its input delay,
+            // since IUT will re-synchronize due to this delay on the same bit on which it loses
+            // arbitration!
             monitor_bit_frm->LooseArbitration(bit_index);
+            monitor_bit_frm->GetBit(bit_index + 1)->GetLastTimeQuantaIterator(BitPhase::Sync)
+                ->Lengthen(dut_input_delay);
 
             driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 

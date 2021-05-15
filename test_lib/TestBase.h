@@ -23,7 +23,6 @@
 #ifndef TEST_BASE
 #define TEST_BASE
 
-using namespace can;
 
 /**
  * @namespace test_lib
@@ -67,10 +66,35 @@ class test_lib::TestBase
         std::chrono::nanoseconds dut_clock_period;
 
         /**
-         * CAN bus Bit timing setting for nominal/data bit rate.
+         * Input delay of DUT. Corresponds to time it takes to signal from can_rx
+         * to be processed by CAN protocol controller. This delay typically includes
+         * delay to resynchronize digital signal (two flops = two cycles). Also,
+         * if long wiring leads to DUT from IUT, signal propagation through CAN RX
+         * from point where IUT, to input of DUT shall be included.
+         * 
+         * Should be set in unit of IUTs clock cycle. E.g. if clock cycle is 5 ns,
+         * and IUTs input delay is 15 ns, put 3 here. Value rounds down.
+         * TODO: Check rounding down is OK!
          */
-        BitTiming nominal_bit_timing;
+        int dut_input_delay;
+
+        /**
+         * Information processing time of DUT (in minimal time quanta = clock cycles)
+         */
+        int dut_ipt;
+
+        /**
+         * CAN Bus bit timing. By default contains bit timing queryied from TB.
+         * If test requires other bit timing, it will modify it!
+         */
+        can::BitTiming nominal_bit_timing;
         can::BitTiming data_bit_timing;
+
+        /**
+         * Backup bit timing. Always contains bit timing queryied from TB.
+         */
+        can::BitTiming backup_nominal_bit_timing;
+        can::BitTiming backup_data_bit_timing;
 
         /**
          * Test name
@@ -80,7 +104,6 @@ class test_lib::TestBase
         /**
          * Pointer to DUT Interface object. Object created when TestBase object
          * is created. Used to access DUT by tests.
-         * TODO: Replace with unique pointer!
          */
         can::DutInterface* dut_ifc;
 
@@ -116,7 +139,9 @@ class test_lib::TestBase
         int seed;
 
         /** 
-         * TODO
+         * Number of Stuff bits within one Test variant. Used during tests which
+         * contain single elementary test, with clause like: "each stuff bit will be
+         * tested"
          */
         int stuff_bits_in_variant = 0;
 
@@ -157,16 +182,6 @@ class test_lib::TestBase
         int tec_old;
         int tec_new;
 
-        /*********************************************************************************
-         * THESE ARE LEGACY AND WILL BE DELETED when all tests are cleaned to use uniques!
-         ********************************************************************************/
-        can::Frame *golden_frame;
-        can::BitFrame *driver_bit_frame;
-        can::BitFrame *monitor_bit_frame;
-        can::BitFrame *driver_bit_frame_2;
-        can::BitFrame *monitor_bit_frame_2;
-
-
         /** 
          * Obtains frame type based on test variant.
          */
@@ -186,6 +201,15 @@ class test_lib::TestBase
          * config.
          */
         void SetupTestEnvironment();
+
+        /**
+         * Setup VIP monitor (in HDL simulation) for simulations where IUT starts as
+         * transmitter (8.x tests). This includes following:
+         *   1. Trigger on CAN_TX falling edge.
+         *   2. 0 ns input delay of monitor after triggering.
+         *   3. Wait for monitor item.
+         */
+        void SetupMonitorTxTests();
 
         /**
          * Runs test.
@@ -220,12 +244,39 @@ class test_lib::TestBase
         void FillTestVariants(VariantMatchingType match_type);
 
         /**
-         * Adds elementary test to a test variant
+         * Adds elementary test to a test variant.
          */
         void AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test);
 
         /**
+         * Adds elementary test for each sample point within a given bit-rate.
+         * Elemetary test object is created by this function.
+         * @param test_variant Test variant in which the test will be added
+         * @param nominal True - One test per nominal bit rate sample point
+         *                False - One test per data bit rate sample point
+         * @param frame_type Type of frame assigned to each added test.
+         */
+        void AddElemTestForEachSamplePoint(TestVariant test_variant, bool nominal,
+                                           FrameType frame_type);
+
+        /**
+         * Generates bit-rate with sample point specific for elementary test.
+         * @param elem_test Elementary test which is being run
+         * @param bit_timing Original bit timing configuration
          * 
+         * Sample point is configured like so:
+         *  1. Default bit-rate is taken
+         *  2. Sample point is shifted by index of elementary test:
+         *      test 1 -> PH1 = 1
+         *      test 2 -> PH1 = 2
+         *      ...
+         *     PROP = 0, PH2 is set to achive the same lenght of bit as in default bit rate
+         */
+        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, BitTiming &bit_timing);
+
+        /**
+         * Generates bit sequence (bit representation) of CAN frame from frame.
+         * Standard bit sequence contains ACK recessive (as if frame was transmitted).
          */
         std::unique_ptr<BitFrame> ConvertBitFrame(Frame &golden_frame);
 
@@ -273,6 +324,16 @@ class test_lib::TestBase
         void CheckTecChange(int reference_tec, int delta);
 
         /**
+         * Poll DUTs Fault confinement state until it becomes error active.
+         */
+        void WaitDutErrorActive();
+
+        /**
+         * Disables DUT, configures its bit timing and, re-enables it.
+         */
+        void ReconfigureDutBitTiming();
+
+        /**
          * Loads Bit frames to driver and monitor. Pushes it as driver/monitor FIFO items.
          * @param driver_frame bit frame to be loaded into driver
          * @param monitor_frame bit frame to be loaded into monitor
@@ -303,7 +364,7 @@ class test_lib::TestBase
         void CheckLowerTesterResult();
 
         /**********************************************************************
-         * Print functions. To be used during test
+         * Print functions.
          *********************************************************************/
 
         /**
@@ -327,16 +388,17 @@ class test_lib::TestBase
         void RandomizeAndPrint(Frame *frame);
 
         /**
-         * Deletes: golden frame, driver bit frame and monitor bit frame
-         * TODO: Replace with unique pointers!!
-         */
-        void DeleteCommonObjects();
-
-        /**
          * Forces erase of all test specific pointers. This is desirable to do
          * each iteration.
          */
         void FreeTestObjects();
+
+    private:
+        /**
+         * Calculates number of possible sample points per bit-rate.
+         * @note CTU CAN FDs limit of min(TSEG1) = 3 clock cycles is taken into account.
+         */
+        int CalcNumSamplePoints(BitTiming& bit_timing);
 };
 
 #endif

@@ -75,10 +75,8 @@ class TestIso_8_1_5 : public test_lib::TestBase
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
             
             /* Basic setup for tests where IUT transmits */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -100,8 +98,11 @@ class TestIso_8_1_5 : public test_lib::TestBase
              *      This checks that DUT does not retransmitt the frame!
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->CompensateEdgeForInputDelay(
+                driver_bit_frm->GetBitOf(0, BitType::Ack), dut_input_delay);
 
-            driver_bit_frm->GetBitOf(0, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+            driver_bit_frm->FlipBitAndCompensate(first_interm_bit, dut_input_delay);
 
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 

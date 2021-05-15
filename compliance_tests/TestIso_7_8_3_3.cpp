@@ -111,7 +111,9 @@ class TestIso_7_8_3_3 : public test_lib::TestBase
              *   1. Turn monitor frame as if received!
              *   2. Force CRC delimiter of driven frame to dominant.
              *   3. Force first e bits of CRC delimiter to Recessive (This delays dominant to
-             *      recessive edge by e T!)
+             *      recessive edge by e T!) in driven frame.
+             *   4. Lenghten CRC delimiter in monitored frame by e. This corresponds to how
+             *      IUT should have re-synchronized!
              *   4. Shorten PH2 of CRC Delimiter to 0 since this-one is in multiples of nominal
              *      Time quanta. Lengthen PH1 (still in data time quanta), by e - 1. This has equal
              *      effect as forcing the bit to Recessive e - 1 after sample point. Next bit is
@@ -124,6 +126,9 @@ class TestIso_7_8_3_3 : public test_lib::TestBase
 
             for (int j = 0; j < elem_test.e; j++)
                 crc_delimiter->ForceTimeQuanta(j, BitValue::Recessive);
+
+            monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+                ->LengthenPhase(BitPhase::Sync, elem_test.e);
 
             crc_delimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             BitPhase phase = crc_delimiter->PrevBitPhase(BitPhase::Ph2);

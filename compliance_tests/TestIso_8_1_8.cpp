@@ -86,10 +86,8 @@ class TestIso_8_1_8 : public test_lib::TestBase
             }
 
             /* Basic setup for tests where IUT transmits */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -126,6 +124,9 @@ class TestIso_8_1_8 : public test_lib::TestBase
              *************************************************************************************/
             Bit *last_id_bit = monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier);
             monitor_bit_frm->LooseArbitration(last_id_bit);
+
+            /* Compensate input delay, lenghten bit on which arbitration was lost */
+            last_id_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             driver_bit_frm->GetBitOf(2, BitType::Intermission)->bit_value_ = BitValue::Dominant;
             

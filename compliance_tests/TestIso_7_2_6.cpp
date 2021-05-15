@@ -117,21 +117,26 @@ class TestIso_7_2_6: public test_lib::TestBase
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
 
-            int crc_index;
-            if (test_variant == TestVariant::Common)
-                crc_index = rand() % 15;
-            else if (elem_test.index == 1)
-                crc_index = rand() % 17;
-            else
-                crc_index = rand() % 21;
+            do {
+                Bit *bit = driver_bit_frm->GetRandomBitOf(BitType::Crc);
+                int index = driver_bit_frm->GetBitIndex(bit);
 
-            TestMessage("Forcing CRC bit nr: %d", crc_index);
-            driver_bit_frm->GetBitOfNoStuffBits(crc_index, BitType::Crc)->FlipBitValue();
+                // Ignore stuff bits, and bits just before stuff bits. If we flip bit before
+                // stuff bit, then we cause stuff error too!
+                if (bit->stuff_bit_type == StuffBitType::NoStuffBit &&
+                    driver_bit_frm->GetBit(index + 1)->stuff_bit_type == StuffBitType::NoStuffBit)
+                    {
+                        // This should cause only CRC error, no stuff error!
+                        bit->FlipBitValue();
+                        break;
+                    }
+            } while (true);
 
-            /* 
-             * TODO: Here we should re-stuff CRC because we might have added/removed
-             *       Stuff bit in CRC and causes length of model CRC and to be different!
-             */
+            // If we are in CAN 2.0, then flipping also non-stuff bit can cause change of
+            // CRC lenght since number of stuff bits can change! Therefore, we need to recalculate
+            // stuff bits, but keep the CRC (since it contains corrupted bit that we rely on)!
+            driver_bit_frm->UpdateFrame(false);
+
             driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
 
             monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);

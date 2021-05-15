@@ -77,10 +77,8 @@ class TestIso_8_6_18 : public test_lib::TestBase
             AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetWaitForMonitor(true);
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -117,7 +115,7 @@ class TestIso_8_6_18 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
 
             Bit *last_err_flg_bit = driver_bit_frm->GetBitOf(5, BitType::PassiveErrorFlag);
-            last_err_flg_bit->FlipBitValue();
+            driver_bit_frm->FlipBitAndCompensate(last_err_flg_bit, dut_input_delay);
 
             int bit_index = driver_bit_frm->GetBitIndex(last_err_flg_bit);
             driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);

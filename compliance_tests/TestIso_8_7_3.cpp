@@ -82,42 +82,18 @@ class TestIso_8_7_3 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 1, shortest possible PH2 = 1. Together we test TQ(N) - 3 tests!
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 3; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Have same bit-rate, but
-            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
-            // end.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
-            
-            /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
-
-            // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
-            dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
-            dut_ifc->Enable();
-            TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
-                usleep(100000);
-
-            TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
-
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, backup_nominal_bit_timing);
+            ReconfigureDutBitTiming();
+            WaitDutErrorActive();
 
             uint8_t data_byte = 0x80;
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
@@ -156,11 +132,11 @@ class TestIso_8_7_3 : public test_lib::TestBase
 
             last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_ - 1);
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_ - 1);
-            
-            // IPT of CTU CAN FD is 2
-            // TODO: Generalize IPT as parameter !!
-            last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)->Shorten(nominal_bit_timing.brp_ - 2);
-            last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)->Shorten(nominal_bit_timing.brp_ - 2);
+
+            last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)
+                ->Shorten(nominal_bit_timing.brp_ - dut_ipt);
+            last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)
+                ->Shorten(nominal_bit_timing.brp_ - dut_ipt);
 
             /* This trick needs to be done to check that IUT transmits the first TQ recessive.
              * During this TQ, LT still sends the hard sync edge. This corresponds to

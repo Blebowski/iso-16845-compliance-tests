@@ -91,10 +91,8 @@ class TestIso_8_1_3 : public test_lib::TestBase
             }
 
             /* Basic setup for tests where IUT transmits */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -141,13 +139,16 @@ class TestIso_8_1_3 : public test_lib::TestBase
              *      recessive.
              *   2. Loose arbitration on n-th bit of base identifier in monitored frame. Skip stuff
              *      bits!
-             *   3. Append second frame as if retransmitted by IUT. This one must be created from
+             *   3. Compensate resynchronisation caused by IUTs input delay.
+             *   4. Append second frame as if retransmitted by IUT. This one must be created from
              *      frame which was actually issued to IUT
              *************************************************************************************/
             Bit *loosing_bit =  monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index - 1,
                                                     BitType::BaseIdentifier);
             loosing_bit->bit_value_ = BitValue::Recessive;
             monitor_bit_frm->LooseArbitration(loosing_bit);
+
+            loosing_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             driver_bit_frm_2->TurnReceivedFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());

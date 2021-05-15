@@ -65,6 +65,14 @@ void test_lib::TestBase::ConfigureTest()
     TestMessage("DUT clock period:");
     std::cout << this->dut_clock_period.count() << " ns" << std::endl;
 
+    // TODO: Query input delay from TB, and eventually from VIP configuration !!!
+    this->dut_input_delay = 2;
+    TestMessage("DUT input delay:");
+    std::cout << "2 clock cycles" << std::endl;
+
+    // TODO: Query DUTs information processing time from TB!
+    this->dut_ipt = 2;
+
     this->nominal_bit_timing.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
     this->nominal_bit_timing.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
     this->nominal_bit_timing.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");
@@ -86,7 +94,11 @@ void test_lib::TestBase::ConfigureTest()
     this->nominal_bit_timing.Print();
     TestMessage("Data Bit Timing configuration from TB:");
     this->data_bit_timing.Print();
-    
+
+    // Create backup, so that we can change the actual bit-timing by test.
+    backup_nominal_bit_timing = nominal_bit_timing;
+    backup_data_bit_timing = data_bit_timing;
+
     TestMessage("Configuring Reset agent, executing reset");
     ResetAgentPolaritySet(0);
     ResetAgentAssert();
@@ -110,7 +122,11 @@ void test_lib::TestBase::ConfigureTest()
     CanAgentMonitorFlush();
     CanAgentDriverStop();
     CanAgentMonitorStop();
-    CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(20));
+
+    // Default Monitor delay (used for RX tests), must correspond to IUTs input delay!
+    // Then if driver starts at time T, monitor will start at proper time t + x, where
+    // x corresponds to input delay. Due to this, monitor will be in sync with IUT exactly!
+    CanAgentSetMonitorInputDelay(dut_input_delay * dut_clock_period);
 
     // Most of TCs use driver and monitor simultaneously, therefore there is no
     // need to configure Trigger in each of them!
@@ -125,12 +141,9 @@ void test_lib::TestBase::ConfigureTest()
     TestMessage("Enabling DUT");
     this->dut_ifc->Enable();
 
-    TestMessage("Waiting till DUT is error active!");
-    while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
-        usleep(2000);
+    WaitDutErrorActive();
 
     TestMessage("DUT ON! Test can start!");
-
     TestMessage("TestBase: Configuration Exiting");
 }
 
@@ -148,6 +161,14 @@ void test_lib::TestBase::SetupTestEnvironment()
     PrintTestInfo();
 
     TestBigMessage("Starting test execution: ", test_name);
+}
+
+
+void test_lib::TestBase::SetupMonitorTxTests()
+{
+    CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
+    CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+    CanAgentSetWaitForMonitor(true);
 }
 
 
@@ -313,6 +334,43 @@ void test_lib::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&
         ++i;
     }
     TestMessage("Test variant not found! Ignoring elementary test.");
+}
+
+
+void test_lib::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
+                            bool nominal, FrameType frame_type)
+{
+    BitTiming &bt = nominal ? nominal_bit_timing : data_bit_timing;
+    int num_sp_points = CalcNumSamplePoints(bt);
+
+    for (int i = 1; i <= num_sp_points; i++)
+        AddElemTest(test_variant, ElementaryTest(i, frame_type));
+}
+
+
+BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, BitTiming &bit_timing)
+{
+    BitTiming new_bt;
+
+    // Respect CTU CAN FDs min(TSEG1) == 3 clock cycles!
+    int init_ph1 = (bit_timing.brp_ == 1) ? 2 : 1;
+
+    assert(((elem_test.index < bit_timing.GetBitLengthTimeQuanta() - 1) &&
+             "Invalid test index, can't configure sample point!"));
+
+    // Calculate new bit-rate from configured one. Have same bit-rate, but
+    // different sample point. Shift sample point from TSEG1 = 2 or 3 till
+    // the end
+    new_bt.brp_ = bit_timing.brp_;
+    new_bt.prop_ = 0;
+    new_bt.ph1_ = init_ph1 + elem_test.index - 1;
+    new_bt.ph2_ = bit_timing.GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
+    new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, bit_timing.sjw_);
+
+    TestMessage("New Data bit timing with shifted sample point:");
+    new_bt.Print();
+
+    return new_bt;
 }
 
 
@@ -514,6 +572,23 @@ void test_lib::TestBase::CheckTecChange(int reference_tec, int delta)
 }
 
 
+void test_lib::TestBase::WaitDutErrorActive()
+{
+    TestMessage("Waiting till DUT is error active...");
+    while (dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+        usleep(100000);
+    TestMessage("DUT is error active!");
+}
+
+
+void test_lib::TestBase::ReconfigureDutBitTiming()
+{
+    dut_ifc->Disable();
+    dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+    dut_ifc->Enable();
+}
+
+
 void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
                                                  can::BitFrame &monitor_bit_frame)
 {
@@ -623,13 +698,6 @@ void test_lib::TestBase::RandomizeAndPrint(Frame *frame)
     frame->Print();
 }
 
-void test_lib::TestBase::DeleteCommonObjects()
-{
-    delete golden_frame;
-    delete driver_bit_frame;
-    delete monitor_bit_frame;
-}
-
 void test_lib::TestBase::FreeTestObjects()
 {
     golden_frm.reset();
@@ -638,4 +706,18 @@ void test_lib::TestBase::FreeTestObjects()
     driver_bit_frm_2.reset();
     monitor_bit_frm.reset();
     monitor_bit_frm_2.reset();
+}
+
+
+int test_lib::TestBase::CalcNumSamplePoints(BitTiming& bit_timing)
+{
+    int tmp = bit_timing.GetBitLengthTimeQuanta();
+
+    // With minimal prescaler:
+    //  min TSEG1 = 3, min TSEG 2 = 2
+    // Otherwise:
+    //  min TSEG1 = 2, min TSEG 2 = 1
+    if (bit_timing.brp_ == 1)
+        return tmp - 4;
+    return tmp - 2;
 }

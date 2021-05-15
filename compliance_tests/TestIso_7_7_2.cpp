@@ -109,11 +109,9 @@ class TestIso_7_7_2 : public test_lib::TestBase
              *      intermission with lenght of only e.
              *   5. Turn second monitored frame as if received.
              *   6. In second frame, force 5-th bit of Base identifier to dominant.
-             *   7. In second frame, shorten SOF by 1 TQ (this corresponds to hard-sync with end
-             *      of SYNC phase).
-             *   8. In second frame, insert active error frame from 6-th bit of Base Identifier to
+             *   7. In second frame, insert active error frame from 6-th bit of Base Identifier to
              *      monitored frame. Insert Passive error frame to driven frame.
-             *   9. Append second frame to first frame.
+             *   8. Append second frame to first frame.
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
 
@@ -140,9 +138,6 @@ class TestIso_7_7_2 : public test_lib::TestBase
             monitor_bit_frm_2->TurnReceivedFrame();
 
             driver_bit_frm_2->GetBitOf(4, BitType::BaseIdentifier)->FlipBitValue();
-
-            driver_bit_frm_2->GetBitOf(0, BitType::Sof)->ShortenPhase(BitPhase::Sync, 1);
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->ShortenPhase(BitPhase::Sync, 1);
 
             driver_bit_frm_2->InsertPassiveErrorFrame(5, BitType::BaseIdentifier);
             monitor_bit_frm_2->InsertActiveErrorFrame(5, BitType::BaseIdentifier);

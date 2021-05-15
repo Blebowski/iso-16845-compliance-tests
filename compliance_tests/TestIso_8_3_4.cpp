@@ -82,9 +82,7 @@ class TestIso_8_3_4 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -133,10 +131,11 @@ class TestIso_8_3_4 : public test_lib::TestBase
             else
                 bit_index_to_flip = 7;
 
-            Bit *bitToFlip = driver_bit_frm->GetBitOf(bit_index_to_flip - 1,
-                                                      BitType::ErrorDelimiter);
-            bitToFlip->bit_value_ = BitValue::Dominant;
-            int next_error_flag_index = driver_bit_frm->GetBitIndex(bitToFlip) + 1;
+            Bit *bit_to_flip = driver_bit_frm->GetBitOf(bit_index_to_flip - 1,
+                                                        BitType::ErrorDelimiter);
+            driver_bit_frm->FlipBitAndCompensate(bit_to_flip, dut_input_delay);
+
+            int next_error_flag_index = driver_bit_frm->GetBitIndex(bit_to_flip) + 1;
 
             driver_bit_frm->InsertActiveErrorFrame(next_error_flag_index);
             monitor_bit_frm->InsertActiveErrorFrame(next_error_flag_index);

@@ -86,9 +86,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
 
             dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -158,6 +156,17 @@ class TestIso_8_5_3 : public test_lib::TestBase
                                           err_delim_index);
                 monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive,
                                            err_delim_index);
+
+                /* First dominant bit inserted will cause re-synchronisation due to input
+                 * delay. We need to compensate it by lenghtening monitoried sequence (what
+                 * IUTs perception of frame is).
+                 */
+                if (i == 0)
+                {
+                    // First bit inserted is 7-th passive error flag bit overally.
+                    Bit *comp_bit = monitor_bit_frm->GetBitOf(6, BitType::PassiveErrorFlag);
+                    comp_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+                }
             }
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());

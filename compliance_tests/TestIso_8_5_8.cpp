@@ -77,9 +77,7 @@ class TestIso_8_5_8 : public test_lib::TestBase
 
             dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -112,12 +110,16 @@ class TestIso_8_5_8 : public test_lib::TestBase
             /**************************************************************************************
              * Modify test frames:
              *   1. Loose arbitration on monitored frame on first bit (0x245 vs 0x445 IDs).
-             *   2. Do iteration specific compensation due to different number of stuff bits (since
+             *   2. Compensate IUTs input delay, since next edge applied by LT will be perceived
+             *      as shifted by IUT, due to its input delay.
+             *   3. Do iteration specific compensation due to different number of stuff bits (since
              *      there are different IDs and CRCs):
              *        A. Common variant - remove one bit
-             *   3. Append the same frame, retransmitted.
+             *   4. Append the same frame, retransmitted.
              *************************************************************************************/
             monitor_bit_frm->LooseArbitration(0, BitType::BaseIdentifier);
+            monitor_bit_frm->GetBitOf(0, BitType::BaseIdentifier)
+                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
 
             if (test_variant == TestVariant::Common)
                 monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitType::Data));

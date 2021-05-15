@@ -111,7 +111,10 @@ class TestIso_7_2_5 : public test_lib::TestBase
         }
 
         /*
-         * Choose CRC bit with required value for CRC error insertion. Stuff bits are left out.
+         * Choose CRC bit with required value for CRC error insertion.
+         * Following bits are left out:
+         *  - Stuff bit
+         *  - A bit before stuff bit (if not left out, undesired stuff error will occur)
          */
         int ChooseCrcBitToCorrupt(BitFrame *bit_frame, BitValue bit_value)
         {
@@ -120,7 +123,11 @@ class TestIso_7_2_5 : public test_lib::TestBase
             do {
                 is_ok = true;
                 bit = bit_frame->GetRandomBitOf(BitType::Crc);
+                int bit_index = bit_frame->GetBitIndex(bit);
+
                 if (bit->stuff_bit_type != StuffBitType::NoStuffBit)
+                    is_ok = false;
+                if (driver_bit_frm->GetBit(bit_index + 1)->stuff_bit_type != StuffBitType::NoStuffBit)
                     is_ok = false;
                 if (bit->bit_value_ != bit_value)
                     is_ok = false;

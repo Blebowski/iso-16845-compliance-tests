@@ -76,10 +76,8 @@ class TestIso_8_6_21 : public test_lib::TestBase
             AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
-            CanAgentSetWaitForMonitor(true);
 
             dut_ifc->SetTec(8);
         }
@@ -125,6 +123,10 @@ class TestIso_8_6_21 : public test_lib::TestBase
             last_base_id->bit_value_ = BitValue::Dominant;
 
             monitor_bit_frm->LooseArbitration(last_base_id);
+
+            // Compensate IUTs input delay, since it will resynchronize due to bits which are
+            // further sent by LT.
+            last_base_id->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 

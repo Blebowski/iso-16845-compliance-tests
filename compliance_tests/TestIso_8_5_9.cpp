@@ -87,9 +87,7 @@ class TestIso_8_5_9 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }            
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -168,6 +166,9 @@ class TestIso_8_5_9 : public test_lib::TestBase
             /* Append second one */
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm_2->TurnReceivedFrame();
+            // Compensate IUTs input delay
+            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)
+                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
             /* Append third one */

@@ -83,9 +83,7 @@ class TestIso_8_3_2 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
@@ -132,7 +130,8 @@ class TestIso_8_3_2 : public test_lib::TestBase
             driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
             monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-            driver_bit_frm->GetBitOf(2, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            Bit *last_interm_bit = driver_bit_frm->GetBitOf(2, BitType::Intermission);
+            driver_bit_frm->FlipBitAndCompensate(last_interm_bit, dut_input_delay);
 
             driver_bit_frm_2->TurnReceivedFrame();
             driver_bit_frm_2->RemoveBit(0, BitType::Sof);

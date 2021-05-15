@@ -87,9 +87,7 @@ class TestIso_8_4_4 : public test_lib::TestBase
             }
 
             /* Standard settings for tests where IUT is transmitter */
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
             /* Dont enable TX to RX feedback beacuse we need to force Dominant overload flag to
              * be received as Recessive!
              */
@@ -120,10 +118,10 @@ class TestIso_8_4_4 : public test_lib::TestBase
              *        This is valid according to spec. since for transmitter frame vaidation shall
              *        occur at the end of EOF!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->PutAcknowledge(dut_input_delay);
 
             Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
-            first_interm_bit->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->FlipBitAndCompensate(first_interm_bit, dut_input_delay);
 
             driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);

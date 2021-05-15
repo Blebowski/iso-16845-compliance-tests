@@ -88,8 +88,10 @@ class TestIso_8_7_5 : public test_lib::TestBase
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
+
+            assert((nominal_bit_timing.brp_ > 2 &&
+                    "BRP Nominal must be bigger than 2 in this test due to test architecture!"));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
