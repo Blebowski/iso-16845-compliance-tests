@@ -395,7 +395,7 @@ class TestIso_7_2_2 : public test_lib::TestBase
 
                 Bit *stuff_bit_to_flip = driver_bit_frm_2->GetStuffBit(stuff_bit);
                 int bit_index = driver_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
-                stuff_bit_to_flip->FlipBitValue();
+                driver_bit_frm->FlipBitAndCompensate(stuff_bit_to_flip, dut_input_delay);
 
                 driver_bit_frm_2->InsertPassiveErrorFrame(bit_index + 1);
                 monitor_bit_frm_2->InsertActiveErrorFrame(bit_index + 1);
