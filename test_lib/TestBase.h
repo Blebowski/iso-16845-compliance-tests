@@ -23,7 +23,6 @@
 #ifndef TEST_BASE
 #define TEST_BASE
 
-using namespace can;
 
 /**
  * @namespace test_lib
@@ -80,10 +79,18 @@ class test_lib::TestBase
         int dut_input_delay;
 
         /**
-         * CAN bus Bit timing setting for nominal/data bit rate.
+         * Default CAN bus bit timing settings queried from TB. 
          */
-        BitTiming nominal_bit_timing;
+        can::BitTiming nominal_bit_timing;
         can::BitTiming data_bit_timing;
+
+        /**
+         * Test specific bit timing. Used by some tests if the test needs to reconfigure
+         * the bit timing to meet purposes of the test (e.g. one elementary test for each
+         * sample point position -> changing sample point requires reconfiguring bit timing).
+         */
+        can::BitTiming test_nominal_bit_timing;
+        can::BitTiming test_data_bit_timing;
 
         /**
          * Test name
@@ -233,9 +240,35 @@ class test_lib::TestBase
         void FillTestVariants(VariantMatchingType match_type);
 
         /**
-         * Adds elementary test to a test variant
+         * Adds elementary test to a test variant.
          */
         void AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test);
+
+        /**
+         * Adds elementary test for each sample point within a given bit-rate.
+         * Elemetary test object is created by this function.
+         * @param test_variant Test variant in which the test will be added
+         * @param nominal True - One test per nominal bit rate sample point
+         *                False - One test per data bit rate sample point
+         * @param frame_type Type of frame assigned to each added test.
+         */
+        void AddElemTestForEachSamplePoint(TestVariant test_variant, bool nominal,
+                                           FrameType frame_type);
+
+        /**
+         * Generates bit-rate with sample point specific for elementary test.
+         * @param elem_test Elementary test which is being run
+         * @param bit_timing Original bit timing configuration
+         * 
+         * Sample point is configured like so:
+         *  1. Default bit-rate is taken
+         *  2. Sample point is shifted by index of elementary test:
+         *      test 1 -> PH1 = 1
+         *      test 2 -> PH1 = 2
+         *      ...
+         *     PROP = 0, PH2 is set to achive the same lenght of bit as in default bit rate
+         */
+        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, BitTiming &bit_timing);
 
         /**
          * Generates bit sequence (bit representation) of CAN frame from frame.
@@ -285,6 +318,16 @@ class test_lib::TestBase
          *              was incremented, negative that it was decremented.
          */
         void CheckTecChange(int reference_tec, int delta);
+
+        /**
+         * Poll DUTs Fault confinement state until it becomes error active.
+         */
+        void WaitDutErrorActive();
+
+        /**
+         * Disables DUT, configures its bit timing and, re-enables it. 
+         */
+        void ReconfigureDutBitTiming(BitTiming nominal, BitTiming data);
 
         /**
          * Loads Bit frames to driver and monitor. Pushes it as driver/monitor FIFO items.
@@ -345,6 +388,13 @@ class test_lib::TestBase
          * each iteration.
          */
         void FreeTestObjects();
+
+    private:
+        /**
+         * Calculates number of possible sample points per bit-rate.
+         * @note CTU CAN FDs limit of min(TSEG1) = 3 clock cycles is taken into account.
+         */
+        int CalcNumSamplePoints(BitTiming& bit_timing);
 };
 
 #endif

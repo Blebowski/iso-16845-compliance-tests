@@ -333,6 +333,43 @@ void test_lib::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&
 }
 
 
+void test_lib::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
+                            bool nominal, FrameType frame_type)
+{
+    BitTiming &bt = nominal ? nominal_bit_timing : data_bit_timing;
+    int num_sp_points = CalcNumSamplePoints(bt);
+
+    for (int i = 1; i <= num_sp_points; i++)
+        AddElemTest(test_variant, ElementaryTest(i, frame_type));
+}
+
+
+BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, BitTiming &bit_timing)
+{
+    BitTiming new_bt;
+
+    // Respect CTU CAN FDs min(TSEG1) == 3 clock cycles!
+    int init_ph1 = (bit_timing.brp_ == 1) ? 2 : 1;
+
+    assert(((elem_test.index < bit_timing.GetBitLengthTimeQuanta() - 1) &&
+             "Invalid test index, can't configure sample point!"));
+
+    // Calculate new bit-rate from configured one. Have same bit-rate, but
+    // different sample point. Shift sample point from TSEG1 = 2 or 3 till
+    // the end
+    new_bt.brp_ = bit_timing.brp_;
+    new_bt.prop_ = 0;
+    new_bt.ph1_ = init_ph1 + elem_test.index - 1;
+    new_bt.ph2_ = bit_timing.GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
+    new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, bit_timing.sjw_);
+
+    TestMessage("New Data bit timing with shifted sample point:");
+    new_bt.Print();
+
+    return new_bt;
+}
+
+
 std::unique_ptr<BitFrame> test_lib::TestBase::ConvertBitFrame(Frame &golden_frame)
 {
     return std::make_unique<BitFrame>(
@@ -531,6 +568,23 @@ void test_lib::TestBase::CheckTecChange(int reference_tec, int delta)
 }
 
 
+void test_lib::TestBase::WaitDutErrorActive()
+{
+    TestMessage("Waiting till DUT is error active...");
+    while (dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+        usleep(100000);
+    TestMessage("DUT is error active!");
+}
+
+
+void test_lib::TestBase::ReconfigureDutBitTiming(BitTiming nominal, BitTiming data)
+{
+    dut_ifc->Disable();
+    dut_ifc->ConfigureBitTiming(nominal, data);
+    dut_ifc->Enable();
+}
+
+
 void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
                                                  can::BitFrame &monitor_bit_frame)
 {
@@ -648,4 +702,18 @@ void test_lib::TestBase::FreeTestObjects()
     driver_bit_frm_2.reset();
     monitor_bit_frm.reset();
     monitor_bit_frm_2.reset();
+}
+
+
+int test_lib::TestBase::CalcNumSamplePoints(BitTiming& bit_timing)
+{
+    int tmp = bit_timing.GetBitLengthTimeQuanta();
+
+    // With minimal prescaler:
+    //  min TSEG1 = 3, min TSEG 2 = 2
+    // Otherwise:
+    //  min TSEG1 = 2, min TSEG 2 = 1
+    if (bit_timing.brp_ == 1)
+        return tmp - 4;
+    return tmp - 2;
 }
