@@ -121,11 +121,9 @@ class TestIso_7_1_6 : public test_lib::TestBase
             else
                 nominal_bit_timing.brp_ = data_bit_timing.brp_ * 8;
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
-            
-            /* Enable and wait till integration is over again */
             dut_ifc->Enable();
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
-                usleep(2000);
+
+            WaitDutErrorActive();
 
             /**************************************************************************************
              * Generate frames!
