@@ -78,7 +78,6 @@ class TestIso_8_7_1 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::Common);
             AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
-
             SetupMonitorTxTests();
 
             assert((nominal_bit_timing.brp_ > 1 &&
@@ -88,8 +87,8 @@ class TestIso_8_7_1 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            test_nominal_bit_timing = GenerateSamplePointForTest(elem_test, nominal_bit_timing);
-            ReconfigureDutBitTiming(test_nominal_bit_timing, data_bit_timing);
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, backup_nominal_bit_timing);
+            ReconfigureDutBitTiming();
             WaitDutErrorActive();
 
             uint8_t data_byte = 0x80;
@@ -124,12 +123,12 @@ class TestIso_8_7_1 : public test_lib::TestBase
             driver_bit_frm->PutAcknowledge(dut_input_delay);
 
             Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(1, BitType::Data);
-            int start_index = test_nominal_bit_timing.prop_ + test_nominal_bit_timing.ph1_ + 2;
+            int start_index = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 2;
             int end_index = bit_to_corrupt->GetLengthTimeQuanta();
             bit_to_corrupt->ForceTimeQuanta(start_index, end_index, BitValue::Recessive);
 
             bit_to_corrupt = driver_bit_frm_2->GetBitOf(1, BitType::Data);
-            start_index = test_nominal_bit_timing.prop_ + test_nominal_bit_timing.ph1_;
+            start_index = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_;
             bit_to_corrupt->ForceTimeQuanta(start_index, end_index, BitValue::Recessive);
 
             int cycles_length = bit_to_corrupt->GetTimeQuanta(start_index - 1)->getLengthCycles();

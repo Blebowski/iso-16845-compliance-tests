@@ -79,18 +79,22 @@ class test_lib::TestBase
         int dut_input_delay;
 
         /**
-         * Default CAN bus bit timing settings queried from TB. 
+         * Information processing time of DUT (in minimal time quanta = clock cycles)
+         */
+        int dut_ipt;
+
+        /**
+         * CAN Bus bit timing. By default contains bit timing queryied from TB.
+         * If test requires other bit timing, it will modify it!
          */
         can::BitTiming nominal_bit_timing;
         can::BitTiming data_bit_timing;
 
         /**
-         * Test specific bit timing. Used by some tests if the test needs to reconfigure
-         * the bit timing to meet purposes of the test (e.g. one elementary test for each
-         * sample point position -> changing sample point requires reconfiguring bit timing).
+         * Backup bit timing. Always contains bit timing queryied from TB.
          */
-        can::BitTiming test_nominal_bit_timing;
-        can::BitTiming test_data_bit_timing;
+        can::BitTiming backup_nominal_bit_timing;
+        can::BitTiming backup_data_bit_timing;
 
         /**
          * Test name
@@ -325,9 +329,9 @@ class test_lib::TestBase
         void WaitDutErrorActive();
 
         /**
-         * Disables DUT, configures its bit timing and, re-enables it. 
+         * Disables DUT, configures its bit timing and, re-enables it.
          */
-        void ReconfigureDutBitTiming(BitTiming nominal, BitTiming data);
+        void ReconfigureDutBitTiming();
 
         /**
          * Loads Bit frames to driver and monitor. Pushes it as driver/monitor FIFO items.

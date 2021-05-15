@@ -70,6 +70,9 @@ void test_lib::TestBase::ConfigureTest()
     TestMessage("DUT input delay:");
     std::cout << "2 clock cycles" << std::endl;
 
+    // TODO: Query DUTs information processing time from TB!
+    this->dut_ipt = 2;
+
     this->nominal_bit_timing.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
     this->nominal_bit_timing.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
     this->nominal_bit_timing.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");
@@ -91,6 +94,10 @@ void test_lib::TestBase::ConfigureTest()
     this->nominal_bit_timing.Print();
     TestMessage("Data Bit Timing configuration from TB:");
     this->data_bit_timing.Print();
+
+    // Create backup, so that we can change the actual bit-timing by test.
+    backup_nominal_bit_timing = nominal_bit_timing;
+    backup_data_bit_timing = data_bit_timing;
 
     TestMessage("Configuring Reset agent, executing reset");
     ResetAgentPolaritySet(0);
@@ -134,12 +141,9 @@ void test_lib::TestBase::ConfigureTest()
     TestMessage("Enabling DUT");
     this->dut_ifc->Enable();
 
-    TestMessage("Waiting till DUT is error active!");
-    while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
-        usleep(2000);
+    WaitDutErrorActive();
 
     TestMessage("DUT ON! Test can start!");
-
     TestMessage("TestBase: Configuration Exiting");
 }
 
@@ -577,10 +581,10 @@ void test_lib::TestBase::WaitDutErrorActive()
 }
 
 
-void test_lib::TestBase::ReconfigureDutBitTiming(BitTiming nominal, BitTiming data)
+void test_lib::TestBase::ReconfigureDutBitTiming()
 {
     dut_ifc->Disable();
-    dut_ifc->ConfigureBitTiming(nominal, data);
+    dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
     dut_ifc->Enable();
 }
 
