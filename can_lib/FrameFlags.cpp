@@ -15,188 +15,150 @@
 #include "can.h"
 #include "FrameFlags.h"
 
-can::FrameFlags::FrameFlags()
-{
-    SetDefaultValues();
-    RandomizeEnableAll();
-}
+can::FrameFlags::FrameFlags() :
+    randomize_fdf_(true),
+    randomize_ide_(true),
+    randomize_rtr_(true),
+    randomize_brs_(true),
+    randomize_esi_(true)
+{}
 
-can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
-                             RtrFlag is_rtr,
-                             BrsFlag is_brs, EsiFlag is_esi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr,
+                             BrsFlag is_brs, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_ide_(is_ide),
+                            is_rtr_(is_rtr),
+                            is_brs_(is_brs),
+                            is_esi_(is_esi)                           
 {
-    is_fdf_ = is_fdf;
-    is_ide_ = is_ide;
-    is_rtr_ = is_rtr;
-    is_brs_ = is_brs;
-    is_esi_ = is_esi;
-
     CorrectFlags();
-    RandomizeDisableAll();
 }
 
-can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
-                             RtrFlag is_rtr, EsiFlag is_esi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_ide_(is_ide),
+                            is_rtr_(is_rtr),
+                            is_esi_(is_esi),
+                            randomize_brs_(true)
 {
-    is_fdf_ = is_fdf;
-    is_ide_ = is_ide;
-    is_rtr_ = is_rtr;
-    is_esi_ = is_esi;
-
     CorrectFlags();
-    RandomizeDisableAll();
-    randomize_brs = true;
 }
 
-can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_rtr_(is_rtr),
+                            is_brs_(is_brs),
+                            is_esi_(is_esi),
+                            randomize_ide_(true)
 {
-    SetDefaultValues();
-
-    is_fdf_ = is_fdf;
-    is_rtr_ = is_rtr;
-    is_brs_ = is_brs;
-    is_esi_ = is_esi;
-
-    RandomizeDisableAll();
-    randomize_ide = true;
-}
-
-can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi)
-{
-    SetDefaultValues();
-
-    is_fdf_ = is_fdf;
-    is_rtr_ = is_rtr;
-    is_esi_ = is_esi;
-
-    RandomizeDisableAll();
-    randomize_ide = true;
-    randomize_brs = true;
-}
-
-can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
-                            RtrFlag is_rtr)
-{
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_ide_ = is_ide;
-    is_rtr_ = is_rtr;
-
     CorrectFlags();
-    RandomizeDisableAll();
-    randomize_esi = true;
-    randomize_brs = true;
 }
 
-
-can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide)
+can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_rtr_(is_rtr),
+                            is_esi_(is_esi),
+                            randomize_ide_(true),
+                            randomize_brs_(true)
 {
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_ide_ = is_ide;
-
-    RandomizeEnableAll();
-    randomize_fdf = false;
-    randomize_ide = false;
-}
-
-
-can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr)
-{
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_rtr_ = is_rtr;
-
     CorrectFlags();
-    RandomizeEnableAll();
-    randomize_fdf = false;
-    randomize_rtr = false;
 }
 
-can::FrameFlags::FrameFlags(FrameType is_fdf)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr):
+                            is_fdf_(is_fdf),
+                            is_ide_(is_ide),
+                            is_rtr_(is_rtr),
+                            randomize_esi_(true),
+                            randomize_brs_(true)
 {
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-
-    RandomizeEnableAll();
-    randomize_fdf = false;
-}
-
-
-can::FrameFlags::FrameFlags(IdentifierType is_ide)
-{
-    SetDefaultValues();
-    
-    is_ide_ = is_ide;
-
-    RandomizeEnableAll();
-    randomize_ide = false;
-}
-
-
-can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs)
-{
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_brs_ = is_brs;
-
     CorrectFlags();
-    RandomizeEnableAll();
-    randomize_fdf = false;
-    randomize_brs = false;
 }
 
 
-can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs,
-                            EsiFlag is_esi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide):
+                            is_fdf_(is_fdf),
+                            is_ide_(is_ide),
+                            randomize_rtr_(true),
+                            randomize_brs_(true),
+                            randomize_esi_(true)
 {
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_brs_ = is_brs;
-    is_esi_ = is_esi;
-
     CorrectFlags();
-    RandomizeEnableAll();
-    randomize_fdf = false;
-    randomize_brs = false;
-    randomize_esi = false;
 }
 
 
-can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi)
+can::FrameFlags::FrameFlags(FrameType is_fdf, RtrFlag is_rtr):
+                            is_fdf_(is_fdf),
+                            is_rtr_(is_rtr),
+                            randomize_ide_(true),
+                            randomize_brs_(true),
+                            randomize_esi_(true)
 {
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_esi_ = is_esi;
-
     CorrectFlags();
-    RandomizeEnableAll();
-    randomize_fdf = false;
-    randomize_esi = false;
+}
+
+can::FrameFlags::FrameFlags(FrameType is_fdf):
+                            is_fdf_(is_fdf),
+                            randomize_ide_(true),
+                            randomize_rtr_(true),
+                            randomize_brs_(true),
+                            randomize_esi_(true)
+{
+    CorrectFlags();
 }
 
 
-can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide,
-                            EsiFlag is_esi)
+can::FrameFlags::FrameFlags(IdentifierType is_ide):
+                            is_ide_(is_ide),
+                            randomize_fdf_(true),
+                            randomize_rtr_(true),
+                            randomize_brs_(true),
+                            randomize_esi_(true)
 {
-    SetDefaultValues();
-    
-    is_fdf_ = is_fdf;
-    is_esi_ = is_esi;
-    is_ide_ = is_ide;
-
     CorrectFlags();
-    RandomizeEnableAll();
-    randomize_fdf = false;
-    randomize_esi = false;
-    randomize_ide = false;
+}
+
+
+can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs):
+                            is_fdf_(is_fdf),
+                            is_brs_(is_brs),
+                            randomize_ide_(true),
+                            randomize_rtr_(true),
+                            randomize_esi_(true)
+{
+    CorrectFlags();
+}
+
+
+can::FrameFlags::FrameFlags(FrameType is_fdf, BrsFlag is_brs, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_brs_(is_brs),
+                            is_esi_(is_esi),
+                            randomize_ide_(true),
+                            randomize_rtr_(true)
+{
+    CorrectFlags();
+}
+
+
+can::FrameFlags::FrameFlags(FrameType is_fdf, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_esi_(is_esi),
+                            randomize_ide_(true),
+                            randomize_rtr_(true),
+                            randomize_brs_(true)
+{
+    CorrectFlags();
+}
+
+
+can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide, EsiFlag is_esi):
+                            is_fdf_(is_fdf),
+                            is_ide_(is_ide),
+                            is_esi_(is_esi),
+                            randomize_rtr_(true),
+                            randomize_brs_(true)
+{
+    CorrectFlags();
 }
 
 bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
@@ -217,7 +179,7 @@ bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
 
 void can::FrameFlags::Randomize()
 {
-    if (randomize_fdf)
+    if (randomize_fdf_)
     {
         if (rand() % 2 == 1)
             is_fdf_ = FrameType::Can2_0;
@@ -225,7 +187,7 @@ void can::FrameFlags::Randomize()
             is_fdf_ = FrameType::CanFd;
     }
 
-    if (randomize_ide)
+    if (randomize_ide_)
     {
         if (rand() % 2 == 1)
             is_ide_ = IdentifierType::Base;
@@ -233,7 +195,7 @@ void can::FrameFlags::Randomize()
             is_ide_ = IdentifierType::Extended;
     }    
 
-    if (randomize_rtr)
+    if (randomize_rtr_)
     {
         if (is_fdf_ == FrameType::CanFd)
             is_rtr_ = RtrFlag::DataFrame;
@@ -243,7 +205,7 @@ void can::FrameFlags::Randomize()
             is_rtr_ = RtrFlag::DataFrame;
     }
 
-    if (randomize_brs)
+    if (randomize_brs_)
     {
         if (is_fdf_ == FrameType::Can2_0)
             is_brs_ = BrsFlag::DontShift;
@@ -253,7 +215,7 @@ void can::FrameFlags::Randomize()
             is_brs_ = BrsFlag::DontShift;
     }
 
-    if (randomize_esi)
+    if (randomize_esi_)
     {
         if (is_fdf_ == FrameType::Can2_0)
             is_esi_ = EsiFlag::ErrorActive;
@@ -262,26 +224,6 @@ void can::FrameFlags::Randomize()
         else
             is_esi_ = EsiFlag::ErrorActive;
     }
-}
-
-
-void can::FrameFlags::RandomizeEnableAll()
-{
-    randomize_fdf = true;
-    randomize_ide = true;
-    randomize_rtr = true;
-    randomize_brs = true;
-    randomize_esi = true;
-}
-
-
-void can::FrameFlags::RandomizeDisableAll()
-{
-    randomize_fdf = false;
-    randomize_ide = false;
-    randomize_rtr = false;
-    randomize_brs = false;
-    randomize_esi = false;
 }
 
 
@@ -301,13 +243,4 @@ void can::FrameFlags::CorrectFlags()
         std::cerr << "Can't set ESI flag when FDF is not set, ESI ignored!\n";
         is_esi_ = EsiFlag::ErrorActive;
     }
-}
-
-void can::FrameFlags::SetDefaultValues()
-{
-    is_fdf_ = FrameType::Can2_0;
-    is_ide_ = IdentifierType::Base;
-    is_esi_ = EsiFlag::ErrorActive;
-    is_rtr_ = RtrFlag::DataFrame;
-    is_brs_ = BrsFlag::DontShift;
 }

@@ -27,18 +27,18 @@ class can::FrameFlags
     public:
 
         /* CAN frame flags */
-        FrameType is_fdf_;
-        IdentifierType is_ide_;
-        RtrFlag is_rtr_;
-        BrsFlag is_brs_;
-        EsiFlag is_esi_;
+        FrameType is_fdf_ = FrameType::Can2_0;
+        IdentifierType is_ide_ = IdentifierType::Base;
+        RtrFlag is_rtr_ = RtrFlag::DataFrame;
+        BrsFlag is_brs_ = BrsFlag::DontShift;
+        EsiFlag is_esi_ = EsiFlag::ErrorActive;
 
         /* Randomization attributes */
-        bool randomize_fdf;
-        bool randomize_ide;
-        bool randomize_rtr;
-        bool randomize_brs;
-        bool randomize_esi;
+        bool randomize_fdf_ = false;
+        bool randomize_ide_ = false;
+        bool randomize_rtr_ = false;
+        bool randomize_brs_ = false;
+        bool randomize_esi_ = false;
 
         /* 
          * A constructor which does not specify all attributes, leaves these arguments enabled
@@ -54,7 +54,7 @@ class can::FrameFlags
         FrameFlags();
 
         /**
-         * Nothing is randomized
+         * Nothing is randomized.
          */
         FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr, BrsFlag is_brs,
                    EsiFlag is_esi);
@@ -125,16 +125,6 @@ class can::FrameFlags
          */
         void Randomize();
 
-        /**
-         * Enables all atributes/flags for randomization.
-         */
-        void RandomizeEnableAll();
-
-        /**
-         * Disables all atributes/flags for randomization.
-         */
-        void RandomizeDisableAll();
-
         friend bool operator==(const FrameFlags &lhs, const FrameFlags rhs);
 
     private:
@@ -146,10 +136,6 @@ class can::FrameFlags
          */
         void CorrectFlags();
 
-        /**
-         * Sets default values of flags
-         */
-        void SetDefaultValues();
 };
 
 #endif
