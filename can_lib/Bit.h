@@ -266,9 +266,6 @@ class can::Bit {
 
     protected:
 
-        /**
-         * 
-         */
         const BitTypeName bit_type_names_[29] =
         {
             {BitType::Sof,                  "SOF"},
