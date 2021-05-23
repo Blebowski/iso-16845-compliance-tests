@@ -50,7 +50,7 @@ class can::Bit {
         BitType bit_type_;
 
         /* Type of stuff bit: DontShift stuff bit, fixed, regular */
-        StuffBitType stuff_bit_type;
+        StuffBitType stuff_bit_type_;
         
         /* Value on CAN bus: Dominant, Recessive */
         BitValue bit_value_;

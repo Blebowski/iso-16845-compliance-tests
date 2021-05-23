@@ -123,8 +123,8 @@ class TestIso_7_2_6: public test_lib::TestBase
 
                 // Ignore stuff bits, and bits just before stuff bits. If we flip bit before
                 // stuff bit, then we cause stuff error too!
-                if (bit->stuff_bit_type == StuffBitType::NoStuffBit &&
-                    driver_bit_frm->GetBit(index + 1)->stuff_bit_type == StuffBitType::NoStuffBit)
+                if (bit->stuff_bit_type_ == StuffBitType::NoStuffBit &&
+                    driver_bit_frm->GetBit(index + 1)->stuff_bit_type_ == StuffBitType::NoStuffBit)
                     {
                         // This should cause only CRC error, no stuff error!
                         bit->FlipBitValue();

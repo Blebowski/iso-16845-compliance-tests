@@ -150,7 +150,7 @@ class TestIso_8_6_7 : public test_lib::TestBase
             case 7:
                 do {
                     bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);
-                } while (bit_to_corrupt->stuff_bit_type != StuffBitType::FixedStuffBit);
+                } while (bit_to_corrupt->stuff_bit_type_ != StuffBitType::FixedStuffBit);
                 break;
             default:
                 bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);

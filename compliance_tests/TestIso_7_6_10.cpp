@@ -132,7 +132,7 @@ class TestIso_7_6_10 : public test_lib::TestBase
                 crc_bit_index = rand() % driver_bit_frm->GetFieldLength(BitType::Crc);
                 crc_bit = driver_bit_frm->GetBitOf(crc_bit_index, BitType::Crc);
                 crc_overall_index = driver_bit_frm->GetBitIndex(crc_bit);
-            } while (crc_bit->stuff_bit_type != StuffBitType::NoStuffBit);
+            } while (crc_bit->stuff_bit_type_ != StuffBitType::NoStuffBit);
             crc_bit->FlipBitValue();
             monitor_bit_frm->GetBit(crc_overall_index)->FlipBitValue();
 

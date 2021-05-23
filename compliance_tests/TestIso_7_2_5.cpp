@@ -125,9 +125,9 @@ class TestIso_7_2_5 : public test_lib::TestBase
                 bit = bit_frame->GetRandomBitOf(BitType::Crc);
                 int bit_index = bit_frame->GetBitIndex(bit);
 
-                if (bit->stuff_bit_type != StuffBitType::NoStuffBit)
+                if (bit->stuff_bit_type_ != StuffBitType::NoStuffBit)
                     is_ok = false;
-                if (driver_bit_frm->GetBit(bit_index + 1)->stuff_bit_type != StuffBitType::NoStuffBit)
+                if (driver_bit_frm->GetBit(bit_index + 1)->stuff_bit_type_ != StuffBitType::NoStuffBit)
                     is_ok = false;
                 if (bit->bit_value_ != bit_value)
                     is_ok = false;

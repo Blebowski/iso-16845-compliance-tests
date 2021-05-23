@@ -87,8 +87,6 @@ class TestIso_8_8_1_1 : public test_lib::TestBase
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
-
-            
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -110,6 +108,7 @@ class TestIso_8_8_1_1 : public test_lib::TestBase
             dut_ifc->Disable();
             dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
             dut_ifc->Enable();
+            
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
                 usleep(100000);

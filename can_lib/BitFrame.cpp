@@ -83,7 +83,7 @@ void can::BitFrame::UpdateCrcBits()
         // inserted (as CRC affects value of these stuff bits), therefore
         // it is illegal to calculate CRC when stuff bits in it are already
         // inserted!
-        assert(bit_it->stuff_bit_type == StuffBitType::NoStuffBit);
+        assert(bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit);
 
         bit_it->bit_value_ = (BitValue)((tmp_crc >> i) & 0x1);
         i--;
@@ -435,10 +435,10 @@ uint32_t can::BitFrame::CalculateCrc()
         crc_nxt_21 = (uint32_t)(bit_value) ^ ((crc21_ >> 20) & 0x1);
 
         // Shift left, CRC 15 always without stuff bits
-        if (bit_it->stuff_bit_type == StuffBitType::NoStuffBit)
+        if (bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit)
             crc15_ = (crc15_ << 1);
 
-        if (bit_it->stuff_bit_type != StuffBitType::FixedStuffBit)
+        if (bit_it->stuff_bit_type_ != StuffBitType::FixedStuffBit)
         {
             crc17_ = (crc17_ << 1);
             crc21_ = (crc21_ << 1);
@@ -449,11 +449,11 @@ uint32_t can::BitFrame::CalculateCrc()
         crc21_ &= 0x1FFFFF;
 
         // Calculate by polynomial
-        if ((crc_nxt_15 == 1) && (bit_it->stuff_bit_type == StuffBitType::NoStuffBit))
+        if ((crc_nxt_15 == 1) && (bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit))
             crc15_ ^= 0xC599;
-        if ((crc_nxt_17 == 1) && (bit_it->stuff_bit_type != StuffBitType::FixedStuffBit))
+        if ((crc_nxt_17 == 1) && (bit_it->stuff_bit_type_ != StuffBitType::FixedStuffBit))
             crc17_ ^= 0x3685B;
-        if ((crc_nxt_21 == 1) && (bit_it->stuff_bit_type != StuffBitType::FixedStuffBit))
+        if ((crc_nxt_21 == 1) && (bit_it->stuff_bit_type_ != StuffBitType::FixedStuffBit))
             crc21_ ^= 0x302899;
 
         bit_it++;
@@ -640,7 +640,7 @@ can::Bit* can::BitFrame::GetBitOfNoStuffBits(size_t index, BitType bit_type)
     while (bit_it != bits_.end())
     {
         if (bit_it->bit_type_ == bit_type &&
-            bit_it->stuff_bit_type == StuffBitType::NoStuffBit)
+            bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit)
             if (i == index) {
                 break;
             } else {
@@ -700,8 +700,8 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if (bit_it->stuff_bit_type == StuffBitType::NormalStuffBit ||
-            bit_it->stuff_bit_type == StuffBitType::FixedStuffBit)
+        if (bit_it->stuff_bit_type_ == StuffBitType::NormalStuffBit ||
+            bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit)
             i++;
     }
 
@@ -719,8 +719,8 @@ can::Bit* can::BitFrame::GetStuffBit(int index, BitType bit_type)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if ((bit_it->stuff_bit_type == StuffBitType::NormalStuffBit ||
-             bit_it->stuff_bit_type == StuffBitType::FixedStuffBit) &&
+        if ((bit_it->stuff_bit_type_ == StuffBitType::NormalStuffBit ||
+             bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit) &&
             (bit_it->bit_type_ == bit_type))
             i++;
     }
@@ -738,7 +738,7 @@ can::Bit* can::BitFrame::GetStuffBit(BitType bit_type, StuffBitType stuff_bit_ty
                                [bit_type, stuff_bit_type, bit_value] (Bit bit) {
         if (bit.bit_type_ == bit_type &&
             bit.bit_value_ == bit_value &&
-            bit.stuff_bit_type == stuff_bit_type)
+            bit.stuff_bit_type_ == stuff_bit_type)
             return true;
         return false;
         });
@@ -753,7 +753,7 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit)
+        if (bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit)
             i++;
     }
 
@@ -772,7 +772,7 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index, BitValue bit_value)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit &&
+        if (bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit &&
             bit_it->bit_value_ == bit_value)
             i++;
     }
@@ -1067,7 +1067,7 @@ void can::BitFrame::TurnReceivedFrame()
 int can::BitFrame::GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type](Bit bit) {
-        if (bit.bit_type_ == bit_type && bit.stuff_bit_type == stuff_bit_type)
+        if (bit.bit_type_ == bit_type && bit.stuff_bit_type_ == stuff_bit_type)
             return true;
         return false;
     });
@@ -1079,7 +1079,7 @@ int can::BitFrame::GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type, bit_value](Bit bit) {
         if (bit.bit_type_ == bit_type &&
-            bit.stuff_bit_type == stuff_bit_type &&
+            bit.stuff_bit_type_ == stuff_bit_type &&
             bit.bit_value_ == bit_value)
             return true;
         return false;
@@ -1090,7 +1090,7 @@ int can::BitFrame::GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type
 int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type](Bit bit) {
-        if (bit.stuff_bit_type == stuff_bit_type)
+        if (bit.stuff_bit_type_ == stuff_bit_type)
             return true;
         return false;
     });
@@ -1100,7 +1100,7 @@ int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type)
 int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type, BitValue bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type, bit_value](Bit bit) {
-        if (bit.stuff_bit_type == stuff_bit_type &&
+        if (bit.stuff_bit_type_ == stuff_bit_type &&
             bit.bit_value_ == bit_value)
             return true;
         return false;
@@ -1143,8 +1143,8 @@ void can::BitFrame::UpdateFrame(bool recalc_crc)
 {
     // First remove all stuff bits!
     for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
-        if (bit_it->stuff_bit_type == StuffBitType::FixedStuffBit ||
-            bit_it->stuff_bit_type == StuffBitType::NormalStuffBit)
+        if (bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit ||
+            bit_it->stuff_bit_type_ == StuffBitType::NormalStuffBit)
             bit_it = bits_.erase(bit_it);
 
     // Recalculate CRC and add stuff bits!
@@ -1289,8 +1289,8 @@ void can::BitFrame::PrintSingleBitField(std::list<Bit>::iterator& bit_it,
     // Handle stuff bit. If stuff bit is inserted behind a single bit
     // field it is marked with the same bit field!
     if (nxtBitIt->bit_type_ == bit_it->bit_type_ &&
-        (nxtBitIt->stuff_bit_type == StuffBitType::FixedStuffBit ||
-         nxtBitIt->stuff_bit_type == StuffBitType::NormalStuffBit))
+        (nxtBitIt->stuff_bit_type_ == StuffBitType::FixedStuffBit ||
+         nxtBitIt->stuff_bit_type_ == StuffBitType::NormalStuffBit))
     {
         if (printStuffBits == true)
         {
@@ -1314,7 +1314,7 @@ void can::BitFrame::PrintMultiBitField(std::list<Bit>::iterator& bit_it,
 
     for (; bit_it->bit_type_ == firstBitIt->bit_type_; bit_it++)
     {
-        if (printStuffBits == false && bit_it->stuff_bit_type != StuffBitType::NoStuffBit)
+        if (printStuffBits == false && bit_it->stuff_bit_type_ != StuffBitType::NoStuffBit)
             continue;
 
         len += 2;

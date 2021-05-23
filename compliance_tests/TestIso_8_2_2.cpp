@@ -242,7 +242,7 @@ class TestIso_8_2_2 : public test_lib::TestBase
             {
                 int attempt_cnt = 0;
                 while (bit_to_corrupt->bit_value_ != bit_value_to_corrupt ||
-                       bit_to_corrupt->stuff_bit_type != StuffBitType::FixedStuffBit)
+                       bit_to_corrupt->stuff_bit_type_ != StuffBitType::FixedStuffBit)
                 {
                     bit_type = GetRandomBitType(elem_test.frame_type, IdentifierType::Base,
                                                 bit_field_to_corrupt);

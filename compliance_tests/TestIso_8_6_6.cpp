@@ -186,7 +186,7 @@ class TestIso_8_6_6 : public test_lib::TestBase
             /* Find random bit within bitfield with value */
             Bit *bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
             while (bit_to_corrupt->bit_value_ != value_to_corrupt &&
-                    bit_to_corrupt->stuff_bit_type == StuffBitType::NoStuffBit)
+                    bit_to_corrupt->stuff_bit_type_ == StuffBitType::NoStuffBit)
                 bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
             // TODO: CRC Can be all zero here, fix it!
 

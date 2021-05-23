@@ -23,7 +23,7 @@ can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags
 {
     this->bit_type_ = bit_type;
     this->bit_value_ = bit_value;
-    this->stuff_bit_type = StuffBitType::NoStuffBit;
+    this->stuff_bit_type_ = StuffBitType::NoStuffBit;
     parent_ = parent;
 
     this->frame_flags = frame_flags;
@@ -40,7 +40,7 @@ can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags
 {
     this->bit_type_ = bit_type;
     this->bit_value_ = bit_value;
-    this->stuff_bit_type = stuff_bit_type;
+    this->stuff_bit_type_ = stuff_bit_type;
     parent_ = parent;
 
     this->frame_flags = frame_flags;
@@ -67,8 +67,8 @@ can::BitValue can::Bit::GetOppositeValue()
 
 bool can::Bit::IsStuffBit()
 {
-    if (stuff_bit_type == StuffBitType::NormalStuffBit ||
-        stuff_bit_type == StuffBitType::FixedStuffBit)
+    if (stuff_bit_type_ == StuffBitType::NormalStuffBit ||
+        stuff_bit_type_ == StuffBitType::FixedStuffBit)
     {
         return true;
     }
