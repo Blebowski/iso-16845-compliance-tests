@@ -19,16 +19,16 @@
 
 
 can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
-              BitTiming* nominal_bit_timing, BitTiming* data_bit_timing)
+              BitTiming* nominal_bit_timing, BitTiming* data_bit_timing)          
 {
     this->bit_type_ = bit_type;
     this->bit_value_ = bit_value;
     this->stuff_bit_type_ = StuffBitType::NoStuffBit;
     parent_ = parent;
 
-    this->frame_flags = frame_flags;
-    this->nominal_bit_timing = nominal_bit_timing;
-    this->data_bit_timing = data_bit_timing;
+    this->frame_flags_ = frame_flags;
+    this->nominal_bit_timing_ = nominal_bit_timing;
+    this->data_bit_timing_ = data_bit_timing;
 
     ConstructTimeQuantas();
 }
@@ -43,9 +43,9 @@ can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags
     this->stuff_bit_type_ = stuff_bit_type;
     parent_ = parent;
 
-    this->frame_flags = frame_flags;
-    this->nominal_bit_timing = nominal_bit_timing;
-    this->data_bit_timing = data_bit_timing;
+    this->frame_flags_ = frame_flags;
+    this->nominal_bit_timing_ = nominal_bit_timing;
+    this->data_bit_timing_ = data_bit_timing;
 
     ConstructTimeQuantas();
 }
@@ -414,7 +414,7 @@ can::BitPhase can::Bit::NextBitPhase(BitPhase bit_phase)
 
 can::BitRate can::Bit::GetPhaseBitRate(BitPhase bit_phase)
 {
-    if (frame_flags->is_fdf_ == FrameType::CanFd && frame_flags->is_brs_ == BrsFlag::Shift)
+    if (frame_flags_->is_fdf_ == FrameType::CanFd && frame_flags_->is_brs_ == BrsFlag::Shift)
     {
         switch (bit_type_) {
         case BitType::Brs:
@@ -448,16 +448,16 @@ can::BitTiming* can::Bit::GetPhaseBitTiming(BitPhase bit_phase)
     BitRate bit_rate = GetPhaseBitRate(bit_phase);
 
     if (bit_rate == BitRate::Nominal)
-        return nominal_bit_timing;
+        return nominal_bit_timing_;
     else
-        return data_bit_timing;
+        return data_bit_timing_;
 }
 
 
 void can::Bit::CorrectPh2LenToNominal()
 {
     /* If bit Phase 2 is in data bit rate, then correct its lenght to nominal */
-    if (GetPhaseBitTiming(BitPhase::Ph2) == data_bit_timing)
+    if (GetPhaseBitTiming(BitPhase::Ph2) == data_bit_timing_)
     {
         for (auto tqIter = time_quantas_.begin(); tqIter != time_quantas_.end();)
             if (tqIter->bit_phase == BitPhase::Ph2)
@@ -465,8 +465,8 @@ void can::Bit::CorrectPh2LenToNominal()
             else
                 tqIter++;
 
-        for (size_t i = 0; i < nominal_bit_timing->ph2_; i++)
-            time_quantas_.push_back(TimeQuanta(this, nominal_bit_timing->brp_, BitPhase::Ph2));
+        for (size_t i = 0; i < nominal_bit_timing_->ph2_; i++)
+            time_quantas_.push_back(TimeQuanta(this, nominal_bit_timing_->brp_, BitPhase::Ph2));
     }
 
 }
@@ -502,8 +502,8 @@ std::list<can::TimeQuanta>::iterator
 
 void can::Bit::ConstructTimeQuantas()
 {
-    BitTiming *tseg1_bit_timing = this->nominal_bit_timing;
-    BitTiming *tseg2_bit_timing = this->nominal_bit_timing;
+    BitTiming *tseg1_bit_timing = this->nominal_bit_timing_;
+    BitTiming *tseg2_bit_timing = this->nominal_bit_timing_;
 
     // Here Assume that PH1 has the same bit rate as TSEG1 which is reasonable
     // as there is no bit-rate shift within TSEG1
@@ -511,9 +511,9 @@ void can::Bit::ConstructTimeQuantas()
     BitRate tseg2_bit_rate = GetPhaseBitRate(BitPhase::Ph2);
 
     if (tseg1_bit_rate == BitRate::Data)
-        tseg1_bit_timing = data_bit_timing;
+        tseg1_bit_timing = data_bit_timing_;
     if (tseg2_bit_rate == BitRate::Data)
-        tseg2_bit_timing = data_bit_timing;
+        tseg2_bit_timing = data_bit_timing_;
 
     // Construct TSEG 1
     time_quantas_.push_back(TimeQuanta(this, tseg1_bit_timing->brp_, BitPhase::Sync));

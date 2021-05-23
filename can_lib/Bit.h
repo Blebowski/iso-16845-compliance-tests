@@ -310,9 +310,9 @@ class can::Bit {
          * 
          * Should be provided during creation of Bit and are not copied internally!
          */
-        BitTiming* nominal_bit_timing;
-        BitTiming* data_bit_timing;
-        FrameFlags* frame_flags;
+        BitTiming* nominal_bit_timing_;
+        BitTiming* data_bit_timing_;
+        FrameFlags* frame_flags_;
 
         /**
          * Time quantas within the bit.
