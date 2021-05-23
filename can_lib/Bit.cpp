@@ -19,36 +19,35 @@
 
 
 can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
-              BitTiming* nominal_bit_timing, BitTiming* data_bit_timing)          
+              BitTiming* nominal_bit_timing, BitTiming* data_bit_timing):
+              bit_type_(bit_type),
+              bit_value_(bit_value),
+              stuff_bit_type_(StuffBitType::NoStuffBit),
+              parent_(parent),
+              frame_flags_(frame_flags),
+              nominal_bit_timing_(nominal_bit_timing),
+              data_bit_timing_(data_bit_timing)
 {
-    this->bit_type_ = bit_type;
-    this->bit_value_ = bit_value;
-    this->stuff_bit_type_ = StuffBitType::NoStuffBit;
-    parent_ = parent;
-
-    this->frame_flags_ = frame_flags;
-    this->nominal_bit_timing_ = nominal_bit_timing;
-    this->data_bit_timing_ = data_bit_timing;
-
     ConstructTimeQuantas();
 }
 
 
 can::Bit::Bit(BitFrame *parent, BitType bit_type, BitValue bit_value, FrameFlags* frame_flags,
               BitTiming* nominal_bit_timing, BitTiming* data_bit_timing,
-              StuffBitType stuff_bit_type)
+              StuffBitType stuff_bit_type) :
+              bit_type_(bit_type),
+              bit_value_(bit_value),
+              stuff_bit_type_(stuff_bit_type),
+              parent_(parent),
+              frame_flags_(frame_flags),
+              nominal_bit_timing_(nominal_bit_timing),
+              data_bit_timing_(data_bit_timing)
 {
-    this->bit_type_ = bit_type;
-    this->bit_value_ = bit_value;
-    this->stuff_bit_type_ = stuff_bit_type;
-    parent_ = parent;
-
-    this->frame_flags_ = frame_flags;
-    this->nominal_bit_timing_ = nominal_bit_timing;
-    this->data_bit_timing_ = data_bit_timing;
-
     ConstructTimeQuantas();
 }
+
+const can::BitPhase can::Bit::default_bit_phases[] =
+    {BitPhase::Sync, BitPhase::Prop, BitPhase::Ph1, BitPhase::Ph2};
 
 
 void can::Bit::FlipBitValue()
@@ -81,21 +80,28 @@ std::string can::Bit::GetBitTypeName()
     for (size_t i = 0; i < sizeof(bit_type_names_) / sizeof(BitTypeName); i++)
         if (bit_type_names_[i].bit_type == bit_type_)
             return bit_type_names_[i].name;
-    return " ";
+    return "<INVALID_BIT_TYPE_NAME>";
 }
 
 
 std::string can::Bit::GetColouredValue()
 {
+    // Put stuff bits green
     if (IsStuffBit())
         return "\033[1;32m" + std::to_string((int)bit_value_) + "\033[0m";
+
+    // Error frame bits red
     else if (bit_type_ == BitType::ActiveErrorFlag ||
              bit_type_ == BitType::PassiveErrorFlag ||
              bit_type_ == BitType::ErrorDelimiter)
         return "\033[1;31m" + std::to_string((int)bit_value_) + "\033[0m";
+
+    // Overload frame light blue
     else if (bit_type_ == BitType::OverloadFlag ||
              bit_type_ == BitType::OverloadDelimiter)
         return "\033[1;36m" + std::to_string((int)bit_value_) + "\033[0m";
+
+    // Default color for other bit types
     else
         return std::to_string((int)bit_value_);
 }
@@ -124,7 +130,7 @@ bool can::Bit::IsSingleBitField()
 
 bool can::Bit::HasPhase(BitPhase bit_phase)
 {
-    for (auto time_quanta : time_quantas_)
+    for (auto &time_quanta : time_quantas_)
         if (time_quanta.bit_phase == bit_phase)
             return true;
 
@@ -134,7 +140,7 @@ bool can::Bit::HasPhase(BitPhase bit_phase)
 
 bool can::Bit::HasNonDefaultValues()
 {
-    for (auto time_quanta : time_quantas_)
+    for (auto &time_quanta : time_quantas_)
         if (time_quanta.HasNonDefaultValues())
             return true;
 
@@ -142,22 +148,15 @@ bool can::Bit::HasNonDefaultValues()
 }
 
 
-void can::Bit::SetAllDefaultValues()
-{
-    for (auto time_quanta : time_quantas_)
-        time_quanta.SetAllDefaultValues();
-}
-
-
 size_t can::Bit::GetPhaseLenTimeQuanta(BitPhase bit_phase)
 {
-    int num_time_quanta = 0;
-
-    for (auto time_quanta : time_quantas_)
-        if (time_quanta.bit_phase == bit_phase)
-            num_time_quanta++;
-
-    return num_time_quanta;
+    return std::count_if(time_quantas_.begin(), time_quantas_.end(),
+            [bit_phase](TimeQuanta time_quanta)
+        {
+            if (time_quanta.bit_phase == bit_phase)
+                return true;
+            return false;
+        });
 }
 
 
@@ -165,7 +164,7 @@ size_t can::Bit::GetPhaseLenCycles(BitPhase bit_phase)
 {
     int num_cycles = 0;
 
-    for (auto time_quanta : time_quantas_)
+    for (auto &time_quanta : time_quantas_)
         if (time_quanta.bit_phase == bit_phase)
             num_cycles += time_quanta.getLengthCycles();
 
@@ -177,10 +176,8 @@ size_t can::Bit::GetLengthTimeQuanta()
 {
     size_t num_time_quanta = 0;
 
-    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Sync);
-    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Prop);
-    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Ph1);
-    num_time_quanta += GetPhaseLenTimeQuanta(BitPhase::Ph2);
+    for (auto &phase : default_bit_phases)
+        num_time_quanta += GetPhaseLenTimeQuanta(phase);
 
     return num_time_quanta;
 }
@@ -190,10 +187,8 @@ size_t can::Bit::GetLengthCycles()
 {
     size_t num_cycles = 0;
 
-    num_cycles += GetPhaseLenCycles(BitPhase::Sync);
-    num_cycles += GetPhaseLenCycles(BitPhase::Prop);
-    num_cycles += GetPhaseLenCycles(BitPhase::Ph1);
-    num_cycles += GetPhaseLenCycles(BitPhase::Ph2);
+    for (auto &phase : default_bit_phases)
+        num_cycles += GetPhaseLenCycles(phase);
 
     return num_cycles;
 }
@@ -204,18 +199,20 @@ size_t can::Bit::ShortenPhase(BitPhase bit_phase, size_t num_time_quanta)
     size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
     size_t shorten_by = num_time_quanta;
 
-    std::cout << "Phase lenght: " << std::to_string(phase_len) << std::endl;
-    std::cout << "Shorten by: " << std::to_string(shorten_by) << std::endl;
+    //std::cout << "Phase lenght: " << std::to_string(phase_len) << std::endl;
+    //std::cout << "Shorten by: " << std::to_string(shorten_by) << std::endl;
 
     if (phase_len == 0)
         return 0;
     if (phase_len < num_time_quanta)
         shorten_by = phase_len;
 
-    auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
-    for (size_t i = 0; i < shorten_by; i++){
-        time_quanta_iterator = time_quantas_.erase(time_quanta_iterator);
-        time_quanta_iterator--;
+    // Following assumes that phase is contiguous within a bit (resonable assumption)
+    auto tq_it = GetLastTimeQuantaIterator(bit_phase);
+    for (size_t i = 0; i < shorten_by; i++)
+    {
+        tq_it = time_quantas_.erase(tq_it);
+        tq_it--;
     }
 
     return shorten_by;
@@ -224,7 +221,6 @@ size_t can::Bit::ShortenPhase(BitPhase bit_phase, size_t num_time_quanta)
 
 void can::Bit::LengthenPhase(BitPhase bit_phase, size_t num_time_quanta)
 {
-    size_t phase_len = GetPhaseLenTimeQuanta(bit_phase);
     auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
 
     /* 
@@ -232,14 +228,12 @@ void can::Bit::LengthenPhase(BitPhase bit_phase, size_t num_time_quanta)
      * first of next phase if phase does not exist. If it exist, move
      * to one further so that we append to the end
      */
-    if (phase_len > 0)
+    if (GetPhaseLenTimeQuanta(bit_phase) > 0)
         time_quanta_iterator++;
 
     BitTiming *bit_timing = GetPhaseBitTiming(bit_phase);
-
     for (size_t i = 0; i < num_time_quanta; i++)
-        time_quantas_.insert(time_quanta_iterator,
-                             TimeQuanta(this, bit_timing->brp_, bit_phase));
+        time_quantas_.insert(time_quanta_iterator, TimeQuanta(this, bit_timing->brp_, bit_phase));
 }
 
 

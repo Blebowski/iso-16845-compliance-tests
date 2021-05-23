@@ -49,11 +49,11 @@ class can::Bit {
         /* Type of bit: SOF, Base Identifier, CRC, ACK, etc... */
         BitType bit_type_;
 
-        /* Type of stuff bit: DontShift stuff bit, fixed, regular */
-        StuffBitType stuff_bit_type_;
-        
         /* Value on CAN bus: Dominant, Recessive */
         BitValue bit_value_;
+
+        /* Type of stuff bit: No stuff bit, fixed, regular */
+        StuffBitType stuff_bit_type_;
 
         /**
          * Flips value of bit from CAN bus perspective.
@@ -63,24 +63,27 @@ class can::Bit {
         void FlipBitValue();
 
         /**
-         * Checks whether bit is stuff bit.
-         * @returns true when bit is stuff bit (regular or fixed), false otherwise.
+         * Checks if bit is stuff bit.
+         * @returns true    when bit is stuff bit (regular or fixed)
+         *          false   otherwise.
          */
         bool IsStuffBit();
 
         /**
          * Checks if bit represents bit field which has single bit on CAN bus
-         * (e.g SOF, IDE, EDL fields have single bit, DATA or CRC not)
-         * @return true if bit field of this bit has single bit, false otherwise.
+         * (e.g SOF, IDE, EDL fields have single bit, DATA or CRC have multiple bits)
+         * @return true     if bit field of this bit has single bit
+         *         false    otherwise.
          */
         bool IsSingleBitField();
 
         /**
-         * Gets string bit value (0,1) coloured.
-         *   @returns stuff bits - green
-         *            error frame bits - red
-         *            overload frame bits - yellow
-         *            others - white
+         * Gets value of bit as coloured string. Colour achieved by ANSI sequence
+         *   @returns String with bit value coloured according to key:
+         *      stuff bits - green
+         *      error frame bits - red
+         *      overload frame bits - light blue
+         *      others - no added color
          */
         std::string GetColouredValue();
 
@@ -95,47 +98,41 @@ class can::Bit {
         BitValue GetOppositeValue();
 
         /**
-         * Checks whether bit contains Bit phase of interest.
+         * Checks whether bit contains Time quantas with a bit_phase type. By default,
+         * bits contain time quantas of all bit-phases.
          * @param bit_phase Phase to check.
-         * @returns true if yes, false otherwise
+         * @returns true    if bit contains bit_phase time quantas
+         *          false   otherwise
          */
         bool HasPhase(BitPhase bit_phase);
 
         /**
-         * Checks whether in some of bits time quantas contain non-default bit
-         * value (glitch).
-         * @returns true if there are non-default values.
-         *         false, if all Time quantas contain only default values.
+         * Checks if some of bits time quantas contain non-default bit value .
+         * @returns true    if there is a time quanta with non-default values.
+         *          false   if all time quantas contain only default values.
          */
         bool HasNonDefaultValues();
 
         /**
-         * Sets all time quantas to have the same value as is value of this bit.
-         */
-        void SetAllDefaultValues();
-
-        /**
-         * Gets length of certain bit phase in Time quantas.
-         * (e.g. for typial bit: getPhaceLenTimeQuanta(BitPhase::Sof) returns 1)
          * @param bit_phase phase whose length to find out
-         * @returns length of bit in Time Quantas
+         * @returns length of bit phase in time quantas
+         *          (e.g. by default lenght of BitPhase::Sync is 1)
          */
         size_t GetPhaseLenTimeQuanta(BitPhase bit_phase);
 
         /**
-         * Gets length of bit phase in clock cycles.
          * @param bit_phase phase whose length to find out
          * @returns length of Bit phase in clock cycles
          */
         size_t GetPhaseLenCycles(BitPhase bit_phase);
 
         /**
-         * @returns Overall bit length in Time quantas.
+         * @returns Length of Bit in time quantas.
          */
         size_t GetLengthTimeQuanta();
 
         /**
-         * @returns Overall bit length in clock cycles.
+         * @returns Length of bit in clock cycles.
          */
         size_t GetLengthCycles();
 
@@ -304,15 +301,20 @@ class can::Bit {
             {BitType::OverloadDelimiter,    "Overload delimiter"}
         };
 
+        /**
+         * Parent frame which contains this bit
+         */
+        BitFrame *parent_;
+
         /* 
          * These hold information about bit timing and fact whether Bit-rate has
          * shifted so they are important for manipulation of bit cycles!
          * 
          * Should be provided during creation of Bit and are not copied internally!
          */
+        FrameFlags* frame_flags_;
         BitTiming* nominal_bit_timing_;
         BitTiming* data_bit_timing_;
-        FrameFlags* frame_flags_;
 
         /**
          * Time quantas within the bit.
@@ -320,14 +322,12 @@ class can::Bit {
         std::list<TimeQuanta> time_quantas_;
 
         /**
-         * Parent frame which contains this bit
-         */
-        BitFrame *parent_;
-
-        /**
          * Constructs time quantas from timing information. Called upon bit creation.
          */
         void ConstructTimeQuantas();
+
+        /** Default bit-phases present in each bit */
+        static const BitPhase default_bit_phases[];
 };
 
 #endif
