@@ -38,13 +38,6 @@ IF (CPP_CHECK)
     set(CMAKE_CXX_CPPCHECK "cppcheck")
 ENDIF()
 
-# Libraries
-add_subdirectory(can_lib)
-add_subdirectory(test_lib)
-add_subdirectory(vpi_lib)
-add_subdirectory(compliance_tests)
-
-add_subdirectory(simulator_interface)
-
+add_subdirectory(src)
 
 set (EXECUTABLE_OUTPUT_PATH bin)

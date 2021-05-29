@@ -1,16 +1,19 @@
 #!/bin/bash
 
+mkdir -p build
 mkdir -p build/Debug
 mkdir -p build/Release
 
+cd build
+
 # Debug build
-cd build/Debug
+cd Debug
 cmake -DCMAKE_BUILD_TYPE=Debug ../..
 make -j `nproc`
-cd ../..
-cd /D
+cd ..
+
 # Release build
-cd build/Release
+cd Release
 cmake -DCMAKE_BUILD_TYPE=Release ../..
 make -j `nproc`
-cd ../..
+cd ..

@@ -272,7 +272,8 @@ class test_lib::TestBase
          *      ...
          *     PROP = 0, PH2 is set to achive the same lenght of bit as in default bit rate
          */
-        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, BitTiming &bit_timing);
+        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test,
+                                             BitTiming &bit_timing);
 
         /**
          * Generates bit sequence (bit representation) of CAN frame from frame.
