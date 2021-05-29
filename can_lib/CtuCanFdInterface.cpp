@@ -43,10 +43,10 @@ void can::CtuCanFdInterface::Enable()
     MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
 
     /** Read number of TXT buffers to do buffer rotation by TX routine correctly! */
-    num_txt_buffers = (int)MemBusAgentRead16(CTU_CAN_FD_TXTB_INFO);
+    num_txt_buffers_ = (int)MemBusAgentRead16(CTU_CAN_FD_TXTB_INFO);
 
     /** Set-up TXT Buffer 1 to be used by default */
-    txt_buf_nr = 0;
+    cur_txt_buf = 0;
 }
 
 
@@ -102,8 +102,7 @@ bool can::CtuCanFdInterface::SetCanVersion(CanVersion canVersion)
         break;
 
     case CanVersion::CanFdTolerant:
-        std::cerr << "CTU CAN FD does not support CAN FD tolerant operation!" <<
-        std::endl;
+        std::cerr << "CTU CAN FD does not support CAN FD tolerant operation!" << std::endl;
         return false;
         break;
     }
@@ -158,7 +157,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
 
     /* TXT Buffer address */
     int txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
-    switch (txt_buf_nr)
+    switch (cur_txt_buf)
     {
     case 0:
         txt_buffer_address = CTU_CAN_FD_TXTB1_DATA_1;
@@ -252,17 +251,17 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     }
 
     // Give command to chosen buffer
-    MemBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (txt_buf_nr + 8)));
+    MemBusAgentWrite32(CTU_CAN_FD_TX_COMMAND, 0x2 | (1 << (cur_txt_buf + 8)));
 
     // Iterate TXT Buffers - Indexed from 0 - Move to next buffer
     // txt_buf_nr is set by Enable function to 0 (TXT Buffer 0), so that first call to SendFrame
     // will send frame via TXT Buffer 0, which is by default highest priority. Therefore even if
     // two frames are sent at once, they are always transmitted by DUT in order in which SendFrame
     // has been called!
-    txt_buf_nr += 1;
-    txt_buf_nr %= num_txt_buffers;
+    cur_txt_buf += 1;
+    cur_txt_buf %= num_txt_buffers_;
 
-    assert(txt_buf_nr >= 0 && txt_buf_nr < num_txt_buffers);
+    assert(cur_txt_buf >= 0 && cur_txt_buf < num_txt_buffers_);
 }
 
 

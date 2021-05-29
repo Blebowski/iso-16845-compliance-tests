@@ -55,9 +55,9 @@ extern "C" {
             void SendReintegrationRequest();
 
             /* Number of TXT buffers. Read by "Enable" */
-            int num_txt_buffers;
+            int num_txt_buffers_;
 
             /* Currently used TXT buffer */
-            unsigned int txt_buf_nr;
+            unsigned int cur_txt_buf;
     };
 }

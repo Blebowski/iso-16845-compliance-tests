@@ -25,11 +25,11 @@
 class can::BitTiming
 {
     public:
-        size_t prop_;
-        size_t ph1_;
-        size_t ph2_;
-        size_t brp_;
-        size_t sjw_;
+        size_t prop_ = 2;
+        size_t ph1_ = 2;
+        size_t ph2_ = 2;
+        size_t brp_ = 2;
+        size_t sjw_ = 2;
 
         BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_t sjw);
         BitTiming();

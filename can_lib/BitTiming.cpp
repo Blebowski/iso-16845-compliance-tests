@@ -16,14 +16,13 @@
 #include "BitTiming.h"
 
 
-can::BitTiming::BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_t sjw)
+can::BitTiming::BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_t sjw):
+    prop_(prop),
+    ph1_(ph1),
+    ph2_(ph2),
+    sjw_(sjw),
+    brp_(brp)
 {
-    prop_ = prop;
-    ph1_ = ph1;
-    ph2_ = ph2;
-    sjw_ = sjw;
-    brp_ = brp;
-
     // SJW can't be larger than any of TSEG1 or TSEG2. Don't account any IPT
     // as this model is ideal implementation
     assert(sjw <= prop + ph1 + 1);
@@ -33,15 +32,16 @@ can::BitTiming::BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_
     assert(sjw <= ph2);
 }
 
-can::BitTiming::BitTiming(){}
+can::BitTiming::BitTiming()
+{}
 
 
 void can::BitTiming::Print()
 {
-    std::cout << "BRP:  " << brp_ << std::endl;
-    std::cout << "PROP: " << prop_ << std::endl;
-    std::cout << "PH1:  " << ph1_ << std::endl;
-    std::cout << "PH2:  " << ph2_ << std::endl;
+    std::cout << "BRP:  " << brp_ << '\n';
+    std::cout << "PROP: " << prop_ << '\n';
+    std::cout << "PH1:  " << ph1_ << '\n';
+    std::cout << "PH2:  " << ph2_ << '\n';
     std::cout << "SJW:  " << sjw_ << std::endl;
 }
 
