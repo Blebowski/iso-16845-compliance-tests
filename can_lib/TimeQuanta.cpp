@@ -17,21 +17,21 @@
 #include "CycleBitValue.h"
 
 
-can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase)
+can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase):
+    bit_phase_(bit_phase),
+    parent_(parent)
 {
     for (int i = 0; i < brp; i++)
         cycle_bit_values_.push_back(CycleBitValue(this));
-    this->bit_phase = bit_phase;
-    parent_ = parent;
 }
 
 
-can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue bit_value)
+can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue bit_value):
+    bit_phase_(bit_phase),
+    parent_(parent)
 {
     for (int i = 0; i < brp; i++)
         cycle_bit_values_.push_back(CycleBitValue(this, bit_value));
-    this->bit_phase = bit_phase;
-    parent_ = parent;
 }
 
 
@@ -40,7 +40,6 @@ bool can::TimeQuanta::HasNonDefaultValues()
     for (auto & cycleBitValue : cycle_bit_values_)
         if (!cycleBitValue.has_default_value_)
             return true;
-
     return false;
 }
 

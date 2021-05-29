@@ -112,7 +112,7 @@ class can::TimeQuanta
         /**
          * Phase of bit to which this time quanta belongs.
          */
-        BitPhase bit_phase;
+        BitPhase bit_phase_;
 
     private:
         /* Cycle bit values within time quanta */

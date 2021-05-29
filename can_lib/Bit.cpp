@@ -131,7 +131,7 @@ bool can::Bit::IsSingleBitField()
 bool can::Bit::HasPhase(BitPhase bit_phase)
 {
     for (auto &time_quanta : time_quantas_)
-        if (time_quanta.bit_phase == bit_phase)
+        if (time_quanta.bit_phase_ == bit_phase)
             return true;
 
     return false;
@@ -153,7 +153,7 @@ size_t can::Bit::GetPhaseLenTimeQuanta(BitPhase bit_phase)
     return std::count_if(time_quantas_.begin(), time_quantas_.end(),
             [bit_phase](TimeQuanta time_quanta)
         {
-            if (time_quanta.bit_phase == bit_phase)
+            if (time_quanta.bit_phase_ == bit_phase)
                 return true;
             return false;
         });
@@ -165,7 +165,7 @@ size_t can::Bit::GetPhaseLenCycles(BitPhase bit_phase)
     int num_cycles = 0;
 
     for (auto &time_quanta : time_quantas_)
-        if (time_quanta.bit_phase == bit_phase)
+        if (time_quanta.bit_phase_ == bit_phase)
             num_cycles += time_quanta.getLengthCycles();
 
     return num_cycles;
@@ -453,7 +453,7 @@ void can::Bit::CorrectPh2LenToNominal()
         // Remove all PH2 phases
         std::remove_if(time_quantas_.begin(), time_quantas_.end(), [](TimeQuanta tq)
             {
-                if (tq.bit_phase == BitPhase::Ph2)
+                if (tq.bit_phase_ == BitPhase::Ph2)
                     return true;
                 return false;
             });
@@ -472,7 +472,7 @@ std::list<can::TimeQuanta>::iterator can::Bit::GetFirstTimeQuantaIterator(BitPha
     {
         return std::find_if(time_quantas_.begin(), time_quantas_.end(), [bit_phase](TimeQuanta tq)
             {
-                if (tq.bit_phase == bit_phase)
+                if (tq.bit_phase_ == bit_phase)
                     return true;
                 return false;
             });
@@ -487,7 +487,7 @@ std::list<can::TimeQuanta>::iterator
     if (HasPhase(bit_phase))
     {
         auto iterator = GetFirstTimeQuantaIterator(bit_phase);
-        while (iterator->bit_phase == bit_phase)
+        while (iterator->bit_phase_ == bit_phase)
             iterator++;
         return --iterator;
     }
