@@ -22,96 +22,69 @@
 // Constructors
 ///////////////////////////////////////////////////////////////////////////////
 
-can::Frame::Frame()
-{
-    frame_flags_ = FrameFlags();
-    dlc_ = 0;
-    identifier_ = 0;
-    data_lenght_ = 0;
+can::Frame::Frame() :
+    frame_flags_(FrameFlags()),
+    randomize_dlc_(true),
+    randomize_identifier_(true),
+    randomize_data_(true)
+{}
 
-    randomize_dlc = true;
-    randomize_identifier = true;
-    randomize_data = true;
-}
-
-can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, int identifier,
-                  uint8_t *data)
+can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, int identifier, uint8_t *data) :
+    frame_flags_(frame_flags)
 {
-    frame_flags_ = frameFlags;   
-    set_identifer(identifier);
+    set_identifier(identifier);
     set_dlc(dlc);
     CopyData(data, data_lenght_);
-
-    randomize_dlc = false;
-    randomize_identifier = false;
-    randomize_data = false;
 }
 
-
-can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, int identifier)
+can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, int identifier) :
+    frame_flags_(frame_flags),
+    randomize_data_(true)
 {
-    frame_flags_ = frameFlags;
-    set_identifer(identifier);
+    set_identifier(identifier);
     set_dlc(dlc);
-
-    randomize_dlc = false;
-    randomize_identifier = false;
-    randomize_data = true;
 }
 
-
-can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc)
+can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc) :
+    frame_flags_(frame_flags),
+    randomize_identifier_(true),
+    randomize_data_(true)
 {
-    frame_flags_ = frameFlags;
     set_dlc(dlc);
-
-    randomize_dlc = false;
-    randomize_identifier = true;
-    randomize_data = true;
 }
 
+can::Frame::Frame(FrameFlags frame_flags) :
+    frame_flags_(frame_flags),
+    randomize_dlc_(true),
+    randomize_identifier_(true),
+    randomize_data_(true)
+{}
 
-can::Frame::Frame(FrameFlags frameFlags)
+can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, uint8_t *data) :
+    frame_flags_(frame_flags),
+    randomize_identifier_(true)
 {
-    frame_flags_ = frameFlags;
-    dlc_ = 0;
-    identifier_ = 0;
-
-    randomize_dlc = true;
-    randomize_identifier = true;
-    randomize_data = true;
-}
-
-
-can::Frame::Frame(FrameFlags frameFlags, uint8_t dlc, uint8_t *data)
-{
-    frame_flags_ = frameFlags;
     set_dlc(dlc);
     CopyData(data, data_lenght_);
-    identifier_ = 0;
-
-    randomize_dlc = false;
-    randomize_identifier = true;
-    randomize_data = false;
 }
 
 void can::Frame::Randomize()
 {
-    /* First randomize flags, this gives cosntraints for further randomization */
+    /* First randomize flags, this gives constraints for further randomization */
     frame_flags_.Randomize();
 
     /*  Due to RTR Flag , Data length might have changed! Update it! */
     set_dlc(dlc_);
 
-    if (randomize_identifier)
+    if (randomize_identifier_)
     {
+        int max_ident_pow = 11;
         if (frame_flags().is_ide_ == IdentifierType::Extended)
-            set_identifer(rand() % ((int)pow(2, 29)));
-        else
-            set_identifer(rand() % ((int)pow(2, 11)));
+            max_ident_pow = 29;
+        set_identifier(rand() % ((int)pow(2, max_ident_pow)));
     }
 
-    if (randomize_dlc)
+    if (randomize_dlc_)
     {
         // Constrain here so that we get reasonable frames for CAN 2.0
         if (frame_flags().is_fdf_ == FrameType::CanFd)
@@ -120,7 +93,7 @@ void can::Frame::Randomize()
             set_dlc(rand() % 0xF);
     }
 
-    if (randomize_data)
+    if (randomize_data_)
         for (int i = 0; i < 64; i++)
             data_[i] = rand() % 256;
 }
@@ -197,7 +170,7 @@ void can::Frame::set_data_lenght(int dataLenght)
     dlc_ = ConvertDataLenghtToDlc(dataLenght);
 }
 
-void can::Frame::set_identifer(int identifier)
+void can::Frame::set_identifier(int identifier)
 {
     assert((!(frame_flags_.is_ide_ == IdentifierType::Base && identifier >= pow(2.0, 11)),
              "Can't set Base identifier larger than 2^11"));
@@ -250,23 +223,25 @@ bool can::Frame::IsValidDataLength(int dataLenght)
 
 void can::Frame::Print()
 {
-    std::cout << std::string(80, '*') << std::endl;
-    std::cout << "CAN Frame:" << std::endl;
-    std::cout << "FDF: " << frame_flags_.is_fdf_ << std::endl;
-    std::cout << "IDE: " << frame_flags_.is_ide_ << std::endl;
+    std::cout << std::string(80, '*') << '\n';
+    std::cout << "CAN Frame:" << '\n';
+    std::cout << "FDF: " << frame_flags_.is_fdf_ << '\n';
+    std::cout << "IDE: " << frame_flags_.is_ide_ << '\n';
+
     if (frame_flags_.is_fdf_ == FrameType::CanFd)
-        std::cout << "BRS: " << frame_flags_.is_brs_ << std::endl;
+        std::cout << "BRS: " << frame_flags_.is_brs_ << '\n';
     else
-        std::cout << "RTR: " << frame_flags_.is_rtr_ << std::endl;
-    std::cout << "DLC: 0x" << std::hex << +dlc_ << std::endl;
-    std::cout << "ESI: " << frame_flags_.is_esi_ << std::endl;
-    std::cout << "Data field length: " << data_lenght_ << std::endl;
-    std::cout << "Identifier: " << std::hex << identifier_ << std::endl;
+        std::cout << "RTR: " << frame_flags_.is_rtr_ << '\n';
+    
+    std::cout << "DLC: 0x" << std::hex << +dlc_ << '\n';
+    std::cout << "ESI: " << frame_flags_.is_esi_ << '\n';
+    std::cout << "Data field length: " << data_lenght_ << '\n';
+    std::cout << "Identifier: " << std::hex << identifier_ << '\n';
 
     std::cout << "Data: ";
     for (int i = 0; i < data_lenght_; i++)
         std::cout << "0x" << std::hex << +data_[i] << " ";
-    std::cout << std::endl;
+    std::cout << '\n';;
 
     std::cout << std::string(80, '*') << std::endl;
 }

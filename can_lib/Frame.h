@@ -47,8 +47,7 @@ class can::Frame {
          * @param identifier CAN Identifier
          * @param data Data payload
          */
-        Frame(FrameFlags frame_flags, uint8_t dlc, int identifier,
-              uint8_t *data);
+        Frame(FrameFlags frame_flags, uint8_t dlc, int identifier, uint8_t *data);
 
         /**
          * Randomizes data.
@@ -79,6 +78,9 @@ class can::Frame {
          */
         Frame(FrameFlags frame_flags, uint8_t dlc, uint8_t *data);
 
+        /**
+         * Getters.
+         */
         FrameFlags frame_flags();
         uint8_t dlc();
         int data_length();
@@ -112,21 +114,21 @@ class can::Frame {
         FrameFlags frame_flags_;
 
         // Data length code
-        uint8_t dlc_;
+        uint8_t dlc_ = 0;
 
         // Data length (always should reflect data length)
-        int data_lenght_;
+        int data_lenght_ = 0;
 
         // Frame identfier
-        int identifier_;
+        int identifier_ = 0;
 
         // Data payload
         uint8_t data_[64];
 
         // Randomization attributes
-        bool randomize_dlc;
-        bool randomize_identifier;
-        bool randomize_data;
+        bool randomize_dlc_ = false;
+        bool randomize_identifier_ = false;
+        bool randomize_data_ = false;
 
         // Supported DLC / Datalength combinations
         const int dlc_to_data_lenght_table_ [16][2] =
@@ -166,7 +168,7 @@ class can::Frame {
          * @param identifier Identifier in range  0 - 2^11-1 (Base) , 0 - 2^29-1(Extended)
          * Aborts on invalid identifier.
          */
-        void set_identifer(int identifier);
+        void set_identifier(int identifier);
 
         /**
          * Copies data into frame data.

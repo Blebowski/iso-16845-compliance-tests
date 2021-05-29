@@ -68,8 +68,9 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_
                             is_fdf_(is_fdf),
                             is_ide_(is_ide),
                             is_rtr_(is_rtr),
-                            randomize_esi_(true),
-                            randomize_brs_(true)
+                            randomize_brs_(true),
+                            randomize_esi_(true)
+                            
 {
     CorrectFlags();
 }
