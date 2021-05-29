@@ -100,8 +100,8 @@ class TestIso_8_7_9 : public test_lib::TestBase
             test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
             test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
             test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index - 1;
+            test_nom_bit_timing.prop_ = elem_test.index_;
+            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
             
             /* Re-configure bit-timing for this test so that frames are generated with it! */
             this->nominal_bit_timing = test_nom_bit_timing;

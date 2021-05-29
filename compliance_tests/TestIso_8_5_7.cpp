@@ -88,7 +88,7 @@ class TestIso_8_5_7 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* ESI needed for CAN FD variant */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -96,7 +96,7 @@ class TestIso_8_5_7 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* ESI needed for CAN FD variant */
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorPassive);
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
             RandomizeAndPrint(golden_frm_2.get());
 

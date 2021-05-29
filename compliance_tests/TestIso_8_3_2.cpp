@@ -103,7 +103,7 @@ class TestIso_8_3_2 : public test_lib::TestBase
                 frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
                                                            EsiFlag::ErrorActive);
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, ids[elem_test.index - 1],
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, ids[elem_test.index_ - 1],
                                                  &data_byte);
             RandomizeAndPrint(golden_frm.get());
 

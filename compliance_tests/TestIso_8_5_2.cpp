@@ -89,7 +89,7 @@ class TestIso_8_5_2 : public test_lib::TestBase
         {
             uint8_t data_byte = 0x80;
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame, 
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame, 
                                                         EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());

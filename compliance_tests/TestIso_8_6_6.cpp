@@ -112,16 +112,16 @@ class TestIso_8_6_6 : public test_lib::TestBase
             do
             {
                 TestBigMessage("Generating random frame...");
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame,
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame,
                                                            EsiFlag::ErrorActive);
                 uint8_t dlc;
 
                 if (test_variant == TestVariant::CanFdEnabled)
                 {
                     /* To achieve CRC17 or CRC21 in elem tests 7-10 of Can FD Enabled variant */
-                    if (elem_test.index == 7 || elem_test.index == 8)
+                    if (elem_test.index_ == 7 || elem_test.index_ == 8)
                         dlc = (rand() % 0xA) + 1;
-                    else if (elem_test.index == 9 || elem_test.index == 10)
+                    else if (elem_test.index_ == 9 || elem_test.index_ == 10)
                         dlc = (rand() % 5) + 0xB;
                     else
                         dlc = rand() % 0xF;
@@ -148,7 +148,7 @@ class TestIso_8_6_6 : public test_lib::TestBase
              *************************************************************************************/
             BitType bit_type_to_corrupt = BitType::Sof;
             BitValue value_to_corrupt = BitValue::Dominant;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
                 bit_type_to_corrupt = BitType::Sof;

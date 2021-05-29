@@ -82,14 +82,14 @@ class TestIso_7_4_1 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
             
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            TestMessage("Forcing bit %d of Intermission to dominant", elem_test.index);
+            TestMessage("Forcing bit %d of Intermission to dominant", elem_test.index_);
 
             /**************************************************************************************
              * Modify test frames:
@@ -100,11 +100,11 @@ class TestIso_7_4_1 : public test_lib::TestBase
             monitor_bit_frm->TurnReceivedFrame();
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-            driver_bit_frm->GetBitOf(elem_test.index - 1, BitType::Intermission)
+            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Intermission)
                 ->bit_value_ = BitValue::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(elem_test.index, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(elem_test.index, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
+            driver_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
             
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

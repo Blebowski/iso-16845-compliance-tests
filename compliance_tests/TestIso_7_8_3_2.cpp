@@ -83,7 +83,7 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
             for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
             {
                 ElementaryTest test = ElementaryTest(i);
-                test.e = i;
+                test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
 
@@ -117,18 +117,18 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
             monitor_bit_frm->TurnReceivedFrame();
 
             Bit *before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
-            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             // 7-th bit should be stuff bit
             Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
             assert(driver_stuff_bit->bit_value_ == BitValue::Dominant);
             int bit_index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
-            for (int j = 0; j < elem_test.e; j++)
+            for (int j = 0; j < elem_test.e_; j++)
                 driver_stuff_bit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);
 
             //driver_stuff_bit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
 
-            for (size_t j = elem_test.e - 1; j < data_bit_timing.ph2_; j++)
+            for (size_t j = elem_test.e_ - 1; j < data_bit_timing.ph2_; j++)
                 driver_stuff_bit->GetTimeQuanta(BitPhase::Ph2, j)
                     ->ForceValue(BitValue::Recessive);
 
@@ -142,7 +142,7 @@ class TestIso_7_8_3_2 : public test_lib::TestBase
              * Execute test
              *************************************************************************************/
             TestMessage("Testing Data byte positive resynchronisation with phase error: %d",
-                        elem_test.e);
+                        elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

@@ -151,8 +151,8 @@ class TestIso_7_6_9 : public test_lib::TestBase
 
             if (test_variant == TestVariant::Common)
             {
-                assert(elem_test.index > 0 && elem_test.index < 9);
-                switch (elem_test.index)
+                assert(elem_test.index_ > 0 && elem_test.index_ < 9);
+                switch (elem_test.index_)
                 {
                 case 1:
                 case 5:
@@ -176,14 +176,14 @@ class TestIso_7_6_9 : public test_lib::TestBase
                     break;
                 }
 
-                if (elem_test.index < 5)
+                if (elem_test.index_ < 5)
                     value = BitValue::Recessive;
                 else
                     value = BitValue::Dominant;
 
             } else if (test_variant == TestVariant::CanFdEnabled) {
-                assert(elem_test.index > 0 && elem_test.index < 7);
-                switch (elem_test.index)
+                assert(elem_test.index_ > 0 && elem_test.index_ < 7);
+                switch (elem_test.index_)
                 {
                 case 1:
                 case 4:
@@ -202,7 +202,7 @@ class TestIso_7_6_9 : public test_lib::TestBase
                     break;
                 }
 
-                if (elem_test.index < 4)
+                if (elem_test.index_ < 4)
                     value = BitValue::Recessive;
                 else
                     value = BitValue::Dominant;
@@ -215,14 +215,14 @@ class TestIso_7_6_9 : public test_lib::TestBase
              * For frame with FDF = 1:
              *  All DLC bits recessive, BRS = 1, ESI = 1
              */
-            if (test_variant == TestVariant::Common && elem_test.index == 6) {
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            if (test_variant == TestVariant::Common && elem_test.index_ == 6) {
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                                                             IdentifierType::Extended);
-            } else if (test_variant == TestVariant::CanFdEnabled && elem_test.index == 5) {
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, BrsFlag::Shift,
+            } else if (test_variant == TestVariant::CanFdEnabled && elem_test.index_ == 5) {
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, BrsFlag::Shift,
                                                             EsiFlag::ErrorPassive);
             } else {
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame);
             }
 
             /* Search for stuff bit of desired value in field as given by elementary test.
@@ -236,8 +236,8 @@ class TestIso_7_6_9 : public test_lib::TestBase
                 std::cout << "Generating frame...\n";
 
                 /* Again, special treament of dominant stuff bit in control field */
-                if ((test_variant == TestVariant::Common && elem_test.index == 6) ||
-                    (test_variant == TestVariant::CanFdEnabled && elem_test.index == 5)) {
+                if ((test_variant == TestVariant::Common && elem_test.index_ == 6) ||
+                    (test_variant == TestVariant::CanFdEnabled && elem_test.index_ == 5)) {
                     golden_frm = std::make_unique<Frame>(*frame_flags, 0xF);
                 } else {
                     golden_frm = std::make_unique<Frame>(*frame_flags);
@@ -251,7 +251,7 @@ class TestIso_7_6_9 : public test_lib::TestBase
 
                 /* To have recessive DLC stuff bit possible by randomization,
                  * R0 bit must be forced to dominant for CAN 2.0 frame */
-                if (test_variant == TestVariant::Common && elem_test.index == 6)
+                if (test_variant == TestVariant::Common && elem_test.index_ == 6)
                 {
                     driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
                     driver_bit_frm->UpdateFrame();

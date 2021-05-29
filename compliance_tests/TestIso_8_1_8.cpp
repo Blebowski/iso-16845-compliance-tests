@@ -93,7 +93,7 @@ class TestIso_8_1_8 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base);
 
             int gold_ids[] = {
                 0x7B,
@@ -104,8 +104,8 @@ class TestIso_8_1_8 : public test_lib::TestBase
                 0x3A
             };
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, gold_ids[elem_test.index - 1]);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags, 0x0, lt_ids[elem_test.index - 1]);
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, gold_ids[elem_test.index_ - 1]);
+            golden_frm_2 = std::make_unique<Frame>(*frame_flags, 0x0, lt_ids[elem_test.index_ - 1]);
 
             driver_bit_frm = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);

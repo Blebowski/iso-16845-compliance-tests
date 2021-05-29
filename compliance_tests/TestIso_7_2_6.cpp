@@ -90,7 +90,7 @@ class TestIso_7_2_6: public test_lib::TestBase
             {
                 dlc = rand() % 9;
             }
-            else if (elem_test.index == 1)
+            else if (elem_test.index_ == 1)
             {
                 if (rand() % 2)
                     dlc = 0x9;
@@ -101,7 +101,7 @@ class TestIso_7_2_6: public test_lib::TestBase
                 dlc = (rand() % 5) + 11; 
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
             RandomizeAndPrint(golden_frm.get());
 

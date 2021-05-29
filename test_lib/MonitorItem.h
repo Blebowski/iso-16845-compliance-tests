@@ -50,24 +50,24 @@ class test_lib::MonitorItem
          * Time for which the item is monitored. When this is CAN bit, then this
          * represents length of the bit on CAN bus.
          */
-        std::chrono::nanoseconds duration;
+        std::chrono::nanoseconds duration_;
 
         /**
          * Sample rate of this item. Indicates how often during monitoring of
          * item CAN agent monitor checks value of can_tx.
          */
-        std::chrono::nanoseconds sample_rate;
+        std::chrono::nanoseconds sample_rate_;
 
         /**
          * Value towards which can_tc shall be checked by CAN agent monitor during monitoring.
          */
-        StdLogic value;
+        StdLogic value_;
 
         /**
          * Message to be displayed by digital simulator when monitoring of item
          * starts.
          */
-        std::string message;
+        std::string message_;
 };
 
 #endif

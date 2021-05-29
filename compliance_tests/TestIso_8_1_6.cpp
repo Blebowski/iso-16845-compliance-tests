@@ -112,12 +112,12 @@ class TestIso_8_1_6 : public test_lib::TestBase
             {
                 /* Last iteration (0x42 CTRL field) indicates RTR frame */
                 RtrFlag rtr_flag;
-                if (elem_test.index == 6)
+                if (elem_test.index_ == 6)
                     rtr_flag = RtrFlag::RtrFrame;
                 else
                     rtr_flag = RtrFlag::DataFrame;
 
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                                         IdentifierType::Base, rtr_flag);
 
                 /* Data, DLCs and identifiers for each iteration */
@@ -135,13 +135,13 @@ class TestIso_8_1_6 : public test_lib::TestBase
                 int ids[6] = {
                     0x78, 0x41F, 0x47F, 0x758, 0x777, 0x7EF
                 };
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1],
-                                    ids[elem_test.index - 1], data[elem_test.index -1]);
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1],
+                                    ids[elem_test.index_ - 1], data[elem_test.index_ -1]);
 
             } else if (test_variant == TestVariant::CanFdEnabled) {
                 
                 /* Flags based on elementary test */
-                switch(elem_test.index)
+                switch(elem_test.index_)
                 {
                     case 1:
                     case 2:
@@ -184,7 +184,7 @@ class TestIso_8_1_6 : public test_lib::TestBase
                 /* DUT must be set to error passive state when ErrorPassive is expected!
                     * Otherwise, it would transmitt ESI_ERROR_ACTIVE
                     */
-                if (elem_test.index == 3 || elem_test.index == 4)
+                if (elem_test.index_ == 3 || elem_test.index_ == 4)
                     dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
                 else
                     dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
@@ -290,8 +290,8 @@ class TestIso_8_1_6 : public test_lib::TestBase
                 uint8_t dlcs[10] = {
                     0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, (uint8_t)(rand() % 0xF)
                 };
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1],
-                                    ids[elem_test.index - 1], data[elem_test.index - 1]);
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1],
+                                    ids[elem_test.index_ - 1], data[elem_test.index_ - 1]);
             }
 
             /* Randomize will have no effect since everything is specified */

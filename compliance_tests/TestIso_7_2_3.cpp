@@ -136,7 +136,7 @@ class TestIso_7_2_3 : public test_lib::TestBase
              */
             if (test_variant == TestVariant::Can_2_0 || test_variant == TestVariant::CanFdTolerant)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x07C30F0F;
@@ -215,7 +215,7 @@ class TestIso_7_2_3 : public test_lib::TestBase
             }
             else if (test_variant == TestVariant::CanFdEnabled)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x07C30F0F;
@@ -338,7 +338,7 @@ class TestIso_7_2_3 : public test_lib::TestBase
              *************************************************************************************/
             if (test_variant == TestVariant::Can_2_0)
             {
-                switch(elem_test.index)
+                switch(elem_test.index_)
                 {
                 case 3:
                     driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
@@ -371,7 +371,7 @@ class TestIso_7_2_3 : public test_lib::TestBase
             }
             else if (test_variant == TestVariant::CanFdTolerant)
             {
-                switch(elem_test.index)
+                switch(elem_test.index_)
                 {
                 case 3:
                     driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
@@ -394,7 +394,7 @@ class TestIso_7_2_3 : public test_lib::TestBase
             }
             else if (test_variant == TestVariant::CanFdEnabled)
             {
-                switch(elem_test.index)
+                switch(elem_test.index_)
                 {
                 case 2:
                     driver_bit_frm->GetBitOf(0, BitType::Srr)->bit_value_ = BitValue::Dominant;

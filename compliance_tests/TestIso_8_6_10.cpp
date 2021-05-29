@@ -87,7 +87,7 @@ class TestIso_8_6_10 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -112,7 +112,7 @@ class TestIso_8_6_10 : public test_lib::TestBase
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
             int bit_to_flip;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bit_to_flip = 1;
             else
                 bit_to_flip = 6;
@@ -139,7 +139,7 @@ class TestIso_8_6_10 : public test_lib::TestBase
             CheckLowerTesterResult();
 
             // +8 for error, -1 for retransmission. In firt elem test, TEC is 0, no retransmission!
-            if (test_variant == TestVariant::Common && elem_test.index == 1)
+            if (test_variant == TestVariant::Common && elem_test.index_ == 1)
                 CheckTecChange(tec_old, 8);
             else
                 CheckTecChange(tec_old, 7);

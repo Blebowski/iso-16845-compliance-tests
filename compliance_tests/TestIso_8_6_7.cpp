@@ -105,12 +105,12 @@ class TestIso_8_6_7 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc;
-            if (elem_test.index < 7)
+            if (elem_test.index_ < 7)
                 dlc = rand() % 0x9;
             else
                 dlc = (rand() % 0x4) + 11;
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                             //IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
                             EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
@@ -129,7 +129,7 @@ class TestIso_8_6_7 : public test_lib::TestBase
              *      retransmitted frame by IUT.
              *************************************************************************************/
             Bit *bit_to_corrupt;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
                 bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
@@ -154,7 +154,7 @@ class TestIso_8_6_7 : public test_lib::TestBase
                 break;
             default:
                 bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);
-                TestMessage("Invalid Elementary test index: %d", elem_test.index);
+                TestMessage("Invalid Elementary test index: %d", elem_test.index_);
                 break;
             }
 

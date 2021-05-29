@@ -81,7 +81,7 @@ class TestIso_7_3_1 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                             RtrFlag::DataFrame);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
             RandomizeAndPrint(golden_frm.get());
@@ -89,7 +89,7 @@ class TestIso_7_3_1 : public test_lib::TestBase
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
-            TestMessage("Prolonging Active Error flag by: %d", (3 * (elem_test.index - 1)) + 1);
+            TestMessage("Prolonging Active Error flag by: %d", (3 * (elem_test.index_ - 1)) + 1);
 
             /**************************************************************************************
              * Modify test frames:
@@ -108,9 +108,9 @@ class TestIso_7_3_1 : public test_lib::TestBase
             driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
             int num_bits_to_insert;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 num_bits_to_insert = 1;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 num_bits_to_insert = 4;
             else
                 num_bits_to_insert = 7;

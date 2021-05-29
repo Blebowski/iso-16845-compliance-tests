@@ -86,12 +86,12 @@ class TestIso_7_6_22 : public test_lib::TestBase
             BitValue bit_value;
 
             /* Tests 1,3 -> DLC < 10. Tests 2,4 -> DLC > 10 */
-            if (elem_test.index % 2 == 0)
+            if (elem_test.index_ % 2 == 0)
                 dlc = (rand() % 5) + 0xA;
             else
                 dlc = rand() % 10;
 
-            if (elem_test.index < 3)
+            if (elem_test.index_ < 3)
                 bit_value = BitValue::Recessive;
             else
                 bit_value = BitValue::Dominant;

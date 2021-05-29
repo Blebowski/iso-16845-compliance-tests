@@ -105,9 +105,9 @@ class TestIso_8_4_3 : public test_lib::TestBase
                 0x3B
             };
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                     RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, ids[elem_test.index - 1],
+            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, ids[elem_test.index_ - 1],
                                                  &data_byte);
             RandomizeAndPrint(golden_frm.get());
 

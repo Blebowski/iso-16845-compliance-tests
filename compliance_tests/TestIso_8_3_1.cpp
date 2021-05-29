@@ -126,9 +126,9 @@ class TestIso_8_3_1 : public test_lib::TestBase
             monitor_bit_frm->InsertActiveErrorFrame(bit_index);
 
             int bits_to_insert;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bits_to_insert = 1;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 bits_to_insert = 4;
             else
                 bits_to_insert = 7;

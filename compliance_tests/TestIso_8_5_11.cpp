@@ -93,7 +93,7 @@ class TestIso_8_5_11 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* First frame */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, BrsFlag::DontShift,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, BrsFlag::DontShift,
                                                        EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1);
             RandomizeAndPrint(golden_frm.get());
@@ -128,7 +128,7 @@ class TestIso_8_5_11 : public test_lib::TestBase
             driver_bit_frm->RemoveBitsFrom(interm_index);
             monitor_bit_frm->RemoveBitsFrom(interm_index);
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
             {
                 for (int i = 0; i < 1408; i++)
                 {

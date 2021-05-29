@@ -122,7 +122,7 @@ class TestIso_7_6_23 : public test_lib::TestBase
             dut_ifc->Disable();
             dut_ifc->ConfigureProtocolException(true);
             nominal_bit_timing = data_bit_timing;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 nominal_bit_timing.brp_ = data_bit_timing.brp_ * 2;
             else
                 nominal_bit_timing.brp_ = data_bit_timing.brp_ * 8;
@@ -137,9 +137,9 @@ class TestIso_7_6_23 : public test_lib::TestBase
              * Generate frames!
              *****************************************************************************/
             // Approriate Frame type is generated in ConfigureTest!
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
             {
                 uint8_t data[64] = {0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
                                     0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,

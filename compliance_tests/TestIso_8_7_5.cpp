@@ -84,7 +84,7 @@ class TestIso_8_7_5 : public test_lib::TestBase
             for (int i = 0; i < num_elem_tests; i++)
             {
                 ElementaryTest test = ElementaryTest(i + 1);
-                test.e = nominal_bit_timing.sjw_ + i + 1;
+                test.e_ = nominal_bit_timing.sjw_ + i + 1;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -136,7 +136,7 @@ class TestIso_8_7_5 : public test_lib::TestBase
                 nominal_bit_timing.sjw_);
 
             int phase_2_len = bit_to_shorten->GetPhaseLenTimeQuanta(BitPhase::Ph2);
-            for (size_t i = 0; i < elem_test.e - nominal_bit_timing.sjw_; i++)
+            for (size_t i = 0; i < elem_test.e_ - nominal_bit_timing.sjw_; i++)
                 bit_to_shorten->ForceTimeQuanta(phase_2_len - i - 1, BitPhase::Ph2,
                                                 BitValue::Dominant);
 

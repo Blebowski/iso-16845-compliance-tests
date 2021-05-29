@@ -82,7 +82,7 @@ class TestIso_8_8_3_1 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
 
             ElementaryTest test = ElementaryTest(1);
-            test.e = data_bit_timing.sjw_;
+            test.e_ = data_bit_timing.sjw_;
             AddElemTest(TestVariant::CanFdEnabled, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
@@ -118,7 +118,7 @@ class TestIso_8_8_3_1 : public test_lib::TestBase
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
             Bit *brs = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            for (int i = 0; i < elem_test.e; i++)
+            for (int i = 0; i < elem_test.e_; i++)
                 brs->ForceTimeQuanta(data_bit_timing.ph2_ - 1 - i, BitPhase::Ph2, BitValue::Dominant);
 
             Bit *esi = driver_bit_frm->GetBitOf(0, BitType::Esi);

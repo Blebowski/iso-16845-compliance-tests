@@ -129,7 +129,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
                 lt_frame_type = FrameType::Can2_0;
                 iut_frame_type = FrameType::Can2_0;
 
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     lt_id_type = IdentifierType::Base;
@@ -174,7 +174,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEnabled) {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     lt_frame_type = FrameType::Can2_0;
@@ -250,7 +250,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
             Bit *bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Sof);
             if (test_variant == TestVariant::Common)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Rtr);
@@ -276,7 +276,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEnabled) {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(10,

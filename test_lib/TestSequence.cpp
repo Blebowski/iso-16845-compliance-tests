@@ -247,10 +247,10 @@ void test_lib::TestSequence::PushDriverValuesToSimulator()
     for (auto driven_value : driven_values)
     {
         if (driven_value.HasMessage())
-            CanAgentDriverPushItem((char)driven_value.value, driven_value.duration,
-                                   driven_value.message);
+            CanAgentDriverPushItem((char)driven_value.value_, driven_value.duration_,
+                                   driven_value.message_);
         else
-            CanAgentDriverPushItem((char)driven_value.value, driven_value.duration);
+            CanAgentDriverPushItem((char)driven_value.value_, driven_value.duration_);
     }
 }
 
@@ -260,10 +260,10 @@ void test_lib::TestSequence::PushMonitorValuesToSimulator()
     for (auto monitorValue : monitored_values)
     {
         if (monitorValue.HasMessage())
-            CanAgentMonitorPushItem((char)monitorValue.value, monitorValue.duration,
-                                    monitorValue.sample_rate, monitorValue.message);
+            CanAgentMonitorPushItem((char)monitorValue.value_, monitorValue.duration_,
+                                    monitorValue.sample_rate_, monitorValue.message_);
         else
-            CanAgentMonitorPushItem((char)monitorValue.value, monitorValue.duration,
-                                    monitorValue.sample_rate);
+            CanAgentMonitorPushItem((char)monitorValue.value_, monitorValue.duration_,
+                                    monitorValue.sample_rate_);
     }
 }

@@ -99,7 +99,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
             // Since there is one frame received in between, IUT will resynchronize and
             // mismatches in data bit rate can occur. Dont shift bit-rate due to this
             // reason.
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                 RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
@@ -137,9 +137,9 @@ class TestIso_8_5_1 : public test_lib::TestBase
             driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
             int bit_index_to_corrupt;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bit_index_to_corrupt = 0;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 bit_index_to_corrupt = 2;
             else
                 bit_index_to_corrupt = 5;

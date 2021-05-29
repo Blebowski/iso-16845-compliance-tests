@@ -124,7 +124,7 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
              *   3. Insert ACK to driven frame.
              *************************************************************************************/
             int d = data_bit_timing.GetBitLengthCycles();
-            if (elem_test.index == 3 || elem_test.index == 4)
+            if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
             driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
 
@@ -162,7 +162,7 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
 
             /* Reconfigure SSP: Test 1, 3 -> Measured + Offset, Test 2, 4 -> Offset only */
             dut_ifc->Disable();
-            if (elem_test.index == 1 || elem_test.index == 3)
+            if (elem_test.index_ == 1 || elem_test.index_ == 3)
             {
                 /* Offset as if normal sample point, TX/RX delay will be measured and added
                  * by IUT. Offset in clock cycles! (minimal time quanta)

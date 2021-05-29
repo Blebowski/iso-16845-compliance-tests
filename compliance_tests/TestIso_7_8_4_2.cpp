@@ -90,7 +90,7 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
                  i++)
             {
                 ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
-                test.e = i;
+                test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
 
@@ -129,7 +129,7 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
             Bit *driver_next_bit = driver_bit_frm->GetBitOf(8, BitType::Data);
             Bit *monitor_next_bit = monitor_bit_frm->GetBitOf(7, BitType::Data);
 
-            for (int j = 0; j < elem_test.e; j++)
+            for (int j = 0; j < elem_test.e_; j++)
                 driver_stuff_bit->ForceTimeQuanta(j, BitValue::Recessive);
             for (size_t j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
                 driver_stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
@@ -146,7 +146,7 @@ class TestIso_7_8_4_2 : public test_lib::TestBase
              * Execute test
              *************************************************************************************/
             TestMessage("Testing data byte positive resynchronisation with phase error: %d",
-                        elem_test.e);
+                        elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

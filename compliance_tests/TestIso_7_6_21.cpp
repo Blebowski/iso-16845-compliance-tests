@@ -89,7 +89,7 @@ class TestIso_7_6_21 : public test_lib::TestBase
              * Dont shift bit-rate needed since Transmitted frame after received frame is not
              * handled well with Bit rate shifts due to small resynchronizations in reciver!
              */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                     RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0xAB, &error_data);
             RandomizeAndPrint(golden_frm.get());

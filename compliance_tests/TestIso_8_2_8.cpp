@@ -99,36 +99,36 @@ class TestIso_8_2_8 : public test_lib::TestBase
 
             int stuff_bit_index;
 
-            if (elem_test.index < 127) {
+            if (elem_test.index_ < 127) {
                 data_first = 0x10;
                 data_rest = 0x78;
-                stuff_bit_index = elem_test.index - 1;
-            } else if (elem_test.index < 253){
+                stuff_bit_index = elem_test.index_ - 1;
+            } else if (elem_test.index_ < 253){
                 data_first = 0x78;
                 data_rest = 0x3C;
-                stuff_bit_index = elem_test.index - 127;
-            } else if (elem_test.index < 379){
+                stuff_bit_index = elem_test.index_ - 127;
+            } else if (elem_test.index_ < 379){
                 data_first = 0x34;
                 data_rest = 0x1E;
-                stuff_bit_index = elem_test.index - 253;
-            } else if (elem_test.index < 505){
+                stuff_bit_index = elem_test.index_ - 253;
+            } else if (elem_test.index_ < 505){
                 data_first = 0x12;
                 data_rest = 0x0F;
-                stuff_bit_index = elem_test.index - 379;
-            } else if (elem_test.index < 631){
+                stuff_bit_index = elem_test.index_ - 379;
+            } else if (elem_test.index_ < 631){
                 data_first = 0x0F;
                 data_rest = 0x87;
-                stuff_bit_index = elem_test.index - 505;
-            } else if (elem_test.index < 757){
+                stuff_bit_index = elem_test.index_ - 505;
+            } else if (elem_test.index_ < 757){
                 data_first = 0x17;
                 data_rest = 0xC3;
-                stuff_bit_index = elem_test.index - 631;
-            } else if (elem_test.index < 883){
+                stuff_bit_index = elem_test.index_ - 631;
+            } else if (elem_test.index_ < 883){
                 data_first = 0x43;
                 data_rest = 0xE1;
-                stuff_bit_index = elem_test.index - 757;
+                stuff_bit_index = elem_test.index_ - 757;
             } else {
-                stuff_bit_index = elem_test.index - 883;
+                stuff_bit_index = elem_test.index_ - 883;
                 data_first = 0x21;
                 data_rest = 0xF0;
             }

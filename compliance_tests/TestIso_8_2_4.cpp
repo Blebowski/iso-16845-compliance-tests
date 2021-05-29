@@ -127,7 +127,7 @@ class TestIso_8_2_4 : public test_lib::TestBase
              */
             if (test_variant == TestVariant::Common)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x07C30F0F;
@@ -169,7 +169,7 @@ class TestIso_8_2_4 : public test_lib::TestBase
             }
             else if (test_variant == TestVariant::CanFdEnabled)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x01E38787;
@@ -285,9 +285,9 @@ class TestIso_8_2_4 : public test_lib::TestBase
             // Elementary tests with ESI=1 means that IUT must be error passive to send such frame!
             bool is_err_passive = false;
             if (test_variant == TestVariant::CanFdEnabled &&
-                ((elem_test.index == 3) ||
-                    (elem_test.index == 4) ||
-                    (elem_test.index == 10)))
+                ((elem_test.index_ == 3) ||
+                    (elem_test.index_ == 4) ||
+                    (elem_test.index_ == 10)))
                 is_err_passive = true;
 
             driver_bit_frm->UpdateFrame();

@@ -20,26 +20,26 @@
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
                                    std::chrono::nanoseconds sample_rate)
 {
-    this->duration = duration;
-    this->sample_rate = sample_rate;
-    this->value = value;
-    this->message = std::string();
+    this->duration_ = duration;
+    this->sample_rate_ = sample_rate;
+    this->value_ = value;
+    this->message_ = std::string();
 }
 
 
 test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
                                    std::chrono::nanoseconds sample_rate, std::string message)
 {
-    this->duration = duration;
-    this->sample_rate = sample_rate;
-    this->value = value;
-    this->message = message;
+    this->duration_ = duration;
+    this->sample_rate_ = sample_rate;
+    this->value_ = value;
+    this->message_ = message;
 }
 
 
 bool test_lib::MonitorItem::HasMessage()
 {
-    if (message.size() > 0)
+    if (message_.size() > 0)
         return true;
     return false;
 }
@@ -48,7 +48,7 @@ bool test_lib::MonitorItem::HasMessage()
 void test_lib::MonitorItem::Print()
 {
     if (HasMessage())
-        std::cout << message << std::endl;
-    std::cout << "Value:    " << (char)value << std::endl;
-    std::cout << "Duration: " << duration.count() << " ns" << std::endl;
+        std::cout << message_ << std::endl;
+    std::cout << "Value:    " << (char)value_ << std::endl;
+    std::cout << "Duration: " << duration_.count() << " ns" << std::endl;
 }

@@ -80,7 +80,7 @@ class TestIso_8_8_5_2 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
 
             ElementaryTest test = ElementaryTest(1);
-            test.e = data_bit_timing.sjw_;
+            test.e_ = data_bit_timing.sjw_;
             AddElemTest(TestVariant::CanFdEnabled, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
@@ -121,7 +121,7 @@ class TestIso_8_8_5_2 : public test_lib::TestBase
             } while (! (random_bit->bit_value_ == BitValue::Recessive &&
                         next_bit->bit_value_ == BitValue::Dominant));
 
-            for (int i = 0; i < elem_test.e; i++)
+            for (int i = 0; i < elem_test.e_; i++)
                 next_bit->ForceTimeQuanta(i, BitValue::Recessive);
 
             for (size_t i = 0; i < data_bit_timing.ph2_; i++)

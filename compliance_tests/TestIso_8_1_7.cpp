@@ -124,14 +124,14 @@ class TestIso_8_1_7 : public test_lib::TestBase
                     0x07C30F0F, 0x07C30F0F, 0x1FB80000
                 };
 
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1],
-                                ids[elem_test.index - 1], data[elem_test.index - 1]);
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1],
+                                ids[elem_test.index_ - 1], data[elem_test.index_ - 1]);
 
             // CAN FD enabled variant
             } else {
                 
                 // Flags based on elementary test
-                switch(elem_test.index)
+                switch(elem_test.index_)
                 {
                     case 1:
                     case 2:
@@ -170,7 +170,7 @@ class TestIso_8_1_7 : public test_lib::TestBase
 
                 // DUT must be set to error passive state when ErrorPassive
                 // is expected! Otherwise, it would transmitt ESI_ERROR_ACTIVE
-                if (elem_test.index == 3 || elem_test.index == 4 || elem_test.index == 10)
+                if (elem_test.index_ == 3 || elem_test.index_ == 4 || elem_test.index_ == 10)
                     dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
                 else
                     dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
@@ -277,8 +277,8 @@ class TestIso_8_1_7 : public test_lib::TestBase
                 uint8_t dlcs[] = {
                     0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, 0x0
                 };
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1],
-                                    ids[elem_test.index - 1], data[elem_test.index - 1]);
+                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1],
+                                    ids[elem_test.index_ - 1], data[elem_test.index_ - 1]);
             }
 
             /* Randomize will have no effect since everything is specified */

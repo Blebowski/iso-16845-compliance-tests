@@ -140,7 +140,7 @@ class TestIso_8_8_2_4 : public test_lib::TestBase
              *   4. Insert ACK so that frame is correctly transmitted.
              *************************************************************************************/
             int d = data_bit_timing.GetBitLengthCycles();
-            if (elem_test.index == 3 || elem_test.index == 4)
+            if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
             driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
 
@@ -167,7 +167,7 @@ class TestIso_8_8_2_4 : public test_lib::TestBase
 
             /* Reconfigure SSP: Test 1, 3 -> Measured + Offset, Test 2, 4 -> Offset only */
             dut_ifc->Disable();
-            if (elem_test.index == 1 || elem_test.index == 3)
+            if (elem_test.index_ == 1 || elem_test.index_ == 3)
             {
                 /* Offset as if two time quantas before regular sample point! This is because if
                  * we set offset as if in sample point, the SSP fro last bit of CRC would already

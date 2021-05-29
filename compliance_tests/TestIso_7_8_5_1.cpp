@@ -81,7 +81,7 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
             for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
             {
                 ElementaryTest test = ElementaryTest(i);
-                test.e = i;
+                test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
 
@@ -113,11 +113,11 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
             Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitType::Esi);
             Bit *brs_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Brs);
 
-            brs_bit->ShortenPhase(BitPhase::Ph2, elem_test.e);
-            brs_bit_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            brs_bit->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+            brs_bit_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
             // In test, e is negative, we have abs(e), so we need to add, not subract.
-            int start_tq = 1 + data_bit_timing.prop_ + data_bit_timing.ph1_ + elem_test.e;
+            int start_tq = 1 + data_bit_timing.prop_ + data_bit_timing.ph1_ + elem_test.e_;
             for (size_t j = start_tq; j < brs_bit->GetLengthTimeQuanta(); j++)
                 esi_bit->ForceTimeQuanta(j, BitValue::Recessive);
 
@@ -128,7 +128,7 @@ class TestIso_7_8_5_1 : public test_lib::TestBase
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ESI negative resynchronisation with phase error: %d",
-                         elem_test.e);
+                         elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

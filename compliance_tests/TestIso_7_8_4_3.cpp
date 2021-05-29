@@ -90,7 +90,7 @@ class TestIso_7_8_4_3 : public test_lib::TestBase
                  i++)
             {
                 ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
-                test.e = i;
+                test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
 
@@ -130,7 +130,7 @@ class TestIso_7_8_4_3 : public test_lib::TestBase
             Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
             crc_delimiter->bit_value_ = BitValue::Dominant;
 
-            for (int j = 0; j < elem_test.e; j++)
+            for (int j = 0; j < elem_test.e_; j++)
                 crc_delimiter->ForceTimeQuanta(j, BitValue::Recessive);
 
             monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
@@ -147,7 +147,7 @@ class TestIso_7_8_4_3 : public test_lib::TestBase
              * Execute test
              *************************************************************************************/
             TestMessage("Testing CRC delimiter positive resynchronisation with phase error: %d",
-                        elem_test.e);
+                        elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

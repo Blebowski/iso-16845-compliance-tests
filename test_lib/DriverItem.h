@@ -29,14 +29,11 @@ class test_lib::DriverItem
 {
     public:
         DriverItem(std::chrono::nanoseconds duration, StdLogic value);
-        DriverItem(std::chrono::nanoseconds duration, StdLogic value,
-                   std::string message);
+        DriverItem(std::chrono::nanoseconds duration, StdLogic value, std::string message);
 
         /**
-         * @brief Checks if items has message
-         * 
-         * Checks if item has message which will be printed by digital simulator
-         * when CAN agent starts driving this item.
+         * @brief Checks if items has message printed by digital simulator when CAN agent starts
+         *        driving this item.
          * 
          * @return true if item has message, false otherwise
          */
@@ -51,18 +48,17 @@ class test_lib::DriverItem
          * Time for which the item is driven. When this is CAN bit, then this
          * represents length of the bit on CAN bus.
          */
-        std::chrono::nanoseconds duration;
+        std::chrono::nanoseconds duration_;
 
         /**
          * Value which is driven by CAN agent driver.
          */
-        StdLogic value;
+        StdLogic value_;
 
         /**
-         * Message to be displayed by digital simulator when driving of item
-         * starts.
+         * Message to be displayed by digital simulator when driving of item starts.
          */
-        std::string message;
+        std::string message_;
 };
 
 #endif

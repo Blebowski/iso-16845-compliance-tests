@@ -91,11 +91,11 @@ class TestIso_8_5_15 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                 RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
 
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                             RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, &data_byte);
 

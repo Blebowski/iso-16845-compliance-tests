@@ -75,7 +75,7 @@ class TestIso_7_7_2 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::Common);
             for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta(); i++){
                 ElementaryTest test = ElementaryTest(i + 1, FrameType::Can2_0);
-                test.e = i + 1;
+                test.e_ = i + 1;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -86,7 +86,7 @@ class TestIso_7_7_2 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base);
 
             /* Base ID = 0x0 */
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x0);
@@ -132,8 +132,8 @@ class TestIso_7_7_2 : public test_lib::TestBase
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph1, nominal_bit_timing.ph1_);
             last_interm_bit_mon->ShortenPhase(BitPhase::Prop, nominal_bit_timing.prop_);
 
-            last_interm_bit_drv->LengthenPhase(BitPhase::Sync, elem_test.e - 1);
-            last_interm_bit_mon->LengthenPhase(BitPhase::Sync, elem_test.e - 1);
+            last_interm_bit_drv->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);
+            last_interm_bit_mon->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);
 
             monitor_bit_frm_2->TurnReceivedFrame();
 

@@ -96,7 +96,7 @@ class TestIso_8_6_4 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                             RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
@@ -124,7 +124,7 @@ class TestIso_8_6_4 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
             int num_bits_to_insert = 0;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
                 num_bits_to_insert = 1;
@@ -188,9 +188,9 @@ class TestIso_8_6_4 : public test_lib::TestBase
              *  16 bits  -> 2 * 8 bits reached (+24, first error frame and 2 * 8 bits)
              *  -1 always decrement for succesfull retransmission
              */
-            if (elem_test.index == 1 || elem_test.index == 2)
+            if (elem_test.index_ == 1 || elem_test.index_ == 2)
                 CheckTecChange(tec_old, 7);
-            else if (elem_test.index == 3 || elem_test.index == 4)
+            else if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 CheckTecChange(tec_old, 15);
             else
                 CheckTecChange(tec_old, 23);

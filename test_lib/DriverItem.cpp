@@ -17,26 +17,25 @@
 #include "DriverItem.h"
 
 
-test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value)
+test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value):
+    duration_(duration),
+    value_(value)
 {
-    this->duration = duration;
-    this->value = value;
-    this->message = std::string();
+    message_ = std::string();
 }
 
 
 test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value,
-                                  std::string message)
-{
-    this->duration = duration;
-    this->value = value;
-    this->message = message;
-}
+                                  std::string message):
+    duration_(duration),
+    value_(value),
+    message_(message)
+{}
 
 
 bool test_lib::DriverItem::HasMessage()
 {
-    if (message.size() > 0)
+    if (message_.size() > 0)
         return true;
     return false;
 }
@@ -45,14 +44,14 @@ bool test_lib::DriverItem::HasMessage()
 void test_lib::DriverItem::Print()
 {
     if (HasMessage() == true)
-        std::cout << message << std::endl;
-    if (value == StdLogic::LOGIC_0)
+        std::cout << message_ << std::endl;
+    if (value_ == StdLogic::LOGIC_0)
         std::cout << "_";
-    else if (value == StdLogic::LOGIC_1)
+    else if (value_ == StdLogic::LOGIC_1)
         std::cout << "¯";
     else
-        std::cout << char(value);
+        std::cout << char(value_);
 
-    std::cout << "Value:    " << (char)value << std::endl;
-    std::cout << "Duration: " << duration.count() << " ns" << std::endl;
+    std::cout << "Value:    " << (char)value_ << '\n';
+    std::cout << "Duration: " << duration_.count() << " ns" << std::endl;
 }

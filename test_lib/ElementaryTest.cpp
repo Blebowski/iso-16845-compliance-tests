@@ -25,30 +25,28 @@
 
 using namespace can;
 
-test_lib::ElementaryTest::ElementaryTest(int index)
+test_lib::ElementaryTest::ElementaryTest(int index) :
+    index_(index)
 {
-    this->index = index;
-    msg = "Elementary test: ";
-    msg += std::to_string(index);
+    msg_ = "Elementary test: ";
+    msg_ += std::to_string(index);
 }
 
-test_lib::ElementaryTest::ElementaryTest(int index, std::string msg)
-{
-    this->index = index;
-    this->msg = msg;
-}
+test_lib::ElementaryTest::ElementaryTest(int index, std::string msg):
+    index_(index),
+    msg_(msg)
+{}
 
-test_lib::ElementaryTest::ElementaryTest(int index, std::string msg, FrameType frame_type)
-{
-    this->index = index;
-    this->msg = msg;
-    this->frame_type = frame_type;
-}
+test_lib::ElementaryTest::ElementaryTest(int index, std::string msg, FrameType frame_type):
+    index_(index),
+    msg_(msg),
+    frame_type_(frame_type)
+{}
 
-test_lib::ElementaryTest::ElementaryTest(int index, FrameType frame_type)
+test_lib::ElementaryTest::ElementaryTest(int index, FrameType frame_type):
+    index_(index),
+    frame_type_(frame_type)
 {
-    this->index = index;
-    msg = "Elementary test: ";
-    msg += std::to_string(index);
-    this->frame_type = frame_type;
+    msg_ = "Elementary test: ";
+    msg_ += std::to_string(index);
 }

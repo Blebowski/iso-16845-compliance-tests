@@ -92,7 +92,7 @@ class TestIso_7_2_4 : public test_lib::TestBase
         {
             uint8_t data[64] = {};
 
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
                 data[0] = 0x10;

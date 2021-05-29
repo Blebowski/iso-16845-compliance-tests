@@ -86,7 +86,7 @@ class TestIso_7_1_8 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index - 1]);
+            golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1]);
             RandomizeAndPrint(golden_frm.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);

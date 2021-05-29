@@ -88,13 +88,13 @@ class TestIso_8_6_20 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Sent by LT */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                                        EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x50);
             RandomizeAndPrint(golden_frm.get());
 
             /* Sent by IUT */
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                                          EsiFlag::ErrorActive);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0x51);
             RandomizeAndPrint(golden_frm_2.get());

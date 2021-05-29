@@ -90,7 +90,7 @@ class TestIso_7_5_5 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                             RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
             RandomizeAndPrint(golden_frm.get());
@@ -119,9 +119,9 @@ class TestIso_7_5_5 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
             int where_to_insert;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 where_to_insert = 0;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 where_to_insert = 2;
             else
                 where_to_insert = 5;

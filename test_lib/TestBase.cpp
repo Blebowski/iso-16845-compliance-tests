@@ -200,7 +200,7 @@ int test_lib::TestBase::Run()
 
             if (RunElemTest(elem_test, test_variant) != 0)
             {
-                TestBigMessage("Elementary test %d failed.", elem_test.index);
+                TestBigMessage("Elementary test %d failed.", elem_test.index_);
                 return (int)FinishTest();
             }
         }
@@ -355,7 +355,7 @@ BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &e
     // Respect CTU CAN FDs min(TSEG1) == 3 clock cycles!
     int init_ph1 = (bit_timing.brp_ == 1) ? 2 : 1;
 
-    assert(((elem_test.index < bit_timing.GetBitLengthTimeQuanta() - 1) &&
+    assert(((elem_test.index_ < bit_timing.GetBitLengthTimeQuanta() - 1) &&
              "Invalid test index, can't configure sample point!"));
 
     // Calculate new bit-rate from configured one. Have same bit-rate, but
@@ -363,7 +363,7 @@ BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &e
     // the end
     new_bt.brp_ = bit_timing.brp_;
     new_bt.prop_ = 0;
-    new_bt.ph1_ = init_ph1 + elem_test.index - 1;
+    new_bt.ph1_ = init_ph1 + elem_test.index_ - 1;
     new_bt.ph2_ = bit_timing.GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
     new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, bit_timing.sjw_);
 
@@ -664,7 +664,7 @@ void test_lib::TestBase::PrintTestInfo()
 void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
 {
     TestMessage(std::string(80, '*').c_str());
-    TestMessage("Elementary Test index: %d", elem_test.index);
+    TestMessage("Elementary Test index: %d", elem_test.index_);
     //TestMessage("Elementary Test message: %s", elem_test.msg.c_str());
     TestMessage(std::string(80, '*').c_str());
 }

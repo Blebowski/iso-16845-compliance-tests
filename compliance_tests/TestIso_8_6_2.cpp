@@ -88,7 +88,7 @@ class TestIso_8_6_2 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -111,9 +111,9 @@ class TestIso_8_6_2 : public test_lib::TestBase
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
             int bit_index_to_corrupt;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bit_index_to_corrupt = 0;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 bit_index_to_corrupt = 2;
             else
                 bit_index_to_corrupt = 5;
@@ -140,7 +140,7 @@ class TestIso_8_6_2 : public test_lib::TestBase
             CheckLowerTesterResult();
 
             /* 8 for Error frame, -1 for sucesfull transmision! No decrement for first test! */
-            if (test_variant == TestVariant::Common && elem_test.index == 1)
+            if (test_variant == TestVariant::Common && elem_test.index_ == 1)
                 CheckTecChange(tec_old, 8);
             else
                 CheckTecChange(tec_old, 7);

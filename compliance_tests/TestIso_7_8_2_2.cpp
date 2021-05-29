@@ -84,7 +84,7 @@ class TestIso_7_8_2_2 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             ElementaryTest test = ElementaryTest(1);
-            test.e = nominal_bit_timing.ph2_;
+            test.e_ = nominal_bit_timing.ph2_;
             AddElemTest(TestVariant::CanFdEnabled, std::move(test));
 
             CanAgentConfigureTxToRxFeedback(true);

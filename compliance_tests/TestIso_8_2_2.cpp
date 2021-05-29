@@ -105,7 +105,7 @@ class TestIso_8_2_2 : public test_lib::TestBase
             /* Choose frame field per elementary test */
             BitField bit_field_to_corrupt = BitField::Sof;
             BitValue bit_value_to_corrupt = BitValue::Dominant;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
                 bit_field_to_corrupt = BitField::Sof;
@@ -184,18 +184,18 @@ class TestIso_8_2_2 : public test_lib::TestBase
 
             /* Choose dlc based on elementary test */
             uint8_t dlc;
-            if (elem_test.index < 14) {
+            if (elem_test.index_ < 14) {
                 dlc = (rand() % 7) + 1; /* To make sure at least 1! */
             } else {
                 /* Distribute DLC so that following elementary tests get CRC17 */
-                if (elem_test.index == 14 || elem_test.index == 15 ||
-                    elem_test.index == 18 || elem_test.index == 19)
+                if (elem_test.index_ == 14 || elem_test.index_ == 15 ||
+                    elem_test.index_ == 18 || elem_test.index_ == 19)
                     dlc = 0x8;
                 else
                     dlc = 0xC;
             }
             
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                                             IdentifierType::Extended, RtrFlag::DataFrame,
                                             BrsFlag::Shift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
@@ -221,11 +221,11 @@ class TestIso_8_2_2 : public test_lib::TestBase
             driver_bit_frm->PutAcknowledge(dut_input_delay);
 
             /* Choose random Bit type within some bit field */
-            BitType bit_type = GetRandomBitType(elem_test.frame_type, IdentifierType::Extended,
+            BitType bit_type = GetRandomBitType(elem_test.frame_type_, IdentifierType::Extended,
                                                 bit_field_to_corrupt);
 
             /* Force extended ID */
-            if (elem_test.index == 3)
+            if (elem_test.index_ == 3)
                 bit_type = BitType::IdentifierExtension;
 
             /* Search for bit of matching value! */
@@ -237,14 +237,14 @@ class TestIso_8_2_2 : public test_lib::TestBase
              * We should have it guaranteed that all following combinations are tested:
              *  [Recessive, Dominant] x [CRC17, CRC21] x [Normal, Fixed Stuff bit]
              */
-            if (elem_test.index == 15 || elem_test.index == 16 ||
-                elem_test.index == 19 || elem_test.index == 20)
+            if (elem_test.index_ == 15 || elem_test.index_ == 16 ||
+                elem_test.index_ == 19 || elem_test.index_ == 20)
             {
                 int attempt_cnt = 0;
                 while (bit_to_corrupt->bit_value_ != bit_value_to_corrupt ||
                        bit_to_corrupt->stuff_bit_type_ != StuffBitType::FixedStuffBit)
                 {
-                    bit_type = GetRandomBitType(elem_test.frame_type, IdentifierType::Base,
+                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentifierType::Base,
                                                 bit_field_to_corrupt);
                     lenght = driver_bit_frm->GetFieldLength(bit_type);
                     index_in_bitfield = rand() % lenght;
@@ -264,9 +264,9 @@ class TestIso_8_2_2 : public test_lib::TestBase
                  * avoids getting stuck in searching for bit to corrupt!
                  */
                 while (bit_to_corrupt->bit_value_ != bit_value_to_corrupt){
-                    bit_type = GetRandomBitType(elem_test.frame_type, IdentifierType::Extended,
+                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentifierType::Extended,
                                                 bit_field_to_corrupt);
-                    if (elem_test.index == 3)
+                    if (elem_test.index_ == 3)
                         bit_type = BitType::IdentifierExtension;
                     lenght = driver_bit_frm->GetFieldLength(bit_type);
                     index_in_bitfield = rand() % lenght;

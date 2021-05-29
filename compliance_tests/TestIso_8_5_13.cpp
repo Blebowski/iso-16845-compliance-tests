@@ -97,7 +97,7 @@ class TestIso_8_5_13 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                             RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
@@ -128,9 +128,9 @@ class TestIso_8_5_13 : public test_lib::TestBase
             monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
             int index_to_flip;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 index_to_flip = 2;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 index_to_flip = 4;
             else
                 index_to_flip = 7;

@@ -84,7 +84,7 @@ class TestIso_7_8_6_3 : public test_lib::TestBase
             for (size_t i = nominal_bit_timing.sjw_ + 1; i <= nominal_bit_timing.ph2_; i++)
             {
                 ElementaryTest test = ElementaryTest(i - nominal_bit_timing.sjw_);
-                test.e = i;
+                test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
             
@@ -116,7 +116,7 @@ class TestIso_7_8_6_3 : public test_lib::TestBase
             Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
             Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitType::Ack);
 
-            for (int j = 0; j < elem_test.e; j++)
+            for (int j = 0; j < elem_test.e_; j++)
                 crc_delimiter_driver->ForceTimeQuanta(nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
                                                       BitValue::Dominant);
 
@@ -132,7 +132,7 @@ class TestIso_7_8_6_3 : public test_lib::TestBase
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ACK negative resynchronisation with phase error: %d",
-                         elem_test.e);
+                         elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

@@ -83,7 +83,7 @@ class TestIso_7_7_4 : public test_lib::TestBase
             for (size_t i = 0; i < num_elem_tests; i++)
             {
                 ElementaryTest test = ElementaryTest(i + 1);
-                test.e = nominal_bit_timing.sjw_ + 1 + i;
+                test.e_ = nominal_bit_timing.sjw_ + 1 + i;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -119,7 +119,7 @@ class TestIso_7_7_4 : public test_lib::TestBase
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
             Bit *before_stuff_bit = driver_bit_frm->GetBitOf(3, BitType::BaseIdentifier);
-            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             // Monitor bit as if node re-synchronised by SJW!
             Bit *monitor_stuff_bit = monitor_bit_frm->GetStuffBit(0);
@@ -129,7 +129,7 @@ class TestIso_7_7_4 : public test_lib::TestBase
             for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
                 driver_stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
             BitPhase prev_phase = driver_stuff_bit->PrevBitPhase(BitPhase::Ph2);
-            int to_be_shortened = elem_test.e - nominal_bit_timing.sjw_ + 1;
+            int to_be_shortened = elem_test.e_ - nominal_bit_timing.sjw_ + 1;
 
             int shortened = driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened);
 
@@ -150,7 +150,7 @@ class TestIso_7_7_4 : public test_lib::TestBase
              * Execute test
              *************************************************************************************/
             // Clean REC so that errors don't accumulate over testing!
-            TestMessage("Testing positive phase error: %d", elem_test.e);
+            TestMessage("Testing positive phase error: %d", elem_test.e_);
             dut_ifc->SetRec(0);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);

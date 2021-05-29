@@ -90,7 +90,7 @@ class TestIso_8_5_4 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* ESI needed for CAN FD variant */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                                                        EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
@@ -118,7 +118,7 @@ class TestIso_8_5_4 : public test_lib::TestBase
             driver_bit_frm->TurnReceivedFrame();
             
             int num_suspend_bits = 0;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
                 case 1:
                     num_suspend_bits = 0;

@@ -114,7 +114,7 @@ class TestIso_7_1_2 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             int can_id;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
                 case 1:
                     can_id = 0x15555555;
@@ -136,9 +136,9 @@ class TestIso_7_1_2 : public test_lib::TestBase
                     break;
             }
 
-            uint8_t dlc = (elem_test.index - 1) / 5;
+            uint8_t dlc = (elem_test.index_ - 1) / 5;
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                             IdentifierType::Extended, RtrFlag::DataFrame);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
             RandomizeAndPrint(golden_frm.get());

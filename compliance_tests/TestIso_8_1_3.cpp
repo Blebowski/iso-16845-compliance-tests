@@ -102,21 +102,21 @@ class TestIso_8_1_3 : public test_lib::TestBase
             int id_iut;
             int id_lt;
             /* We match bit position to be flipped with test index */
-            if (elem_test.index == 7)
+            if (elem_test.index_ == 7)
                 id_iut = 0x010;
             else
                 id_iut = 0x7EF; 
 
             /* LT must have n-th bit of ID set to dominant */
             id_lt = id_iut;
-            id_lt &= ~(1 << (11 - elem_test.index));
+            id_lt &= ~(1 << (11 - elem_test.index_));
 
             /* In this test, we MUST NOT shift bit-rate! After loosing arbitration, IUT will
              * resynchronize in data bit-rate if granularity of data bit-rate is higher than
              * of nominal bit-rate! This would result in slightly shifted monitored frame
              * compared to IUT!
              */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                 RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
             RandomizeAndPrint(golden_frm.get());
@@ -143,7 +143,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
              *   4. Append second frame as if retransmitted by IUT. This one must be created from
              *      frame which was actually issued to IUT
              *************************************************************************************/
-            Bit *loosing_bit =  monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index - 1,
+            Bit *loosing_bit =  monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 1,
                                                     BitType::BaseIdentifier);
             loosing_bit->bit_value_ = BitValue::Recessive;
             monitor_bit_frm->LooseArbitration(loosing_bit);

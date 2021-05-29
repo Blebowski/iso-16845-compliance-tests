@@ -84,7 +84,7 @@ class TestIso_8_6_5 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -128,7 +128,7 @@ class TestIso_8_6_5 : public test_lib::TestBase
 
             /* 23 bits = 2 * 8 bits -> Increment + 16. -1 decrement for succesfull transmission.
              * This is skipped on first elementary test since TEC is 0.*/
-            if (test_variant == TestVariant::Common && elem_test.index == 1)
+            if (test_variant == TestVariant::Common && elem_test.index_ == 1)
                 CheckTecChange(tec_old, 16);
             else
                 CheckTecChange(tec_old, 15);

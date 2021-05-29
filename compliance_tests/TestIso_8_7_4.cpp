@@ -85,7 +85,7 @@ class TestIso_8_7_4 : public test_lib::TestBase
             for (int i = 0; i < num_elem_tests; i++)
             {
                 ElementaryTest test = ElementaryTest(i + 1);
-                test.e = i + 1;
+                test.e_ = i + 1;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -133,9 +133,9 @@ class TestIso_8_7_4 : public test_lib::TestBase
             } while (!(bit_to_shorten->bit_value_ == BitValue::Recessive &&
                         next_bit->bit_value_ == BitValue::Dominant));
 
-            bit_to_shorten->ShortenPhase(BitPhase::Ph2, elem_test.e);
+            bit_to_shorten->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
-            monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e - 1);
+            monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e_ - 1);
             monitor_bit_frm->GetBit(bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
 
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;

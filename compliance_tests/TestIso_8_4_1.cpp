@@ -95,7 +95,7 @@ class TestIso_8_4_1 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -115,10 +115,10 @@ class TestIso_8_4_1 : public test_lib::TestBase
              *************************************************************************************/
             driver_bit_frm->TurnReceivedFrame();
             
-            Bit *interm_bit = driver_bit_frm->GetBitOf(elem_test.index - 1, BitType::Intermission);
+            Bit *interm_bit = driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Intermission);
             driver_bit_frm->FlipBitAndCompensate(interm_bit, dut_input_delay);
-            monitor_bit_frm->InsertOverloadFrame(elem_test.index, BitType::Intermission);
-            driver_bit_frm->InsertPassiveErrorFrame(elem_test.index, BitType::Intermission);
+            monitor_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
+            driver_bit_frm->InsertPassiveErrorFrame(elem_test.index_, BitType::Intermission);
 
             for (int k = 0; k < 15; k++)
             {

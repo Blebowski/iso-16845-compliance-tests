@@ -84,7 +84,7 @@ class TestIso_7_4_3 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                             IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
                             EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
@@ -108,7 +108,7 @@ class TestIso_7_4_3 : public test_lib::TestBase
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
             {
                 driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
 
@@ -142,7 +142,7 @@ class TestIso_7_4_3 : public test_lib::TestBase
             RunLowerTester(true, true);
             CheckLowerTesterResult();
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 CheckNoRxFrame();
             else
                 CheckRxFrame(*golden_frm);

@@ -95,7 +95,7 @@ class TestIso_7_8_1_1 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // CAN FD frame, Shift/ No shift based on elementary test!
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
             else
                 frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::DontShift);
@@ -124,7 +124,7 @@ class TestIso_7_8_1_1 : public test_lib::TestBase
 
             int dominant_pulse_length;
             
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 dominant_pulse_length = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_;
             else
                 dominant_pulse_length = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 1;
@@ -138,7 +138,7 @@ class TestIso_7_8_1_1 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              **************************************************************************************/
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 TestMessage("Testing BRS sampled Recessive");
             else
                 TestMessage("Testing BRS sampled Dominant");

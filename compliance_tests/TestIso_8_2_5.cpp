@@ -106,7 +106,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
         {
             /* Choose DLC based on elementary test */
             uint8_t dlc;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
             case 2:
@@ -134,7 +134,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
                 break;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, BrsFlag::Shift,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, BrsFlag::Shift,
                                                        EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
             RandomizeAndPrint(golden_frm.get());
@@ -157,7 +157,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
             driver_bit_frm->PutAcknowledge(dut_input_delay);
 
             Bit *bit_to_corrupt;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
             case 1:
                 bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
@@ -180,7 +180,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
             case 9:
             case 10:
             case 11:
-                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 6);
+                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index_ - 6);
                 break;
             case 12:
             case 13:
@@ -189,11 +189,11 @@ class TestIso_8_2_5 : public test_lib::TestBase
             case 16:
             case 17:
             case 18:
-                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 12);
+                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index_ - 12);
                 break;
             default:
-                TestMessage("Invalid Elementary test index: %d", elem_test.index);
-                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index - 12);
+                TestMessage("Invalid Elementary test index: %d", elem_test.index_);
+                bit_to_corrupt = driver_bit_frm->GetFixedStuffBit(elem_test.index_ - 12);
             }
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);

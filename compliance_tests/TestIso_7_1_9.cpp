@@ -83,11 +83,11 @@ class TestIso_7_1_9 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type);
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
             RandomizeAndPrint(golden_frm_2.get());
 
@@ -102,7 +102,7 @@ class TestIso_7_1_9 : public test_lib::TestBase
              *      intermission!
              *   2. Monitor frames as if received, driver frame must have ACK too!
              *************************************************************************************/
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
             {
                 driver_bit_frm->RemoveBit(2, BitType::Intermission);
                 monitor_bit_frm->RemoveBit(2, BitType::Intermission);

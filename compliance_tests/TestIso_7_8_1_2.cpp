@@ -104,7 +104,7 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
             // In 2nd iteration dominant bit will be sampled at second bit position of data field!
             // We must expect this in golden frame so that it will be compared correctly with
             // received frame!
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte_recessive_sampled);
             else
                 golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte_dominant_sampled);
@@ -126,7 +126,7 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
             data_bit->bit_value_ = BitValue::Recessive;
 
             int dominant_pulse_length;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 dominant_pulse_length = data_bit_timing.prop_ + data_bit_timing.ph1_;
             else
                 dominant_pulse_length = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
@@ -140,7 +140,7 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 TestMessage("Testing Data bit sampled Recessive");
             else
                 TestMessage("Testing Data bit sampled Dominant");

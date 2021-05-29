@@ -124,9 +124,9 @@ class TestIso_8_3_4 : public test_lib::TestBase
             monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
             int bit_index_to_flip;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bit_index_to_flip = 2;
-            else if (elem_test.index == 2)
+            else if (elem_test.index_ == 2)
                 bit_index_to_flip = 4;
             else
                 bit_index_to_flip = 7;

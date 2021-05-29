@@ -20,8 +20,8 @@ can::BitTiming::BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_
     prop_(prop),
     ph1_(ph1),
     ph2_(ph2),
-    sjw_(sjw),
-    brp_(brp)
+    brp_(brp),
+    sjw_(sjw)
 {
     // SJW can't be larger than any of TSEG1 or TSEG2. Don't account any IPT
     // as this model is ideal implementation

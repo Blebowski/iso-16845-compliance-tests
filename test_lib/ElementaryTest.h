@@ -45,16 +45,16 @@ class test_lib::ElementaryTest
         /* Index of the elementary test (starting from 1. This is the same
          * number as is after # in ISO116845!)
          */
-        int index;
+        int index_;
 
         /* String to be printed when this elementary test starts */
-        std::string msg;
+        std::string msg_;
 
         /* Phase error (used during bit timing tests) */
-        int e;
+        int e_;
 
         /* Frame type used by the test */
-        FrameType frame_type;
+        FrameType frame_type_;
 };
 
 #endif

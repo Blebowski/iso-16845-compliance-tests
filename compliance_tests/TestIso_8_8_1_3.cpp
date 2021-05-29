@@ -117,9 +117,9 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
             test_data_bit_timing.brp_ = data_bit_timing.brp_;
             test_data_bit_timing.sjw_ = data_bit_timing.sjw_;
             test_data_bit_timing.ph1_ = 0;
-            test_data_bit_timing.prop_ = (elem_test.index + 1) / 2;
+            test_data_bit_timing.prop_ = (elem_test.index_ + 1) / 2;
             test_data_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() -
-                                        ((elem_test.index + 1) / 2) - 1;
+                                        ((elem_test.index_ + 1) / 2) - 1;
             
             /* Re-configure bit-timing for this test so that frames are generated with it! */
             this->data_bit_timing = test_data_bit_timing;
@@ -159,7 +159,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
 
             Bit *data_bit;
             BitValue bit_value;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bit_value = BitValue::Dominant;
             else
                 bit_value = BitValue::Recessive;
@@ -168,7 +168,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
                 data_bit = driver_bit_frm->GetRandomBitOf(BitType::Data);
             } while (data_bit->bit_value_ != bit_value);
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
             {
                 for (size_t i = 0; i < data_bit_timing.ph2_; i++)
                     data_bit->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Recessive);

@@ -98,7 +98,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
             // Since there is one frame received in between first and third frame, 
             // IUT will resynchronize and mismatches in data bit rate can occur. Dont shift
             // bit-rate due to this reason. Alternative is to demand BRP=BRP_FD
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                 RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
@@ -132,7 +132,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
             driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
 
             int bits_to_insert = 0;
-            switch (elem_test.index)
+            switch (elem_test.index_)
             {
                 case 1:
                     bits_to_insert = 1;

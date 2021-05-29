@@ -78,7 +78,7 @@ class TestIso_7_7_3 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::Common);
             for (size_t i = 0; i < nominal_bit_timing.sjw_; i++){
                 ElementaryTest test = ElementaryTest(i + 1);
-                test.e = i + 1;
+                test.e_ = i + 1;
                 elem_tests[0].push_back(test);
             }
 
@@ -112,9 +112,9 @@ class TestIso_7_7_3 : public test_lib::TestBase
             monitor_bit_frm->TurnReceivedFrame();
 
             Bit *before_stuff_bit = driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier);
-            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
             before_stuff_bit = monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier);
-            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e);
+            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
             for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)

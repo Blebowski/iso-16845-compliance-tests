@@ -120,7 +120,7 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
             int bit_index = driver_bit_frm->GetBitIndex(crc_delim);
             int dominant_pulse_lenght;
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_;
             else
                 dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
@@ -128,7 +128,7 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
             for (int j = 0; j < dominant_pulse_lenght; j++)
                 crc_delim->ForceTimeQuanta(j, BitValue::Dominant);    
 
-            if (elem_test.index == 2)
+            if (elem_test.index_ == 2)
             {
                 driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
                 monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
@@ -140,7 +140,7 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 TestMessage("Testing CRC delimiter bit sampled Recessive");
             else
                 TestMessage("Testing CRC delimiter bit sampled Dominant");
@@ -151,7 +151,7 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
 
             // Read received frame from DUT and compare with sent frame
             // (first elementary test only, second one ends with error frame)
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 CheckRxFrame(*golden_frm);
 
             return FinishElementaryTest();

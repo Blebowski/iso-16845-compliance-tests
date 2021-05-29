@@ -131,7 +131,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
              */
             if (test_variant == TestVariant::Can_2_0 || test_variant == TestVariant::CanFdTolerant)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x78;
@@ -212,14 +212,14 @@ class TestIso_7_1_10 : public test_lib::TestBase
                     break;
 
                 default:
-                    TestMessage("Invalid Elementary test index: %d", elem_test.index);
+                    TestMessage("Invalid Elementary test index: %d", elem_test.index_);
                     break;
                 }
 
             }
             else if (test_variant == TestVariant::CanFdEnabled)
             {
-                switch (elem_test.index)
+                switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x78;
@@ -337,7 +337,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
              *************************************************************************************/
             if (test_variant == TestVariant::Can_2_0)
             {
-                switch(elem_test.index)
+                switch(elem_test.index_)
                 {
                 case 3:
                 case 4:
@@ -351,7 +351,7 @@ class TestIso_7_1_10 : public test_lib::TestBase
             }
             else if (test_variant == TestVariant::CanFdEnabled)
             {
-                if (elem_test.index == 5)
+                if (elem_test.index_ == 5)
                 {
                     driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
                     monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;

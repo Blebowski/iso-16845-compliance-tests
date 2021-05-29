@@ -114,9 +114,9 @@ class TestIso_8_1_1 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             int id;
-            uint8_t dlc = (elem_test.index - 1) / 5;
+            uint8_t dlc = (elem_test.index_ - 1) / 5;
 
-            switch((elem_test.index - 1) % 5)
+            switch((elem_test.index_ - 1) % 5)
             {
                 case 0:
                     id = 0x555;
@@ -137,7 +137,7 @@ class TestIso_8_1_1 : public test_lib::TestBase
                     break;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                             RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id);
             RandomizeAndPrint(golden_frm.get());

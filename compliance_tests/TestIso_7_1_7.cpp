@@ -90,7 +90,7 @@ class TestIso_7_1_7 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -150,11 +150,11 @@ class TestIso_7_1_7 : public test_lib::TestBase
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
             driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
             {
                 driver_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
                 monitor_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
-            } else if (elem_test.index == 3) {
+            } else if (elem_test.index_ == 3) {
                 driver_bit_frm->RemoveBit(2, BitType::Intermission);
                 monitor_bit_frm->RemoveBit(2, BitType::Intermission);
             }
@@ -162,12 +162,12 @@ class TestIso_7_1_7 : public test_lib::TestBase
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm_2->TurnReceivedFrame();
-            if (elem_test.index == 3)
+            if (elem_test.index_ == 3)
                 monitor_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-            if (elem_test.index == 3)
+            if (elem_test.index_ == 3)
             {
                 driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
                 monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);

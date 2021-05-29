@@ -88,7 +88,7 @@ class TestIso_7_8_2_1 : public test_lib::TestBase
             for (size_t i = 1; i <= num_elem_tests; i++)
             {
                 ElementaryTest test = ElementaryTest(i);
-                test.e = nominal_bit_timing.sjw_ + i;
+                test.e_ = nominal_bit_timing.sjw_ + i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
 
@@ -118,8 +118,8 @@ class TestIso_7_8_2_1 : public test_lib::TestBase
             Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Edl);
             Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
 
-            edl_bit_driver->LengthenPhase(BitPhase::Ph2, elem_test.e);
-            edl_bit_monitor->LengthenPhase(BitPhase::Ph2, elem_test.e);
+            edl_bit_driver->LengthenPhase(BitPhase::Ph2, elem_test.e_);
+            edl_bit_monitor->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             for (size_t j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
                 brs_bit->GetTimeQuanta(j)->ForceValue(BitValue::Dominant);
@@ -130,7 +130,7 @@ class TestIso_7_8_2_1 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            TestMessage("Testing 'res' bit hard-sync with phase error: %d", elem_test.e);
+            TestMessage("Testing 'res' bit hard-sync with phase error: %d", elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

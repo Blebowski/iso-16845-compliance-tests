@@ -84,7 +84,7 @@ class TestIso_7_6_12 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -109,7 +109,7 @@ class TestIso_7_6_12 : public test_lib::TestBase
 
             /* Force n-th bit of Error Delimiter to dominant! */
             int bit_to_corrupt;
-            if (elem_test.index == 1)
+            if (elem_test.index_ == 1)
                 bit_to_corrupt = 2;
             else
                 bit_to_corrupt = 7;

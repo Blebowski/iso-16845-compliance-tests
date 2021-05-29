@@ -79,7 +79,7 @@ class TestIso_7_7_11 : public test_lib::TestBase
             for (size_t i = 1; i <= nominal_bit_timing.sjw_; i++)
             {
                 ElementaryTest test = ElementaryTest(i);
-                test.e = i;
+                test.e_ = i;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
         }
@@ -109,20 +109,20 @@ class TestIso_7_7_11 : public test_lib::TestBase
 
             auto tq_it = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
                             ->GetLastTimeQuantaIterator(BitPhase::Ph2);
-            for (int i = 0; i < elem_test.e; i++)
+            for (int i = 0; i < elem_test.e_; i++)
             {
                 tq_it->ForceValue(BitValue::Dominant);
                 tq_it--;
             }
 
             monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
             Bit *ack = driver_bit_frm->GetBitOf(0, BitType::Ack);
             ack->bit_value_ = BitValue::Dominant;
 
             tq_it = ack->GetLastTimeQuantaIterator(BitPhase::Ph2);
-            for (size_t i = 0; i < elem_test.e + nominal_bit_timing.ph2_; i++)
+            for (size_t i = 0; i < elem_test.e_ + nominal_bit_timing.ph2_; i++)
             {
                 tq_it->ForceValue(BitValue::Recessive);
                 tq_it--;
@@ -134,7 +134,7 @@ class TestIso_7_7_11 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            TestMessage("Testing ACK negative phase error: %d", elem_test.e);
+            TestMessage("Testing ACK negative phase error: %d", elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

@@ -103,7 +103,7 @@ class TestIso_8_7_2 : public test_lib::TestBase
             WaitDutErrorActive();
 
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, IdentifierType::Base,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
                                 RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x7FF, &data_byte);
             RandomizeAndPrint(golden_frm.get());

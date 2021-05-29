@@ -79,7 +79,7 @@ class TestIso_7_7_5 : public test_lib::TestBase
             FillTestVariants(VariantMatchingType::Common);
             for (size_t i = 1; i <= nominal_bit_timing.sjw_; i++){
                 ElementaryTest test = ElementaryTest(i);
-                test.e = i;
+                test.e_ = i;
                 elem_tests[0].push_back(test);
             }
 
@@ -111,9 +111,9 @@ class TestIso_7_7_5 : public test_lib::TestBase
             monitor_bit_frm->TurnReceivedFrame();
 
             driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
             monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e);
+                ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
             Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
             stuff_bit->bit_value_ = BitValue::Recessive;
@@ -129,7 +129,7 @@ class TestIso_7_7_5 : public test_lib::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            TestMessage("Testing negative phase error: %d", elem_test.e);
+            TestMessage("Testing negative phase error: %d", elem_test.e_);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

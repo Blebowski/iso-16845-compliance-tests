@@ -109,27 +109,27 @@ class TestIso_8_1_4 : public test_lib::TestBase
             /* We match bit position to be flipped with test index. Last two tests are tests where
              * we test on SRR or IDE
              */
-            if (elem_test.index == 7 || elem_test.index == 30 || elem_test.index == 31)
+            if (elem_test.index_ == 7 || elem_test.index_ == 30 || elem_test.index_ == 31)
                 id_iut = 0x00400000;
             else
                 id_iut = 0x1FBFFFFF; 
 
             /* LT must have n-th bit of ID set to dominant */
             id_lt = id_iut;
-            if (elem_test.index < 30)
-                id_lt &= ~(1 << (29 - elem_test.index));
+            if (elem_test.index_ < 30)
+                id_lt &= ~(1 << (29 - elem_test.index_));
 
             /* On elementary test 31, LT send base frame. Correct the ID so that LT sends base ID
              * with the same bits as IUT. This will guarantee that IUT sending extended frame with
              * 0x00400000 will send the same first bits as LT. Since LT will be sending base frame,
              * but IUT extended frame, IUT will loose on IDE bit!
             */
-            else if (elem_test.index == 31)
+            else if (elem_test.index_ == 31)
                 id_lt = (id_iut >> 18) & 0x7FF;
 
             /* On elementary test 31, IUT shall loose on IDE bit. Occurs when LT sends base frame! */
             IdentifierType ident_type_lt;
-            if (elem_test.index == 31)
+            if (elem_test.index_ == 31)
                 ident_type_lt = IdentifierType::Base;
             else
                 ident_type_lt = IdentifierType::Extended;
@@ -138,7 +138,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
              * recessive SRR. LT must also send recessive bit (RTR) otherwise IUT would loose on
              * SRR and not IDE!
              */
-            if (elem_test.index == 31)
+            if (elem_test.index_ == 31)
                 rtr_flag = RtrFlag::RtrFrame;
             else
                 rtr_flag = RtrFlag::DataFrame;
@@ -148,9 +148,9 @@ class TestIso_8_1_4 : public test_lib::TestBase
              * of nominal bit-rate! This would result in slightly shifted monitored frame
              * compared to IUT!
              */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type, ident_type_lt,
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, ident_type_lt,
                                     rtr_flag, BrsFlag::DontShift, EsiFlag::ErrorActive);
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type,
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_,
                                     IdentifierType::Extended, rtr_flag, BrsFlag::DontShift,
                                     EsiFlag::ErrorActive);
 
@@ -183,23 +183,23 @@ class TestIso_8_1_4 : public test_lib::TestBase
              *************************************************************************************/
             Bit *loosing_bit;
 
-            if (elem_test.index < 12){
-                loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index - 1,
+            if (elem_test.index_ < 12){
+                loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 1,
                                                         BitType::BaseIdentifier);
-            } else if (elem_test.index < 30){
-                loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index - 12,
+            } else if (elem_test.index_ < 30){
+                loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 12,
                                                         BitType::IdentifierExtension);
             /* Elementary test 30 - loose on SRR */
-            } else if (elem_test.index == 30) {
+            } else if (elem_test.index_ == 30) {
                 loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Srr);
 
             /* Elementary test 31 - loose on IDE */
-            } else if (elem_test.index == 31){
+            } else if (elem_test.index_ == 31){
                 loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
             
             } else {
                 loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
-                TestMessage("Invalid Elementary test index: %d", elem_test.index);
+                TestMessage("Invalid Elementary test index: %d", elem_test.index_);
             }
 
             loosing_bit->bit_value_ = BitValue::Recessive;
@@ -210,7 +210,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
             /* On elementary test 30, IUT shall loose on SRR bit, therefore we must send this bit
              * dominant by LT, so we flip it
              */
-            if (elem_test.index == 30){
+            if (elem_test.index_ == 30){
                 Bit *srr_bit = driver_bit_frm->GetBitOf(0, BitType::Srr);
                 srr_bit->bit_value_ = BitValue::Dominant;
                 int index = driver_bit_frm->GetBitIndex(srr_bit);
@@ -232,7 +232,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
              * 
              * Note that in CAN FD frame there is no RTR bit so R1 must be set instead!
              */
-            if (elem_test.index == 31) {
+            if (elem_test.index_ == 31) {
                 if (test_variant == TestVariant::Common)
                     monitor_bit_frm->GetBitOf(0, BitType::Rtr)->bit_value_ = BitValue::Recessive;
                 else
