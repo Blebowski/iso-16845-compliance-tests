@@ -101,8 +101,6 @@ class can::Frame {
          */
         void Randomize();
 
-        friend bool operator==(Frame& lhs, Frame& rhs);
-
         /**
          * Prints frame.
          * TODO: Add stream input

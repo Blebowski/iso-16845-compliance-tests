@@ -133,20 +133,6 @@ uint8_t can::Frame::data(int index)
     return data_[index];
 }
 
-bool operator==(can::Frame& lhs, can::Frame& rhs)
-{
-    if (lhs.identifier() != rhs.identifier())
-        return false;
-    if (lhs.dlc() != rhs.dlc())
-        return false;
-    if (!(lhs.frame_flags() == rhs.frame_flags()))
-        return false;
-    for (int i = 0; i < lhs.data_length(); i++)
-        if (lhs.data(i) != rhs.data(i))
-            return false;
-    return true;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Setters
 ///////////////////////////////////////////////////////////////////////////////
