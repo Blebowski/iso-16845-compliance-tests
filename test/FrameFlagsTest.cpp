@@ -226,4 +226,16 @@ int main()
 {
     test_randomization();
 
+    // Check operator overload
+    FrameFlags ff1 = FrameFlags(FrameType::Can2_0, IdentifierType::Base, RtrFlag::DataFrame,
+                                BrsFlag::DontShift, EsiFlag::ErrorActive);
+    FrameFlags ff2 = FrameFlags(FrameType::Can2_0, IdentifierType::Base, RtrFlag::DataFrame,
+                                BrsFlag::DontShift, EsiFlag::ErrorActive);
+    assert(ff1 == ff2);
+
+    FrameFlags ff3 = FrameFlags(FrameType::CanFd, IdentifierType::Base, RtrFlag::DataFrame,
+                                BrsFlag::DontShift, EsiFlag::ErrorActive);
+    FrameFlags ff4 = FrameFlags(FrameType::Can2_0, IdentifierType::Base, RtrFlag::DataFrame,
+                                BrsFlag::DontShift, EsiFlag::ErrorPassive);
+    assert(ff3 != ff4);
 }
