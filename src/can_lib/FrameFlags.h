@@ -12,6 +12,7 @@
 
 #include "can.h"
 
+
 #ifndef FRAME_FLAGS
 #define FRAME_FLAGS
 
@@ -41,11 +42,16 @@ class can::FrameFlags
         bool randomize_esi_ = false;
 
         /* 
-         * A constructor which does not specify all attributes, leaves these arguments enabled
-         * for randomization. Attributes will be randomized upon call of 'randomize'.
+         * A constructor call which does not specify all attributes, leaves these arguments enabled
+         * for randomization. Attributes will be randomized upon call of 'Randomize'.
          * 
          * All values are randomized in valid ranges. There can never be e.g. CAN FD frame with
          * RTR flag or CAN 2.0 frame with BRS flag.
+         * 
+         * Example:
+         *   FrameFlags(FramType:Can_2_0, RtrFlag::DataFrame)
+         * will create CAN 2.0 Data frame, BRS, ESI will be kept default (do not exist in
+         * CAN 2.0), and Identifier type will be allows for randomization.
          */
 
         /**
@@ -72,8 +78,7 @@ class can::FrameFlags
         /**
          *  BRS and ESI are randomized (if frame is CAN FD frame)
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide,
-                   RtrFlag is_rtr);
+        FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr);
 
         /**
          * Randomizes RTR flag, BRS and ESI
@@ -86,7 +91,7 @@ class can::FrameFlags
         FrameFlags(FrameType is_fdf, RtrFlag is_rtr);
 
         /**
-         * Randomizes IDE, RTR, ESI
+         * Randomizes IDE, BRS
          */
         FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi);
 
@@ -101,7 +106,7 @@ class can::FrameFlags
         FrameFlags(IdentifierType is_ide);
 
         /**
-         * Randomizes ESI, BRS, RTR
+         * Randomizes ESI, IDE, RTR
          */
         FrameFlags(FrameType is_fdf, BrsFlag is_brs);
 

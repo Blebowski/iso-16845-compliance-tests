@@ -15,6 +15,7 @@
 #include "can.h"
 #include "FrameFlags.h"
 
+
 can::FrameFlags::FrameFlags() :
     randomize_fdf_(true),
     randomize_ide_(true),

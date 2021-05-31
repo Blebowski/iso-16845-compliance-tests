@@ -38,6 +38,12 @@ IF (CPP_CHECK)
     set(CMAKE_CXX_CPPCHECK "cppcheck")
 ENDIF()
 
+enable_testing()
+SET(CTEST_OUTPUT_ON_FAILURE TRUE)
+
+include_directories(src)
+
 add_subdirectory(src)
+add_subdirectory(test)
 
 set (EXECUTABLE_OUTPUT_PATH bin)

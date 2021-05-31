@@ -16,4 +16,8 @@ cd ..
 cd Release
 cmake -DCMAKE_BUILD_TYPE=Release ../..
 make -j `nproc`
-cd ..
+
+# Run tests on Release build
+make test
+
+cd ../..
