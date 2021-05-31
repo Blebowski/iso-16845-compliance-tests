@@ -163,21 +163,25 @@ can::FrameFlags::FrameFlags(FrameType is_fdf, IdentifierType is_ide, EsiFlag is_
     CorrectFlags();
 }
 
-bool operator==(const can::FrameFlags &lhs, const can::FrameFlags rhs)
+bool can::FrameFlags::operator==(const can::FrameFlags rhs)
 {
-    if (lhs.is_brs_ != rhs.is_brs_)
+    if (is_brs_ != rhs.is_brs_)
         return false;
-    if (lhs.is_esi_ != rhs.is_esi_)
+    if (is_esi_ != rhs.is_esi_)
         return false;
-    if (lhs.is_fdf_ != rhs.is_fdf_)
+    if (is_fdf_ != rhs.is_fdf_)
         return false;
-    if (lhs.is_ide_ != rhs.is_ide_)
+    if (is_ide_ != rhs.is_ide_)
         return false;
-    if (lhs.is_rtr_ != rhs.is_rtr_)
+    if (is_rtr_ != rhs.is_rtr_)
         return false;
     return true;
 }
 
+bool can::FrameFlags::operator!=(const FrameFlags rhs)
+{
+    return !(*this==rhs);
+}
 
 void can::FrameFlags::Randomize()
 {

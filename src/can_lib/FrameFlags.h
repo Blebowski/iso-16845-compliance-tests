@@ -130,7 +130,11 @@ class can::FrameFlags
          */
         void Randomize();
 
-        friend bool operator==(const FrameFlags &lhs, const FrameFlags rhs);
+        /**
+         * Operators on comparisons of frame flags
+         */
+        bool operator==(const FrameFlags rhs);
+        bool operator!=(const FrameFlags rhs);
 
     private:
 
