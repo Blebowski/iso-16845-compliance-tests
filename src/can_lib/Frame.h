@@ -112,7 +112,7 @@ class can::Frame {
         int identifier_ = 0;
 
         // Data payload
-        uint8_t data_[64];
+        uint8_t data_[64] = {0x0};
 
         // Randomization attributes
         bool randomize_dlc_ = false;

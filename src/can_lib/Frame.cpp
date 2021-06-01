@@ -95,7 +95,7 @@ void can::Frame::Randomize()
     }
 
     if (randomize_data_)
-        for (int i = 0; i < 64; i++)
+        for (int i = 0; i < data_lenght_; i++)
             data_[i] = rand() % 256;
 }
 
