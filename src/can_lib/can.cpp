@@ -16,7 +16,7 @@
 
 using namespace can;
 
-std::ostream& can::operator<<(std::ostream& os, FrameType &frame_type)
+std::ostream& can::operator<<(std::ostream& os, const FrameType &frame_type)
 {
     if (frame_type == FrameType::Can2_0)
         os << "CAN 2.0";
@@ -26,7 +26,7 @@ std::ostream& can::operator<<(std::ostream& os, FrameType &frame_type)
 }
 
 
-std::ostream& can::operator<<(std::ostream& os, IdentifierType &identifier_type)
+std::ostream& can::operator<<(std::ostream& os, const IdentifierType &identifier_type)
 {
     if (identifier_type == IdentifierType::Base)
         os << "Base";
@@ -36,7 +36,7 @@ std::ostream& can::operator<<(std::ostream& os, IdentifierType &identifier_type)
 }
 
 
-std::ostream& can::operator<<(std::ostream& os, BrsFlag &brs_flag)
+std::ostream& can::operator<<(std::ostream& os, const BrsFlag &brs_flag)
 {
     if (brs_flag == BrsFlag::Shift)
         os << "Shift";
@@ -46,7 +46,7 @@ std::ostream& can::operator<<(std::ostream& os, BrsFlag &brs_flag)
 }
 
 
-std::ostream& can::operator<<(std::ostream& os, RtrFlag &rtr_flag)
+std::ostream& can::operator<<(std::ostream& os, const RtrFlag &rtr_flag)
 {
     if (rtr_flag == RtrFlag::DataFrame)
         os << "Data frame";
@@ -56,7 +56,7 @@ std::ostream& can::operator<<(std::ostream& os, RtrFlag &rtr_flag)
 }
 
 
-std::ostream& can::operator<<(std::ostream& os, EsiFlag &esi_flag)
+std::ostream& can::operator<<(std::ostream& os, const EsiFlag &esi_flag)
 {
     if (esi_flag == EsiFlag::ErrorActive)
         os << "Error Active";

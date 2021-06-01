@@ -23,7 +23,7 @@ namespace can {
         CanFd
     };
 
-    std::ostream &operator<<(std::ostream &os, FrameType &frame_type);
+    std::ostream &operator<<(std::ostream &os, const FrameType &frame_type);
 
     enum class IdentifierType
     {
@@ -31,7 +31,7 @@ namespace can {
         Extended
     };
 
-    std::ostream &operator<<(std::ostream &os, IdentifierType &identifier_type);
+    std::ostream &operator<<(std::ostream &os, const IdentifierType &identifier_type);
 
     enum class BrsFlag
     {
@@ -39,7 +39,7 @@ namespace can {
         DontShift
     };
 
-    std::ostream &operator<<(std::ostream &os, BrsFlag &brs_flag);
+    std::ostream &operator<<(std::ostream &os, const BrsFlag &brs_flag);
 
     enum class RtrFlag
     {
@@ -47,7 +47,7 @@ namespace can {
         RtrFrame
     };
 
-    std::ostream &operator<<(std::ostream &os, RtrFlag &rtr_flag);
+    std::ostream &operator<<(std::ostream &os, const RtrFlag &rtr_flag);
     
     enum class EsiFlag
     {
@@ -55,7 +55,7 @@ namespace can {
         ErrorPassive
     };
 
-    std::ostream &operator<<(std::ostream &os, EsiFlag &esi_flag);
+    std::ostream &operator<<(std::ostream &os, const EsiFlag &esi_flag);
 
     enum class BitType
     {
