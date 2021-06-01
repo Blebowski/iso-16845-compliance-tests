@@ -101,40 +101,6 @@ void can::Frame::Randomize()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Getters
-///////////////////////////////////////////////////////////////////////////////
-
-can::FrameFlags can::Frame::frame_flags()
-{
-    return frame_flags_;
-}
-
-uint8_t can::Frame::dlc()
-{
-    return dlc_;
-}
-
-int can::Frame::data_length()
-{
-    return data_lenght_;
-}
-
-int can::Frame::identifier()
-{
-    return identifier_;
-}
-
-uint8_t* can::Frame::data()
-{
-    return data_;
-}
-
-uint8_t can::Frame::data(int index)
-{
-    return data_[index];
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Setters
 ///////////////////////////////////////////////////////////////////////////////
 

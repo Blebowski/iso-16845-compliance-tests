@@ -81,20 +81,12 @@ class can::Frame {
         /**
          * Getters.
          */
-        FrameFlags frame_flags();
-        uint8_t dlc();
-        int data_length();
-        int identifier();
-
-        /**
-         * @returns Pointer to first data byte.
-         */
-        uint8_t* data();
-
-        /**
-         * @returns Data byte on 'index' position.
-         */
-        uint8_t data(int index);
+        inline FrameFlags frame_flags() { return frame_flags_; };
+        inline uint8_t dlc() { return dlc_; };
+        inline int data_length() { return data_lenght_; };
+        inline int identifier() { return identifier_; };
+        inline uint8_t* data() { return data_; };
+        inline uint8_t data(int index) { return data_[index]; };
 
         /**
          * Randomize attribtue which are enabled for randomization (see constructor).
@@ -102,8 +94,7 @@ class can::Frame {
         void Randomize();
 
         /**
-         * Prints frame.
-         * TODO: Add stream input
+         * Prints frame to stdout.
          */
         void Print();
 
