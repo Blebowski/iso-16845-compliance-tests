@@ -7,4 +7,5 @@ endmacro()
 
 add_can_lib_test(ExampleTest.cpp EXAMPLE_TEST)
 add_can_lib_test(FrameFlagsTest.cpp FRAME_FLAGS_TEST)
+add_can_lib_test(FrameTest.cpp FRAME_TEST)
 
