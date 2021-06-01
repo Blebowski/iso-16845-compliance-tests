@@ -15,6 +15,7 @@
 #include "can.h"
 #include "BitTiming.h"
 #include "TimeQuanta.h"
+#include "FrameFlags.h"
 #include "Bit.h"
 
 
@@ -406,8 +407,7 @@ can::BitPhase can::Bit::NextBitPhase(BitPhase bit_phase)
 
 can::BitRate can::Bit::GetPhaseBitRate(BitPhase bit_phase)
 {
-    if (frame_flags_->is_fdf_ == FrameType::CanFd &&
-        frame_flags_->is_brs_ == BrsFlag::Shift)
+    if (frame_flags_->is_fdf() == FrameType::CanFd && frame_flags_->is_brs() == BrsFlag::Shift)
     {
         switch (bit_type_) {
         case BitType::Brs:

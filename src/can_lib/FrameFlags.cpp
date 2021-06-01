@@ -250,3 +250,33 @@ void can::FrameFlags::CorrectFlags()
         is_esi_ = EsiFlag::ErrorActive;
     }
 }
+
+void can::FrameFlags::set_fdf(FrameType is_fdf)
+{
+    is_fdf_ = is_fdf;
+    CorrectFlags();
+}
+
+void can::FrameFlags::set_ide(IdentifierType is_ide)
+{
+    is_ide_ = is_ide;
+    CorrectFlags();
+}
+
+void can::FrameFlags::set_rtr(RtrFlag is_rtr)
+{
+    is_rtr_ = is_rtr;
+    CorrectFlags();
+}
+
+void can::FrameFlags::set_brs(BrsFlag is_brs)
+{
+    is_brs_ = is_brs;
+    CorrectFlags();
+}
+
+void can::FrameFlags::set_esi(EsiFlag is_esi)
+{
+    is_esi_ = is_esi;
+    CorrectFlags();
+}

@@ -27,20 +27,6 @@ class can::FrameFlags
 {
     public:
 
-        /* CAN frame flags */
-        FrameType is_fdf_ = FrameType::Can2_0;
-        IdentifierType is_ide_ = IdentifierType::Base;
-        RtrFlag is_rtr_ = RtrFlag::DataFrame;
-        BrsFlag is_brs_ = BrsFlag::DontShift;
-        EsiFlag is_esi_ = EsiFlag::ErrorActive;
-
-        /* Randomization attributes */
-        bool randomize_fdf_ = false;
-        bool randomize_ide_ = false;
-        bool randomize_rtr_ = false;
-        bool randomize_brs_ = false;
-        bool randomize_esi_ = false;
-
         /* 
          * A constructor call which does not specify all attributes, leaves these arguments enabled
          * for randomization. Attributes will be randomized upon call of 'Randomize'.
@@ -136,6 +122,20 @@ class can::FrameFlags
         bool operator==(const FrameFlags rhs);
         bool operator!=(const FrameFlags rhs);
 
+        // Getters
+        inline FrameType is_fdf() { return is_fdf_; };
+        inline IdentifierType is_ide() { return is_ide_; };
+        inline RtrFlag is_rtr() { return is_rtr_; };
+        inline BrsFlag is_brs() { return is_brs_; };
+        inline EsiFlag is_esi() { return is_esi_; };
+
+        // Setters
+        void set_fdf(FrameType is_fdf);
+        void set_ide(IdentifierType is_ide);
+        void set_rtr(RtrFlag is_rtr);
+        void set_brs(BrsFlag is_brs);
+        void set_esi(EsiFlag is_esi);
+
     private:
 
         /**
@@ -144,6 +144,20 @@ class can::FrameFlags
          * CAN 2.0 frames have no BRS flags or ESI Flags.
          */
         void CorrectFlags();
+
+        /* CAN frame flags */
+        FrameType is_fdf_ = FrameType::Can2_0;
+        IdentifierType is_ide_ = IdentifierType::Base;
+        RtrFlag is_rtr_ = RtrFlag::DataFrame;
+        BrsFlag is_brs_ = BrsFlag::DontShift;
+        EsiFlag is_esi_ = EsiFlag::ErrorActive;
+
+        /* Randomization attributes */
+        bool randomize_fdf_ = false;
+        bool randomize_ide_ = false;
+        bool randomize_rtr_ = false;
+        bool randomize_brs_ = false;
+        bool randomize_esi_ = false;
 
 };
 

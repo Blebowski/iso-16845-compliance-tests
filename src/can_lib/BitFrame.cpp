@@ -21,7 +21,7 @@ void can::BitFrame::ConstructFrame()
 {
     BuildFrameBits();
 
-    if (frame_flags().is_fdf_ == FrameType::Can2_0){
+    if (frame_flags().is_fdf() == FrameType::Can2_0){
         CalculateCrc();
         UpdateCrcBits();
 
@@ -70,7 +70,7 @@ void can::BitFrame::UpdateCrcBits()
     uint32_t tmp_crc = crc();
     int i;
 
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0)
         i = 14;
     else if (data_lenght_ > 16)
         i = 20;
@@ -94,7 +94,7 @@ void can::BitFrame::UpdateCrcBits()
 
 uint32_t can::BitFrame::base_identifier()
 {
-    if (frame_flags_.is_ide_ == IdentifierType::Extended)
+    if (frame_flags_.is_ide() == IdentifierType::Extended)
         return ((uint32_t)(identifier() >> 18));
     else
         return (uint32_t)identifier();
@@ -103,7 +103,7 @@ uint32_t can::BitFrame::base_identifier()
 
 uint32_t can::BitFrame::identifier_extension()
 {
-    if (frame_flags_.is_ide_ == IdentifierType::Extended)
+    if (frame_flags_.is_ide() == IdentifierType::Extended)
         return (uint32_t)(identifier()) & 0x3FFFF;
     else
         return 0;
@@ -112,7 +112,7 @@ uint32_t can::BitFrame::identifier_extension()
 
 uint8_t can::BitFrame::stuff_count()
 {
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0){
+    if (frame_flags_.is_fdf() == FrameType::Can2_0){
         std::cerr << "CAN 2.0 frame does not have Stuff count field defined" << std::endl;
         return 0;
     }
@@ -122,7 +122,7 @@ uint8_t can::BitFrame::stuff_count()
 
 uint32_t can::BitFrame::crc()
 {
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0)
         return crc15_;
     if (data_lenght_ > 16)
         return crc21_;
@@ -186,13 +186,13 @@ void can::BitFrame::BuildFrameBits()
         AppendBit(BitType::BaseIdentifier, base_id >> i);
 
     // Build RTR/r1/SRR
-    if (frame_flags_.is_ide_ == IdentifierType::Extended) {
+    if (frame_flags_.is_ide() == IdentifierType::Extended) {
         AppendBit(BitType::Srr, BitValue::Recessive);
     } else {
-        if (frame_flags_.is_fdf_ == FrameType::CanFd) {
+        if (frame_flags_.is_fdf() == FrameType::CanFd) {
             AppendBit(BitType::R1, BitValue::Dominant);
         } else {
-            if (frame_flags_.is_rtr_ == RtrFlag::RtrFrame)
+            if (frame_flags_.is_rtr() == RtrFlag::RtrFrame)
                 AppendBit(BitType::Rtr, BitValue::Recessive);
             else
                 AppendBit(BitType::Rtr, BitValue::Dominant);
@@ -200,17 +200,17 @@ void can::BitFrame::BuildFrameBits()
     }
 
     // Build IDE, Extended Identifier and one bit post Extended Identifier
-    if (frame_flags_.is_ide_ == IdentifierType::Extended) {
+    if (frame_flags_.is_ide() == IdentifierType::Extended) {
         AppendBit(BitType::Ide, BitValue::Recessive);
 
         uint32_t extId = identifier_extension();
         for (int i = 17; i >= 0; i--)
             AppendBit(BitType::IdentifierExtension, extId >> i);
 
-        if (frame_flags_.is_fdf_ == FrameType::CanFd) {
+        if (frame_flags_.is_fdf() == FrameType::CanFd) {
             AppendBit(BitType::R1, BitValue::Dominant);
         } else {
-            if (frame_flags_.is_rtr_ == RtrFlag::RtrFrame) {
+            if (frame_flags_.is_rtr() == RtrFlag::RtrFrame) {
                 AppendBit(BitType::Rtr, BitValue::Recessive);
             } else {
                 AppendBit(BitType::Rtr, BitValue::Dominant);
@@ -221,27 +221,27 @@ void can::BitFrame::BuildFrameBits()
     }
 
     // Build EDL/r0/r1 bit
-    if (frame_flags_.is_fdf_ == FrameType::CanFd) {
+    if (frame_flags_.is_fdf() == FrameType::CanFd) {
         AppendBit(BitType::Edl, BitValue::Recessive);
-    } else if (frame_flags_.is_ide_ == IdentifierType::Extended) {
+    } else if (frame_flags_.is_ide() == IdentifierType::Extended) {
         AppendBit(BitType::R1, BitValue::Dominant);
     } else {
         AppendBit(BitType::R0, BitValue::Dominant);
     }
 
     // Build extra r0 past EDL or in Extended Identifier frame
-    if (frame_flags_.is_fdf_ == FrameType::CanFd || frame_flags_.is_ide_ == IdentifierType::Extended) {
+    if (frame_flags_.is_fdf() == FrameType::CanFd || frame_flags_.is_ide() == IdentifierType::Extended) {
         AppendBit(BitType::R0, BitValue::Dominant);
     }
 
     // Build BRS and ESI bits
-    if (frame_flags_.is_fdf_ == FrameType::CanFd) {
-        if (frame_flags_.is_brs_ == BrsFlag::Shift)
+    if (frame_flags_.is_fdf() == FrameType::CanFd) {
+        if (frame_flags_.is_brs() == BrsFlag::Shift)
             AppendBit(BitType::Brs, BitValue::Recessive);
         else
             AppendBit(BitType::Brs, BitValue::Dominant);
         
-        if (frame_flags_.is_esi_ == EsiFlag::ErrorActive)
+        if (frame_flags_.is_esi() == EsiFlag::ErrorActive)
             AppendBit(BitType::Esi, BitValue::Dominant);
         else
             AppendBit(BitType::Esi, BitValue::Recessive);
@@ -259,7 +259,7 @@ void can::BitFrame::BuildFrameBits()
     
     // Build Stuff count + parity (put dummy as we don't know number of
     // stuff bits yet)!
-    if (frame_flags_.is_fdf_ == FrameType::CanFd)
+    if (frame_flags_.is_fdf() == FrameType::CanFd)
     {
         for (int i = 0; i < 3; i++)
             AppendBit(BitType::StuffCount, BitValue::Dominant);
@@ -270,7 +270,7 @@ void can::BitFrame::BuildFrameBits()
     // yet, we can't calculate value of CRC for CAN FD frames!
     int crc_length;
 
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0)
         crc_length = 15;
     else if (data_length() <= 16)
         crc_length = 17;
@@ -283,7 +283,7 @@ void can::BitFrame::BuildFrameBits()
     // Add CRC Delimiter, ACK and ACK Delimiter
     AppendBit(BitType::CrcDelimiter, BitValue::Recessive);
     AppendBit(BitType::Ack, BitValue::Recessive);
-    if (frame_flags_.is_fdf_ == FrameType::CanFd)
+    if (frame_flags_.is_fdf() == FrameType::CanFd)
         AppendBit(BitType::Ack, BitValue::Recessive);
     AppendBit(BitType::AckDelimiter, BitValue::Recessive);
 
@@ -361,7 +361,7 @@ void can::BitFrame::InsertStuffCountStuffBits()
     std::list<Bit>::iterator bit_it;
     BitValue stuff_bit_value;
 
-    assert(!(frame_flags_.is_fdf_ == FrameType::Can2_0));
+    assert(!(frame_flags_.is_fdf() == FrameType::Can2_0));
 
     for (bit_it = bits_.begin(); bit_it->bit_type_ != BitType::StuffCount; bit_it++)
         ;
@@ -463,7 +463,7 @@ uint32_t can::BitFrame::CalculateCrc()
     //printf("Calculated CRC 17 : 0x%x\n", crc17_);
     //printf("Calculated CRC 21 : 0x%x\n", crc21_);
 
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0)
         return crc15_;
     else if (data_lenght_ <= 16)
         return crc17_;
@@ -479,7 +479,7 @@ bool can::BitFrame::SetStuffCount()
     bit_it = bits_.begin();
 
     // DontShift sense to try to set Stuff count on CAN 2.0 frames!
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0)
         return false;
 
     while (bit_it->bit_type_ != BitType::StuffCount && bit_it != bits_.end())
@@ -535,7 +535,7 @@ bool can::BitFrame::SetStuffParity()
     std::list<Bit>::iterator bit_it;
     uint8_t val = 0;
 
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0)
         return false;
 
     for (bit_it = bits_.begin(); bit_it->bit_type_ != BitType::StuffParity; bit_it++)
@@ -1148,7 +1148,7 @@ void can::BitFrame::UpdateFrame(bool recalc_crc)
             bit_it = bits_.erase(bit_it);
 
     // Recalculate CRC and add stuff bits!
-    if (frame_flags().is_fdf_ == FrameType::Can2_0){
+    if (frame_flags().is_fdf() == FrameType::Can2_0){
         if (recalc_crc) {
             CalculateCrc();
             UpdateCrcBits();

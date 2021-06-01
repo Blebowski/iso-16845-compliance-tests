@@ -189,27 +189,27 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
 
     // Frame format word
     frame_format_word.u32 = 0;    
-    if (frame->frame_flags().is_fdf_ == FrameType::CanFd)
+    if (frame->frame_flags().is_fdf() == FrameType::CanFd)
         frame_format_word.s.fdf = ctu_can_fd_frame_format_w_fdf::FD_CAN;
     else
         frame_format_word.s.fdf = ctu_can_fd_frame_format_w_fdf::NORMAL_CAN;
 
-    if (frame->frame_flags().is_ide_ == IdentifierType::Extended)
+    if (frame->frame_flags().is_ide() == IdentifierType::Extended)
         frame_format_word.s.ide = ctu_can_fd_frame_format_w_ide::EXTENDED;
     else
         frame_format_word.s.ide = ctu_can_fd_frame_format_w_ide::BASE;
 
-    if (frame->frame_flags().is_rtr_ == RtrFlag::RtrFrame)
+    if (frame->frame_flags().is_rtr() == RtrFlag::RtrFrame)
         frame_format_word.s.rtr = ctu_can_fd_frame_format_w_rtr::RTR_FRAME;
     else
         frame_format_word.s.rtr = ctu_can_fd_frame_format_w_rtr::NO_RTR_FRAME;
 
-    if (frame->frame_flags().is_brs_ == BrsFlag::Shift)
+    if (frame->frame_flags().is_brs() == BrsFlag::Shift)
         frame_format_word.s.brs = ctu_can_fd_frame_format_w_brs::BR_SHIFT;
     else
         frame_format_word.s.brs = ctu_can_fd_frame_format_w_brs::BR_NO_SHIFT;
 
-    if (frame->frame_flags().is_esi_ == EsiFlag::ErrorActive)
+    if (frame->frame_flags().is_esi() == EsiFlag::ErrorActive)
         frame_format_word.s.esi_rsv = ctu_can_fd_frame_format_w_esi_rsv::ESI_ERR_ACTIVE;
     else
         frame_format_word.s.esi_rsv = ctu_can_fd_frame_format_w_esi_rsv::ESI_ERR_PASIVE;
@@ -219,7 +219,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     // Identifier word
     identifier_word.u32 = 0;
 
-    if (frame->frame_flags().is_ide_ == IdentifierType::Extended)
+    if (frame->frame_flags().is_ide() == IdentifierType::Extended)
     {
         identifier_word.s.identifier_base =
             (((uint32_t)frame->identifier()) >> 18) & 0x7FF;

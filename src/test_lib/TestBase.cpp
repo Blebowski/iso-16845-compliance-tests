@@ -388,30 +388,20 @@ std::unique_ptr<BitFrame> test_lib::TestBase::ConvertBitFrame(Frame &golden_fram
  */
 bool test_lib::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &real_frame)
 {
-    bool retVal = true;
+    bool ret_val = true;
 
     if (expected_frame.identifier() != real_frame.identifier())
-        retVal = false;
+        ret_val = false;
     if (expected_frame.dlc() != real_frame.dlc())
-        retVal = false;
-
-    // Compare frame flags
-    if (!(expected_frame.frame_flags().is_brs_ == real_frame.frame_flags().is_brs_))
-        retVal = false;
-    if (!(expected_frame.frame_flags().is_esi_ == real_frame.frame_flags().is_esi_))
-        retVal = false;
-    if (!(expected_frame.frame_flags().is_fdf_ == real_frame.frame_flags().is_fdf_))
-        retVal = false;
-    if (!(expected_frame.frame_flags().is_ide_ == real_frame.frame_flags().is_ide_))
-        retVal = false;
-    if (!(expected_frame.frame_flags().is_rtr_ == real_frame.frame_flags().is_rtr_))
-        retVal = false;
+        ret_val = false;
+    if (expected_frame.frame_flags() != real_frame.frame_flags())
+        ret_val = false;
 
     for (int i = 0; i < expected_frame.data_length(); i++)
         if (expected_frame.data(i) != real_frame.data(i))
-            retVal = false;
+            ret_val = false;
 
-    if (retVal == false)
+    if (!ret_val)
     {
         TestMessage("Frame read from DUT does not match send frame!");
         TestMessage("Expected frame:");
@@ -419,7 +409,7 @@ bool test_lib::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &r
         TestMessage("Real frame:");
         real_frame.Print();
     }
-    return retVal;
+    return ret_val;
 }
 
 

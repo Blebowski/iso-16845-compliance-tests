@@ -14,6 +14,7 @@
 #include <cmath>
 #include <assert.h>
 
+#include "can.h"
 #include "Frame.h"
 #include "FrameFlags.h"
 
@@ -79,7 +80,7 @@ void can::Frame::Randomize()
     if (randomize_identifier_)
     {
         int max_ident_pow = 11;
-        if (frame_flags().is_ide_ == IdentifierType::Extended)
+        if (frame_flags().is_ide() == IdentifierType::Extended)
             max_ident_pow = 29;
         set_identifier(rand() % ((int)pow(2, max_ident_pow)));
     }
@@ -87,7 +88,7 @@ void can::Frame::Randomize()
     if (randomize_dlc_)
     {
         // Constrain here so that we get reasonable frames for CAN 2.0
-        if (frame_flags().is_fdf_ == FrameType::CanFd)
+        if (frame_flags().is_fdf() == FrameType::CanFd)
             set_dlc(rand() % 0x9);
         else
             set_dlc(rand() % 0xF);
@@ -149,7 +150,7 @@ void can::Frame::set_data_lenght(int dataLenght)
 {
     assert(IsValidDataLength(dataLenght) && "Invalid data length");
 
-    assert(!(frame_flags_.is_fdf_ == FrameType::Can2_0 && dataLenght > 8) &&
+    assert(!(frame_flags_.is_fdf() == FrameType::Can2_0 && dataLenght > 8) &&
             "Can't set data length to more than 8 on CAN 2.0 frame");
     
     data_lenght_ = dataLenght;
@@ -158,7 +159,7 @@ void can::Frame::set_data_lenght(int dataLenght)
 
 void can::Frame::set_identifier(int identifier)
 {
-    assert((!(frame_flags_.is_ide_ == IdentifierType::Base && identifier >= pow(2.0, 11)),
+    assert((!(frame_flags_.is_ide() == IdentifierType::Base && identifier >= pow(2.0, 11)),
              "Can't set Base identifier larger than 2^11"));
 
     assert((!(identifier >= pow(2.0, 29)), "Can't set Extended identifier larger than 2^29"));
@@ -179,10 +180,10 @@ void can::Frame::CopyData(uint8_t *data, int dataLen)
 
 int can::Frame::ConvertDlcToDataLenght(uint8_t dlc)
 {
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0 && frame_flags_.is_rtr_ == RtrFlag::RtrFrame)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0 && frame_flags_.is_rtr() == RtrFlag::RtrFrame)
         return 0;
 
-    if (frame_flags_.is_fdf_ == FrameType::Can2_0 && dlc >= 0x8)
+    if (frame_flags_.is_fdf() == FrameType::Can2_0 && dlc >= 0x8)
         return 0x8;
 
     assert(dlc <= 16);
@@ -211,16 +212,16 @@ void can::Frame::Print()
 {
     std::cout << std::string(80, '*') << '\n';
     std::cout << "CAN Frame:" << '\n';
-    std::cout << "FDF: " << frame_flags_.is_fdf_ << '\n';
-    std::cout << "IDE: " << frame_flags_.is_ide_ << '\n';
+    std::cout << "FDF: " << frame_flags_.is_fdf() << '\n';
+    std::cout << "IDE: " << frame_flags_.is_ide() << '\n';
 
-    if (frame_flags_.is_fdf_ == FrameType::CanFd)
-        std::cout << "BRS: " << frame_flags_.is_brs_ << '\n';
+    if (frame_flags_.is_fdf() == FrameType::CanFd)
+        std::cout << "BRS: " << frame_flags_.is_brs() << '\n';
     else
-        std::cout << "RTR: " << frame_flags_.is_rtr_ << '\n';
+        std::cout << "RTR: " << frame_flags_.is_rtr() << '\n';
     
     std::cout << "DLC: 0x" << std::hex << +dlc_ << '\n';
-    std::cout << "ESI: " << frame_flags_.is_esi_ << '\n';
+    std::cout << "ESI: " << frame_flags_.is_esi() << '\n';
     std::cout << "Data field length: " << data_lenght_ << '\n';
     std::cout << "Identifier: " << std::hex << identifier_ << '\n';
 
