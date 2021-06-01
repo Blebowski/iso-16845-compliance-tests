@@ -123,11 +123,11 @@ class can::FrameFlags
         bool operator!=(const FrameFlags rhs);
 
         // Getters
-        inline FrameType is_fdf() { return is_fdf_; };
-        inline IdentifierType is_ide() { return is_ide_; };
-        inline RtrFlag is_rtr() { return is_rtr_; };
-        inline BrsFlag is_brs() { return is_brs_; };
-        inline EsiFlag is_esi() { return is_esi_; };
+        inline FrameType is_fdf() const { return is_fdf_; };
+        inline IdentifierType is_ide() const { return is_ide_; };
+        inline RtrFlag is_rtr() const { return is_rtr_; };
+        inline BrsFlag is_brs() const { return is_brs_; };
+        inline EsiFlag is_esi() const { return is_esi_; };
 
         // Setters
         void set_fdf(FrameType is_fdf);

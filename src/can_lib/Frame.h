@@ -81,15 +81,15 @@ class can::Frame {
         /**
          * Getters.
          */
-        inline FrameFlags frame_flags() { return frame_flags_; };
-        inline uint8_t dlc() { return dlc_; };
-        inline int data_length() { return data_lenght_; };
-        inline int identifier() { return identifier_; };
+        inline FrameFlags frame_flags() const { return frame_flags_; };
+        inline uint8_t dlc() const { return dlc_; };
+        inline int data_length() const { return data_lenght_; };
+        inline int identifier() const { return identifier_; };
         inline uint8_t* data() { return data_; };
-        inline uint8_t data(int index) { return data_[index]; };
+        inline uint8_t data(int index) const { return data_[index]; };
 
         /**
-         * Randomize attribtue which are enabled for randomization (see constructor).
+         * Randomize attribute which are enabled for randomization (see constructor).
          */
         void Randomize();
 
@@ -97,6 +97,12 @@ class can::Frame {
          * Prints frame to stdout.
          */
         void Print();
+
+        /**
+         * Compare overloads
+         */
+        bool operator==(const Frame rhs);
+        bool operator!=(const Frame rhs);
 
     protected:
 

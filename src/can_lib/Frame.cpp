@@ -19,16 +19,13 @@
 #include "FrameFlags.h"
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Constructors
-///////////////////////////////////////////////////////////////////////////////
-
 can::Frame::Frame() :
     frame_flags_(FrameFlags()),
     randomize_dlc_(true),
     randomize_identifier_(true),
     randomize_data_(true)
 {}
+
 
 can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, int identifier, uint8_t *data) :
     frame_flags_(frame_flags)
@@ -37,6 +34,7 @@ can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, int identifier, uint8_t *
     set_dlc(dlc);
     CopyData(data, data_lenght_);
 }
+
 
 can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, int identifier) :
     frame_flags_(frame_flags),
@@ -54,12 +52,14 @@ can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc) :
     set_dlc(dlc);
 }
 
+
 can::Frame::Frame(FrameFlags frame_flags) :
     frame_flags_(frame_flags),
     randomize_dlc_(true),
     randomize_identifier_(true),
     randomize_data_(true)
 {}
+
 
 can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, uint8_t *data) :
     frame_flags_(frame_flags),
@@ -68,6 +68,7 @@ can::Frame::Frame(FrameFlags frame_flags, uint8_t dlc, uint8_t *data) :
     set_dlc(dlc);
     CopyData(data, data_lenght_);
 }
+
 
 void can::Frame::Randomize()
 {
@@ -100,9 +101,28 @@ void can::Frame::Randomize()
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Setters
-///////////////////////////////////////////////////////////////////////////////
+bool can::Frame::operator==(const Frame rhs)
+{
+    if (identifier() != rhs.identifier())
+        return false;
+    if (dlc() != rhs.dlc())
+        return false;
+    if (frame_flags() != rhs.frame_flags())
+        return false;
+    if (data_length() != rhs.data_length())
+        return false;
+
+    for (int i = 0; i < data_length(); i++)
+        if (data(i) != rhs.data(i))
+            return false;
+
+    return true;
+}
+
+bool can::Frame::operator!=(const can::Frame rhs)
+{
+    return !(*this == rhs);
+}
 
 void can::Frame::set_dlc(uint8_t dlc)
 {
