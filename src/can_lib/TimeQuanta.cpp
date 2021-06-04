@@ -38,7 +38,7 @@ can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue b
 bool can::TimeQuanta::HasNonDefaultValues()
 {
     for (auto & cycleBitValue : cycle_bit_values_)
-        if (!cycleBitValue.has_default_value_)
+        if (!cycleBitValue.has_default_value())
             return true;
     return false;
 }

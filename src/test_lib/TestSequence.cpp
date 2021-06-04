@@ -117,10 +117,10 @@ void test_lib::TestSequence::AppendDriverBit(can::Bit* bit)
         {
             cycle_bit_value = time_quanta->getCycleBitValue(j);
 
-            if (cycle_bit_value->has_default_value_)
+            if (cycle_bit_value->has_default_value())
                 current_value = bit_value;
             else
-                current_value = cycle_bit_value->bit_value_;
+                current_value = cycle_bit_value->bit_value();
 
             // Note: This ignores non-default values which are equal to
             //       its default value (as expected) and merges them into

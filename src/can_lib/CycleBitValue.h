@@ -47,16 +47,20 @@ class can::CycleBitValue
          * Releases value within given cycle (returns to default value)
          */
         void ReleaseValue();
-
-        /* Default value from CanBit should be taken */
-        bool has_default_value_;
-
-        /* If has_default_value_ = false, then cycle has this value */
-        BitValue bit_value_;
     
+        // Getters
+        inline bool has_default_value() const { return has_default_value_; };
+        inline BitValue bit_value() const { return bit_value_; };
+
     protected:
         /* Time quanta which contains this cycle */
         TimeQuanta *parent_;
+
+        /* Default value from CanBit should be taken */
+        bool has_default_value_ = true;
+
+        /* If has_default_value_ = false, then cycle has this value */
+        BitValue bit_value_ = BitValue::Recessive;
 };
 
 #endif
