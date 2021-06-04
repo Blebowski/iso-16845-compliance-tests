@@ -109,14 +109,17 @@ class can::TimeQuanta
          */
         void ForceValue(BitValue bit_value);
 
-        /**
-         * Phase of bit to which this time quanta belongs.
-         */
-        BitPhase bit_phase_;
+        // Getters
+        inline BitPhase bit_phase() const { return bit_phase_; };
 
     private:
         /* Cycle bit values within time quanta */
         std::list<CycleBitValue> cycle_bit_values_;
+
+        /**
+         * Phase of bit to which this time quanta belongs.
+         */
+        BitPhase bit_phase_;
 
         /* Parent Bit which contains this Time Quanta*/
         Bit *parent_;
