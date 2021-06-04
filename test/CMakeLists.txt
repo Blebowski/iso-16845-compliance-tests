@@ -9,4 +9,5 @@ add_can_lib_test(ExampleTest.cpp EXAMPLE_TEST)
 add_can_lib_test(FrameFlagsTest.cpp FRAME_FLAGS_TEST)
 add_can_lib_test(FrameTest.cpp FRAME_TEST)
 add_can_lib_test(CycleBitValueTest.cpp CYCLE_BIT_VALUE_TEST)
+add_can_lib_test(TimeQuantaTest.cpp TIME_QUANTA_TEST)
 
