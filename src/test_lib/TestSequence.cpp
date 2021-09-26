@@ -117,31 +117,33 @@ void test_lib::TestSequence::AppendDriverBit(can::Bit* bit)
         {
             cycle_bit_value = time_quanta->getCycleBitValue(j);
 
+            // Obtain value of current cycle
+            // Note: This ignores non-default values which are equal to
+            //       its default value (as expected) and merges them into
+            //       single monitored / driven item!
             if (cycle_bit_value->has_default_value())
                 current_value = bit_value;
             else
                 current_value = cycle_bit_value->bit_value();
 
-            // Note: This ignores non-default values which are equal to
-            //       its default value (as expected) and merges them into
-            //       single monitored / driven item!
-
-            // If we did not detect bit value change -> it still belongs to the
-            // same segment -> legnthen it
+            // Did not detect bit value change -> it still belongs to the same segment
+            // -> legnthen it
             if (current_value == last_value)
                 duration += clock_period;
 
-            // We detected value change or are at the end of bit, add item.
-            if (current_value != last_value ||
-                ((i == time_quantas - 1) && (j == cycles - 1))) 
+            // Detected value change, push previous item
+            if (current_value != last_value)
             {
-                // TODO: Push with message on first Item of bit
-                // TODO: Push with message on each next item signalling glitch!
+                pushDriverValue(duration, last_value, bit->GetBitTypeName());
                 
-                if (duration.count() > 0)
-                    pushDriverValue(duration, last_value, bit->GetBitTypeName());
                 duration = clock_period;
                 last_value = current_value;
+            }
+
+            // Reach last cycle of bit, push rest
+            if ((i == time_quantas - 1) && (j == cycles - 1)) 
+            {
+                pushDriverValue(duration, last_value, bit->GetBitTypeName());               
             }
         }
     }
