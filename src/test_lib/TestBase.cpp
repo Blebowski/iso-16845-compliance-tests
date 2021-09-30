@@ -588,14 +588,21 @@ void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame
     test_sequence->PushDriverValuesToSimulator();
     test_sequence->PushMonitorValuesToSimulator();
 
+#ifndef NDEBUG
+    driver_bit_frame.PrintDetailed(dut_clock_period);
+    monitor_bit_frame.PrintDetailed(dut_clock_period);
+#endif
+
     delete test_sequence;
 }
+
 
 int test_lib::TestBase::RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                                     [[maybe_unused]] const TestVariant &test_variant)
 {
     return 0;
 }
+
 
 void test_lib::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
 {
