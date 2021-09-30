@@ -448,8 +448,14 @@ can::BitTiming* can::Bit::GetPhaseBitTiming(BitPhase bit_phase)
 void can::Bit::CorrectPh2LenToNominal()
 {
     /* If bit Phase 2 is in data bit rate, then correct its lenght to nominal */
+
     if (GetPhaseBitTiming(BitPhase::Ph2) == data_bit_timing_)
     {
+        std::cout << "Compensating PH2 of " << GetBitTypeName() <<
+                     " bit due to inserted Error frame!" << std::endl;
+        std::cout << "Lenght before compensation: " <<
+                    std::to_string(GetLengthCycles()) << std::endl;
+
         // Remove all PH2 phases
         for (auto tqIter = time_quantas_.begin(); tqIter != time_quantas_.end();)
              if (tqIter->bit_phase() == BitPhase::Ph2)
@@ -460,6 +466,9 @@ void can::Bit::CorrectPh2LenToNominal()
         // Re-create again with nominal bit timing
         for (size_t i = 0; i < nominal_bit_timing_->ph2_; i++)
             time_quantas_.push_back(TimeQuanta(this, nominal_bit_timing_->brp_, BitPhase::Ph2));
+
+        std::cout << "Lenght after compensation: " <<
+                    std::to_string(GetLengthCycles()) << std::endl;            
     }
 
 }
