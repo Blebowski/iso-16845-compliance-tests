@@ -155,7 +155,7 @@ class TestIso_7_2_5 : public test_lib::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             int id = rand() % (int)pow(2, 11);
-            uint8_t dlc;
+            uint8_t dlc = 0x0;
 
             if (test_variant == TestVariant::Common) {
                 if (elem_test.index_ == 3) {
