@@ -11,6 +11,7 @@
  *****************************************************************************/
 
 #include <cstdint>
+#include <chrono>
 #include <list>
 
 #include "Frame.h"
@@ -398,6 +399,11 @@ class can::BitFrame : public Frame {
          * @param print_stuff_bits prints stuff bits if true, othewise stuff bits are skipped.
          */
         void Print(bool print_stuff_bits);
+
+        /**
+         * Prints frame with detailed timing information
+         */
+        void PrintDetailed(std::chrono::nanoseconds clock_period);
 
         /**
          * Updates frame. Following is done:

@@ -870,7 +870,7 @@ bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
     Bit *bit = GetBit(index);
 
     /* We should not insert Error frame oinstead of SOF right away as real DUT
-     * will never start transmitting errro frame right from SOF! */
+     * will never start transmitting error frame right from SOF! */
     assert(index > 0);
 
     assert(error_flag_type == BitType::ActiveErrorFlag ||
@@ -1137,6 +1137,20 @@ void can::BitFrame::Print(bool print_stuff_bits)
     std::cout << vals << std::endl;
     std::cout << std::string(names.length(), '-') << std::endl;
 }
+
+
+void can::BitFrame::PrintDetailed(std::chrono::nanoseconds clock_period)
+{
+    std::cout << std::endl << "Frame: " << std::endl;
+
+    for (auto & bit : bits_)
+    {
+        std::chrono::nanoseconds bit_length = bit.GetLengthCycles() * clock_period;
+        std::cout << bit.GetBitTypeName() << " : " << 
+            std::to_string(bit_length.count()) << std::endl;
+    }
+}
+
 
 
 void can::BitFrame::UpdateFrame(bool recalc_crc)
