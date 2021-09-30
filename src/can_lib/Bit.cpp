@@ -451,12 +451,11 @@ void can::Bit::CorrectPh2LenToNominal()
     if (GetPhaseBitTiming(BitPhase::Ph2) == data_bit_timing_)
     {
         // Remove all PH2 phases
-        std::remove_if(time_quantas_.begin(), time_quantas_.end(), [](TimeQuanta tq)
-            {
-                if (tq.bit_phase() == BitPhase::Ph2)
-                    return true;
-                return false;
-            });
+        for (auto tqIter = time_quantas_.begin(); tqIter != time_quantas_.end();)
+             if (tqIter->bit_phase() == BitPhase::Ph2)
+                 tqIter = time_quantas_.erase(tqIter);
+             else
+                 tqIter++;
 
         // Re-create again with nominal bit timing
         for (size_t i = 0; i < nominal_bit_timing_->ph2_; i++)
