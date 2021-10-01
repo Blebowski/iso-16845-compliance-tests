@@ -1267,7 +1267,20 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
 void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
 {
     bit->FlipBitValue();
-    if (bit->bit_value_ == BitValue::Dominant)
+
+    int index = GetBitIndex(bit);
+
+    // If we are flipping bit 0, then there will be no edge introduced!
+    if (index == 0)
+        return;
+
+    Bit *prev_bit = GetBit(index - 1);
+
+    // We need to compensate if flipped value is Dominant and Previous bit is Recessive.
+    // If this condition is met, then we insert unwanted synchronization edge to IUTs
+    // CAN RX stream. Therefore we need to adjust position of this edge accordingly not
+    // to cause undesired resynchronization!
+    if (bit->bit_value_ == BitValue::Dominant && prev_bit->bit_value_ == BitValue::Recessive)
         CompensateEdgeForInputDelay(bit, input_delay);
 }
 
