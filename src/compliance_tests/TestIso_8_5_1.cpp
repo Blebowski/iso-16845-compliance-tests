@@ -152,8 +152,6 @@ class TestIso_8_5_1 : public test_lib::TestBase
             
             driver_bit_frm->InsertActiveErrorFrame(bit_index);
             monitor_bit_frm->InsertPassiveErrorFrame(bit_index);
-            driver_bit_frm->CompensateEdgeForInputDelay(
-                driver_bit_frm->GetBitOf(0, BitType::ActiveErrorFlag), dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm_2->TurnReceivedFrame();
@@ -169,6 +167,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
             driver_bit_frm_2->TurnReceivedFrame();
+
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

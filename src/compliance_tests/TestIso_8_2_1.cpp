@@ -215,7 +215,7 @@ class TestIso_8_2_1 : public test_lib::TestBase
             /**************************************************************************************
              * Modify test frames:
              *   1. Insert ACK to driven frame so that IUT does not detect ACK error!
-             *   2. Choose randomi bit within bit field as given by elementary test
+             *   2. Choose random bit within bit field as given by elementary test
              *   3. Corrupt value of this bit in driven frame.
              *   4. Insert Active Error flag from next bit on in both driven and monitored frames!
              *   5. Append the same frame after first frame as if retransmitted by IUT!
