@@ -86,6 +86,8 @@ class TestIso_8_7_3 : public test_lib::TestBase
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
+
+            assert(dut_input_delay == dut_ipt && "Needed due to test assumptions!");
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -130,13 +132,21 @@ class TestIso_8_7_3 : public test_lib::TestBase
             Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitType::Intermission);
             Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitType::Intermission);
 
-            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_ - 1);
-            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_ - 1);
+            // Remove whole PH2
+            while (last_interm_bit_drv->GetPhaseLenTimeQuanta(BitPhase::Ph2) > 0)
+            {
+                last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, 1);
+                last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, 1);
+            }
 
-            last_interm_bit_drv->GetTimeQuanta(BitPhase::Ph2, 0)
-                ->Shorten(nominal_bit_timing.brp_ - dut_ipt);
-            last_interm_bit_mon->GetTimeQuanta(BitPhase::Ph2, 0)
-                ->Shorten(nominal_bit_timing.brp_ - dut_ipt);
+            // Here we lenghten only monitored bit! Since Input delay of CTU CAN FD is the same
+            // as its IPT, if we added IPT also on driven frame, we would need to compensate
+            // for the same value. Since input delay is the same as IPT, if we add nothing, the
+            // edge will anyway arrive IPT after sample point! By adding IPT to monitored frame,
+            // we acccount for IPT in IUTs perception of the synchronization edge on RX!
+            // TODO: This works only for controllers which have IPT = Input Delay!
+            last_interm_bit_mon->GetTimeQuanta(last_interm_bit_mon->GetLengthTimeQuanta() - 1)
+                ->Lengthen(dut_ipt);
 
             /* This trick needs to be done to check that IUT transmits the first TQ recessive.
              * During this TQ, LT still sends the hard sync edge. This corresponds to
