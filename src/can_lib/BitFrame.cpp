@@ -1227,7 +1227,8 @@ found:
                     assert("Hit start of frame! Cant move so far!" && false);
                 } else {
                     curr_bit--;
-                    curr_time_quanta = curr_bit->GetLastTimeQuantaIterator(BitPhase::Ph2);
+                    curr_time_quanta = curr_bit->GetTimeQuantaIterator(
+                                        curr_bit->GetLengthTimeQuanta() - 1);
                     curr_cycle = curr_time_quanta->GetCycleBitValueIterator(
                                 curr_time_quanta->getLengthCycles() - 1);
                 }
@@ -1255,7 +1256,7 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
     assert(prev_bit->bit_value_ == BitValue::Recessive &&
            "Input delay compensation shall start at Recessive bit");
 
-    CycleBitValue *cycle = from->GetFirstTimeQuantaIterator(BitPhase::Sync)->getCycleBitValue(0);
+    CycleBitValue *cycle = from->GetTimeQuanta(0)->getCycleBitValue(0);
     for (int i = 0; i < input_delay; i++)
     {
         CycleBitValue *compensated_cycle = MoveCyclesBack(cycle, i + 1);
