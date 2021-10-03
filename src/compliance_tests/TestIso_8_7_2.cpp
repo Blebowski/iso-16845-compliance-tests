@@ -98,7 +98,7 @@ class TestIso_8_7_2 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, backup_nominal_bit_timing);
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
             ReconfigureDutBitTiming();
             WaitDutErrorActive();
 

@@ -272,8 +272,7 @@ class test_lib::TestBase
          *      ...
          *     PROP = 0, PH2 is set to achive the same lenght of bit as in default bit rate
          */
-        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test,
-                                             BitTiming &bit_timing);
+        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal);
 
         /**
          * Generates bit sequence (bit representation) of CAN frame from frame.
@@ -399,7 +398,7 @@ class test_lib::TestBase
          * Calculates number of possible sample points per bit-rate.
          * @note CTU CAN FDs limit of min(TSEG1) = 3 clock cycles is taken into account.
          */
-        int CalcNumSamplePoints(BitTiming& bit_timing);
+        int CalcNumSamplePoints(bool nominal);
 };
 
 #endif

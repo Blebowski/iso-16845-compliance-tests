@@ -340,32 +340,55 @@ void test_lib::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&
 void test_lib::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
                             bool nominal, FrameType frame_type)
 {
-    BitTiming &bt = nominal ? nominal_bit_timing : data_bit_timing;
-    int num_sp_points = CalcNumSamplePoints(bt);
+    int num_sp_points = CalcNumSamplePoints(nominal);
 
     for (int i = 1; i <= num_sp_points; i++)
         AddElemTest(test_variant, ElementaryTest(i, frame_type));
 }
 
 
-BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, BitTiming &bit_timing)
+BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal)
 {
     BitTiming new_bt;
 
-    // Respect CTU CAN FDs min(TSEG1) == 3 clock cycles!
-    int init_ph1 = (bit_timing.brp_ == 1) ? 2 : 1;
+    BitTiming *orig_bt;
+    if (nominal)
+        orig_bt = &backup_nominal_bit_timing;
+    else
+        orig_bt = &backup_data_bit_timing;
 
-    assert(((elem_test.index_ < bit_timing.GetBitLengthTimeQuanta() - 1) &&
+    // Respect CTU CAN FDs minimal TSEG1 duration in clock cycles:
+    //      Nominal = 5
+    //      Data = 3
+    int init_ph1;
+    if (nominal)
+    {
+        if (orig_bt->brp_ == 1) {
+            init_ph1 = 4;
+        } else if (orig_bt->brp_ == 2) {
+            init_ph1 = 2;
+        } else {
+            init_ph1 = 1;
+        }
+    } else {
+        if (orig_bt->brp_ == 1) {
+            init_ph1 = 2;
+        } else {
+            init_ph1 = 1;
+        }
+    }
+    
+    assert(((elem_test.index_ < orig_bt->GetBitLengthTimeQuanta() - 1) &&
              "Invalid test index, can't configure sample point!"));
 
     // Calculate new bit-rate from configured one. Have same bit-rate, but
     // different sample point. Shift sample point from TSEG1 = 2 or 3 till
     // the end
-    new_bt.brp_ = bit_timing.brp_;
+    new_bt.brp_ = orig_bt->brp_;
     new_bt.prop_ = 0;
     new_bt.ph1_ = init_ph1 + elem_test.index_ - 1;
-    new_bt.ph2_ = bit_timing.GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
-    new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, bit_timing.sjw_);
+    new_bt.ph2_ = orig_bt->GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
+    new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, orig_bt->sjw_);
 
     TestMessage("New Data bit timing with shifted sample point:");
     new_bt.Print();
@@ -706,15 +729,35 @@ void test_lib::TestBase::FreeTestObjects()
 }
 
 
-int test_lib::TestBase::CalcNumSamplePoints(BitTiming& bit_timing)
+int test_lib::TestBase::CalcNumSamplePoints(bool nominal)
 {
-    int tmp = bit_timing.GetBitLengthTimeQuanta();
+    int tmp;
+    if (nominal)
+        tmp = nominal_bit_timing.GetBitLengthTimeQuanta();
+    else
+        tmp = data_bit_timing.GetBitLengthTimeQuanta();
 
-    // With minimal prescaler:
-    //  min TSEG1 = 3, min TSEG 2 = 2
-    // Otherwise:
-    //  min TSEG1 = 2, min TSEG 2 = 1
-    if (bit_timing.brp_ == 1)
-        return tmp - 4;
-    return tmp - 2;
+    // Minimal durations (in cycles):
+    //  Nominal - TSEG1 = 5, TSEG2 = 3
+    //  Data - TSEG1 = 3, TSEG2 = 2
+    if (nominal)
+    {
+        if (nominal_bit_timing.brp_ == 1) {
+            return tmp - 7;
+        } else if (nominal_bit_timing.brp_ == 2) {
+            return tmp - 4;
+        } else if ((nominal_bit_timing.brp_ == 3) || (nominal_bit_timing.brp_ == 4)) {
+            return tmp - 2;
+        } else {
+            return tmp - 1;
+        }
+    } else {
+        if (data_bit_timing.brp_ == 1) {
+            return tmp - 4;
+        } else if (data_bit_timing.brp_ == 2) {
+            return tmp - 2;
+        } else {
+            return tmp - 1;
+        }
+    }
 }

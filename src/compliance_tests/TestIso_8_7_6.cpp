@@ -75,20 +75,13 @@ using namespace test_lib;
 class TestIso_8_7_6 : public test_lib::TestBase
 {
     public:
-        BitTiming test_nom_bit_timing;
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
 
-            // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 2, shortest possible PH2 = 1, PH1 always 0. Together we test
-            // TQ(N) - 3 tests!
-            for (size_t i = 1; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
 
             assert((nominal_bit_timing.brp_ > 2 &&
                     "BRP Nominal must be bigger than 2 in this test due to test architecture!"));
@@ -97,28 +90,18 @@ class TestIso_8_7_6 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Have same bit-rate, but
-            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
-            // end.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index_;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
-            
-            /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
+            nominal_bit_timing.Print();
 
             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
@@ -131,8 +114,10 @@ class TestIso_8_7_6 : public test_lib::TestBase
              * Modify test frames:
              *   1. Set Ack dominant in driven frame.
              *   2. Choose random recessive bit which is followed by dominant bit.
-             *   3. Shorten chosen bit by 1 TQ in driven and monitored frames. This
-             *      corresponds to resynchronization by 1 TQ.
+             *   3. Shorten chosen bit by 1 TQ in driven frame. This will cause negative
+             *      resynchronization with e = -1. IUT will finish TSEG1 immediately and
+             *      have TSEG2 of next bit shorter by -1. So shorten Sync of next bit
+             *      in monitored frame by 1.
              *   4. Force 2nd Time quanta of dominant bit after the random recessive bit
              *      to Recessive in driven frame.
              * 
@@ -154,7 +139,7 @@ class TestIso_8_7_6 : public test_lib::TestBase
             } while (next_bit == nullptr || next_bit->bit_value_ == BitValue::Recessive);
 
             rand_bit->ShortenPhase(BitPhase::Ph2, 1);
-            monitor_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2, 1);
+            monitor_bit_frm->GetBit(rand_bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
 
             next_bit->ForceTimeQuanta(1, BitValue::Recessive);
 
