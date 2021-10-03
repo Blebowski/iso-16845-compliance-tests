@@ -127,6 +127,8 @@ class TestIso_8_7_2 : public test_lib::TestBase
              *      mitted). Shorten that SOF by 1 TQ (since Hard sync ends with one SYNC segment
              *      completed).
              *   6. Append second frame after the first frame.
+             *   7. Compensate edge position from Intermission to Second SOF for input delay of
+             *      IUT.
              *   
              *   Note: First frame ends 1 TQ - 1 minimal TQ before the end of Intermission bit 2
              *         (in both driven and monitored frames). After this, monitored frame is appen-
@@ -147,15 +149,11 @@ class TestIso_8_7_2 : public test_lib::TestBase
             last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             BitPhase prev_phase_drv = last_interm_bit_drv->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_drv->ShortenPhase(prev_phase_drv, 1);
-            // TODO: Fix quering here, if we have TSEG1 = 1, we actually erase whole byte which
-            //       causes crash!
             last_interm_bit_drv->GetLastTimeQuantaIterator(prev_phase_drv)->Shorten(1);
 
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);                    
             BitPhase prev_phase_mon = last_interm_bit_mon->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_mon->ShortenPhase(prev_phase_mon, 1);
-            // TODO: Fix quering here, if we have TSEG1 = 1, we actually erase whole byte which
-            //       causes crash!
             last_interm_bit_mon->GetLastTimeQuantaIterator(prev_phase_mon)->Shorten(1);
 
             driver_bit_frm_2->TurnReceivedFrame();
@@ -166,6 +164,9 @@ class TestIso_8_7_2 : public test_lib::TestBase
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+
+            driver_bit_frm->CompensateEdgeForInputDelay(
+                driver_bit_frm->GetBitOf(1, BitType::Sof), this->dut_input_delay);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
