@@ -72,41 +72,27 @@ using namespace test_lib;
 class TestIso_8_8_1_1 : public test_lib::TestBase
 {
     public:
-        BitTiming test_nom_bit_timing;
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             
-            // Elementary test for each possible positon of sample point
-            // between: (2, NTQ-1)
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
+            AddElemTestForEachSamplePoint(TestVariant::CanFdEnabled, true, FrameType::Can2_0);
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Have same bit-rate, but
-            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
-            // end.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index_;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
             
             /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             
             TestMessage("Waiting till DUT is error active!");
@@ -114,7 +100,7 @@ class TestIso_8_8_1_1 : public test_lib::TestBase
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
+            nominal_bit_timing.Print();
 
 
             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, EsiFlag::ErrorActive);
