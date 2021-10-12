@@ -79,18 +79,11 @@ class TestIso_8_8_1_4 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-
-            // Elementary test for each possible positon of sample point between: (2, NTQ-1)
-            // Note that this test verifies BRS bit, so we need to alternate also data bit timing!
-            // This will then affect overall bit-rate!
-            for (size_t i = 0; i < data_bit_timing.GetBitLengthTimeQuanta() - 2; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
+            AddElemTestForEachSamplePoint(TestVariant::CanFdEnabled, false, FrameType::Can2_0);
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
 
             assert(data_bit_timing.brp_ > 2 &&
                    "TQ(D) shall bigger than 2 for this test due to test architecture!");
@@ -99,37 +92,23 @@ class TestIso_8_8_1_4 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Modify PROP + PH2 of data bit rate.
-            // Modify only PH2 of nominal bit-rate. This should be sufficient for various sample
-            // point positions within CRC delimiter.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = nominal_bit_timing.prop_;
-            test_nom_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
-            
-            test_data_bit_timing.brp_ = data_bit_timing.brp_;
-            test_data_bit_timing.sjw_ = data_bit_timing.sjw_;
-            test_data_bit_timing.ph1_ = 0;
-            test_data_bit_timing.prop_ = elem_test.index_;
-            test_data_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
-
-            /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
-            this->data_bit_timing = test_data_bit_timing;
+            // Generate new test-specific bit timings
+            // Keep both bit-rates the same to make the sample point generation simple!
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
+            data_bit_timing = GenerateSamplePointForTest(elem_test, false);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, test_data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
+            nominal_bit_timing.Print();
             TestMessage("Data bit timing for this elementary test:");
-            test_data_bit_timing.Print();
+            data_bit_timing.Print();
 
 
             uint8_t data = 0x55;
@@ -159,8 +138,10 @@ class TestIso_8_8_1_4 : public test_lib::TestBase
             it->ForceValue(BitValue::Recessive);
 
             TimeQuanta *first_ph2_tq = crc_delim->GetTimeQuanta(BitPhase::Ph2, 0);
-            for (size_t i = 0; i < data_bit_timing.brp_; i++)
+
+            for (size_t i = 0; i < nominal_bit_timing.brp_; i++){
                 first_ph2_tq->ForceCycleValue(i, BitValue::Recessive);
+            }
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
