@@ -367,18 +367,31 @@ BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &e
             init_ph1 = 4;
         } else if (orig_bt->brp_ == 2) {
             init_ph1 = 2;
-        } else {
+        } else if (orig_bt->brp_ == 3) {
+            init_ph1 = 2;
+        } else if (orig_bt->brp_ == 4) {
             init_ph1 = 1;
+        } else {
+            init_ph1 = 0;
         }
     } else {
         if (orig_bt->brp_ == 1) {
             init_ph1 = 2;
-        } else {
+        } else if (orig_bt->brp_ == 2) {
             init_ph1 = 1;
+        } else {
+            init_ph1 = 0;
         }
     }
     
-    assert(((elem_test.index_ < orig_bt->GetBitLengthTimeQuanta() - 1) &&
+    // If we have N Time Quanta bit time, then we can have at most
+    // N - 1 Sample point positions regardless of bit time parameters.
+    // If we have more, this shows we have some additional elementary
+    // tests, not just the ones for "each sample point". This situation
+    // does not occur in standard, and if it happened, it was mostly
+    // an error in configuration of number of elementary tests. Therefore
+    // we forbid this option.
+    assert(((elem_test.index_ < orig_bt->GetBitLengthTimeQuanta()) &&
              "Invalid test index, can't configure sample point!"));
 
     // Calculate new bit-rate from configured one. Have same bit-rate, but
