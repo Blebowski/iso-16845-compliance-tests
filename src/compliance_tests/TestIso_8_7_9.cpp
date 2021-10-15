@@ -75,47 +75,34 @@ using namespace test_lib;
 class TestIso_8_7_9 : public test_lib::TestBase
 {
     public:
-        BitTiming test_nom_bit_timing;
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            
-            // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 1, shortest possible PH2 = 2, PH1 always 0.
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLengthTimeQuanta() -
-                                   nominal_bit_timing.sjw_ - 3; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+            FillTestVariants(VariantMatchingType::Common);            
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
+
+            assert(nominal_bit_timing.brp_ > 2 &&
+                   "TQ(N) shall bigger than 2 for this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Have same bit-rate, but
-            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
-            // end.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index_;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
-            
-            /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
+            // Generate test specific bit timing
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
+            nominal_bit_timing.Print();
 
             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
@@ -132,10 +119,13 @@ class TestIso_8_7_9 : public test_lib::TestBase
              *   1. Choose random dominant bit from driven frame.
              *   2. Force last time Quanta of phase before PH2 and first time quanta of
              *      Phase 2 to recessive.
-             *   3. Shorten PH2 of driven and monitored frames by SJW. This correponds to
+             *   3. Compensate position of inserted two time quanta glitch. Shift it by IUT
+             *      input delay, so that IUTs perception of the glitch is exactly the two time
+             *      quanta around the sample point.
+             *   4. Shorten PH2 of driven and monitored frames by SJW. This correponds to
              *      by how much IUT should have resynchronized.
-             *   4. Insert Active Error frame from next bit on.
-             *   5. Append retransmitted frame
+             *   5. Insert Active Error frame from next bit on.
+             *   6. Append retransmitted frame
              *************************************************************************************/
             Bit *rand_bit = driver_bit_frm->GetRandomBit(BitValue::Dominant);
             int rand_bit_index = driver_bit_frm->GetBitIndex(rand_bit);
@@ -144,10 +134,16 @@ class TestIso_8_7_9 : public test_lib::TestBase
             rand_bit->GetLastTimeQuantaIterator(rand_bit->PrevBitPhase(BitPhase::Ph2))
                 ->ForceValue(BitValue::Recessive);
 
+            // TODO: Execute compensation of position of inserted two time quanta glitch. We should
+            //       take into account IUTs input delay and shift the glitch by dut_input_delay
+            //       time quantas sho that IUT receives the glitch exactly the two time quanta
+            //       around the sample point from its perception!
+            //       If we do this, we no more need min TQ(N) == 2!
+
             rand_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
             monitor_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2,
                 nominal_bit_timing.sjw_);
-        
+
             driver_bit_frm->InsertActiveErrorFrame(rand_bit_index + 1);
             monitor_bit_frm->InsertActiveErrorFrame(rand_bit_index + 1);
 
