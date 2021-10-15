@@ -368,7 +368,7 @@ BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &e
         } else if (orig_bt->brp_ == 2) {
             init_ph1 = 2;
         } else if (orig_bt->brp_ == 3) {
-            init_ph1 = 2;
+            init_ph1 = 1;
         } else if (orig_bt->brp_ == 4) {
             init_ph1 = 1;
         } else {
@@ -403,7 +403,9 @@ BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &e
     new_bt.ph2_ = orig_bt->GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
     new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, orig_bt->sjw_);
 
-    TestMessage("New Data bit timing with shifted sample point:");
+    // Handle cases where we add too many elementary tests and we wou
+
+    TestMessage("New bit timing with shifted sample point:");
     new_bt.Print();
 
     return new_bt;
