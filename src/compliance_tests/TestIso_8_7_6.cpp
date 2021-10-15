@@ -90,7 +90,7 @@ class TestIso_8_7_6 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true, 2);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
