@@ -115,6 +115,12 @@ class TestIso_8_8_2_3 : public test_lib::TestBase
 
             assert(data_bit_timing.brp_ > 2 &&
                    "TQ(D) shall bigger than 2 for this test due to test architecture!");
+
+            // Following constraint is not due model, IUT issues, it is due to principle of the
+            // test, we can't avoid it!
+            assert(data_bit_timing.GetBitLengthCycles() * 2 <
+                   ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
+                   " In this test TSEG1(N) <= Bit time(D) due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
