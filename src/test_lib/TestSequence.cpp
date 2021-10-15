@@ -159,7 +159,7 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Prop);
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph1);
 
-    /* Tseg2 duration */
+    /* Count Tseg2 duration */
     size_t tseg_2_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph2);
 
     /* Count lenghts in nanoseconds */
@@ -171,14 +171,22 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
         for (size_t j = 0; j < bit->GetTimeQuanta(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
             tseg_2_duration += clock_period;
 
-    /* Get sample rate for each phase! */
-    size_t brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
-    size_t brp_fd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
-    std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
-    std::chrono::nanoseconds sampleRateData = brp_fd * clock_period;
-
-    pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->bit_value_, bit->GetBitTypeName());
-    pushMonitorValue(tseg_2_duration, sampleRateData, bit->bit_value_, bit->GetBitTypeName());
+    // Get sample rate for each phase and push monitor item. Push only if the phase has non-zero
+    // lenght. No need to monitor time sequences with 0 duration. Also, if e.g TSEG2 is 0 due
+    // to its shortening in the test, we would not be able to query its Time Quanta 0!
+    if (tseg_1_duration > std::chrono::nanoseconds(0))
+    {
+        size_t brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
+        std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
+        pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->bit_value_, bit->GetBitTypeName());
+    }
+    
+    if (tseg_2_duration > std::chrono::nanoseconds(0))
+    {
+        size_t brp_fd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
+        std::chrono::nanoseconds sampleRateData = brp_fd * clock_period;
+        pushMonitorValue(tseg_2_duration, sampleRateData, bit->bit_value_, bit->GetBitTypeName());
+    }
 }
 
 void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
