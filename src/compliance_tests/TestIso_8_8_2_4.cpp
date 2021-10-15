@@ -110,9 +110,7 @@ class TestIso_8_8_2_4 : public test_lib::TestBase
             for (int i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
 
             //assert(data_bit_timing.brp_ > 2 &&
             //       "TQ(D) shall bigger than 2 for this test due to test architecture!");

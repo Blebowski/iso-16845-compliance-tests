@@ -92,9 +92,7 @@ class TestIso_8_8_2_2 : public test_lib::TestBase
             for (int i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,

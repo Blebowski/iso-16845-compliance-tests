@@ -81,10 +81,8 @@ class TestIso_8_8_5_1 : public test_lib::TestBase
             test.e_ = data_bit_timing.sjw_;
             AddElemTest(TestVariant::CanFdEnabled, std::move(test));
 
-            dut_ifc->ConfigureSsp(SspType::Disabled, 0);
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            dut_ifc->ConfigureSsp(SspType::Disabled, 0);            
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,

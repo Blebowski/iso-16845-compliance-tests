@@ -85,9 +85,8 @@ class TestIso_8_8_1_2 : public test_lib::TestBase
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+
+            SetupMonitorTxTests();
 
             assert(nominal_bit_timing.brp_ > 2 &&
                    "TQ(N) shall bigger than 2 for this test due to test architecture!");

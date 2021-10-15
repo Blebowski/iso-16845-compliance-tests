@@ -84,9 +84,7 @@ class TestIso_8_8_5_2 : public test_lib::TestBase
             AddElemTest(TestVariant::CanFdEnabled, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
