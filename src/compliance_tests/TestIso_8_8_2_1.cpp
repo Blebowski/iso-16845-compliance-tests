@@ -94,9 +94,13 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
             for (int i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
 
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
-            CanAgentSetWaitForMonitor(true);
+            // Following constraint is not due model, IUT issues, it is due to principle of the
+            // test, we can't avoid it!
+            assert(data_bit_timing.GetBitLengthCycles() * 2 <
+                   ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
+                   " In this test TSEG1(N) <= Bit time(D) due to test architecture!");
+
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
