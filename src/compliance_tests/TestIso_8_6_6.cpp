@@ -69,6 +69,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
+#include <math.h>
 
 #include "../vpi_lib/vpiComplianceLib.hpp"
 
@@ -106,9 +107,6 @@ class TestIso_8_6_6 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            /* Repeat randomization if first data byte or if ID is zero! This should satisfy that
-             * search for random bit will find a bit of desired value!
-             */
             do
             {
                 TestBigMessage("Generating random frame...");
@@ -130,7 +128,15 @@ class TestIso_8_6_6 : public test_lib::TestBase
                     }
                     golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
                     RandomizeAndPrint(golden_frm.get());
-            } while (golden_frm->identifier() == 0x0 && golden_frm->data(0) == 0x00);
+
+            // We repeat generating random frame as long as we have any of the fields
+            // whose non-stuff bits we could possibly flip with all zeroes or all ones!
+            } while (golden_frm->identifier() == (pow(2, 11) - 1) ||
+                     golden_frm->identifier() == (pow(2, 29) - 1) ||
+                     golden_frm->dlc() == 0x0 ||
+                     golden_frm->dlc() == 0xF ||
+                     golden_frm->data(0) == 0x00 ||
+                     golden_frm->data(0) == 0xFF);
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
@@ -185,10 +191,10 @@ class TestIso_8_6_6 : public test_lib::TestBase
 
             /* Find random bit within bitfield with value */
             Bit *bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
-            while (bit_to_corrupt->bit_value_ != value_to_corrupt &&
-                    bit_to_corrupt->stuff_bit_type_ == StuffBitType::NoStuffBit)
+            while (bit_to_corrupt->bit_value_ != value_to_corrupt ||
+                   bit_to_corrupt->stuff_bit_type_ != StuffBitType::NoStuffBit)
                 bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
-            // TODO: CRC Can be all zero here, fix it!
+            // TODO: CRC can be possibly all zeroes or all ones causing infinite loop!
 
             driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
