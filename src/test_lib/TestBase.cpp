@@ -465,12 +465,13 @@ BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &e
     new_bt.prop_ = 0;
     new_bt.ph1_ = init_ph1 + elem_test.index_ - 1;
     new_bt.ph2_ = orig_bt->GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
-    new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, orig_bt->sjw_);
 
     // Handle cases where we add too many elementary tests and we would make PH2
     // equal to zero, putting sample point at the end of bit is stupid!
     if (new_bt.ph2_ == 0)
         new_bt.ph2_ = 1;
+
+    new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, orig_bt->sjw_);
 
     TestMessage("New bit timing with shifted sample point:");
     new_bt.Print();
