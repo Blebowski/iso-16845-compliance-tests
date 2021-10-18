@@ -260,24 +260,12 @@ class test_lib::TestBase
                                            FrameType frame_type);
 
         /**
-         * Generates bit-rate with sample point specific for elementary test.
-         * @param elem_test Elementary test which is being run
-         * @param bit_timing Original bit timing configuration
-         * 
-         * Sample point is configured like so:
-         *  1. Default bit-rate is taken
-         *  2. Sample point is shifted by index of elementary test:
-         *      test 1 -> PH1 = minimal lenght as given by IUT constraints!
-         *      test 2 -> PH1 = 2
-         *      ...
-         *     PROP = 0, PH2 is set to achieve the same lenght of bit as in default bit rate.
-         * 
          * 
          */
         BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal);
 
         /**
-         * Generates sample point with minimal length of Phase 1 given by parameter!
+         * TODO
          */
         BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal,
                                              size_t minimal_ph1);
@@ -406,13 +394,31 @@ class test_lib::TestBase
          * Calculates number of possible sample points per bit-rate.
          * @note CTU CAN FDs limit of min(TSEG1) = 3 clock cycles is taken into account.
          */
-        int CalcNumSamplePoints(bool nominal);
+        size_t CalcNumSamplePoints(bool nominal);
 
         /**
          * Returns minimal Ph1 duration based on current bit-rate configuration. Minimal
          * Ph1 is chosen such that minimal bit-rate of IUT is respected!
          */
-        int GetDefaultMinPh1(BitTiming *orig_bt, bool nominal);
+        size_t GetDefaultMinPh1(BitTiming *orig_bt, bool nominal);
+
+        /**
+         * Generates bit-rate with sample point specific for elementary test.
+         * @param elem_test Elementary test which is being run
+         * @param bit_timing Original bit timing configuration
+         * 
+         * Sample point is configured like so:
+         *  1. Default bit-rate is taken
+         *  2. Sample point is shifted by index of elementary test:
+         *      test 1 -> PH1 = minimal lenght as given by IUT constraints!
+         *      test 2 -> PH1 = 2
+         *      ...
+         *     PROP = 0, PH2 is set to achieve the same length of bit as in
+         *     default bit timing config.
+         * 
+         * DUT considerations are taken into account!
+         */
+        BitTiming GenerateBitTiming(const ElementaryTest &elem_test, bool nominal, size_t minimal_ph1);
 };
 
 #endif
