@@ -119,7 +119,7 @@ class TestIso_8_8_2_4 : public test_lib::TestBase
             // test, we can't avoid it!
             assert(data_bit_timing.GetBitLengthCycles() * 2 <
                    ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
-                   " In this test TSEG1(N) <= Bit time(D) due to test architecture!");
+                   " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
