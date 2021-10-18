@@ -71,48 +71,36 @@ using namespace test_lib;
 class TestIso_8_7_7 : public test_lib::TestBase
 {
     public:
-        BitTiming test_nom_bit_timing;
 
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
 
-            // Elementary test for each possible positon of sample point, restrict to shortest
-            // possible PROP = 2, shortest possible PH2 = 2, PH1 always 0. Together we test
-            // TQ(N) - 4 tests!
-            for (size_t i = 1; i < nominal_bit_timing.GetBitLengthTimeQuanta() - 3; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-
-            CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
-            CanAgentSetWaitForMonitor(true);
+            SetupMonitorTxTests();
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            // Calculate new bit-rate from configured one. Have same bit-rate, but
-            // different sample point. Shift sample point from 2 TQ up to 1 TQ before the
-            // end.
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
-            test_nom_bit_timing.ph1_ = 0;
-            test_nom_bit_timing.prop_ = elem_test.index_;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLengthTimeQuanta() - elem_test.index_ - 1;
-            
-            /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
+            // Minimal lenght of PH1/PROP must be such that the delayed edge by two time
+            // quanta + input delay of IUT will still guarantee that proper value of
+            // transmitted bit will propagate to IUTs reception in time!
+            // For CTU CAN FD, this is:
+            //      input delay (2) + delay of edge due to test (2) + 1 = 5. Minimal
+            //      duration of TSEG1 = 5 cycles!!!
+            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true, 4);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            test_nom_bit_timing.Print();
-
+            nominal_bit_timing.Print();
 
             frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags);
