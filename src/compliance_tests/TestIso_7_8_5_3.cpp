@@ -80,14 +80,14 @@ class TestIso_7_8_5_3 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
+            for (size_t i = 1; i <= nominal_bit_timing.sjw_; i++)
             {
                 ElementaryTest test = ElementaryTest(i);
                 test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
             
-            // Note: We cant enable TX to RX feedback here since DUT would
+            // Note: We can't enable TX to RX feedback here since DUT would
             //       screw us modified bits by transmitting dominant ACK!
         }
 
