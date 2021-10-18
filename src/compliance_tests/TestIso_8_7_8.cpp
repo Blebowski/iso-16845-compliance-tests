@@ -117,7 +117,7 @@ class TestIso_8_7_8 : public test_lib::TestBase
              *   2. Shorten PH2 of second bit of data field by SJW in both driven and monitored
              *      frames. This corresponds to by how much the IUT shall resynchronize.
              *   3. Force all remaining time quantas of PH2 of this bit to 0 in driven frame.
-             *      Together with step 2, this achvies shortening by whole PH2 of received frame,
+             *      Together with step 2, this achieves shortening by whole PH2 of received frame,
              *      but following bit length is effectively lengthened for IUT, so that IUT will
              *      not have remaining phase error to synchronize away during next bits.
              *   4. Force last input delay of bit phase before PH2 of the same bit to dominant!
