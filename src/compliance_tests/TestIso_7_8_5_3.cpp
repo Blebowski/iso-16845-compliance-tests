@@ -106,7 +106,13 @@ class TestIso_7_8_5_3 : public test_lib::TestBase
              *   1. Turn monitor frame as if received!
              *   2. Force driven ACK bit to Dominant.
              *   3. Shorten CRC delimiter of driven and monitored bits by e.
-             *   4. Force Phase 2 of ACK to Recessive on driven bit!
+             *   4. If e = SJW, then force the first TQ of monitored bit value of ACK to
+             *      Recessive. This is to compensate the fact that when e = SJW, IUT will finish
+             *      immediately and shorten following TSEG1 (as if PH2 of CRC Delimiter is SYNC
+             *      of ACK bit). Resynchronization is correct, but IUT will start transmitt ACK
+             *      one TQ later (it will not shorten its PH2 to 0 cycles if it receives
+             *      synchronization edge in first TQ of PH2 due to plain causality).
+             *   5. Force Phase 2 of ACK to Recessive on driven bit!
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
@@ -117,6 +123,13 @@ class TestIso_7_8_5_3 : public test_lib::TestBase
 
             crc_delimiter_driver->ShortenPhase(BitPhase::Ph2, elem_test.e_);
             crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+
+            if ((size_t)elem_test.e_ == nominal_bit_timing.sjw_)
+            {
+                Bit *ack_monitor = monitor_bit_frm->GetBitOf(0, BitType::Ack);
+                ack_monitor->ForceTimeQuanta(0, BitValue::Recessive);
+                //ack_monitor->bit_value_ = BitValue::Recessive;
+            }
 
             for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
                 ack_driver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
