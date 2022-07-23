@@ -40,8 +40,8 @@
  * Directly reference generated C headers in CTU CAN FD main repo!
  */
 extern "C" {
-    #include "../../../../../../driver/ctucanfd_frame.h"
-    #include "../../../../../../driver/ctucanfd_regs.h"
+    #include "../../../../../driver/ctucanfd_frame.h"
+    #include "../../../../../driver/ctucanfd_regs.h"
 }
 
 
