@@ -87,17 +87,17 @@ class test_lib::TestBase
          * delay to resynchronize digital signal (two flops = two cycles). Also,
          * if long wiring leads to DUT from IUT, signal propagation through CAN RX
          * from point where IUT, to input of DUT shall be included.
-         * 
+         *
          * Should be set in unit of IUTs clock cycle. E.g. if clock cycle is 5 ns,
          * and IUTs input delay is 15 ns, put 3 here. Value rounds down.
          * TODO: Check rounding down is OK!
          */
-        int dut_input_delay;
+        size_t dut_input_delay;
 
         /**
          * Information processing time of DUT (in minimal time quanta = clock cycles)
          */
-        int dut_ipt;
+        size_t dut_ipt;
 
         /**
          * CAN Bus bit timing. By default contains bit timing queryied from TB.
