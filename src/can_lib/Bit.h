@@ -174,7 +174,7 @@ class can::Bit {
         /**
          * @param index Index of time quanta to return (starting with 0)
          * @return Pointer to bit's time quanta on 'index' position.
-         * 
+         *
          * If there are less time quantas within a bit than 'index', aborts.
          */
         TimeQuanta* GetTimeQuanta(size_t index);
@@ -182,7 +182,7 @@ class can::Bit {
         /**
          * @param index Index of time quanta to return (starting with 0)
          * @return Iterator to bit's time quanta on 'index' position.
-         * 
+         *
          * If there are less time quantas within a bit than 'index', aborts.
          */
         std::list<TimeQuanta>::iterator GetTimeQuantaIterator(size_t index);
@@ -192,10 +192,22 @@ class can::Bit {
          * @param bit_phase phase whose Time Quantas shall be returned
          * @param index Index of time quanta (within bit phase) to return (starting with 0)
          * @return Pointer to time quanta on 'index' position within 'bit_phase'.
-         * 
+         *
          * If phase does not exist within a bit or bit does not have so many Time quanta, aborts.
          */
         TimeQuanta* GetTimeQuanta(BitPhase bit_phase, size_t index);
+
+        /**
+         * Gets a cycle within a frame
+         * @param index Index of cycle (within a frame) to return (starting with 0)
+         * @return Pointer to cycle on 'index' position within frame.
+         */
+        CycleBitValue* GetCycle(size_t index);
+
+        /**
+         * @return An index of cycle within bit
+         */
+        size_t GetCycleIndex(can::CycleBitValue* cycle);
 
         /**
          * Forces a time quanta within a bit to value (Inserts a glitch).

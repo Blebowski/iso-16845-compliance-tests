@@ -1210,13 +1210,16 @@ can::CycleBitValue* can::BitFrame::MoveCyclesBack(CycleBitValue *from, size_t mo
     /* Search for the TQ and bit which contains the cycle */
     //std::cout << "STARTING SEARCH" << std::endl;
     int bit_index = 0;
-    for (curr_bit = bits_.begin(); curr_bit != bits_.end(); curr_bit++)
+    curr_bit = bits_.begin();
+    while (curr_bit != bits_.end())
     {
         size_t tq_index = 0;
-        for (curr_time_quanta = curr_bit->GetTimeQuantaIterator(0);; curr_time_quanta++)
+        curr_time_quanta = curr_bit->GetTimeQuantaIterator(0);
+        while (true)
         {
             size_t cycle_index = 0;
-            for (curr_cycle = curr_time_quanta->GetCycleBitValueIterator(0);; curr_cycle++)
+            curr_cycle = curr_time_quanta->GetCycleBitValueIterator(0);
+            while (true)
             {
                 if (&(*curr_cycle) == from)
                     goto found;
@@ -1224,19 +1227,22 @@ can::CycleBitValue* can::BitFrame::MoveCyclesBack(CycleBitValue *from, size_t mo
                 if (cycle_index == (curr_time_quanta->getLengthCycles() - 1))
                     break;
                 cycle_index++;
+                curr_cycle++;
             }
             if (tq_index == (curr_bit->GetLengthTimeQuanta() - 1))
                 break;
             tq_index++;
+            curr_time_quanta++;
         }
         bit_index++;
+        curr_bit++;
     }
     assert("Input cycle should be part of frame" && false);
 
 found:
     /* Iterate back for required amount of cycles */
     size_t cnt = 0;
-    do {
+    while (cnt < move_by) {
         if (curr_cycle == curr_time_quanta->GetCycleBitValueIterator(0)) {
             if (curr_time_quanta == curr_bit->GetTimeQuantaIterator(0)) {
                 if (curr_bit == bits_.begin()) {
@@ -1246,7 +1252,7 @@ found:
                     curr_time_quanta = curr_bit->GetTimeQuantaIterator(
                                         curr_bit->GetLengthTimeQuanta() - 1);
                     curr_cycle = curr_time_quanta->GetCycleBitValueIterator(
-                                curr_time_quanta->getLengthCycles() - 1);
+                                    curr_time_quanta->getLengthCycles() - 1);
                 }
             } else {
                 curr_time_quanta--;
@@ -1257,7 +1263,7 @@ found:
             curr_cycle--;
         }
         cnt++;
-    } while (cnt != move_by);
+    }
 
     return &(*curr_cycle);
 }
@@ -1268,7 +1274,7 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
     [[maybe_unused]] Bit *prev_bit = GetBit(GetBitIndex(from) - 1);
 
     assert(from->bit_value_ == BitValue::Dominant &&
-           "Input delay compensation shall end at Dominant bit");    
+           "Input delay compensation shall end at Dominant bit");
     assert(prev_bit->bit_value_ == BitValue::Recessive &&
            "Input delay compensation shall start at Recessive bit");
 

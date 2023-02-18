@@ -269,6 +269,40 @@ can::TimeQuanta* can::Bit::GetTimeQuanta(size_t index)
     return &(*GetTimeQuantaIterator(index));
 }
 
+can::CycleBitValue* can::Bit::GetCycle(size_t index)
+{
+    auto tq = GetTimeQuantaIterator(0);
+    auto cycle = tq->GetCycleBitValueIterator(0);
+    size_t cnt = 0;
+    while (cnt != index) {
+        if (&(*cycle) == tq->getCycleBitValue(tq->getLengthCycles() - 1)) {
+            tq++;
+            cycle = tq->GetCycleBitValueIterator(0);
+        } else {
+            cycle++;
+        }
+        cnt++;
+    }
+    return &(*cycle);
+}
+
+size_t can::Bit::GetCycleIndex(can::CycleBitValue* cycle)
+{
+    auto tq = GetTimeQuantaIterator(0);
+    auto curr_cycle = tq->GetCycleBitValueIterator(0);
+    size_t cnt = 0;
+    while (&(*curr_cycle) != cycle) {
+        if (&(*curr_cycle) == tq->getCycleBitValue(tq->getLengthCycles() - 1)) {
+            tq++;
+            assert (tq != time_quantas_.end());
+            curr_cycle = tq->GetCycleBitValueIterator(0);
+        } else {
+            curr_cycle++;
+        }
+        cnt++;
+    }
+    return cnt;
+}
 
 can::TimeQuanta* can::Bit::GetTimeQuanta(BitPhase bit_phase, size_t index)
 {
