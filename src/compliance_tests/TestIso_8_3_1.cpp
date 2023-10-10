@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 26.7.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -46,7 +46,7 @@
  *          #1 the LT extends the error flag by 1 dominant bit;
  *          #2 the LT extends the error flag by 4 dominant bits;
  *          #3 the LT extends the error flag by 7 dominant bits.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *
@@ -54,12 +54,12 @@
  *  The LT causes the IUT to transmit a frame. The LT corrupts this frame in
  *  data field causing the IUT to send an active error frame. The LT prolongs
  *  the error flag sent by IUT according to elementary test cases.
- * 
+ *
  * Response:
  *  The IUT shall generate only one error frame.
  *  The IUT shall restart the transmission after the intermission field
  *  following the error frame.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -176,5 +176,5 @@ class TestIso_8_3_1 : public test_lib::TestBase
 
             return FinishElementaryTest();
         }
-    
+
 };

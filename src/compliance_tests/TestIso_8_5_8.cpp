@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.8.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.5.8
- * 
+ *
  * @brief The purpose of this test is to verify that a passive state IUT, after
  *        losing arbitration, repeats the frame without inserting any suspend
  *        transmission.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   There is one elementarty test to perform:
  *      #1 The LT causes the IUT to lose arbitration by sending a frame of
@@ -49,10 +49,10 @@
  *
  * Setup:
  *  The IUT is set to the TEC passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame according to elementary test cases.
- * 
+ *
  * Response:
  *  The LT verifies that the IUT re-transmits its frame (1 + 7 + 3) bit times
  *  after acknowledging the received frame.
@@ -116,7 +116,7 @@ class TestIso_8_5_8 : public test_lib::TestBase
             /* This will be frame beating IUT with lower ID */
             driver_bit_frm = ConvertBitFrame(*golden_frm_2);
 
-            /* This is frame sent by IUT (ID= 0x200)*/ 
+            /* This is frame sent by IUT (ID= 0x200)*/
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* This is retransmitted frame by IUT */
@@ -154,7 +154,7 @@ class TestIso_8_5_8 : public test_lib::TestBase
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());
             WaitForDriverAndMonitor();
-  
+
             CheckLowerTesterResult();
 
             return FinishElementaryTest();

@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,40 +20,40 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 16.4.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.6.3
- * 
+ *
  * @brief This test verifies that the IUT increases its REC by 8 when detecting
  *        the eighth consecutive dominant bit following the transmission of its
  *        active error flag and after each sequence of additional 8 consecutive
  *        dominant bits.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      REC, FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      REC, FDF = 1
- * 
+ *
  * Elementary test cases:
  *      #1 16 bit dominant
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to generate an active error frame in data field.
  *  After the error flag sent by the IUT, the LT sends a sequence of dominant
  *  bits according to elementary test cases.
- * 
+ *
  * Response:
  *  The IUT’s REC value shall be increased by 8 on each eighth dominant bit
  *  after the error flag.
@@ -148,7 +148,7 @@ class TestIso_7_6_3 : public test_lib::TestBase
              *  +2*8 for each 8 dominant bits after Error flag! after each error flag!
              */
             CheckRecChange(rec_old, +25);
-            
+
             FreeTestObjects();
             return FinishElementaryTest();
         }

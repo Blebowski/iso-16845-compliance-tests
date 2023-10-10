@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 09.7.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -46,16 +46,16 @@
  *          Transmitted frame
  *    ID      RTR/RRS         DATA      Description of the     Number of elementary
  *                           field     concerned arbitration          tests
- *                                            bit               
+ *                                            bit
  *  0x7EF        0          DontShift Data     Collision on all bits          10
  *                                           equal to 1.
  *  0x010        0          DontShift Data     Collision on all bits          1
  *                                           equal to 1.
  *  For a SPECIFIC device, all possible possibilities of transmitting a recessive
  *  arbitration bit shall be considered.
- *  
+ *
  *  For CAN FD enabled test, the RTR is represented by RRS and transmitted as 0.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *
@@ -121,7 +121,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
             if (elem_test.index_ == 7)
                 id_iut = 0x010;
             else
-                id_iut = 0x7EF; 
+                id_iut = 0x7EF;
 
             /* LT must have n-th bit of ID set to dominant */
             id_lt = id_iut;
@@ -136,7 +136,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
                                 RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
             RandomizeAndPrint(golden_frm.get());
-            
+
             /* This frame is actually given to IUT to send it */
             golden_frm_2 = std::make_unique<Frame>(*frame_flags, dlc, id_iut);
             RandomizeAndPrint(golden_frm_2.get());
@@ -178,7 +178,7 @@ class TestIso_8_1_3 : public test_lib::TestBase
              *************************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm_2.get());                    
+            this->dut_ifc->SendFrame(golden_frm_2.get());
             WaitForDriverAndMonitor();
             CheckLowerTesterResult();
             CheckRxFrame(*golden_frm);
@@ -186,5 +186,5 @@ class TestIso_8_1_3 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-      
+
 };

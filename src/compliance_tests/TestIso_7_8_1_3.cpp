@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,26 +20,26 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 23.5.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.8.1.3
- * 
+ *
  * @brief The purpose of this test is to verify the position of the sample point
  *        of an IUT on bit position CRC delimiter.
  *
  * @version CAN FD Enabled
- * 
+ *
  * Test variables:
  *      Sampling_Point(D) configuration as available by IUT.
  *          CRC Delimiter
  *          FDF = 1
- * 
+ *
  * Elementary test cases:
  *      There are two elementary tests to perform for at least 1 bit rate
  *      configuration:
@@ -52,23 +52,23 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT sends a frame according to elementary test cases.
- * 
+ *
  *  Test CRC delimiter #1:
  *      The LT forces a recessive CRC delimiter bit to dominant from beginning
  *      up to one TQ(D) before the Sampling point.
- * 
+ *
  *  Test CRC delimiter #2:
  *      The LT forces a recessive CRC delimiter bit to dominant from beginning
  *      up to the sampling point.
- * 
+ *
  * Response:
  *  Test CRC delimiter #1:
  *      The modified CRC delimiter bit shall be sampled as recessive.
  *      The frame is valid. DontShift error flag shall occur.
- * 
+ *
  *  Test CRC delimiter #2:
  *      The modified CRC delimiter bit shall be sampled as dominant.
  *      The frame is invalid. An error frame shall follow.
@@ -117,7 +117,7 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
-            
+
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
@@ -142,7 +142,7 @@ class TestIso_7_8_1_3 : public test_lib::TestBase
                 dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
 
             for (int j = 0; j < dominant_pulse_lenght; j++)
-                crc_delim->ForceTimeQuanta(j, BitValue::Dominant);    
+                crc_delim->ForceTimeQuanta(j, BitValue::Dominant);
 
             if (elem_test.index_ == 2)
             {

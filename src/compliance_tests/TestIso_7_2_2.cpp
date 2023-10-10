@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,31 +20,31 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 13.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.2.2
- * 
+ *
  * @brief This test verifies that the IUT detects a stuff error whenever it
  *        receives 6 consecutive bits of the same value until the position of
  *        the CRC delimiter in a base format frame.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *      Classical CAN
  *          ID, RTR, FDF, DLC, DATA
- * 
+ *
  *      CAN FD Tolerant, CAN FD Enabled
  *          ID, RTR, DLC, DATA
  *
  *      CAN FD Enabled
  *          ID, RRS, BRS, ESI, DLC, DATA Byte 0 defined, all others 0x55
- * 
+ *
  * Elementary test cases:
  *                               Classical CAN
  *              ID          CTRL                DATA
@@ -58,7 +58,7 @@
  *      #8    0x777         0x01              0x1F
  *      #9    0x7EF         0x42                -
  *     #10    0x3EA         0x5F                -
- * 
+ *
  *                      CAN FD Tolerant, CAN FD Enabled
  *              ID          CTRL                DATA
  *      #1     0x78         0x08              0x01, all others 0xE1
@@ -71,7 +71,7 @@
  *      #8    0x777         0x01              0x1F
  *      #9    0x7EF         0x42                -
  *     #10    0x3EA         0x4F                -
- * 
+ *
  *                              CAN FD Enabled
  *              ID          CTRL                DATA
  *      #1     0x78         0xAE              0xF8, all others 0x55
@@ -84,14 +84,14 @@
  *      #8    0x1F0         0xA1              0xF0, all others 0x55
  *      #9    0x000         0xA0                -
  *     #10    0x7FF         0xB0                -
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  A single test frame is used for each elementary test. The LT forces one
  *  of the stuff bits to its complement.
- * 
+ *
  * Response:
  *  The IUT shall generate an active error frame starting at the bit position
  *  following the stuff error.
@@ -402,7 +402,7 @@ class TestIso_7_2_2 : public test_lib::TestBase
                 TestMessage("Total stuff bits in variant so far: %d", stuff_bits_in_variant);
                 stuff_bits_in_variant++;
 
-                /* 
+                /*
                  * Copy frame to second frame so that we dont loose modification of bits.
                  * Corrupt only second one.
                  */

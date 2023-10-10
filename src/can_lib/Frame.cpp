@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -143,7 +143,7 @@ bool can::Frame::operator!=(const can::Frame rhs)
 void can::Frame::set_dlc(uint8_t dlc)
 {
     assert(dlc < 17 && "Can't set DLC higher than 16");
-    
+
     dlc_ = dlc;
     data_lenght_ = ConvertDlcToDataLenght(dlc);
 }
@@ -154,7 +154,7 @@ void can::Frame::set_data_lenght(int dataLenght)
 
     assert(!(frame_flags_.is_fdf() == FrameType::Can2_0 && dataLenght > 8) &&
             "Can't set data length to more than 8 on CAN 2.0 frame");
-    
+
     data_lenght_ = dataLenght;
     dlc_ = ConvertDataLenghtToDlc(dataLenght);
 }
@@ -221,7 +221,7 @@ void can::Frame::Print()
         std::cout << "BRS: " << frame_flags_.is_brs() << '\n';
     else
         std::cout << "RTR: " << frame_flags_.is_rtr() << '\n';
-    
+
     std::cout << "DLC: 0x" << std::hex << +dlc_ << '\n';
     std::cout << "ESI: " << frame_flags_.is_esi() << '\n';
     std::cout << "Data field length: " << data_lenght_ << '\n';

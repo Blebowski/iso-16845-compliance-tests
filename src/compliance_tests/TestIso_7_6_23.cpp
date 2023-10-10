@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,55 +20,55 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 22.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.6.23
- * 
+ *
  * @brief The purpose of this test is to verify that the IUT switches to
  *        protocol exception on non-nominal values of the bits described in
  *        test variables and did not change the CAN error counter.
  * @version CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  CAN FD Tolerant:
  *      FDF = 1
  *      DLC
  *      Data: All data byte with the same value
  *      Bit rate ratio between nominal and data bit rate
- * 
+ *
  *  CAN FD enabled:
  *      FDF = 1
  *      “res” bit = 1
  *      DLC
  *      Data: All data byte with the same value
  *      Bit rate ratio between nominal and data bit rate
- * 
+ *
  * Elementary test cases:
  *   CAN FD Tolerant:
- *      Test    Format      DLC         Data        Bit rate ratio   
+ *      Test    Format      DLC         Data        Bit rate ratio
  *       #1      FBFF       0xA         0xAA            1:2
  *       #2      FBFF       0xF         0xFF            1:8
  *       #3      CBFF       0xF         0xFF             -
- * 
+ *
  *   CAN FD Enabled:
  *       #1      FBFF       0xA         0xAA            1:2
  *       #2      FBFF       0xF         0xFF            1:8
- *       #3      CBFF       0xF         0xFF             -  
- * 
+ *       #3      CBFF       0xF         0xFF             -
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  a) The test system causes a receive error to initialize the REC value to 9.
  *  b) A single test frame is used for the elementary test, followed immediately
  *     by a valid Classical CAN frame.
- * 
+ *
  * Response:
  *  The IUT shall not generate any error flag in this test frame.
  *  The IUT shall not acknowledge the test frame.
@@ -76,7 +76,7 @@
  *  the test state shall match the data sent in the test frame.
  *  The IUT’s REC value shall be 8 after reception of the valid Classical
  *  CAN frame.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -143,7 +143,7 @@ class TestIso_7_6_23 : public test_lib::TestBase
             else
                 nominal_bit_timing.brp_ = data_bit_timing.brp_ * 8;
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
-            
+
             /* Enable and wait till integration is over again */
             dut_ifc->Enable();
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
@@ -204,7 +204,7 @@ class TestIso_7_6_23 : public test_lib::TestBase
                 driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
                 monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
             }
-            
+
             driver_bit_frm->UpdateFrame();
             monitor_bit_frm->UpdateFrame();
 
@@ -219,7 +219,7 @@ class TestIso_7_6_23 : public test_lib::TestBase
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
-            /********************************************************************************** 
+            /**********************************************************************************
              * Execute test
              *********************************************************************************/
             dut_ifc->SetRec(9);

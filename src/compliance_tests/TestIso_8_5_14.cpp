@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 14.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -45,7 +45,7 @@
  *      There is one elementary test to perform:
  *          #1 At the bit position following the end of the passive error flag,
  *             the LT starts to send 6 dominant bits.
- * 
+ *
  * Setup:
  *  The IUT is set to the TEC passive state
  *
@@ -57,7 +57,7 @@
  * Response:
  *  The IUT shall re-transmit the same frame 31 bit times after the detection
  *  of the corrupted bit.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -90,7 +90,7 @@ class TestIso_8_5_14 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));            
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             /* Basic settings where IUT is transmitter */
@@ -114,7 +114,7 @@ class TestIso_8_5_14 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************
@@ -126,7 +126,7 @@ class TestIso_8_5_14 : public test_lib::TestBase
              *      Insert 6 recessive bits to monitored frame.
              *   4. Append suspend transmission (both driven and monitored frames).
              *   5. Append retransmitted frame as if transmitted by IUT.
-             * 
+             *
              * Note: After the corrupted bit, there will be:
              *    6 bits            passive error frame
              *    6 bits            waiting for recessive bit to start error delimiter
@@ -163,7 +163,7 @@ class TestIso_8_5_14 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /*****************************************************************************
              * Execute test
              *****************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

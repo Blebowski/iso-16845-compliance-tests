@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,43 +20,43 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 21.9.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.6.9
- * 
+ *
  * @brief This test verifies that an IUT acting as a transmitter increases its
  *        TEC by 8 when detecting a form error on a bit of the error delimiter
  *        it is transmitting.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      ACk Slot 2 bits
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   Elementary tests to perform:
  *     #1 corrupting the second bit of the error delimiter;
  *     #2 corrupting the fourth bit of the error delimiter;
  *     #3 corrupting the seventh bit of the error delimiter.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  Then, the LT causes the IUT to generate an error frame in data field.
  *  The LT corrupts the error delimiter according to elementary test cases.
- *  
+ *
  * Response:
  *  The IUT’s TEC value shall be increased by 8 at the corrupted bit.
  *****************************************************************************/
@@ -152,7 +152,7 @@ class TestIso_8_6_9 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /*****************************************************************************
              * Execute test
              *****************************************************************************/
             tec_old = dut_ifc->GetTec();

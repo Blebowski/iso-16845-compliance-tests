@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 19.9.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.6.1
- * 
+ *
  * @brief This test verifies that an IUT acting as a transmitter increases its
  *        TEC by 8 when detecting a bit error during the transmission of an
  *        active error flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   Elementary tests to perform:
  *      #1 corrupting the first bit of the active error flag;
@@ -50,19 +50,19 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
- *  
+ *
  *  Then, the LT corrupts a bit in data field to causes the IUT to generate an
  *  active error frame.
- * 
+ *
  *  The LT corrupts one of the dominant bits of the error flag according to
  *  elementary test cases.
- *  
+ *
  * Response:
  *  The IUT’s TEC value shall be increased by 8 on the corrupted bit.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -116,7 +116,7 @@ class TestIso_8_6_1 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************
@@ -144,7 +144,7 @@ class TestIso_8_6_1 : public test_lib::TestBase
             Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
                                                             BitType::ActiveErrorFlag);
             bit_to_corrupt->bit_value_ = BitValue::Recessive;
-            
+
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
             monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);

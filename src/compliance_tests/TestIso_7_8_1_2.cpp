@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,26 +20,26 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 23.5.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.8.1.2
- * 
+ *
  * @brief The purpose of this test is to verify the position of the sample
  *        point of an IUT on bit position DATA field.
- * 
+ *
  * @version CAN FD Enabled
- * 
+ *
  * Test variables:
  *      Sampling_Point(D) configuration as available by IUT.
  *      DATA field
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *      There are two elementary tests to perform for at least 1 bit rate
  *      configuration:
@@ -47,27 +47,27 @@
  *             before sampling point;
  *          #2 test for late sampling point: bit level change to recessive
  *             after sampling point.
- *          
+ *
  *      Refer to 6.2.3.
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT sends a frame according to elementary test cases.
- * 
+ *
  *  Test Data #1:
  *      The LT forces a recessive bit to dominant from beginning up to one TQ(D)
  *      before the sampling point.
- * 
+ *
  *  Test DATA #2:
  *      The LT forces a dominant bit to recessive for Phase_Seg2(D).
- * 
+ *
  * Response:
  *  Test DATA #1:
  *      The modified data bit shall be sampled as recessive.
  *      The frame is valid. DontShift error flag shall occur.
- * 
+ *
  *  Test DATA #2:
  *      The modified data bit shall be sampled as dominant.
  *      The frame is valid. DontShift error flag shall occur.
@@ -148,7 +148,7 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
                 dominant_pulse_length = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
 
             for (int j = 0; j < dominant_pulse_length; j++)
-                data_bit->ForceTimeQuanta(j, BitValue::Dominant);    
+                data_bit->ForceTimeQuanta(j, BitValue::Dominant);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
@@ -165,7 +165,7 @@ class TestIso_7_8_1_2 : public test_lib::TestBase
             RunLowerTester(true, true);
             CheckLowerTesterResult();
             CheckRxFrame(*golden_frm);
-            
+
             return FinishElementaryTest();
         }
 };

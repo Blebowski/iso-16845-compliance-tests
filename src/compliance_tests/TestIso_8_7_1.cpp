@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,35 +20,35 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 28.9.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.7.1
- * 
+ *
  * @brief The purpose of this test is to verify the sample point of an IUT
  *        acting as a transmitter.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN
  *  CAN FD tolerant
  *  CAN FD enabled
- * 
+ *
  *  Sampling_Point(N) and SJW(N) configuration as available by IUT.
  *  FDF = 0
- * 
+ *
  * Elementary test cases:
  *   Test each possible sampling point for at least 1 bit rate configuration.
  *   Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a Classical CAN frame according to
  *  elementary test cases.
@@ -58,7 +58,7 @@
  *  Later, the LT forces another dominant bit preceded by a recessive bit from
  *  sampling point – 1 TQ(N) – minimum time quantum up to end of bit to
  *  recessive value.
- *  
+ *
  * Response:
  *  The IUT shall generate an error frame on the bit position following the
  *  second shortened bit.
@@ -176,7 +176,7 @@ class TestIso_8_7_1 : public test_lib::TestBase
             dut_ifc->SendFrame(golden_frm.get());
             dut_ifc->SendFrame(golden_frm.get());
             WaitForDriverAndMonitor();
-            
+
             CheckLowerTesterResult();
 
             return FinishElementaryTest();

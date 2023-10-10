@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,33 +20,33 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 30.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.2.8
- * 
+ *
  * @brief This test verifies that the IUT detects an error when after the
  *        transmission of 5 identical bits, it receives a sixth bit identical
  *        to the five precedents.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
- * Test variables: 
+ *
+ * Test variables:
  *  CAN FD Enabled
  *      Data byte 0 - 63, ID = 0x555, IDE = 0, DLC = 15, FDF = 1
- * 
+ *
  * Elementary test cases:
  *  CAN FD Enabled
  *   All 1 008 stuff bit positions within the defined data bytes will be tested.
  *
  *   There are 35 elementary tests to perform.
- * 
+ *
  *                      Data byte 0                   Data bytes 1 - 63
- *      #1 to #126          0x10                            0x78        
+ *      #1 to #126          0x10                            0x78
  *    #127 to #252          0x78                            0x3C
  *    #253 to #378          0x34                            0x1E
  *    #379 to #504          0x12                            0x0F
@@ -57,15 +57,15 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  A single test frame is used for each elementary test. In each elementary
  *  test, the LT forces another one of the stuff bits to its complement.
- *  
+ *
  * Response:
  *  The IUT shall generate an active error frame starting at the bit position
  *  following the bit error at stuff bit position.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -217,5 +217,5 @@ class TestIso_8_2_8 : public test_lib::TestBase
 
             return FinishElementaryTest();
         }
-    
+
 };

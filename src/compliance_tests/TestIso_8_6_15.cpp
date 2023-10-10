@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,44 +20,44 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 26.9.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.6.15
- * 
+ *
  * @brief This test verifies that an IUT acting as a transmitter does not
  *        change the value of its TEC when detecting a form error on the last
  *        bit of the overload delimiter it is transmitting.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   Elementary tests to perform:
  *     #1 LT sends 1 dominant bit.
- * 
+ *
  * Setup:
  *  The LT forces the IUT to increase its TEC.
  *  The LT causes the IUT to transmit a frame, where the LT causes an error
  *  scenario to set TEC to 08 h before the test started.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  Then, the LT causes the IUT to generate an overload frame after this data
  *  frame.
  *  At the last bit of the overload delimiter, the LT sends dominant bit
  *  according to elementary test cases.
- *  
+ *
  * Response:
  *  The IUT’s TEC value shall be equal to the set-up value decreased by 1.
  *****************************************************************************/
@@ -95,7 +95,7 @@ class TestIso_8_6_15 : public test_lib::TestBase
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             SetupMonitorTxTests();
-            CanAgentConfigureTxToRxFeedback(true);            
+            CanAgentConfigureTxToRxFeedback(true);
 
             dut_ifc->SetTec(8);
         }

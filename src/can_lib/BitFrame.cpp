@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -256,7 +256,7 @@ void can::BitFrame::BuildFrameBits()
             AppendBit(BitType::Brs, BitValue::Recessive);
         else
             AppendBit(BitType::Brs, BitValue::Dominant);
-        
+
         if (frame_flags_.is_esi() == EsiFlag::ErrorActive)
             AppendBit(BitType::Esi, BitValue::Dominant);
         else
@@ -272,7 +272,7 @@ void can::BitFrame::BuildFrameBits()
         for (int j = 7; j >= 0; j--)
             AppendBit(BitType::Data, data(i) >> j);
     }
-    
+
     // Build Stuff count + parity (put dummy as we don't know number of
     // stuff bits yet)!
     if (frame_flags_.is_fdf() == FrameType::CanFd)
@@ -408,7 +408,7 @@ void can::BitFrame::InsertCrcFixedStuffBits()
     std::list<Bit>::iterator bit_it;
     int same_bits = 0;
 
-    // Search first bit of CRC 
+    // Search first bit of CRC
     for (bit_it = bits_.begin(); bit_it->bit_type_ != BitType::Crc; bit_it++)
         ;
 
@@ -569,7 +569,7 @@ size_t can::BitFrame::GetBitCount()
     return bits_.size();
 }
 
-        
+
 size_t can::BitFrame::GetFieldLength(BitType bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(),
@@ -779,7 +779,7 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
     return &(*bit_it);
 }
 
-    
+
 can::Bit* can::BitFrame::GetFixedStuffBit(size_t index, BitValue bit_value)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
@@ -1162,7 +1162,7 @@ void can::BitFrame::PrintDetailed(std::chrono::nanoseconds clock_period)
     for (auto & bit : bits_)
     {
         std::chrono::nanoseconds bit_length = bit.GetLengthCycles() * clock_period;
-        std::cout << bit.GetBitTypeName() << " : " << 
+        std::cout << bit.GetBitTypeName() << " : " <<
             std::to_string(bit_length.count()) << std::endl;
     }
 }

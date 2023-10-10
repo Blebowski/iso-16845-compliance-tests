@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,27 +20,27 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 21.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.8.1.3
- * 
+ *
  * @brief The purpose of this test is to verify the sample point of an IUT
  *        acting as a transmitter on a bit position at DATA field.
  * @version CAN FD enabled
- * 
+ *
  * Test variables:
  *  CAN FD enabled
  *      Sampling_Point(D) configuration as available by IUT.
  *      DATA field
  *      BRS = 1
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *  There are two elementary tests to perform for each programmable sampling
  *  point inside a chosen number of TQ for at least 1 bit rate configuration:
@@ -50,21 +50,21 @@
  *         point to correct value.
  *
  *  Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *  Transmitter delay compensation is disabled.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
- *  
+ *
  *  Test DATA #1:
  *      The LT forces Phase_Seg2(D) of a dominant bit to recessive.
- * 
+ *
  *  Test DATA #2:
  *      The LT force a recessive bit to dominant for
  *      Sync_Seg(D) + Prop_Seg(D) + Phase_Seg1(D) – 1 TQ(D).
- * 
+ *
  * Response:
  *  Test DATA #1:
  *      The modified data bit shall be sampled as dominant.
@@ -104,7 +104,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            
+
             // Change data sample point. Iterate with sample point:
             //  from: PROP = 1, PH2 = TQ(D) - 2
             //  to: PROP = TQ(D) - 2, PH2 = 1
@@ -134,7 +134,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
             test_data_bit_timing.prop_ = (elem_test.index_ + 1) / 2;
             test_data_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() -
                                         ((elem_test.index_ + 1) / 2) - 1;
-            
+
             /* Re-configure bit-timing for this test so that frames are generated with it! */
             this->data_bit_timing = test_data_bit_timing;
 
@@ -152,7 +152,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
 
             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
                                                        EsiFlag::ErrorActive);
-            /* To make sure there is at least 1 data byte! */ 
+            /* To make sure there is at least 1 data byte! */
             golden_frm = std::make_unique<Frame>(*frame_flags, rand() % 0xF + 1);
             RandomizeAndPrint(golden_frm.get());
 
@@ -167,7 +167,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
              *       - Elementary test 2 : Recessive bit
              *   3. Force parts of the generated bit like so:
              *       - Elementary test 1 : Phase 2 to Recessive.
-             *       - Elementary test 2 : SYNQ+ PROP + Phase 1 - 1 TQ to Dominant. 
+             *       - Elementary test 2 : SYNQ+ PROP + Phase 1 - 1 TQ to Dominant.
              *************************************************************************************/
             driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
@@ -195,7 +195,7 @@ class TestIso_8_8_1_3 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /*****************************************************************************
              * Execute test
              *****************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

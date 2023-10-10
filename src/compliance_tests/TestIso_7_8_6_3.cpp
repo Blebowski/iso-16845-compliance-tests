@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 19.6.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -59,7 +59,7 @@
  *  The LT forces an amount of |e| TQ from end of Phase_Seg2(N) of CRC
  *  delimiter bit to dominant according to elementary test cases. By this,
  *  the CRC delimiter bit of the IUT is shortened by an amount of SJW(N).
- *  
+ *
  *  Additionally, the Phase_Seg2(N) of ACK bit shall be forced to recessive.
  *
  * Response:
@@ -103,7 +103,7 @@ class TestIso_7_8_6_3 : public test_lib::TestBase
                 test.e_ = i;
                 AddElemTest(TestVariant::CanFdEnabled, std::move(test));
             }
-            
+
             CanAgentConfigureTxToRxFeedback(true);
         }
 

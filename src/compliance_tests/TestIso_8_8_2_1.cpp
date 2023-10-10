@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,29 +20,29 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 19.12.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.8.2.1
- * 
+ *
  * @brief The purpose of this test is to verify the secondary sample point of
  *        an IUT acting as a transmitter with a delay, d, between transmitted
  *        signal and received signal will not be applied on bit position “res”
  *        bit.
  * @version CAN FD enabled
- * 
+ *
  * Test variables:
  *      Available configuration methods for delay compensation = fix programmed
  *      or automatically measured.
  *          Delay, d, in range of TQ (D) = d ∈ (1, 2 data bit times)
  *          “res” bit
  *          FDF = 1
- * 
+ *
  * Elementary test cases:
  *  There are two elementary tests to perform for 1 bit rate configuration and
  *  each way of configuration of delay compensation - fix programmed or
@@ -52,13 +52,13 @@
  *
  *  Test for late Sampling_Point(N):
  *      bit level changed after sampling point to wrong value.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *  Transmitter delay compensation shall be enabled. SSP offset shall be
  *  configured to evaluate the delayed bit on similar position like the
  *  sampling point in data phase [Sampling_Point(D)].
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  The LT prolonged the SOF bit on IUT receive input by an amount of d
@@ -66,7 +66,7 @@
  *  relative against the transmitted sequence of IUT.
  *  The LT forces Phase_Seg2(N) of the transmitted (not shifted) “res”
  *  bit position to recessive.
- * 
+ *
  * Response:
  *  The modified “res” bit shall be sampled as dominant.
  *  The frame is valid. No error flag shall occur.
@@ -153,7 +153,7 @@ class TestIso_8_8_2_1 : public test_lib::TestBase
              * whole frame. First "MoveCyclesBack", finds TQ and bit, in which 'orig' cycle is
              * (redundantly multiple times), then it iterates back through bit until it moved
              * for d cycles.
-             * 
+             *
              * I am aware of the shittines of the solution, but I decided to live with it as
              * the penalty is just not so big!
              * Alternative would be to have also bottom->up reference in Bit/TQ/Cycle hierarchy.

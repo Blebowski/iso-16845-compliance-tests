@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,33 +20,33 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 26.4.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.6.17
- * 
+ *
  * @brief This test verifies that the IUT does not change the value of its REC
  *        when receiving a 13-bit length overload flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      REC, FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      REC, FDF = 1
- * 
+ *
  * Elementary test cases:
  *      #1 7 dominant bits.
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  a) The test system causes a receive error to initialize the REC value to 9.
  *  b) The LT causes the IUT to generate an overload frame after a valid frame
@@ -114,7 +114,7 @@ class TestIso_7_6_17 : public test_lib::TestBase
              *      can_rx from first bit of overload delimiter.
              *************************************************************************************/
             monitor_bit_frm->TurnReceivedFrame();
-            
+
             driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
 
             monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
@@ -139,7 +139,7 @@ class TestIso_7_6_17 : public test_lib::TestBase
             rec_old = dut_ifc->GetRec();
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
-            
+
             CheckLowerTesterResult();
             CheckRxFrame(*golden_frm);
             /* Only for sucesfull frame reception */

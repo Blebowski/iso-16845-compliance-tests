@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,41 +20,41 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 15.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.7.3
- * 
+ *
  * @brief The purpose of this test is to verify that the IUT, with a pending
  *        transmission, makes a hard synchronization when detecting a dominant
  *        bit after the sample point of the third bit of the intermission field.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN
  *  CAN FD tolerant
  *  CAN FD enabled
- * 
+ *
  *  Sampling_Point(N) and SJW(N) configuration as available by IUT.
  *      ID = MSB dominant
  *      FDF = 0
- * 
+ *
  * Elementary test cases:
  *   Test each possible sampling point inside a chosen number of TQ for at
  *   least 1 bit rate configuration.
- * 
- *      #1 LT generates a dominant bit starting IPT after the sample point.  
- * 
+ *
+ *      #1 LT generates a dominant bit starting IPT after the sample point.
+ *
  *   Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a Classical CAN frame according to
  *  elementary test cases.
@@ -62,7 +62,7 @@
  *  While the IUT’s transmission is pending, the LT generates a dominant
  *  bit according to elementary test cases after the sample point of the
  *  third bit of the intermission field.
- *  
+ *
  * Response:
  *  The IUT shall start transmitting its SOF at the next TQ following the
  *  recessive to dominant edge.

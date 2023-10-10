@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,21 +20,21 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 10.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.1.3
- * 
+ *
  * @brief This test verifies the capability of the IUT to manage the reception
  *        of arbitration winning frame, while the IUT loses the arbitration.
- * 
+ *
  * @version CAN FD Enabled, CAN FD Tolerant, Classical CAN
- * 
+ *
  * Test variables:
  *  ID all bit = 1
  *  IDE
@@ -42,7 +42,7 @@
  *  FDF
  *  DLC = 0
  *  RTR = 1
- * 
+ *
  * Elementary test cases:
  *  CAN FD Enabled, CAN FD Tolerant, Classical CAN :
  *          LT Frame format         IUT frame format        Bit arb. lost
@@ -52,23 +52,23 @@
  *      #4      CEFF                    CBFF                LSB Base ID
  *      #5      CEFF                    CEFF                LSB Extended ID
  *      #6      CEFF                    CEFF                    RTR
- *  
+ *
  *  CAN FD Enabled :
  *          LT Frame format         IUT frame format        Bit arb. lost
  *      #1      CBFF                    FBFF                LSB Base ID
  *      #2      FBFF                    CBFF                    RTR
  *      #3      CEFF                    FEFF                LSB Extended ID
  *      #4      FEFF                    CEFF                    RTR
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame according to “IUT frame format”
  *  in elementary test cases. Then, the LT forces the bit described at “bit
  *  for arbitration lost” in elementary test cases to dominant state and
  *  continues to send a valid frame according to elementary test cases.
- * 
+ *
  * Response:
  *  The IUT shall become the receiver when sampling the dominant bit sent by
  *  the LT.
@@ -77,11 +77,11 @@
  *  of the frame.
  *  The IUT shall not generate any error flag during the test.
  *  The content of the frame shall match the LT request.
- * 
+ *
  * Note:
  *  An implementation with limited ID range may not be able to transmit/receive
  *  the frame.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -230,7 +230,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
                     break;
                 }
             }
-            
+
             /* For IUT */
             frame_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag,
                                                         EsiFlag::ErrorActive);
@@ -253,7 +253,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
              *      Correct monitored bit value to expect value which corresponds to what was sent
              *      by IUT!
              *   2. Compensate input delay of IUT. If Recessive to Dominant edge of bit on which
-             *      arbitration is lost, is sent by LT exactly at SYNC, then due to input delay, 
+             *      arbitration is lost, is sent by LT exactly at SYNC, then due to input delay,
              *      it will be seen slightly later by IUT. If prescaler is smaller than input
              *      delay, this will create undesirable resynchronisation by IUT. This needs to
              *      be compensated by lenghtening monitored bit!
@@ -314,7 +314,7 @@ class TestIso_7_1_3 : public test_lib::TestBase
                 }
             }
 
-            /* 
+            /*
              * In all frames monitored bits shall be equal to driven bits up to point where
              * arbitration is lost!
              */

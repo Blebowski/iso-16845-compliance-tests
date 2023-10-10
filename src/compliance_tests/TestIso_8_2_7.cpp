@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 24.7.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -44,7 +44,7 @@
  *      There are two elementary tests to perform:
  *          #1 CRC delimiter up to 2-bit long (late ACK bit – long distance);
  *          #2 ACK up to 2-bit long (superposing ACK bits – near and long distance).
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *
@@ -54,7 +54,7 @@
  *
  * Response:
  *  The frame is valid. The IUT shall not generate an error frame.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -119,7 +119,7 @@ class TestIso_8_2_7 : public test_lib::TestBase
                 driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
             else
                 driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-            
+
             driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
 
             driver_bit_frm->Print(true);
@@ -136,5 +136,5 @@ class TestIso_8_2_7 : public test_lib::TestBase
 
             return FinishElementaryTest();
         }
-    
+
 };

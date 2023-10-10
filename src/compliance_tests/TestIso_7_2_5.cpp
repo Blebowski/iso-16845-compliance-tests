@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,16 +20,16 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 18.12.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.2.5
- * 
+ *
  * @brief The purpose of this test is to verify:
  *          — that the IUT uses the specific CRC mechanism according to frame
  *            format,
@@ -38,11 +38,11 @@
  *          — that the IUT does not detect an error when monitoring a dominant
  *            bit at the ACK slot while sending a recessive one.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
- * Test variables: 
+ *
+ * Test variables:
  *      Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *          CRC, FDF = 0, SOF
- * 
+ *
  * Elementary test cases:
  *    Classical CAN, CAN FD Tolerant, CAN FD Enabled:
  *      Number of elementary tests: 3
@@ -50,38 +50,38 @@
  *      #2 A recessive bit in the CRC field is changed in a dominant bit.
  *      #3 The dominant SOF bit in the frame is changed in a recessive
  *         one followed by an ID 001 h.
- * 
+ *
  *    CAN FD Enabled:
  *      #1 and #2 A dominant bit in the CRC field is changed in a recessive
  *         bit for CRC-17 with DLC ≤ 10 (#1) and CRC-21 with DLC > 10 (#2)
  *         (test for CRC value).
- *  
+ *
  *      #3 and #4 A recessive bit in the CRC field is changed in a dominant
  *         bit for CRC-17 with DLC ≤ 10 (#3) and CRC-21 with DLC > 10 (#4)
  *         (test for CRC value).
- * 
+ *
  *      #5 The test system sends a frame where two times a recessive stuff
  *         bit becomes a normal bit by losing one of the previous bits by
  *         synchronization issues while the CRC register is equal zero
  *         (test for stuff-counter).
- * 
+ *
  *      #6 The parity bit of the stuff count and the following fixed stuff
  *         bit changed into their opposite values (test for stuff-counter
  *         parity bit value).
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  A single test frame is used for each elementary test. The LT modifies the
  *  frame according to elementary test cases.
- * 
+ *
  * Response:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled:
  *      The IUT shall not acknowledge the test frame. The IUT shall generate
  *      an active error frame starting at the first bit position following
  *      the ACK delimiter.
- *  
+ *
  *  CAN FD Enabled:
  *      The IUT shall not acknowledge the test frame. The IUT shall generate
  *      an active error frame starting at the fourth bit position following the
@@ -263,5 +263,5 @@ class TestIso_7_2_5 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-        
+
 };

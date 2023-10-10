@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 14.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -45,7 +45,7 @@
  *      There is one elementary test to perform:
  *          #1 The LT check that the repeated frame start 6 + 8 + 3 + 8 bit
  *             after the last dominant bit send by LT.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *
@@ -59,7 +59,7 @@
  * Response:
  *  The IUT shall generate a passive error flag and repeat the frame
  *  6 + 8 + 3 + 8 bit after the last dominant bit sent by LT.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -92,12 +92,12 @@ class TestIso_8_5_15 : public test_lib::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));            
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
             AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
 
             /* Basic settings where IUT is transmitter */
             SetupMonitorTxTests();
-            /* 
+            /*
              * TX/RX feedback cant be enabled since we corrupt dominant
              * transmitted bits to recessive.
              */
@@ -119,14 +119,14 @@ class TestIso_8_5_15 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* Second frame differs in ESI bit */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
 
             /**************************************************************************************
              * Modify test frames:
              *   1. Force 7-th data bit to dominant to cause stuff error.
              *   2. Remove all bits from next bit on.
-             *   3. Insert 16 recessive bits to driven frame. Inssert 16 dominant bits to monitored 
+             *   3. Insert 16 recessive bits to driven frame. Inssert 16 dominant bits to monitored
              *      frame.
              *   4. Append Passive Error frame after the bits from previous step. Append to both
              *      driven and monitored frames.

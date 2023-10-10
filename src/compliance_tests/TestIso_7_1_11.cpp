@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,32 +20,32 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 12.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.1.11
- * 
+ *
  * @brief This test verifies the behaviour of the IUT when receiving a correct
  *        extended frame with particular data containing critical stuffing bit
  *        profiles in the different fields of the frame according to test
  *        variables.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *      Classical CAN
  *          ID, SRR, RTR, FDF, R0, DLC, DATA
- * 
+ *
  *      CAN FD Tolerant, CAN FD Enabled
  *          ID, SRR, RTR, FDF = 0, DLC, DATA
  *
  *      CAN FD Enabled
  *          ID, SRR, RRS, BRS, ESI, DLC, DATA, FDF=1
- * 
+ *
  * Elementary test cases:
  *                          Classical CAN
  *          ID          CTRL                DATA
@@ -56,7 +56,7 @@
  *  #5  0x1FB80000     0x181                0xA0
  *  #6  0x00BC540F     0x1E0                -
  *  #7  0x155D5557     0x1FF                -
- * 
+ *
  *                  CAN FD Tolerant, CAN FD Enabled
  *          ID          CTRL                DATA
  *  #1  0x07C30F0F     0x188                all bytes 0x3C
@@ -79,13 +79,13 @@
  *  #9  0x01E38787     0x3A0                -
  * #10  0x11F3C3C3     0x380                -
  * #11  0x00000000     0x6B0                -
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
- *  A single test frame is used for each of the elementary tests. 
- * 
+ *  A single test frame is used for each of the elementary tests.
+ *
  * Response:
  *  The IUT shall not generate any error flag during the test.
  *  The IUT shall acknowledge the test frame.

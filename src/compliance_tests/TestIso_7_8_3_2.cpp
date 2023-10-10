@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,27 +20,27 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 24.5.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.8.3.2
- * 
+ *
  * @brief The purpose of this test is to verify the behaviour of an IUT
  *        detecting a positive phase error e on a recessive to dominant edge
  *        with e ≤ SJW(D) on bit position DATA.
  *
  * @version CAN FD Enabled
- * 
+ *
  * Test variables:
  *      Sampling_Point(D) and SJW(D) configuration as available by IUT.
  *          DATA field
  *          FDF = 1
- * 
+ *
  * Elementary test cases:
  *      There is one elementary test to perform for each possible value of e
  *      for at least 1 bit rate configuration.
@@ -51,7 +51,7 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT sends a frame containing a dominant stuff bit in DATA field.
  *  Then, the recessive to dominant edge before this dominant stuff bit
@@ -60,7 +60,7 @@
  *  The LT forces a part of Phase_Seg2(D) of the delayed stuff bit to
  *  recessive. This recessive part of Phase_seg2 start at e − 1 TQ(D)
  *  after sampling point.
- * 
+ *
  * Response:
  *  The modified data bit shall be sampled as recessive.
  *  The wrong value of stuff bit shall cause an error frame.

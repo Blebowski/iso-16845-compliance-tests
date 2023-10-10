@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,45 +20,45 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 20.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.6.21
- * 
+ *
  * @brief This test verifies that the IUT does not change the value of its REC
  *        when transmitting a frame successfully.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   There is one elementary test to perform:
  *      #1 The higher prior frame is disturbed by an error to increase REC.
  *
  * Setup:
  *  No action required, the IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *
  *  The LT sends a frame with higher ID priority to cause the IUT to lose
  *  arbitration according to elementary test cases. The IUT will repeat its
  *  transmission after error treatment.
- *  
+ *
  * Response:
  *  The IUT’s REC value shall be incremented and not decremented after
  *  transmission.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -101,7 +101,7 @@ class TestIso_7_6_21 : public test_lib::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            /* 
+            /*
              * Dont shift bit-rate needed since Transmitted frame after received frame is not
              * handled well with Bit rate shifts due to small resynchronizations in reciver!
              */
@@ -114,7 +114,7 @@ class TestIso_7_6_21 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************

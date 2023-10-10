@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 24.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
@@ -46,19 +46,19 @@
  *          Transmitted frame
  *    ID      RTR/RRS         DATA      Description of the     Number of elementary
  *                           field     concerned arbitration          tests
- *                                            bit               
+ *                                            bit
  *  0x1FBFFFFF   0           No Data    Collision on all bits           28
  *                            field         equal to 1.
  *  0x00400000   0           No Data    Collision on all bits           1
  *                            field         equal to 1.
  *  0x00400000   0           No Data    Collision on SRR and            2
  *                            field         IDE bit
- * 
+ *
  *  For a SPECIFIC device, all possible possibilities of transmitting a recessive
  *  arbitration bit shall be considered.
- *  
+ *
  *  For CAN FD enabled test, the RTR is represented by RRS and transmitted as 0.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *
@@ -128,7 +128,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
             if (elem_test.index_ == 7 || elem_test.index_ == 30 || elem_test.index_ == 31)
                 id_iut = 0x00400000;
             else
-                id_iut = 0x1FBFFFFF; 
+                id_iut = 0x1FBFFFFF;
 
             /* LT must have n-th bit of ID set to dominant */
             id_lt = id_iut;
@@ -172,7 +172,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
 
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
             RandomizeAndPrint(golden_frm.get());
-            
+
             /* This frame is actually given to IUT to send it */
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, dlc, id_iut);
             RandomizeAndPrint(golden_frm_2.get());
@@ -212,7 +212,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
             /* Elementary test 31 - loose on IDE */
             } else if (elem_test.index_ == 31){
                 loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
-            
+
             } else {
                 loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
                 TestMessage("Invalid Elementary test index: %d", elem_test.index_);
@@ -245,7 +245,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
              * frame which always has RTR bit dominant (right after Base ID). IUT is sending
              * Extended frame, therefore at position of RTR it will send SRR which is Recessive.
              * So bit at position of RTR in monitored frame must be set to recessive!
-             * 
+             *
              * Note that in CAN FD frame there is no RTR bit so R1 must be set instead!
              */
             if (elem_test.index_ == 31) {
@@ -267,7 +267,7 @@ class TestIso_8_1_4 : public test_lib::TestBase
              *************************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm_2.get());                    
+            this->dut_ifc->SendFrame(golden_frm_2.get());
             WaitForDriverAndMonitor();
             CheckLowerTesterResult();
             CheckRxFrame(*golden_frm);
@@ -275,5 +275,5 @@ class TestIso_8_1_4 : public test_lib::TestBase
             FreeTestObjects();
             return FinishElementaryTest();
         }
-    
+
 };

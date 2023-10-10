@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,46 +20,46 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 14.1.2021
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.8.5.2
- * 
+ *
  * @brief The purpose of this test is to verify that an IUT transmitting a
  *        dominant bit does not perform any resynchronization as a result of a
  *        recessive to dominant edge with a positive phase error e ≤ SJW(D)
  * @version CAN FD enabled
- * 
+ *
  * Test variables:
  *  CAN FD enabled
- * 
+ *
  *  Sampling_Point(D) and SJW(D) configuration as available by IUT.
  *      Phase error e
  *      DATA field
  *      BRS = 1
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *  There is one elementary test to perform for at least 1 bit rate
  *  configuration.
  *      #1 Recessive to dominant edge after e = SJW(D) recessive TQ(D).
- * 
+ *
  *  Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  The LT forces the beginning of the dominant bit in DATA field to recessive
  *  according to elementary test cases.
  *  The LT forces the Phase_Seg2(D) of these dominant bit to recessive.
- * 
+ *
  * Response:
  *  The modified data bit shall be sampled as dominant.
  *  The frame is valid. No error flag shall occur.

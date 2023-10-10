@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,29 +20,29 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.9.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.5.3
- * 
+ *
  * @brief The purpose of this test is to verify that an error passive IUT does
  *        not detect any error when detecting up to 7 consecutive dominant bits
  *        starting at the bit position following the last bit of the passive
  *        error flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      Error delimiter of passive error frame, FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      Error delimiter of passive error frame, FDF = 1
- * 
+ *
  * Elementary test cases:
  *  Elementary tests to perform:
  *      #1 transmitting 1 consecutive dominant bit;
@@ -51,14 +51,14 @@
  *
  * Setup:
  *  The IUT is set in passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to generate a passive error frame in data field.
  *  After the passive error flag, the LT starts transmitting dominant bits
  *  according to elementary test cases.
  *  After the dominant bit sequence, the LT waits for error delimiter +
  *  intermission − 1 (8 + 2) bit time before sending a valid test frame.
- * 
+ *
  * Response:
  *  The IUT shall acknowledge the test frame.
  *****************************************************************************/
@@ -88,7 +88,7 @@ using namespace test_lib;
 class TestIso_7_5_3 : public test_lib::TestBase
 {
     public:
-        
+
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
@@ -168,10 +168,10 @@ class TestIso_7_5_3 : public test_lib::TestBase
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();
-            
+
             CheckRxFrame(*golden_frm);
             CheckNoRxFrame(); /* Only one frame should be received! */
-            
+
             FreeTestObjects();
             return FinishElementaryTest();
         }
