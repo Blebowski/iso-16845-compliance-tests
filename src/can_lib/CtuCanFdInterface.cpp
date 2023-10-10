@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <assert.h>
@@ -34,7 +34,7 @@
 #include "BitTiming.h"
 
 #include "CtuCanFdInterface.h"
-#include "../vpi_lib/vpiComplianceLib.hpp"
+#include "../pli_lib/PliComplianceLib.hpp"
 
 /*
  * Directly reference generated C headers in CTU CAN FD main repo!
@@ -51,7 +51,7 @@ void can::CtuCanFdInterface::Enable()
     data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
     data.s.ena = CTU_CAN_ENABLED;
 
-    /* 
+    /*
      * By default forbid that TXT Buffer goes to TX Failed in bus-off. This allows
      * testing reintegration time!
      */
@@ -204,7 +204,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     }
 
     // Frame format word
-    frame_format_word.u32 = 0;    
+    frame_format_word.u32 = 0;
     if (frame->frame_flags().is_fdf() == FrameType::CanFd)
         frame_format_word.s.fdf = ctu_can_fd_frame_format_w_fdf::FD_CAN;
     else
@@ -297,7 +297,7 @@ can::Frame can::CtuCanFdInterface::ReadFrame()
     RtrFlag is_rtr;
     BrsFlag is_brs;
     EsiFlag is_esi;
-    
+
     frame_format_word.u32 = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
     identifier_word.u32 = MemBusAgentRead32(CTU_CAN_FD_RX_DATA);
 
@@ -311,12 +311,12 @@ can::Frame can::CtuCanFdInterface::ReadFrame()
         is_fdf = FrameType::CanFd;
     else
         is_fdf = FrameType::Can2_0;
-    
+
     if (frame_format_word.s.ide == ctu_can_fd_frame_format_w_ide::EXTENDED)
         is_ide = IdentifierType::Extended;
     else
         is_ide = IdentifierType::Base;
-    
+
     if (frame_format_word.s.rtr == ctu_can_fd_frame_format_w_rtr::RTR_FRAME)
         is_rtr = RtrFlag::RtrFrame;
     else
@@ -384,7 +384,7 @@ int can::CtuCanFdInterface::GetTec()
     return data.s.tec_val;
 }
 
-        
+
 void can::CtuCanFdInterface::SetRec(int rec)
 {
     // Enable test-mode otherwise we will not be able to change REC or TEC!
@@ -400,8 +400,8 @@ void can::CtuCanFdInterface::SetRec(int rec)
 
     MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
 }
-        
-    
+
+
 void can::CtuCanFdInterface::SetTec(int tec)
 {
     // Enable test-mode otherwise we will not be able to change REC or TEC!
@@ -447,7 +447,7 @@ void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
         break;
 
     default:
-        break; 
+        break;
     }
 
     MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);

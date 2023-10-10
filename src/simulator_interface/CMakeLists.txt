@@ -1,21 +1,21 @@
 ###############################################################################
-# 
+#
 # Copyright (C) Ondrej Ille - All Rights Reserved
-#  
+#
 # Copying, publishing, distributing of this file is stricly prohibited unless
 # previously aggreed with author of this text.
-# 
+#
 # Author: Ondrej Ille, <ondrej.ille@gmail.com>
 # Date: 27.3.2020
-# 
+#
 ###############################################################################
 
 add_library(
     SIMULATOR_INTERFACE_LIB SHARED
 
-    ghdl_vpi_interface.c
+    simulator_interface.c
 
-    $<TARGET_OBJECTS:VPI_LIB>
+    $<TARGET_OBJECTS:PLI_LIB>
     $<TARGET_OBJECTS:CAN_LIB>
     $<TARGET_OBJECTS:TEST_LIB>
     $<TARGET_OBJECTS:COMPLIANCE_TESTS>

@@ -44,7 +44,7 @@ EXTERN_C_START
 # include  <stdarg.h>
 # include  <stdio.h>
 # include  <stdarg.h>
-# include  "_pli_types.h"
+# include  "ghdl_pli_types.h"
 
 #define ICARUS_VPI_CONST
 #ifdef __cplusplus

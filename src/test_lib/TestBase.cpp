@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -35,7 +35,7 @@
 #include <unistd.h>
 
 #include "../test_lib/test_lib.h"
-#include "../vpi_lib/vpiComplianceLib.hpp"
+#include "../pli_lib/PliComplianceLib.hpp"
 #include "../can_lib/CtuCanFdInterface.h"
 #include "../can_lib/can.h"
 
@@ -74,7 +74,7 @@ can::FrameType test_lib::TestBase::GetDefaultFrameType(TestVariant &variant)
 
 void test_lib::TestBase::ConfigureTest()
 {
-    TestMessage("TestBase: Configuration Entered");    
+    TestMessage("TestBase: Configuration Entered");
 
     TestMessage("Querying test configuration from TB:");
     this->dut_clock_period = TestControllerAgentGetCfgDutClockPeriod();
@@ -120,7 +120,7 @@ void test_lib::TestBase::ConfigureTest()
     ResetAgentAssert();
     ResetAgentDeassert();
 
-    TestMessage("Configuring Clock generator agent");    
+    TestMessage("Configuring Clock generator agent");
     ClockAgentSetPeriod(std::chrono::nanoseconds(this->dut_clock_period));
     ClockAgentSetJitter(std::chrono::nanoseconds(0));
     ClockAgentSetDuty(50);
@@ -309,7 +309,7 @@ void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
             test_variants.push_back(TestVariant::CanFdEnabled);
         elem_tests.push_back(std::vector<ElementaryTest>());
         break;
-    
+
     case VariantMatchingType::ClassicalFdCommon:
         if (dut_can_version == CanVersion::Can_2_0)
             test_variants.push_back(TestVariant::Can_2_0);
@@ -513,7 +513,7 @@ BitType test_lib::TestBase::GetRandomBitType(FrameType frame_type, IdentifierTyp
                 return BitType::Dlc;
             }
         }
-    
+
     case BitField::Data:
         return BitType::Data;
 
@@ -788,7 +788,7 @@ BitTiming test_lib::TestBase::GenerateBitTiming(const ElementaryTest &elem_test,
 
     if (init_ph1 < minimal_ph1)
         init_ph1 = minimal_ph1;
-    
+
     // If we have N Time Quanta bit time, then we can have at most N - 1 Sample point positions
     // regardless of bit time parameters / constraints. If we have more, this shows we have some
     // additional elementary tests, not just the ones for "each sample point". This situation

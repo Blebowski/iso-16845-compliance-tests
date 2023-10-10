@@ -60,7 +60,7 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
+#include "pli_lib.h"
 
 #include "../test_lib/test_lib.h"
 #include "../test_lib/TestBase.h"

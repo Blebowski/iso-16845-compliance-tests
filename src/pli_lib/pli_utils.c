@@ -1,26 +1,24 @@
-/****************************************************************************** 
- * 
+/******************************************************************************
+ *
  * @copyright Copyright (C) Ondrej Ille - All Rights Reserved
- * 
+ *
  * Copying, publishing, distributing of this file is stricly prohibited unless
  * previously aggreed with author of this text.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
 
-#include "_pli_types.h"
-#include "vpi_user.h"
-#include "vpi_utils.h"
-#include "vpi_handle_manager.h"
+#include "pli_utils.h"
+#include "pli_handle_manager.h"
 
 
-int vpi_drive_str_value(const char *signal_name, const char *value)
+int pli_drive_str_value(const char *signal_name, const char *value)
 {
     struct hlist_node* node = hman_get_ctu_vip_net_handle(signal_name);
 
@@ -45,7 +43,7 @@ int vpi_drive_str_value(const char *signal_name, const char *value)
 }
 
 
-int vpi_read_str_value(const char *signal_name, char *ret_value)
+int pli_read_str_value(const char *signal_name, char *ret_value)
 {
     struct hlist_node* node = hman_get_ctu_vip_net_handle(signal_name);
 

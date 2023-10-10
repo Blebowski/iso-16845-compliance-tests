@@ -1,22 +1,20 @@
-/****************************************************************************** 
- * 
+/******************************************************************************
+ *
  * @copyright Copyright (C) Ondrej Ille - All Rights Reserved
- * 
+ *
  * Copying, publishing, distributing of this file is stricly prohibited unless
  * previously aggreed with author of this text.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 09.10.2020
- * 
+ *
  *****************************************************************************/
 
 #include <string.h>
 #include <stdlib.h>
 
-#include "_pli_types.h"
-#include "vpi_user.h"
-#include "vpi_utils.h"
-#include "vpi_handle_manager.h"
+#include "pli_handle_manager.h"
+
 
 /* Handle to CTU CAN FD VIP - Test controller agent module */
 static vpiHandle ctu_vip_handle = NULL;
@@ -35,9 +33,9 @@ static char ctu_vip_path[] = CTU_VIP_HIERARCHICAL_PATH;
  * @param module Handle to module to be searched
  * @param exp_name Expected name of the module
  */
-void hman_search_ctu_vip_handle(vpiHandle module, char *exp_name)
+static void hman_search_ctu_vip_handle(vpiHandle module, char *exp_name)
 {
-    //fprintf(stderr, "%s Searching: %s Expected: %s\n", VPI_TAG, vpi_get_str(vpiName, module), exp_name);
+    //fprintf(stderr, "%s Searching: %s Expected: %s\n", PLI_TAG, vpi_get_str(vpiName, module), exp_name);
 
     if (!strcmp(exp_name, vpi_get_str(vpiName, module)))
     {
@@ -61,13 +59,13 @@ void hman_search_ctu_vip_handle(vpiHandle module, char *exp_name)
 /**
  * @returns Handle to CTU CAN FD VIP module inside HDL simulation.
  */
-vpiHandle hman_get_ctu_vip_handle()
+static vpiHandle hman_get_ctu_vip_handle()
 {
     /* Search upon first request and cache the handle */
     if (ctu_vip_handle == NULL)
     {
 #ifdef DEBUG_BUILD
-        vpi_printf("%s Searching for CTU CAN FD VIP module: %s\n", VPI_TAG, CTU_VIP_HIERARCHICAL_PATH);
+        vpi_printf("%s Searching for CTU CAN FD VIP module: %s\n", PLI_TAG, CTU_VIP_HIERARCHICAL_PATH);
 #endif
         char *top_name = strtok(ctu_vip_path, "/");
 
@@ -90,7 +88,7 @@ vpiHandle hman_get_ctu_vip_handle()
  * @param Signal_name name whose handle to create.
  * @returns VPI handle to signal.
  */
-vpiHandle hman_create_ctu_vip_handle(const char *signal_name)
+static vpiHandle hman_create_ctu_vip_handle(const char *signal_name)
 {
     vpiHandle ctu_scope_h = vpi_handle(vpiScope, hman_get_ctu_vip_handle());
     vpiHandle net_iterator = vpi_iterate(vpiNet, ctu_scope_h);
@@ -108,8 +106,8 @@ vpiHandle hman_create_ctu_vip_handle(const char *signal_name)
         }
     }
 
-    vpi_printf("%s Can't find %s signal", VPI_TAG, signal_name);
-    fprintf(stderr, "%s Can't find %s signal", VPI_TAG, signal_name);
+    vpi_printf("%s Can't find %s signal", PLI_TAG, signal_name);
+    fprintf(stderr, "%s Can't find %s signal", PLI_TAG, signal_name);
     vpi_free_object(net_iterator);
     vpi_free_object(ctu_scope_h);
     return NULL;
@@ -121,7 +119,7 @@ vpiHandle hman_create_ctu_vip_handle(const char *signal_name)
  * @param signal_name Name of signal whose handle to search for
  * @param Pointer to handle node in Handle list.
  */
-struct hlist_node* hman_search_handle_list(const char *signal_name)
+static struct hlist_node* hman_search_handle_list(const char *signal_name)
 {
     if (list_head == NULL)
         return NULL;
@@ -143,7 +141,7 @@ struct hlist_node* hman_search_handle_list(const char *signal_name)
  * Adds new top signal handle to "top_signals_handle" list.
  * TODO: Handle malloc return code properly!
  */
-struct hlist_node* hman_add_handle_to_list(vpiHandle handle, const char *signal_name)
+static struct hlist_node* hman_add_handle_to_list(vpiHandle handle, const char *signal_name)
 {
     /* First entry to empty list */
     if (list_head == NULL)
@@ -158,7 +156,7 @@ struct hlist_node* hman_add_handle_to_list(vpiHandle handle, const char *signal_
     }
 
     struct hlist_node *current = list_head;
- 
+
     /* Get last entry in the list*/
     while (current->next != NULL)
         current = current->next;
@@ -190,7 +188,7 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
     {
         vpiHandle new_signal_handle = hman_create_ctu_vip_handle(signal_name);
 #ifdef DEBUG_BUILD
-        vpi_printf("%s Caching signal handle of: %s\n", VPI_TAG,
+        vpi_printf("%s Caching signal handle of: %s\n", PLI_TAG,
                     vpi_get_str(vpiFullName, new_signal_handle));
 #endif
         list_entry = hman_add_handle_to_list(new_signal_handle, signal_name);
@@ -202,7 +200,7 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
 
 void hman_cleanup()
 {
-    vpi_printf("%s Handle manager cleanup\n", VPI_TAG);
+    vpi_printf("%s Handle manager cleanup\n", PLI_TAG);
 
     struct hlist_node *current = list_head;
     struct hlist_node *next;

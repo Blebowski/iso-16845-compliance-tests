@@ -1,3 +1,5 @@
+#ifndef FRAME_H
+#define FRAME_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -27,11 +29,9 @@
  *****************************************************************************/
 
 #include <cstdint>
+
 #include "can.h"
 #include "FrameFlags.h"
-
-#ifndef CAN_FRAME
-#define CAN_FRAME
 
 
 /**

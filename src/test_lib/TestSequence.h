@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef TEST_SEQUENCE_H
+#define TEST_SEQUENCE_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +22,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -37,14 +39,11 @@
 #include "MonitorItem.h"
 #include "DriverItem.h"
 
-#ifndef TEST_SEQUENCE
-#define TEST_SEQUENCE
-
 /**
  * @namespace test_lib
  * @class TestSequence
  * @brief Test sequence for simulator.
- * 
+ *
  * Test sequence contains sequence for CAN Agent driver and for CAN Agent
  * monitor. Driver sequence will be driven by CAN agent to "can_rx" of DUT
  * and Monitor sequence will be checked by CAN agent on "can_tx" of DUT.
@@ -61,7 +60,7 @@ class test_lib::TestSequence
         /**
          * @brief Gets pointer to n-th monitor item.
          * @param index Index of monitor item in monitor sequence.
-         * 
+         *
          * @return Pointer to monitor item at position "index". NULL if index is
          *         larger than number of monitor items in sequence.
          */
@@ -70,7 +69,7 @@ class test_lib::TestSequence
         /**
          * @brief Gets pointer to n-th driver item.
          * @param index Index of driver item in driver sequence.
-         * 
+         *
          * @return Pointer to driver item at position "index". NULL if index is
          *         larger than number of driver items in sequence.
          */
@@ -86,7 +85,7 @@ class test_lib::TestSequence
          * @brief Prints items in driver sequence.
          */
         void PrintDrivenValues();
-        
+
         /**
          * @brief Prints items in monitor sequence.
          */
@@ -125,54 +124,54 @@ class test_lib::TestSequence
 
         /**
          * @brief Appends CAN frame to driver sequence.
-         * 
+         *
          * CAN frame is converted to sequence of driver items for CAN Agent
          * driver and appended to "drivenValues". Each bit on CAN bus is converted
          * to single driver item.
-         * 
+         *
          * @param bit_frame Reference to CAN frame to be converted. Not modified.
          */
         void AppendDriverFrame(can::BitFrame& bit_frame);
 
         /**
          * @brief Appends CAN frame to monitor sequence.
-         * 
+         *
          * CAN frame is converted to sequence of monitor items for CAN Agent
          * monitor and appended to "monitorValues".
-         * 
+         *
          * Bits BRS and CRC delimiters are converted to two monitor items. All
          * other bits are converted to single monitor item. Duration of monitor
          * item is equal to duration of the bit on CAN bus. Sample rate of each
          * item is equal to Baud rate prescaler used during that bit.
-         * 
+         *
          * @warning BRS and CRC delimiter encoding causes that CAN agent monitor
          *          does not perform check exactly in sample point of these bits!
-         * 
+         *
          * @param bit_frame Reference to CAN frame to be converted. Not modified.
          */
         void AppendMonitorFrame(can::BitFrame& bit_frame);
 
         /**
          * @brief Appends single CAN bit to driver items sequence.
-         * 
+         *
          * CAN bit is converted to single driver item sequence.
-         * 
+         *
          * @param bit CAN bit to append. Not modified
          */
         void AppendDriverBit(can::Bit *bit);
 
         /**
          * @brief Appends single CAN bit to monitor items sequence.
-         * 
+         *
          * CAN bit is converted to single monitor item sequence.
-         * 
+         *
          * @param bit CAN bit to append. Not modified
          */
         void AppendMonitorBit(can::Bit *bit);
 
         /**
          * @brief Appends bit during which bit rate shift occurs (BRS, CRC delimiter).
-         * 
+         *
          * @param bit CAN bit to append. Not modified.
          */
         void appendMonitorBitWithShift(can::Bit *bit);
