@@ -220,5 +220,3 @@ add_library(
     TestIso_9_6_1.cpp
     TestIso_9_6_2.cpp
 )
-
-target_link_libraries(COMPLIANCE_TESTS PUBLIC VPI_LIB)

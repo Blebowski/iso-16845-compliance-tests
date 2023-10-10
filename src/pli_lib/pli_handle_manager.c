@@ -23,9 +23,7 @@ static vpiHandle ctu_vip_handle = NULL;
 static struct hlist_node *list_head = NULL;
 
 /* Hierarchical path in HDL simulator where CTU CAN FD VIP is instantiated */
-#pragma message (CTU_VIP_HIERARCHICAL_PATH)
 static char ctu_vip_path[] = CTU_VIP_HIERARCHICAL_PATH;
-
 
 /**
  * @brief Searches through module instances recursively if module matches

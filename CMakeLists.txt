@@ -37,8 +37,9 @@ SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 # Use '/' as hierarchy delimiter.
 ###############################################################################
 SET (CTU_VIP_HIERARCHICAL_PATH "tb_top_ctu_can_fd/ctu_can_fd_vip_inst")
+message(STATUS "CTU CAN FD VIP simulation hierarchy is: ${CTU_VIP_HIERARCHICAL_PATH}")
 
-MESSAGE("Build type: " CMAKE_BUILD_TYPE)
+MESSAGE(STATUS "Build type: " CMAKE_BUILD_TYPE)
 add_compile_options(-fPIC -Wall -Wextra -Wpedantic -I -c)
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -54,9 +55,17 @@ IF (CPP_CHECK)
 ENDIF()
 
 enable_testing()
+
 SET(CTEST_OUTPUT_ON_FAILURE TRUE)
 
-include_directories(src)
+# Hierarchical path where PLI searches for handles
+add_compile_definitions(CTU_VIP_HIERARCHICAL_PATH=\"${CTU_VIP_HIERARCHICAL_PATH}\")
+
+# Needed for driver defines that are used to access registers!
+# Using original bitfield header file.
+add_compile_definitions(__LITTLE_ENDIAN_BITFIELD)
+
+include_directories(src/can_lib src/test_lib src/pli_lib src/compliance_tests)
 
 add_subdirectory(src)
 add_subdirectory(test)

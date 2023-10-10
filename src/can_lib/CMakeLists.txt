@@ -24,5 +24,3 @@ add_library(
     BitTiming.cpp
     CtuCanFdInterface.cpp
 )
-
-target_compile_definitions(CAN_LIB PUBLIC -D__LITTLE_ENDIAN_BITFIELD)

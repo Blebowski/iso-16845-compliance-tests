@@ -1,5 +1,5 @@
-#ifndef VPI_USER_H
-#define VPI_USER_H
+#ifndef GHDL_VPI_USER_H
+#define GHDL_VPI_USER_H
 /*
  * Copyright (c) 1999-2014 Stephen Williams (steve@icarus.com)
  *
