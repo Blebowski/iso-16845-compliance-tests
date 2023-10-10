@@ -30,9 +30,7 @@
 
 #include <memory>
 
-#include "test_lib.h"
-
-#include "test_lib.h"
+#include "test.h"
 #include "TestBase.h"
 
 
@@ -57,7 +55,7 @@ extern "C" void RunCppTest(char *test_name);
  *
  * @param name Name of SW test object to create.
  */
-test_lib::TestBase* ConstructTestObject(std::string name);
+test::TestBase* ConstructTestObject(std::string name);
 
 
 /**

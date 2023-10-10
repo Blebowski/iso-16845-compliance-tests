@@ -31,10 +31,10 @@
 #include "../test_lib/test_lib.h"
 #include "../test_lib/TestBase.h"
 
-using namespace test_lib;
+using namespace test;
 
 #define TEST_DECLARATION(TEST_NAME) \
-  class TEST_NAME : public test_lib::TestBase { \
+  class TEST_NAME : public test::TestBase { \
     void ConfigureTest(); \
     int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test, \
                     [[maybe_unused]] const TestVariant &test_variant); \

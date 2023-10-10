@@ -1,3 +1,5 @@
+#ifndef CAN_LIB_H
+#define CAN_LIB_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -22,39 +24,20 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 25.8.2020
+ * @date 27.3.2020
  *
  *****************************************************************************/
 
-#include <chrono>
-#include <string>
-#include <list>
-#include <memory>
+#include "can.h"
 
-#include "ElementaryTest.h"
+#include "Bit.h"
+#include "BitFrame.h"
+#include "BitTiming.h"
+#include "CtuCanFdInterface.h"
+#include "CycleBitValue.h"
+#include "DutInterface.h"
+#include "Frame.h"
+#include "FrameFlags.h"
+#include "TimeQuanta.h"
 
-test::ElementaryTest::ElementaryTest(int index) :
-    index_(index)
-{
-    msg_ = "Elementary test: ";
-    msg_ += std::to_string(index);
-}
-
-test::ElementaryTest::ElementaryTest(int index, std::string msg):
-    index_(index),
-    msg_(msg)
-{}
-
-test::ElementaryTest::ElementaryTest(int index, std::string msg, can::FrameType frame_type):
-    index_(index),
-    msg_(msg),
-    frame_type_(frame_type)
-{}
-
-test::ElementaryTest::ElementaryTest(int index, can::FrameType frame_type):
-    index_(index),
-    frame_type_(frame_type)
-{
-    msg_ = "Elementary test: ";
-    msg_ += std::to_string(index);
-}
+#endif

@@ -31,16 +31,18 @@
 #include <string>
 #include <chrono>
 
-#include "test_lib.h"
+#include <can_lib.h>
+
+#include "test.h"
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class DriverItem
  * @brief CAN Agent driver item
  *
  * Represents single item to be driver by CAN Agent driver.
  */
-class test_lib::DriverItem
+class test::DriverItem
 {
     public:
         DriverItem(std::chrono::nanoseconds duration, StdLogic value);

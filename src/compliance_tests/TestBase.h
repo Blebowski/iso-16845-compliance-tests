@@ -32,15 +32,11 @@
 #include <list>
 #include <vector>
 
-#include "test_lib.h"
-#include "../can_lib/can.h"
-#include "../can_lib/BitTiming.h"
-#include "../can_lib/DutInterface.h"
-#include "ElementaryTest.h"
-
+#include <can_lib.h>
+#include <test_lib.h>
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class TestBase
  * @brief Test Base class
  *
@@ -50,7 +46,7 @@
  * @note Each test should call TestBase::run() in the beginning of its run
  *       function.
  */
-class test_lib::TestBase
+class test::TestBase
 {
     public:
 

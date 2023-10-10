@@ -33,23 +33,20 @@
 #include <list>
 #include <memory>
 
-#include "../can_lib/can.h"
-#include "../can_lib/BitTiming.h"
-#include "../can_lib/DutInterface.h"
-#include "../can_lib/BitFrame.h"
+#include <can_lib.h>
 
-#include "test_lib.h"
+#include "test.h"
 
 using namespace can;
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class ElementaryTest
  * @brief Elementary test class
  *
  * Represents single Elementary test as described in ISO16845-1:2016.
  */
-class test_lib::ElementaryTest
+class test::ElementaryTest
 {
     public:
         ElementaryTest(int index);

@@ -32,10 +32,10 @@
 #include <cstdarg>
 #include <memory>
 
-#include "test_lib.h"
-#include "TestLoader.h"
+#include <can_lib.h>
+#include <test_lib.h>
 
-#include "TestBase.h"
+#include "TestLoader.h"
 
 /******************************************************************************
  * Implementations of compliance tests
@@ -259,9 +259,9 @@ std::thread *testThread;
  * This is simple workaround so that we don't have to implement some form
  * of reflection/factory solution which would convert us string to constructor
  *****************************************************************************/
-test_lib::TestBase* ConstructTestObject(std::string name)
+test::TestBase* ConstructTestObject(std::string name)
 {
-    test_lib::TestBase *test_ptr = NULL;
+    test::TestBase *test_ptr = NULL;
 
     if (name == "base") {
         test_ptr = new TestBase;
@@ -722,7 +722,7 @@ void TestBigMessage(std::string message, ...)
 
 int cppTestThread(char *test_name)
 {
-    test_lib::TestBase *cpp_test = ConstructTestObject(test_name);
+    test::TestBase *cpp_test = ConstructTestObject(test_name);
     int test_result = cpp_test->Run();
     delete cpp_test;
     return test_result;

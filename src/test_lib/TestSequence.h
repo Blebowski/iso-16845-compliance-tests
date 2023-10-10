@@ -33,14 +33,15 @@
 #include <chrono>
 #include <vector>
 
-#include "../can_lib/can.h"
-#include "test_lib.h"
+#include <can_lib.h>
+#include <pli_lib.h>
 
+#include "test.h"
 #include "MonitorItem.h"
 #include "DriverItem.h"
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class TestSequence
  * @brief Test sequence for simulator.
  *
@@ -48,7 +49,7 @@
  * monitor. Driver sequence will be driven by CAN agent to "can_rx" of DUT
  * and Monitor sequence will be checked by CAN agent on "can_tx" of DUT.
  */
-class test_lib::TestSequence
+class test::TestSequence
 {
     public:
         TestSequence(std::chrono::nanoseconds clock_period);

@@ -88,25 +88,12 @@
 #include <chrono>
 #include <cmath>
 
-#include "pli_lib.h"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_1_1 : public test_lib::TestBase
+class TestIso_7_1_1 : public test::TestBase
 {
     public:
 

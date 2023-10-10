@@ -29,11 +29,10 @@
 #include <chrono>
 #include <iostream>
 
-#include "test_lib.h"
 #include "DriverItem.h"
 
 
-test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value):
+test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value):
     duration_(duration),
     value_(value)
 {
@@ -41,7 +40,7 @@ test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic val
 }
 
 
-test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value,
+test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value,
                                   std::string message):
     duration_(duration),
     value_(value),
@@ -49,7 +48,7 @@ test_lib::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic val
 {}
 
 
-bool test_lib::DriverItem::HasMessage()
+bool test::DriverItem::HasMessage()
 {
     if (message_.size() > 0)
         return true;
@@ -57,7 +56,7 @@ bool test_lib::DriverItem::HasMessage()
 }
 
 
-void test_lib::DriverItem::Print()
+void test::DriverItem::Print()
 {
     if (HasMessage() == true)
         std::cout << message_ << std::endl;

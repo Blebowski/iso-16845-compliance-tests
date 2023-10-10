@@ -29,11 +29,9 @@
 #include <chrono>
 #include <iostream>
 
-#include "test_lib.h"
 #include "MonitorItem.h"
 
-
-test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+test::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
                                    std::chrono::nanoseconds sample_rate)
 {
     this->duration_ = duration;
@@ -43,7 +41,7 @@ test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic v
 }
 
 
-test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
+test::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
                                    std::chrono::nanoseconds sample_rate, std::string message)
 {
     this->duration_ = duration;
@@ -53,7 +51,7 @@ test_lib::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic v
 }
 
 
-bool test_lib::MonitorItem::HasMessage()
+bool test::MonitorItem::HasMessage()
 {
     if (message_.size() > 0)
         return true;
@@ -61,7 +59,7 @@ bool test_lib::MonitorItem::HasMessage()
 }
 
 
-void test_lib::MonitorItem::Print()
+void test::MonitorItem::Print()
 {
     if (HasMessage())
         std::cout << message_ << std::endl;

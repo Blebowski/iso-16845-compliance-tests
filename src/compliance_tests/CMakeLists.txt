@@ -14,6 +14,7 @@
 add_library(
     COMPLIANCE_TESTS OBJECT
 
+    TestBase.cpp
     TestDemo.cpp
     TestIso_7_1_1.cpp
     TestIso_7_1_2.cpp

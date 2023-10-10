@@ -31,16 +31,16 @@
 #include <string>
 #include <chrono>
 
-#include "test_lib.h"
+#include "test.h"
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class MonitorItem
  * @brief CAN Agent monitor item
  *
  * Represents single item to be monitored by CAN Agent monitor.
  */
-class test_lib::MonitorItem
+class test::MonitorItem
 {
     public:
         MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
