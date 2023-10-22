@@ -28,6 +28,7 @@
 
 #include <iostream>
 #include <assert.h>
+#include <iomanip>
 
 #include "can.h"
 #include "Bit.h"
@@ -1157,13 +1158,19 @@ void can::BitFrame::Print(bool print_stuff_bits)
 
 void can::BitFrame::PrintDetailed(std::chrono::nanoseconds clock_period)
 {
-    std::cout << std::endl << "Frame: " << std::endl;
+    std::cout
+        << std::setw (20) << "Field"
+        << std::setw (20) << "Duration (ns)"
+        << std::setw (20) << "Value" << std::endl;
 
     for (auto & bit : bits_)
     {
         std::chrono::nanoseconds bit_length = bit.GetLengthCycles() * clock_period;
-        std::cout << bit.GetBitTypeName() << " : " <<
-            std::to_string(bit_length.count()) << std::endl;
+
+        std::cout
+            << std::setw (20) << bit.GetBitTypeName()
+            << std::setw (20) << std::to_string(bit_length.count())
+            << std::setw (19) << " " << bit.GetColouredValue() << std::endl;
     }
 }
 
