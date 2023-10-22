@@ -36,6 +36,7 @@
 #include "SimulatorChannel.hpp"
 
 
+
 /*****************************************************************************
  * Reset agent functions
  ****************************************************************************/
@@ -71,7 +72,7 @@ void ResetAgentPolaritySet(int polarity)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_RES_GEN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_RST_AGNT_CMD_POLARITY_SET);
-    simulator_channel.pli_data_in = pol;
+    simulator_channel.pli_data_in = std::string(pol);
 
     SimulatorChannelProcessRequest();
 }
@@ -124,7 +125,7 @@ void ClockAgentSetPeriod(std::chrono::nanoseconds clockPeriod)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CLK_GEN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CLK_AGNT_CMD_PERIOD_SET);
-    simulator_channel.pli_data_in = std::bitset<PLI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -153,7 +154,7 @@ void ClockAgentSetJitter(std::chrono::nanoseconds jitter)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CLK_GEN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CLK_AGNT_CMD_JITTER_SET);
-    simulator_channel.pli_data_in = std::bitset<PLI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -180,7 +181,7 @@ void ClockAgentSetDuty(int duty)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CLK_GEN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CLK_AGNT_CMD_DUTY_SET);
-    simulator_channel.pli_data_in = std::bitset<PLI_DBUF_SIZE>(duty).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(duty).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -226,16 +227,20 @@ void MemBusAgentStop()
 
 void MemBusAgentWrite32(int address, uint32_t data)
 {
-    std::string pli_data_in = "1"; // Use blocking write
-    pli_data_in.append("10"); // 32 bit write
-    pli_data_in.append(std::bitset<16>(address).to_string());
-    pli_data_in.append(std::bitset<32>(data).to_string());
+    //std::cout << "Memory bus agent 32-bit write:" << std::endl;
+    //std::cout << "Address: 0x" << std::hex << address << std::endl;
+    //std::cout << "Data: 0x" << std::hex << data << std::endl;
+
+    std::string tmp = "1"; // Use blocking write
+    tmp.append("10"); // 32 bit write
+    tmp.append(std::bitset<16>(address).to_string());
+    tmp.append(std::bitset<32>(data).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_WRITE);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -243,17 +248,17 @@ void MemBusAgentWrite32(int address, uint32_t data)
 
 void MemBusAgentWrite16(int address, uint16_t data)
 {
-    std::string pli_data_in = "1"; // Use blocking write
-    pli_data_in.append("01"); // 16 bit write
-    pli_data_in.append(std::bitset<16>(address).to_string());
-    pli_data_in.append("0000000000000000");
-    pli_data_in.append(std::bitset<16>(data).to_string());
+    std::string tmp = "1"; // Use blocking write
+    tmp.append("01"); // 16 bit write
+    tmp.append(std::bitset<16>(address).to_string());
+    tmp.append("0000000000000000");
+    tmp.append(std::bitset<16>(data).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_WRITE);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -261,17 +266,17 @@ void MemBusAgentWrite16(int address, uint16_t data)
 
 void MemBusAgentWrite8(int address, uint8_t data)
 {
-    std::string pli_data_in = "1"; // Use blocking write
-    pli_data_in.append("00"); // 8 bit write
-    pli_data_in.append(std::bitset<16>(address).to_string());
-    pli_data_in.append("000000000000000000000000");
-    pli_data_in.append(std::bitset<8>(data).to_string());
+    std::string tmp = "1"; // Use blocking write
+    tmp.append("00"); // 8 bit write
+    tmp.append(std::bitset<16>(address).to_string());
+    tmp.append("000000000000000000000000");
+    tmp.append(std::bitset<8>(data).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_WRITE);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -279,34 +284,40 @@ void MemBusAgentWrite8(int address, uint8_t data)
 
 uint32_t MemBusAgentRead32(int address)
 {
-    std::string pli_data_in = "";
-    pli_data_in.append("10"); // 32 bit access
-    pli_data_in.append(std::bitset<16>(address).to_string());
-    pli_data_in.append("00000000000000000000000000000000");
+
+    //std::cout << "Memory bus agent 32-bit read:" << std::endl;
+    //std::cout << "Address: 0x" << std::hex << address << std::endl;
+
+    std::string tmp = "";
+    tmp.append("10"); // 32 bit access
+    tmp.append(std::bitset<16>(address).to_string());
+    tmp.append("00000000000000000000000000000000");
 
     simulator_channel.read_access = true;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_READ);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 
-    return (uint32_t)strtoul(simulator_channel.pli_data_out.c_str(), NULL, 2);
+    uint32_t rv = (uint32_t)strtoul(simulator_channel.pli_data_out.c_str(), NULL, 2);
+    //std::cout << "Data: 0x" << std::hex << rv << std::endl;
+    return rv;
 }
 
 uint16_t MemBusAgentRead16(int address)
 {
-    std::string pli_data_in = "";
-    pli_data_in.append("01"); // 16 bit access
-    pli_data_in.append(std::bitset<16>(address).to_string());
-    pli_data_in.append("00000000000000000000000000000000");
+    std::string tmp = "";
+    tmp.append("01"); // 16 bit access
+    tmp.append(std::bitset<16>(address).to_string());
+    tmp.append("00000000000000000000000000000000");
 
     simulator_channel.read_access = true;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_READ);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 
@@ -316,16 +327,16 @@ uint16_t MemBusAgentRead16(int address)
 
 uint8_t MemBusAgentRead8(int address)
 {
-    std::string pli_data_in = "";
-    pli_data_in.append("00"); // 8 bit access
-    pli_data_in.append(std::bitset<16>(address).to_string());
-    pli_data_in.append("00000000000000000000000000000000");
+    std::string tmp = "";
+    tmp.append("00"); // 8 bit access
+    tmp.append(std::bitset<16>(address).to_string());
+    tmp.append("00000000000000000000000000000000");
 
     simulator_channel.read_access = true;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_READ);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 
@@ -363,7 +374,7 @@ void memBusAgentSetXModeSetup(std::chrono::nanoseconds setup)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_SET_X_MODE_SETUP);
-    simulator_channel.pli_data_in = std::bitset<PLI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -377,7 +388,7 @@ void MemBusAgentSetXModeHold(std::chrono::nanoseconds hold)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_SET_X_MODE_HOLD);
-    simulator_channel.pli_data_in = std::bitset<PLI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -391,7 +402,7 @@ void MemBusAgentSetOutputDelay(std::chrono::nanoseconds delay)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_MEM_BUS_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_MEM_BUS_AGNT_SET_OUTPUT_DELAY);
-    simulator_channel.pli_data_in = std::bitset<PLI_DBUF_SIZE>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -461,16 +472,17 @@ char CanAgentDriverGetDrivenVal()
 void CanAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    pli_data_in.append(1, drivenValue);    // Driven value
-    pli_data_in.append("0");      // No message
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+
+    std::string tmp = "";
+    tmp.append(1, drivenValue);                                         // Driven value
+    tmp.append("0");                                                    // No message
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_DRIVER_PUSH_ITEM);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -479,22 +491,18 @@ void CanAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration)
 void CanAgentDriverPushItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    int strLen = msg.length();
 
-    if (strLen > PLI_STR_BUF_SIZE)
-        strLen = PLI_STR_BUF_SIZE;
-
-    pli_data_in.append(1, drivenValue); // Driven value
-    pli_data_in.append("1");   // Message included
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string tmp = "";
+    tmp.append(1, drivenValue);                                         // Driven value
+    tmp.append("1");                                                    // Message included
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = true;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_DRIVER_PUSH_ITEM);
     simulator_channel.pli_message_data = msg;
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -508,7 +516,7 @@ void CanAgentDriverSetWaitTimeout(std::chrono::nanoseconds timeout)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_DRIVER_SET_WAIT_TIMEOUT);
-    simulator_channel.pli_data_in = std::bitset<64>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -528,22 +536,18 @@ void CanAgentDriverWaitFinish()
 void CanAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    int strLen = msg.length();
 
-    if (strLen > PLI_STR_BUF_SIZE)
-        strLen = PLI_STR_BUF_SIZE;
-
-    pli_data_in.append(1, drivenValue); // Driven value
-    pli_data_in.append("1");   // Message included
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string tmp = "";
+    tmp.append(1, drivenValue);                                             // Driven value
+    tmp.append("1");                                                        // Message included
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());       // Drive time
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = true;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
     simulator_channel.pli_message_data = msg;
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -552,16 +556,16 @@ void CanAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration
 void CanAgentDriveSingleItem(char drivenValue, std::chrono::nanoseconds duration)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    pli_data_in.append(1, drivenValue);    // Driven value
-    pli_data_in.append("0");         // No message
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string data_in = "";
+    data_in.append(1, drivenValue);                                         // Driven value
+    data_in.append("0");                                                    // No message
+    data_in.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_DRIVER_DRIVE_SINGLE_ITEM);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = data_in;
 
     SimulatorChannelProcessRequest();
 }
@@ -580,18 +584,18 @@ void CanAgentDriveAllItems()
 
 void CanAgentSetWaitForMonitor(bool waitForMonitor)
 {
-    std::string pli_data_in = "";
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-1>(0).to_string());
+    std::string tmp = "";
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-1>(0).to_string());
     if (waitForMonitor)
-        pli_data_in.append("1");
+        tmp.append("1");
     else
-        pli_data_in.append("0");
+        tmp.append("0");
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_CMD_SET_WAIT_FOR_MONITOR);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -672,21 +676,21 @@ void CanAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
                              std::chrono::nanoseconds sampleRate)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    pli_data_in.append(1, monitorValue);    // Driven value
-    pli_data_in.append("0");      // No message
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string tmp = "";
+    tmp.append(1, monitorValue);                                        // Driven value
+    tmp.append("0");                                                    // No message
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string pli_data_in_2 = "";
-    pli_data_in_2.append(std::bitset<PLI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string tmp_2 = "";
+    tmp_2.append(std::bitset<PLI_DATA_IN_SIZE-2>(sampleRateVal).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_PUSH_ITEM);
-    simulator_channel.pli_data_in = pli_data_in;
-    simulator_channel.pli_data_in_2 = pli_data_in_2;
+    simulator_channel.pli_data_in = tmp;
+    simulator_channel.pli_data_in_2 = tmp_2;
 
     SimulatorChannelProcessRequest();
 }
@@ -696,27 +700,23 @@ void CanAgentMonitorPushItem(char monitorValue, std::chrono::nanoseconds duratio
                              std::chrono::nanoseconds sampleRate, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    int strLen = msg.length();
 
-    if (strLen > PLI_STR_BUF_SIZE)
-        strLen = PLI_STR_BUF_SIZE;
-
-    pli_data_in.append(1, monitorValue); // Driven value
-    pli_data_in.append("1");   // Message included
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string tmp = "";
+    tmp.append(1, monitorValue);                                        // Driven value
+    tmp.append("1");                                                    // Message included
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string pli_data_in_2 = "";
-    pli_data_in_2.append(std::bitset<PLI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string tmp_2 = "";
+    tmp_2.append(std::bitset<PLI_DATA_IN_SIZE-2>(sampleRateVal).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = true;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_PUSH_ITEM);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
     simulator_channel.pli_message_data = msg;
-    simulator_channel.pli_data_in_2 = pli_data_in_2;
+    simulator_channel.pli_data_in_2 = tmp_2;
 
     SimulatorChannelProcessRequest();
 }
@@ -730,7 +730,7 @@ void CanAgentMonitorSetWaitTimeout(std::chrono::nanoseconds timeout)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_SET_WAIT_TIMEOUT);
-    simulator_channel.pli_data_in = std::bitset<64>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -751,22 +751,22 @@ void CanAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
                                std::chrono::nanoseconds sampleRate)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
+    std::string tmp = "";
 
-    pli_data_in.append(1, monitorValue); // Driven value
-    pli_data_in.append("0");   // No Message
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    tmp.append(1, monitorValue);                                        // Driven value
+    tmp.append("0");                                                    // No Message
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string pli_data_in_2 = "";
-    pli_data_in_2.append(std::bitset<PLI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string tmp_2 = "";
+    tmp_2.append(std::bitset<PLI_DATA_IN_SIZE-2>(sampleRateVal).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
-    simulator_channel.pli_data_in = pli_data_in;
-    simulator_channel.pli_data_in_2 = pli_data_in_2;
+    simulator_channel.pli_data_in = tmp;
+    simulator_channel.pli_data_in_2 = tmp_2;
 
     SimulatorChannelProcessRequest();
 }
@@ -776,26 +776,22 @@ void CanAgentMonitorSingleItem(char monitorValue, std::chrono::nanoseconds durat
                                std::chrono::nanoseconds sampleRate, std::string msg)
 {
     unsigned long long timeVal = duration.count() * 1000000;
-    std::string pli_data_in = "";
-    int strLen = msg.length();
 
-    if (strLen > PLI_STR_BUF_SIZE)
-        strLen = PLI_STR_BUF_SIZE;
-
-    pli_data_in.append(1, monitorValue); // Driven value
-    pli_data_in.append("1");   // Message included
-    pli_data_in.append(std::bitset<PLI_DBUF_SIZE-2>(timeVal).to_string()); // Drive time
+    std::string tmp = "";
+    tmp.append(1, monitorValue);                                        // Driven value
+    tmp.append("1");                                                    // Message included
+    tmp.append(std::bitset<PLI_DATA_IN_SIZE-2>(timeVal).to_string());   // Drive time
 
     unsigned long long sampleRateVal = sampleRate.count() * 1000000;
-    std::string pli_data_in_2 = "";
-    pli_data_in_2.append(std::bitset<PLI_DBUF_SIZE-2>(sampleRateVal).to_string());
+    std::string tmp_2 = "";
+    tmp_2.append(std::bitset<PLI_DATA_IN_SIZE-2>(sampleRateVal).to_string());
 
     simulator_channel.read_access = false;
     simulator_channel.use_msg_data = true;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_MONITOR_SINGLE_ITEM);
-    simulator_channel.pli_data_in = pli_data_in;
-    simulator_channel.pli_data_in_2 = pli_data_in_2;
+    simulator_channel.pli_data_in = tmp;
+    simulator_channel.pli_data_in_2 = tmp_2;
     simulator_channel.pli_message_data = msg;
 
     SimulatorChannelProcessRequest();
@@ -815,31 +811,31 @@ void CanAgentMonitorAllItems()
 
 void CanAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger)
 {
-    std::string pli_data_in = "";
+    std::string tmp = "";
     switch (trigger){
     case CanAgentMonitorTrigger::Immediately:
-        pli_data_in.append("000");
+        tmp.append("000");
         break;
     case CanAgentMonitorTrigger::RxRising:
-        pli_data_in.append("001");
+        tmp.append("001");
         break;
     case CanAgentMonitorTrigger::RxFalling:
-        pli_data_in.append("010");
+        tmp.append("010");
         break;
     case CanAgentMonitorTrigger::TxRising:
-        pli_data_in.append("011");
+        tmp.append("011");
         break;
     case CanAgentMonitorTrigger::TxFalling:
-        pli_data_in.append("100");
+        tmp.append("100");
         break;
     case CanAgentMonitorTrigger::TimeElapsed:
-        pli_data_in.append("101");
+        tmp.append("101");
         break;
     case CanAgentMonitorTrigger::DriverStart:
-        pli_data_in.append("110");
+        tmp.append("110");
         break;
     case CanAgentMonitorTrigger::DriverStop:
-        pli_data_in.append("111");
+        tmp.append("111");
         break;
     }
 
@@ -847,7 +843,7 @@ void CanAgentMonitorSetTrigger(CanAgentMonitorTrigger trigger)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_SET_TRIGGER);
-    simulator_channel.pli_data_in = pli_data_in;
+    simulator_channel.pli_data_in = tmp;
 
     SimulatorChannelProcessRequest();
 }
@@ -902,7 +898,7 @@ void CanAgentSetMonitorInputDelay(std::chrono::nanoseconds inputDelay)
     simulator_channel.use_msg_data = false;
     simulator_channel.pli_dest = std::string(PLI_DEST_CAN_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_CAN_AGNT_MONITOR_SET_INPUT_DELAY);
-    simulator_channel.pli_data_in = std::bitset<64>(timeVal).to_string();
+    simulator_channel.pli_data_in = std::bitset<PLI_DATA_IN_SIZE>(timeVal).to_string();
 
     SimulatorChannelProcessRequest();
 }
@@ -945,7 +941,7 @@ std::chrono::nanoseconds TestControllerAgentGetCfgDutClockPeriod()
     simulator_channel.use_msg_data = true;
     simulator_channel.pli_dest = std::string(PLI_DEST_TEST_CONTROLLER_AGENT);
     simulator_channel.pli_cmd = std::string(PLI_TEST_AGNT_GET_CFG);
-    simulator_channel.pli_message_data = "CFG_DUT_CLOCK_PERIOD";
+    simulator_channel.pli_message_data = std::string("CFG_DUT_CLOCK_PERIOD");
 
     SimulatorChannelProcessRequest();
 

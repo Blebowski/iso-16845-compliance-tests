@@ -56,6 +56,15 @@ SimulatorChannel simulator_channel
     ATOMIC_VAR_INIT(false),                         // req
 };
 
+static std::string PliWord(int width, std::string input)
+{
+    std::string rv = std::string(width, '0');
+
+    for (size_t i = 0; i < input.length(); i++)
+        rv[width - i - 1] = input[input.length() - i - 1];
+
+    return rv;
+}
 
 void SimulatorChannelStartRequest()
 {
@@ -91,10 +100,10 @@ void SimulatorChannelClearRequest()
 }
 
 
-void ProcessVpiClkCallback()
+void ProcessPliClkCallback()
 {
     std::atomic<bool> req;
-    char pli_read_data[2 * PLI_DBUF_SIZE];
+    char pli_read_data[2 * PLI_DATA_OUT_SIZE];
     char pli_ack[128];
 
     // Check if there is hanging request on SimulatorChannel!
@@ -103,7 +112,7 @@ void ProcessVpiClkCallback()
     std::atomic_thread_fence(std::memory_order_seq_cst);
 
     //
-    // Callback cannot poll on VPI hanshake since it is blocking for digital
+    // Callback cannot poll on PLI hanshake since it is blocking for digital
     // simulator! Therefore Callback is processed as automata!
     //
     switch (simulator_channel.fsm.load())
@@ -111,21 +120,43 @@ void ProcessVpiClkCallback()
         case SimulatorChannelFsm::FREE:
             if (req.load())
             {
-                pli_drive_str_value(PLI_SIGNAL_DEST, simulator_channel.pli_dest.c_str());
-                pli_drive_str_value(PLI_SIGNAL_CMD, simulator_channel.pli_cmd.c_str());
-                pli_drive_str_value(PLI_SIGNAL_DATA_IN, simulator_channel.pli_data_in.c_str());
-                pli_drive_str_value(PLI_SIGNAL_DATA_IN_2, simulator_channel.pli_data_in_2.c_str());
+                pli_drive_str_value(
+                    PLI_SIGNAL_DEST,
+                    PliWord(PLI_DEST_SIZE, simulator_channel.pli_dest).c_str());
+
+                pli_drive_str_value(
+                    PLI_SIGNAL_CMD,
+                    PliWord(PLI_CMD_SIZE, simulator_channel.pli_cmd).c_str());
+
+                pli_drive_str_value(
+                    PLI_SIGNAL_DATA_IN,
+                    PliWord(PLI_DATA_IN_SIZE, simulator_channel.pli_data_in).c_str());
+
+                pli_drive_str_value(
+                    PLI_SIGNAL_DATA_IN_2,
+                    PliWord(PLI_DATA_IN_2_SIZE, simulator_channel.pli_data_in_2).c_str());
+
                 if (simulator_channel.use_msg_data)
                 {
-                    std::string vector = "";
+                    // Pad by spaces
+                    std::string space_paded = std::string(PLI_STR_BUF_MAX_MSG_LEN, ' ');
                     for (size_t i = 0; i < simulator_channel.pli_message_data.length(); i++)
-                        vector.append(std::bitset<8>(simulator_channel.pli_message_data.at(i)).to_string());
+                        space_paded[i] = simulator_channel.pli_message_data[i];
 
-                    pli_drive_str_value(PLI_STR_BUF_IN, vector.c_str());
+                    // Convert to ASCII encoding
+                    std::string vector = "";
+                    for (size_t i = 0; i < space_paded.length(); i++)
+                        vector.append(std::bitset<8>(space_paded.at(i)).to_string());
+
+                    // No need to pad anymore
+                    pli_drive_str_value(PLI_SIGNAL_STR_BUF_IN, vector.c_str());
                 }
 
                 std::atomic_thread_fence(std::memory_order_acquire);
-                pli_drive_str_value(PLI_SIGNAL_REQ, "1");
+
+                pli_drive_str_value(
+                    PLI_SIGNAL_REQ, std::string("1").c_str());
+
                 simulator_channel.fsm.store(SimulatorChannelFsm::REQ_UP);
                 std::atomic_thread_fence(std::memory_order_acquire);
             }
@@ -144,7 +175,10 @@ void ProcessVpiClkCallback()
                 pli_read_str_value(PLI_SIGNAL_DATA_OUT, pli_read_data);
                 simulator_channel.pli_data_out = std::string(pli_read_data);
             }
-            pli_drive_str_value(PLI_SIGNAL_REQ, "0");
+
+            pli_drive_str_value(
+                    PLI_SIGNAL_REQ, std::string("0").c_str());
+
             simulator_channel.fsm.store(SimulatorChannelFsm::ACK_UP);
             std::atomic_thread_fence(std::memory_order_acquire);
             break;
@@ -155,7 +189,10 @@ void ProcessVpiClkCallback()
             pli_read_str_value(PLI_SIGNAL_ACK, pli_ack);
             if (strcmp(pli_ack, (char*) "0"))
                 return;
-            pli_drive_str_value(PLI_SIGNAL_REQ, "0");
+
+            pli_drive_str_value(
+                    PLI_SIGNAL_REQ, std::string("0").c_str());
+
             simulator_channel.fsm.store(SimulatorChannelFsm::FREE);
             std::atomic_thread_fence(std::memory_order_acquire);
             SimulatorChannelClearRequest();

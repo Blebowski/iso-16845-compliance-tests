@@ -613,13 +613,23 @@ void test::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
     TestSequence *test_sequence;
 
     test_sequence = new TestSequence(this->dut_clock_period, driver_bit_frame, monitor_bit_frame);
-    test_sequence->PushDriverValuesToSimulator();
-    test_sequence->PushMonitorValuesToSimulator();
 
 #ifndef NDEBUG
+    TestMessage(std::string(80, '*').c_str());
+    TestMessage("Pushing frames to lower tester...");
+    TestMessage(std::string(80, '*').c_str());
+
+    TestMessage("Driven frame:");
     driver_bit_frame.PrintDetailed(dut_clock_period);
+
+    TestMessage("Monitored frame:");
     monitor_bit_frame.PrintDetailed(dut_clock_period);
+
+    TestMessage(std::string(80, '*').c_str());
 #endif
+
+    test_sequence->PushDriverValuesToSimulator();
+    test_sequence->PushMonitorValuesToSimulator();
 
     delete test_sequence;
 }

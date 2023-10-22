@@ -34,7 +34,7 @@
 #include "BitTiming.h"
 
 #include "CtuCanFdInterface.h"
-#include "../pli_lib/PliComplianceLib.hpp"
+#include "../cosimulation/PliComplianceLib.hpp"
 
 /*
  * Directly reference generated C headers in CTU CAN FD main repo!

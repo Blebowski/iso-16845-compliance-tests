@@ -144,7 +144,7 @@ extern SimulatorChannel simulator_channel;
  *     request, then test can read data from SimulatorChannel which were returned
  *     by simulator on "pli_data_out".
  */
-extern "C" void ProcessVpiClkCallback();
+extern "C" void ProcessPliClkCallback();
 
 
 /**********************************************************************

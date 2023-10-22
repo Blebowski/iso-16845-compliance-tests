@@ -54,7 +54,7 @@
  * This helps performance-wise, and also avoids memory leaks in GHDL.
  */
 struct hlist_node {
-    vpiHandle handle;
+    T_PLI_HANDLE handle;
     char *signal_name;
     int signal_size;
     struct hlist_node *next;
