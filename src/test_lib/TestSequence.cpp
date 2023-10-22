@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,29 +20,23 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
-#include "test_lib.h"
-#include "../can_lib/can.h"
-
 #include "TestSequence.h"
-#include "../can_lib/BitFrame.h"
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period)
+test::TestSequence::TestSequence(std::chrono::nanoseconds clock_period)
 {
     this->clock_period = clock_period;
 }
 
 
-test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
-                                     can::BitFrame& frame,
-                                     SequenceType sequence_type)
+test::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
+                                 can::BitFrame& frame,
+                                 SequenceType sequence_type)
 {
     this->clock_period = clock_period;
 
@@ -56,9 +50,9 @@ test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
 }
 
 
-test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
-                                     can::BitFrame& driver_frame,
-                                     can::BitFrame& monitor_frame)
+test::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
+                                 can::BitFrame& driver_frame,
+                                 can::BitFrame& monitor_frame)
 {
     this->clock_period = clock_period;
     monitored_values.clear();
@@ -69,7 +63,7 @@ test_lib::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
 }
 
 
-void test_lib::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
+void test::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 {
     int bit_count = driver_frame.GetBitCount();
     can::Bit *bit;
@@ -82,7 +76,7 @@ void test_lib::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 }
 
 
-void test_lib::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
+void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 {
     int bit_count = monitor_frame.GetBitCount();
     can::Bit *bit;
@@ -113,7 +107,7 @@ void test_lib::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 }
 
 
-void test_lib::TestSequence::AppendDriverBit(can::Bit* bit)
+void test::TestSequence::AppendDriverBit(can::Bit* bit)
 {
     int time_quantas = bit->GetLengthTimeQuanta();
     can::BitValue bit_value = bit->bit_value_;
@@ -151,21 +145,21 @@ void test_lib::TestSequence::AppendDriverBit(can::Bit* bit)
             if (current_value != last_value)
             {
                 pushDriverValue(duration, last_value, bit->GetBitTypeName());
-                
+
                 duration = clock_period;
                 last_value = current_value;
             }
 
             // Reach last cycle of bit, push rest
-            if ((i == time_quantas - 1) && (j == cycles - 1)) 
+            if ((i == time_quantas - 1) && (j == cycles - 1))
             {
-                pushDriverValue(duration, last_value, bit->GetBitTypeName());               
+                pushDriverValue(duration, last_value, bit->GetBitTypeName());
             }
         }
     }
 }
 
-void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
+void test::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 {
     std::chrono::nanoseconds tseg_1_duration (0);
     std::chrono::nanoseconds tseg_2_duration (0);
@@ -196,7 +190,7 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
         std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
         pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->bit_value_, bit->GetBitTypeName());
     }
-    
+
     if (tseg_2_duration > std::chrono::nanoseconds(0))
     {
         size_t brp_fd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
@@ -205,7 +199,7 @@ void test_lib::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
     }
 }
 
-void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
+void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
     std::chrono::nanoseconds duration (0);
 
@@ -221,7 +215,7 @@ void test_lib::TestSequence::appendMonitorNotShift(can::Bit *bit)
 }
 
 
-void test_lib::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
+void test::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
                                              can::BitValue bit_value,
                                              std::string message)
 {
@@ -236,7 +230,7 @@ void test_lib::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
 }
 
 
-void test_lib::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
+void test::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
                                               std::chrono::nanoseconds sample_rate,
                                               can::BitValue bit_value,
                                               std::string message)
@@ -252,7 +246,7 @@ void test_lib::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
 }
 
 
-void test_lib::TestSequence::PrintDrivenValues()
+void test::TestSequence::PrintDrivenValues()
 {
     for (auto driven_value : driven_values)
         driven_value.Print();
@@ -260,7 +254,7 @@ void test_lib::TestSequence::PrintDrivenValues()
 }
 
 
-void test_lib::TestSequence::PrintMonitoredValues()
+void test::TestSequence::PrintMonitoredValues()
 {
     for (auto monitored_value : monitored_values)
         monitored_value.Print();
@@ -268,7 +262,7 @@ void test_lib::TestSequence::PrintMonitoredValues()
 }
 
 
-void test_lib::TestSequence::PushDriverValuesToSimulator()
+void test::TestSequence::PushDriverValuesToSimulator()
 {
     for (auto driven_value : driven_values)
     {
@@ -281,7 +275,7 @@ void test_lib::TestSequence::PushDriverValuesToSimulator()
 }
 
 
-void test_lib::TestSequence::PushMonitorValuesToSimulator()
+void test::TestSequence::PushMonitorValuesToSimulator()
 {
     for (auto monitorValue : monitored_values)
     {

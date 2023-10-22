@@ -1,5 +1,5 @@
-#ifndef VPI_USER_H
-#define VPI_USER_H
+#ifndef GHDL_VPI_USER_H
+#define GHDL_VPI_USER_H
 /*
  * Copyright (c) 1999-2014 Stephen Williams (steve@icarus.com)
  *
@@ -44,7 +44,7 @@ EXTERN_C_START
 # include  <stdarg.h>
 # include  <stdio.h>
 # include  <stdarg.h>
-# include  "_pli_types.h"
+# include  "ghdl_pli_types.h"
 
 #define ICARUS_VPI_CONST
 #ifdef __cplusplus

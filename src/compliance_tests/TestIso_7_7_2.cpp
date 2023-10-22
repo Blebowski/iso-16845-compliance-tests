@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,25 +20,25 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 15.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.7.2
- * 
+ *
  * @brief The purpose of this test is to verify that the IUT makes a hard
  *        synchronization when receiving an early SOF delayed by e,
  *        e ∈ [1, NTQ(N)].
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Sampling_Point(N) configuration as available by IUT.
  *      FDF = 0
- * 
+ *
  * Elementary test cases:
  *      There is one elementary test to perform for each possible value of e.
  *          #1 Length of third bit of intermission field is e ∈ [1, NTQ(N)].
@@ -46,13 +46,13 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT sends a first test frame disturbed by an error frame and after the
  *  second bit of the intermission field, it sends an SOF delayed by e time
  *  quanta depending on the elementary test cases.
  *  The SOF is followed by a sequence of 5 dominant bits.
- * 
+ *
  * Response:
  *  The IUT shall respond with an error frame 6 bit times − 1TQ(N) (Sync_Segment)
  *  or up to 6 bit times after the recessive to dominant edge at the beginning
@@ -64,25 +64,12 @@
 #include <chrono>
 #include <cmath>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_7_2 : public test_lib::TestBase
+class TestIso_7_7_2 : public test::TestBase
 {
     public:
 
@@ -164,7 +151,7 @@ class TestIso_7_7_2 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /*****************************************************************************
              * Execute test
              *****************************************************************************/
             dut_ifc->SetRec(0);

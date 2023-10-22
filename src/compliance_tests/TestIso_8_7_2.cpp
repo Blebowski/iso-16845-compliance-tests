@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,42 +20,42 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 15.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.7.2
- * 
+ *
  * @brief The purpose of this test is to verify that the IUT, with a pending
  *        transmission, makes a hard synchronization when detecting a dominant
  *        bit before the sample point of the third bit of the intermission
  *        field.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN
  *  CAN FD tolerant
  *  CAN FD enabled
- * 
+ *
  *  Sampling_Point(N) and SJW(N) configuration as available by IUT.
  *      ID = MSB recessive
  *      FDF = 0
- * 
+ *
  * Elementary test cases:
  *   Test each possible sampling point inside a chosen number of TQ for at least
  *   1 bit rate configuration.
  *      #1 Dominant bit starting [1 TQ(N) + minimum time quantum] before the
  *         sample point of the third bit of the intermission field.
- *   
+ *
  *   Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a Classical CAN frame according to
  *  elementary test cases.
@@ -63,7 +63,7 @@
  *  While the IUT’s transmission is pending, the LT generates a dominant bit
  *  according to elementary test cases before the sample point of the third
  *  bit of the intermission field.
- *  
+ *
  * Response:
  *  The IUT shall start transmitting the first bit of the identifier 1 bit
  *  time −1 TQ or up to 1 bit time after the recessive to dominant edge of
@@ -77,25 +77,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_7_2 : public test_lib::TestBase
+class TestIso_8_7_2 : public test::TestBase
 {
     public:
 
@@ -103,7 +90,7 @@ class TestIso_8_7_2 : public test_lib::TestBase
         {
             FillTestVariants(VariantMatchingType::Common);
             AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
-            
+
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
@@ -145,7 +132,7 @@ class TestIso_8_7_2 : public test_lib::TestBase
              *   6. Append second frame after the first frame.
              *   7. Compensate edge position from Intermission to Second SOF for input delay of
              *      IUT.
-             *   
+             *
              *   Note: First frame ends 1 TQ - 1 minimal TQ before the end of Intermission bit 2
              *         (in both driven and monitored frames). After this, monitored frame is appen-
              *         ded, just with SOF dominant. This means that dominant bit will be received
@@ -167,7 +154,7 @@ class TestIso_8_7_2 : public test_lib::TestBase
             last_interm_bit_drv->ShortenPhase(prev_phase_drv, 1);
             last_interm_bit_drv->GetLastTimeQuantaIterator(prev_phase_drv)->Shorten(1);
 
-            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);                    
+            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             BitPhase prev_phase_mon = last_interm_bit_mon->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_mon->ShortenPhase(prev_phase_mon, 1);
             last_interm_bit_mon->GetLastTimeQuantaIterator(prev_phase_mon)->Shorten(1);
@@ -187,7 +174,7 @@ class TestIso_8_7_2 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /*****************************************************************************
              * Execute test
              *****************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

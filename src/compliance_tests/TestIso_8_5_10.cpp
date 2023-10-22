@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,29 +20,29 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 2.9.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.5.10
- * 
+ *
  * @brief The purpose of this test is to verify that a passive state IUT does
  *        not transmit a frame starting with an identifier and without
  *        transmitting SOF when detecting a dominant bit on the third bit of
  *        the intermission field.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   Elementary tests to perform:
  *      #1 The LT forces the bus to recessive for bus-off recovery time
@@ -50,32 +50,32 @@
  *
  * Setup:
  *  The IUT is set to the TEC passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame twice.
  *  The LT causes the IUT to generate an error frame. During the error flag
  *  transmitted by the IUT, the LT forces recessive state during 16 bit times.
  *  After the following passive error flag, the error delimiter is forced to
  *  dominant state for 112 bit times.
- * 
+ *
  *  Then, the IUT transmits its first frame. The LT acknowledges the frame
  *  and immediately causes the IUT to generate an overload frame.
  *
  *  The LT forces the first bit of this overload flag to recessive state
  *  creating a bit error. (6 + 7) bit times later, the LT generates a dominant
  *  bit to cause the IUT to generate a new overload frame.
- * 
+ *
  *  The LT forces the first bit of this new overload flag to recessive state
  *  causing the IUT to increments its TEC to the bus-off limit.
- * 
+ *
  *  (6 + 8 + 3 + 8) bit times later, the LT sends a valid frame according to
  *  elementary test cases.
- *  
+ *
  * Response:
  *  Only one frame shall be transmitted by the IUT.
  *  The IUT shall not acknowledge the frame sent by the LT.
  *  Error counter shall be reset after bus-off recovery.
- * 
+ *
  * Note:
  *  Check error counter after bus-off, if applicable.
  *****************************************************************************/
@@ -84,25 +84,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_5_10 : public test_lib::TestBase
+class TestIso_8_5_10 : public test::TestBase
 {
     public:
 
@@ -138,7 +125,7 @@ class TestIso_8_5_10 : public test_lib::TestBase
             RandomizeAndPrint(golden_frm_2.get());
 
             /* At first, frm_2 holds the same retransmitted frame! */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************
@@ -198,7 +185,7 @@ class TestIso_8_5_10 : public test_lib::TestBase
                 driver_bit_frm->AppendBit(BitType::ActiveErrorFlag, BitValue::Dominant);
                 monitor_bit_frm->AppendBit(BitType::ActiveErrorFlag, BitValue::Recessive);
             }
-            
+
             // Compensate IUTs resynchronization caused by input delay due to first of 112
             // applied dominant bits. Recessive -> Dominant edge is applied right at SYNC,
             // due to input delay IUT will perceive this later and positively resynchronize.
@@ -210,7 +197,7 @@ class TestIso_8_5_10 : public test_lib::TestBase
                 driver_bit_frm->AppendBit(BitType::ErrorDelimiter, BitValue::Recessive);
                 monitor_bit_frm->AppendBit(BitType::ErrorDelimiter, BitValue::Recessive);
             }
-            
+
             for (int i = 0; i < 3; i++)
             {
                 driver_bit_frm->AppendBit(BitType::Intermission, BitValue::Recessive);
@@ -280,10 +267,10 @@ class TestIso_8_5_10 : public test_lib::TestBase
             /* Append as if third frame which DUT shall not ACK (its bux off) */
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            
+
             monitor_bit_frm_2->TurnReceivedFrame();
             monitor_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
-            
+
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
@@ -297,13 +284,13 @@ class TestIso_8_5_10 : public test_lib::TestBase
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());
             WaitForDriverAndMonitor();
-            
+
             CheckLowerTesterResult();
 
             /* Must restart DUT for next iteration since it is bus off! */
             this->dut_ifc->Disable();
             this->dut_ifc->Enable();
-            
+
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
                 usleep(2000);

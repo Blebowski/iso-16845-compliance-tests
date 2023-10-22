@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,86 +20,73 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.2.2
- * 
+ *
  * @brief This test verifies that the IUT detects a bit error when the bit it
  *        is transmitting in an extended frame is different from the bit it
  *        receives.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      Each frame field with exception of the arbitration field where only
  *      dominant bits shall be modified and the ACK slot that will not be tested.
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      Each frame field with exception of the arbitration field where only
  *      dominant bits shall be modified and the ACK slot that will not be tested.
  *      DLC - to cause different CRC types
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *   The test shall modify at least 1 dominant extended identifier bit and
  *   the “FDF”, “r0” bits.
- * 
+ *
  *   There are 14 elementary tests to perform
- * 
+ *
  *  CAN FD enabled
  *   The test shall modify at least 1 dominant extended identifier bit, bit
  *   error in fix stuff bit for CRC (17) and CRC (21) + bit error in
  *   CRC (17) and CRC (21)
- * 
+ *
  *   There are 21 elementary tests to perform.
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit the frames and creates a bit error
  *  according to elementary test cases.
- *  
+ *
  * Response:
  *  The IUT shall generate an active error frame starting at the bit position
  *  following the corrupted bit.
- *  
+ *
  *  The IUT shall restart the transmission of the data frame as soon as the
  *  bus is idle.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_2_2 : public test_lib::TestBase
+class TestIso_8_2_2 : public test::TestBase
 {
     public:
 
@@ -176,7 +163,7 @@ class TestIso_8_2_2 : public test_lib::TestBase
                 bit_field_to_corrupt = BitField::Control;
                 bit_value_to_corrupt = BitValue::Dominant;
                 break;
-            
+
             /*
              * Following are in CAN FD variant only! These are all in CRC!
              */
@@ -210,7 +197,7 @@ class TestIso_8_2_2 : public test_lib::TestBase
                 else
                     dlc = 0xC;
             }
-            
+
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                                             IdentifierType::Extended, RtrFlag::DataFrame,
                                             BrsFlag::Shift, EsiFlag::ErrorActive);
@@ -221,7 +208,7 @@ class TestIso_8_2_2 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************
@@ -289,7 +276,7 @@ class TestIso_8_2_2 : public test_lib::TestBase
                     bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                 }
             }
-            
+
             TestMessage("Corrupting bit type: %s", bit_to_corrupt->GetBitTypeName().c_str());
             TestMessage("Index in bit field: %d", index_in_bitfield);
             TestMessage("Value to be corrupted: %d", (int)bit_to_corrupt->bit_value_);

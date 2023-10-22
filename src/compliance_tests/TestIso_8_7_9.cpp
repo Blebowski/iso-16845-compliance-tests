@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,30 +20,30 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 21.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.7.9
- * 
+ *
  * @brief The purpose of this test is to verify the behaviour of an IUT, acting
  *        as a transmitter, synchronizing to a recessive to dominant edge after
  *        the sample point, while sending a dominant bit. The edge is caused by
  *        a disturbance of the dominant bit.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN
  *  CAN FD tolerant
  *  CAN FD enabled
- * 
+ *
  *  Sampling_Point(N) and SJW(N) configuration as available by IUT.
  *      FDF = 0
- * 
+ *
  * Elementary test cases:
  *  There is one elementary test to perform for each programmable sampling point
  *  inside a chosen number of TQ for at least 1 bit rate configuration.
@@ -51,15 +51,15 @@
  *         before the sample point of the IUT.
  *
  *  Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a Classical CAN frame.
  *  While the IUT sends a dominant bit, the LT sends two time quanta recessive
  *  state, according to elementary test cases.
- * 
+ *
  * Response:
  *  The IUT sends an error flag and the next edge sent by the IUT occurs 6
  *  bit times + [Phase_Seg2(N) – SJW(N)] after the recessive to dominant edge
@@ -70,31 +70,18 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_7_9 : public test_lib::TestBase
+class TestIso_8_7_9 : public test::TestBase
 {
     public:
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);            
+            FillTestVariants(VariantMatchingType::Common);
             AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
 
             SetupMonitorTxTests();
@@ -170,7 +157,7 @@ class TestIso_8_7_9 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /************************************************************************************** 
+            /**************************************************************************************
              * Execute test
              *************************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

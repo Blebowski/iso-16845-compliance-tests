@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,21 +20,21 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 3.5.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.7.9.2
- * 
+ *
  * @brief The purpose of this test is to verify that an IUT will not use any
  *        edge for resynchronization after detection of a recessive to dominant
  *        edge in idle state (after hard synchronization).
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Sampling_Point(N) configuration as available by IUT.
  *  Dominant pulses on IDLE bus. Pulse group:
@@ -45,7 +45,7 @@
  *      d) Recessive time = 1 TQ(N) + 2 minimum time quantum
  *      e) Third glitch = Prop_Seg(N) + Phase_Seg1(N) – 2
  *  FDF = 0
- * 
+ *
  * Elementary test cases:
  *      There is one elementary test to perform for at least 1 bit rate
  *      configuration.
@@ -57,13 +57,13 @@
  *
  * Setup:
  *  DontShift action required, the IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT sends a dominant glitch group according to elementary test cases
  *  for this test case.
  *  Then, the LT waits for 8 bit times to check that no error frame will start
  *  after that.
- * 
+ *
  * Response:
  *  The IUT shall remain in the idle state.
  *****************************************************************************/
@@ -73,25 +73,12 @@
 #include <chrono>
 #include <cmath>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_7_9_2 : public test_lib::TestBase
+class TestIso_7_7_9_2 : public test::TestBase
 {
     public:
 
@@ -144,15 +131,15 @@ class TestIso_7_7_9_2 : public test_lib::TestBase
             // Now set to length as in description. SYNC already has length of one!
             driver_bit_frm->GetBit(0)->LengthenPhase(BitPhase::Sync,
                 (nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 2) / 2 - 1);
-            
+
             driver_bit_frm->GetBit(1)->LengthenPhase(BitPhase::Sync, 1);
-            
+
             driver_bit_frm->GetBit(2)->LengthenPhase(BitPhase::Sync,
                 (nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 2) / 2 - 1);
             driver_bit_frm->GetBit(2)->GetTimeQuanta(0)->Shorten(1);
 
             driver_bit_frm->GetBit(3)->GetTimeQuanta(0)->Lengthen(2);
-            
+
             driver_bit_frm->GetBit(4)->LengthenPhase(BitPhase::Sync,
                 nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 3);
 

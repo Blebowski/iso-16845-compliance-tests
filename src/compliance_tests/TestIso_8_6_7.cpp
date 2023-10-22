@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 14.11.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.6.7
- * 
+ *
  * @brief This test verifies that an IUT acting as a transmitter increases its
  *        TEC by 8 when detecting a form error in a frame on one of the7
  *        following fields described in test variables.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      CRC Delimiter
  *      ACK Delimiter
  *      EOF
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      CRC
  *      CRC Delimiter
@@ -49,7 +49,7 @@
  *      EOF
  *      DLC - to cause different CRC types
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *     There are five elementary tests to perform.
@@ -68,14 +68,14 @@
  *          #5 EOF last bit
  *          #6 Fix stuff bit in CRC 17
  *          #7 Fix stuff bit in CRC 21
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  Then, the LT corrupts a bit according to elementary test cases.
- *  
+ *
  * Response:
  *  The IUT’s TEC value shall be increased by 8 at the bit error detection.
  *****************************************************************************/
@@ -84,25 +84,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_6_7 : public test_lib::TestBase
+class TestIso_8_6_7 : public test::TestBase
 {
     public:
 
@@ -202,7 +189,7 @@ class TestIso_8_6_7 : public test_lib::TestBase
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());
             WaitForDriverAndMonitor();
-            
+
             CheckLowerTesterResult();
             /* +8 for form error, -1 for sucesfull retransmission */
             CheckTecChange(tec_old, 7);

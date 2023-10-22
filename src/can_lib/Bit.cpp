@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -240,7 +240,7 @@ void can::Bit::LengthenPhase(BitPhase bit_phase, size_t num_time_quanta)
 {
     auto time_quanta_iterator = GetLastTimeQuantaIterator(bit_phase);
 
-    /* 
+    /*
      * GetLastTimeQuantaIterator returns Last time Quanta of phase or
      * first of next phase if phase does not exist. If it exist, move
      * to one further so that we append to the end
@@ -398,7 +398,7 @@ can::BitPhase can::Bit::PrevBitPhase(BitPhase bit_phase)
             return BitPhase::Ph1;
         if (HasPhase(BitPhase::Prop))
             return BitPhase::Prop;
-        
+
         // Assume here Sync phase is always there. We can't remove
         // it by Bit time settings. Having bit without sync phase
         // means corrupted bit!
@@ -448,7 +448,7 @@ can::BitPhase can::Bit::NextBitPhase(BitPhase bit_phase)
         if (HasPhase(BitPhase::Ph2))
             return BitPhase::Ph2;
         return BitPhase::Ph1;
-    
+
     case BitPhase::Ph2:
         break;
     }
@@ -518,7 +518,7 @@ void can::Bit::CorrectPh2LenToNominal()
             time_quantas_.push_back(TimeQuanta(this, nominal_bit_timing_->brp_, BitPhase::Ph2));
 
         std::cout << "Lenght after compensation: " <<
-                    std::to_string(GetLengthCycles()) << std::endl;            
+                    std::to_string(GetLengthCycles()) << std::endl;
     }
 
 }

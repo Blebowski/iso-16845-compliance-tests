@@ -1,5 +1,5 @@
-#ifndef PLI_TYPES_H
-#define PLI_TYPES_H
+#ifndef GHDL_PLI_TYPES_H
+#define GHDL_PLI_TYPES_H
 /*
  * Copyright (c) 2003-2014 Stephen Williams (steve@icarus.com)
  *

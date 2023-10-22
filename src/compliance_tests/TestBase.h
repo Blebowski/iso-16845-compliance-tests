@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef TEST_BASE_H
+#define TEST_BASE_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,38 +22,31 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <chrono>
 #include <list>
 #include <vector>
 
-#include "test_lib.h"
-#include "../can_lib/can.h"
-#include "../can_lib/BitTiming.h"
-#include "../can_lib/DutInterface.h"
-#include "ElementaryTest.h"
-
-#ifndef TEST_BASE
-#define TEST_BASE
-
+#include <can_lib.h>
+#include <test_lib.h>
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class TestBase
  * @brief Test Base class
- * 
+ *
  * Contains common attributes used by all tests.
- * 
+ *
  * @note Each test should inherit from this class.
  * @note Each test should call TestBase::run() in the beginning of its run
  *       function.
  */
-class test_lib::TestBase
+class test::TestBase
 {
     public:
 
@@ -68,12 +63,12 @@ class test_lib::TestBase
 
         /**********************************************************************
          * Test configuration.
-         * 
+         *
          * Path of test configuration is like so:
          *  1. YAML config file.
          *  2. VUnit applies it to TB top generics. Generics are propagated to
          *     Test controller agent.
-         *  3. Test reads this configuration from test controller agent via VPI! 
+         *  3. Test reads this configuration from test controller agent via VPI!
          **********************************************************************/
 
         /**
@@ -154,7 +149,7 @@ class test_lib::TestBase
          */
         int seed;
 
-        /** 
+        /**
          * Number of Stuff bits within one Test variant. Used during tests which
          * contain single elementary test, with clause like: "each stuff bit will be
          * tested"
@@ -198,7 +193,7 @@ class test_lib::TestBase
         int tec_old;
         int tec_new;
 
-        /** 
+        /**
          * Obtains frame type based on test variant.
          */
         can::FrameType GetDefaultFrameType(TestVariant &variant);
@@ -238,7 +233,7 @@ class test_lib::TestBase
         virtual int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant);
 
         /**
-         * 
+         *
          */
         virtual int FinishElementaryTest();
 
@@ -276,7 +271,7 @@ class test_lib::TestBase
                                            FrameType frame_type);
 
         /**
-         * 
+         *
          */
         BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal);
 
@@ -360,7 +355,7 @@ class test_lib::TestBase
         void RunLowerTester(bool start_driver, bool start_monitor);
 
         /**
-         * Starts driver and monitor. 
+         * Starts driver and monitor.
          */
         void StartDriverAndMonitor(void);
 
@@ -385,17 +380,17 @@ class test_lib::TestBase
         void PrintTestInfo();
 
         /**
-         * 
+         *
          */
         void PrintElemTestInfo(ElementaryTest elem_test);
 
         /**
-         * 
+         *
          */
         void PrintVariantInfo(TestVariant test_variant);
 
         /**
-         * Randomizes and prints 
+         * Randomizes and prints
          */
         void RandomizeAndPrint(Frame *frame);
 
@@ -422,7 +417,7 @@ class test_lib::TestBase
          * Generates bit-rate with sample point specific for elementary test.
          * @param elem_test Elementary test which is being run
          * @param bit_timing Original bit timing configuration
-         * 
+         *
          * Sample point is configured like so:
          *  1. Default bit-rate is taken
          *  2. Sample point is shifted by index of elementary test:
@@ -431,7 +426,7 @@ class test_lib::TestBase
          *      ...
          *     PROP = 0, PH2 is set to achieve the same length of bit as in
          *     default bit timing config.
-         * 
+         *
          * DUT considerations are taken into account!
          */
         BitTiming GenerateBitTiming(const ElementaryTest &elem_test, bool nominal, size_t minimal_ph1);

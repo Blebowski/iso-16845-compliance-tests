@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.8.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.5.6
- * 
+ *
  * @brief The purpose of this test is to verify that a passive state IUT being
  *        transmitter does not transmit any data frame before the end of the
  *        suspend transmission following an overload frame.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   There is one elementarty test to perform:
  *      #1 After overload flag, the LT forces the bus to recessive for overload
@@ -49,12 +49,12 @@
  *
  * Setup:
  *  The IUT is set to the TEC passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit two frames.
  *  The LT lets the IUT transmit the first frame and causes the IUT to generate
  *  an overload frame according to elementary test cases.
- * 
+ *
  * Response:
  *  After the intermission following the overload frame, the LT verifies that
  *  the IUT wait 8 more bits before transmitting the second frame.
@@ -64,25 +64,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_5_6 : public test_lib::TestBase
+class TestIso_8_5_6 : public test::TestBase
 {
     public:
 
@@ -149,7 +136,7 @@ class TestIso_8_5_6 : public test_lib::TestBase
             dut_ifc->SendFrame(golden_frm.get());
             dut_ifc->SendFrame(golden_frm.get());
             WaitForDriverAndMonitor();
-            
+
             CheckLowerTesterResult();
 
             return FinishElementaryTest();

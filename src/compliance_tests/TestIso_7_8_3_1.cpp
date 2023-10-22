@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,27 +20,27 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 23.5.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.8.3.1
- * 
+ *
  * @brief The purpose of this test is to verify the behaviour of an IUT
  *        detecting a positive phase error e on a recessive to dominant edge
  *        with e ≤ SJW(D) on bit position ESI.
  *
  * @version CAN FD Enabled
- * 
+ *
  * Test variables:
  *      Sampling_Point(D) and SJW(D) configuration as available by IUT.
  *          ESI = 1
  *          FDF = 1
- * 
+ *
  * Elementary test cases:
  *      There is one elementary test to perform for each possible value of e
  *      for at least 1 bit rate configuration.
@@ -51,13 +51,13 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The first e TQ(D) (e according to elementary test cases) of the ESI bit
  *  are set to recessive, then the following {Prop_Seg(D) + Phase_Seg1(D)]
  *  TQ(D)’s are set to dominant. The rest of the ESI bit, Phase_Seg2(D)+1 is
  *  set to recessive. At all, ESI is lengthened by e TQ(D).
- * 
+ *
  * Response:
  *  The modified ESI bit shall be sampled as recessive.
  *  The frame is valid. DontShift error flag shall occur.
@@ -68,25 +68,12 @@
 #include <chrono>
 #include <cmath>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_8_3_1 : public test_lib::TestBase
+class TestIso_7_8_3_1 : public test::TestBase
 {
     public:
 
@@ -115,7 +102,7 @@ class TestIso_7_8_3_1 : public test_lib::TestBase
             RandomizeAndPrint(golden_frm.get());
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);  
+            monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************
              * Modify test frames:

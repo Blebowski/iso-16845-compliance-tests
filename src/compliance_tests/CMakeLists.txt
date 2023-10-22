@@ -1,19 +1,20 @@
 
 ###############################################################################
-# 
+#
 # Copyright (C) Ondrej Ille - All Rights Reserved
-#  
+#
 # Copying, publishing, distributing of this file is stricly prohibited unless
 # previously aggreed with author of this text.
-# 
+#
 # Author: Ondrej Ille, <ondrej.ille@gmail.com>
 # Date: 27.3.2020
-# 
+#
 ###############################################################################
 
 add_library(
     COMPLIANCE_TESTS OBJECT
-    
+
+    TestBase.cpp
     TestDemo.cpp
     TestIso_7_1_1.cpp
     TestIso_7_1_2.cpp
@@ -219,5 +220,3 @@ add_library(
     TestIso_9_6_1.cpp
     TestIso_9_6_2.cpp
 )
-
-target_link_libraries(COMPLIANCE_TESTS PUBLIC VPI_LIB)

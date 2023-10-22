@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef FRAME_FLAGS_H
+#define FRAME_FLAGS_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,36 +22,31 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include "can.h"
 
-
-#ifndef FRAME_FLAGS
-#define FRAME_FLAGS
-
-
 /**
  * @class FrameFlags
  * @namespace can
- * 
+ *
  * Represents flags of CAN frame (IDE, RTR, BRS, ESI, FDF(EDL))
  */
 class can::FrameFlags
 {
     public:
 
-        /* 
+        /*
          * A constructor call which does not specify all attributes, leaves these arguments enabled
          * for randomization. Attributes will be randomized upon call of 'Randomize'.
-         * 
+         *
          * All values are randomized in valid ranges. There can never be e.g. CAN FD frame with
          * RTR flag or CAN 2.0 frame with BRS flag.
-         * 
+         *
          * Example:
          *   FrameFlags(FramType:Can_2_0, RtrFlag::DataFrame)
          * will create CAN 2.0 Data frame, BRS, ESI will be kept default (do not exist in

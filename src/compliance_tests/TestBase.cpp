@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,41 +20,35 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
-
-#include "test_lib.h"
-#include "TestBase.h"
-#include "TestLoader.h"
-#include "TestSequence.h"
 #include <unistd.h>
 
-#include "../test_lib/test_lib.h"
-#include "../vpi_lib/vpiComplianceLib.hpp"
-#include "../can_lib/CtuCanFdInterface.h"
-#include "../can_lib/can.h"
+#include <pli_lib.h>
+
+#include "TestBase.h"
 
 using namespace can;
 
 
-test_lib::TestBase::TestBase()
+test::TestBase::TestBase()
 {
     this->dut_ifc = new can::CtuCanFdInterface;
     this->dut_can_version = can::CanVersion::CanFdEnabled;
     this->test_result = true;
 }
 
-test_lib::TestBase::~TestBase()
+test::TestBase::~TestBase()
 {
     delete this->dut_ifc;
 }
 
-can::FrameType test_lib::TestBase::GetDefaultFrameType(TestVariant &variant)
+can::FrameType test::TestBase::GetDefaultFrameType(TestVariant &variant)
 {
     switch (variant){
         case TestVariant::Common:
@@ -72,9 +66,9 @@ can::FrameType test_lib::TestBase::GetDefaultFrameType(TestVariant &variant)
 }
 
 
-void test_lib::TestBase::ConfigureTest()
+void test::TestBase::ConfigureTest()
 {
-    TestMessage("TestBase: Configuration Entered");    
+    TestMessage("TestBase: Configuration Entered");
 
     TestMessage("Querying test configuration from TB:");
     this->dut_clock_period = TestControllerAgentGetCfgDutClockPeriod();
@@ -120,7 +114,7 @@ void test_lib::TestBase::ConfigureTest()
     ResetAgentAssert();
     ResetAgentDeassert();
 
-    TestMessage("Configuring Clock generator agent");    
+    TestMessage("Configuring Clock generator agent");
     ClockAgentSetPeriod(std::chrono::nanoseconds(this->dut_clock_period));
     ClockAgentSetJitter(std::chrono::nanoseconds(0));
     ClockAgentSetDuty(50);
@@ -164,7 +158,7 @@ void test_lib::TestBase::ConfigureTest()
 }
 
 
-void test_lib::TestBase::SetupTestEnvironment()
+void test::TestBase::SetupTestEnvironment()
 {
     TestBigMessage("Base test config...");
     TestBase::ConfigureTest();
@@ -180,7 +174,7 @@ void test_lib::TestBase::SetupTestEnvironment()
 }
 
 
-void test_lib::TestBase::SetupMonitorTxTests()
+void test::TestBase::SetupMonitorTxTests()
 {
     CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
     CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
@@ -188,7 +182,7 @@ void test_lib::TestBase::SetupMonitorTxTests()
 }
 
 
-int test_lib::TestBase::Run()
+int test::TestBase::Run()
 {
     SetupTestEnvironment();
 
@@ -230,7 +224,7 @@ int test_lib::TestBase::Run()
 }
 
 
-int test_lib::TestBase::FinishElementaryTest()
+int test::TestBase::FinishElementaryTest()
 {
     if (test_result)
         return 0;
@@ -238,7 +232,7 @@ int test_lib::TestBase::FinishElementaryTest()
 }
 
 
-test_lib::TestResult test_lib::TestBase::FinishTest()
+test::TestResult test::TestBase::FinishTest()
 {
     TestBigMessage("Cleaning up test environemnt...");
     TestControllerAgentEndTest((int)test_result);
@@ -247,7 +241,7 @@ test_lib::TestResult test_lib::TestBase::FinishTest()
 }
 
 
-test_lib::TestResult test_lib::TestBase::FinishTest(TestResult test_result)
+test::TestResult test::TestBase::FinishTest(TestResult test_result)
 {
     this->test_result = (int) test_result;
     TestBigMessage("Cleaning up test environemnt...");
@@ -256,7 +250,7 @@ test_lib::TestResult test_lib::TestBase::FinishTest(TestResult test_result)
     return (TestResult) test_result;
 }
 
-void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
+void test::TestBase::FillTestVariants(VariantMatchingType match_type)
 {
     switch (match_type)
     {
@@ -309,7 +303,7 @@ void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
             test_variants.push_back(TestVariant::CanFdEnabled);
         elem_tests.push_back(std::vector<ElementaryTest>());
         break;
-    
+
     case VariantMatchingType::ClassicalFdCommon:
         if (dut_can_version == CanVersion::Can_2_0)
             test_variants.push_back(TestVariant::Can_2_0);
@@ -337,7 +331,7 @@ void test_lib::TestBase::FillTestVariants(VariantMatchingType match_type)
 }
 
 
-void test_lib::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test)
+void test::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test)
 {
     int i = 0;
     for (auto &test_variant_it : test_variants)
@@ -353,7 +347,7 @@ void test_lib::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&
 }
 
 
-void test_lib::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
+void test::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
                             bool nominal, FrameType frame_type)
 {
     int num_sp_points = CalcNumSamplePoints(nominal);
@@ -363,7 +357,7 @@ void test_lib::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
 }
 
 
-size_t test_lib::TestBase::GetDefaultMinPh1(BitTiming *orig_bt, bool nominal)
+size_t test::TestBase::GetDefaultMinPh1(BitTiming *orig_bt, bool nominal)
 {
     // Respect CTU CAN FDs minimal TSEG1 duration in clock cycles:
     //      Nominal = 5
@@ -395,20 +389,20 @@ size_t test_lib::TestBase::GetDefaultMinPh1(BitTiming *orig_bt, bool nominal)
 }
 
 
-BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal)
+BitTiming test::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal)
 {
     return GenerateBitTiming(elem_test, nominal, 0);
 }
 
 
-BitTiming test_lib::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal,
+BitTiming test::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal,
                                                          size_t minimal_ph1)
 {
     return GenerateBitTiming(elem_test, nominal, minimal_ph1);
 }
 
 
-std::unique_ptr<BitFrame> test_lib::TestBase::ConvertBitFrame(Frame &golden_frame)
+std::unique_ptr<BitFrame> test::TestBase::ConvertBitFrame(Frame &golden_frame)
 {
     return std::make_unique<BitFrame>(
         golden_frame, &nominal_bit_timing, &data_bit_timing);
@@ -420,7 +414,7 @@ std::unique_ptr<BitFrame> test_lib::TestBase::ConvertBitFrame(Frame &golden_fram
  * overloaded it is non-member function of class. When this is linked with GHDL
  * simulation, it throws out linkage errors!
  */
-bool test_lib::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &real_frame)
+bool test::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &real_frame)
 {
     bool ret_val = true;
 
@@ -447,7 +441,7 @@ bool test_lib::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &r
 }
 
 
-BitType test_lib::TestBase::GetRandomBitType(FrameType frame_type, IdentifierType ident_type,
+BitType test::TestBase::GetRandomBitType(FrameType frame_type, IdentifierType ident_type,
                                             BitField bit_field)
 {
     switch (bit_field)
@@ -513,7 +507,7 @@ BitType test_lib::TestBase::GetRandomBitType(FrameType frame_type, IdentifierTyp
                 return BitType::Dlc;
             }
         }
-    
+
     case BitField::Data:
         return BitType::Data;
 
@@ -544,7 +538,7 @@ BitType test_lib::TestBase::GetRandomBitType(FrameType frame_type, IdentifierTyp
     return BitType::BaseIdentifier;
 }
 
-void test_lib::TestBase::CheckRxFrame(Frame &golden_frame)
+void test::TestBase::CheckRxFrame(Frame &golden_frame)
 {
     // Read received frame from DUT and compare with sent frame
     Frame read_frame = dut_ifc->ReadFrame();
@@ -556,7 +550,7 @@ void test_lib::TestBase::CheckRxFrame(Frame &golden_frame)
 }
 
 
-void test_lib::TestBase::CheckNoRxFrame()
+void test::TestBase::CheckNoRxFrame()
 {
     if (dut_ifc->HasRxFrame())
     {
@@ -566,7 +560,7 @@ void test_lib::TestBase::CheckNoRxFrame()
 }
 
 
-void test_lib::TestBase::CheckRecChange(int reference_rec, int delta)
+void test::TestBase::CheckRecChange(int reference_rec, int delta)
 {
     int rec_new = dut_ifc->GetRec();
     if (rec_new != (reference_rec + delta))
@@ -581,7 +575,7 @@ void test_lib::TestBase::CheckRecChange(int reference_rec, int delta)
 }
 
 
-void test_lib::TestBase::CheckTecChange(int reference_tec, int delta)
+void test::TestBase::CheckTecChange(int reference_tec, int delta)
 {
     int tec_new = dut_ifc->GetTec();
     if (tec_new != (reference_tec + delta))
@@ -596,7 +590,7 @@ void test_lib::TestBase::CheckTecChange(int reference_tec, int delta)
 }
 
 
-void test_lib::TestBase::WaitDutErrorActive()
+void test::TestBase::WaitDutErrorActive()
 {
     TestMessage("Waiting till DUT is error active...");
     while (dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
@@ -605,7 +599,7 @@ void test_lib::TestBase::WaitDutErrorActive()
 }
 
 
-void test_lib::TestBase::ReconfigureDutBitTiming()
+void test::TestBase::ReconfigureDutBitTiming()
 {
     dut_ifc->Disable();
     dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
@@ -613,32 +607,42 @@ void test_lib::TestBase::ReconfigureDutBitTiming()
 }
 
 
-void test_lib::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
+void test::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
                                                  can::BitFrame &monitor_bit_frame)
 {
     TestSequence *test_sequence;
 
     test_sequence = new TestSequence(this->dut_clock_period, driver_bit_frame, monitor_bit_frame);
-    test_sequence->PushDriverValuesToSimulator();
-    test_sequence->PushMonitorValuesToSimulator();
 
 #ifndef NDEBUG
+    TestMessage(std::string(80, '*').c_str());
+    TestMessage("Pushing frames to lower tester...");
+    TestMessage(std::string(80, '*').c_str());
+
+    TestMessage("Driven frame:");
     driver_bit_frame.PrintDetailed(dut_clock_period);
+
+    TestMessage("Monitored frame:");
     monitor_bit_frame.PrintDetailed(dut_clock_period);
+
+    TestMessage(std::string(80, '*').c_str());
 #endif
+
+    test_sequence->PushDriverValuesToSimulator();
+    test_sequence->PushMonitorValuesToSimulator();
 
     delete test_sequence;
 }
 
 
-int test_lib::TestBase::RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+int test::TestBase::RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                                     [[maybe_unused]] const TestVariant &test_variant)
 {
     return 0;
 }
 
 
-void test_lib::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
+void test::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
 {
 
     // Note: It is important to start monitor first because it waits for driver
@@ -658,21 +662,21 @@ void test_lib::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
 }
 
 
-void test_lib::TestBase::StartDriverAndMonitor()
+void test::TestBase::StartDriverAndMonitor()
 {
     CanAgentMonitorStart();
     CanAgentDriverStart();
 }
 
 
-void test_lib::TestBase::WaitForDriverAndMonitor()
+void test::TestBase::WaitForDriverAndMonitor()
 {
     CanAgentMonitorWaitFinish();
     CanAgentDriverWaitFinish();
 }
 
 
-void test_lib::TestBase::CheckLowerTesterResult()
+void test::TestBase::CheckLowerTesterResult()
 {
     CanAgentCheckResult();
     CanAgentMonitorStop();
@@ -681,7 +685,7 @@ void test_lib::TestBase::CheckLowerTesterResult()
     CanAgentDriverFlush();
 }
 
-void test_lib::TestBase::PrintTestInfo()
+void test::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: %s", test_name.c_str());
@@ -692,7 +696,7 @@ void test_lib::TestBase::PrintTestInfo()
     TestMessage("Total number of elementary tests: %d", num_elem_tests);
 }
 
-void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
+void test::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Elementary Test index: %d", elem_test.index_);
@@ -700,7 +704,7 @@ void test_lib::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
     TestMessage(std::string(80, '*').c_str());
 }
 
-void test_lib::TestBase::PrintVariantInfo(TestVariant test_variant)
+void test::TestBase::PrintVariantInfo(TestVariant test_variant)
 {
     switch (test_variant)
     {
@@ -722,14 +726,14 @@ void test_lib::TestBase::PrintVariantInfo(TestVariant test_variant)
         }
 }
 
-void test_lib::TestBase::RandomizeAndPrint(Frame *frame)
+void test::TestBase::RandomizeAndPrint(Frame *frame)
 {
     frame->Randomize();
     TestMessage("Test frame:");
     frame->Print();
 }
 
-void test_lib::TestBase::FreeTestObjects()
+void test::TestBase::FreeTestObjects()
 {
     golden_frm.reset();
     golden_frm_2.reset();
@@ -740,7 +744,7 @@ void test_lib::TestBase::FreeTestObjects()
 }
 
 
-size_t test_lib::TestBase::CalcNumSamplePoints(bool nominal)
+size_t test::TestBase::CalcNumSamplePoints(bool nominal)
 {
     int tmp;
     if (nominal)
@@ -773,7 +777,7 @@ size_t test_lib::TestBase::CalcNumSamplePoints(bool nominal)
     }
 }
 
-BitTiming test_lib::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, bool nominal,
+BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, bool nominal,
                                            size_t minimal_ph1)
 {
     BitTiming new_bt;
@@ -788,7 +792,7 @@ BitTiming test_lib::TestBase::GenerateBitTiming(const ElementaryTest &elem_test,
 
     if (init_ph1 < minimal_ph1)
         init_ph1 = minimal_ph1;
-    
+
     // If we have N Time Quanta bit time, then we can have at most N - 1 Sample point positions
     // regardless of bit time parameters / constraints. If we have more, this shows we have some
     // additional elementary tests, not just the ones for "each sample point". This situation

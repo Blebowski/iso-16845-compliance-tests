@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,26 +20,26 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 3.4.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.1.5
- * 
+ *
  * @brief The purpose of this test is to verify that the IUT accepts the
  *        non-nominal value of bit described in test variables in a valid
  *        extended format frame.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN   : SRR, FDF, r0
  *  CAN FD Tolerant : SRR, FDF, r0=0
  *  CAN FD Enabled  : SRR, RRS, FDF=1
- * 
+ *
  * Elementary test cases:
  *  Classical CAN:
  *      TEST    SRR     r0      FDF
@@ -49,8 +49,8 @@
  *       #4      0       1       1
  *       #5      0       1       0
  *       #6      0       0       1
- *       #7      0       0       0   
- * 
+ *       #7      0       0       0
+ *
  *  CAN FD Tolerant:
  *      TEST    SRR     r0
  *       #1      1       1
@@ -62,45 +62,31 @@
  *       #1      1       1
  *       #2      0       1
  *       #3      0       0
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  A single test frame is used for the elementary test cases.
- * 
+ *
  * Response:
  *  The IUT shall not generate any error flag in this test frame.
  *  The IUT shall acknowledge the test frame.
  *  The data received by the IUT during the test state shall match the data
  *  sent in the test frame.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-#include "../test_lib/ElementaryTest.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_1_5 : public test_lib::TestBase
+class TestIso_7_1_5 : public test::TestBase
 {
     public:
 
@@ -160,7 +146,7 @@ class TestIso_7_1_5 : public test_lib::TestBase
                 /* In CAN 2.0 Extended frame format, R1 is at position of FDF */
                 Bit *r1_driver = driver_bit_frm->GetBitOf(0, BitType::R1);
                 Bit *r1_monitor = monitor_bit_frm->GetBitOf(0, BitType::R1);
-                
+
                 switch (elem_test.index_)
                 {
                 case 1:
@@ -286,7 +272,7 @@ class TestIso_7_1_5 : public test_lib::TestBase
 
             monitor_bit_frm->TurnReceivedFrame();
 
-            /********************************************************************************** 
+            /**********************************************************************************
              * Execute test
              *********************************************************************************/
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

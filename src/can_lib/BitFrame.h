@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef BIT_FRAME_H
+#define BIT_FRAME_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +22,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <cstdint>
@@ -33,16 +35,12 @@
 #include "Frame.h"
 #include "Bit.h"
 
-#ifndef BIT_FRAME
-#define BIT_FRAME
-
-
 /**
  * @class Bit
  * @namespace can
- * 
+ *
  * Class representing single frame on CAN bus.
- * 
+ *
  */
 class can::BitFrame : public Frame {
 
@@ -341,7 +339,7 @@ class can::BitFrame : public Frame {
          * recessive. ACK bit becomes dominant. Arbitration can be lost only on bits which
          * belong to arbitration field.
          * @param can_bit Pointer to bit at which arbitration shall be lost.
-         * @returns true if succesfull, false otherwise 
+         * @returns true if succesfull, false otherwise
          */
         bool LooseArbitration(Bit *can_bit);
 
@@ -425,11 +423,11 @@ class can::BitFrame : public Frame {
          * Updates frame. Following is done:
          *  1. Stuff bits are updated
          *  2. CRC is recalculated (if allowed).
-         * 
+         *
          * This function can be used to update the frame to have valid CRC after a bit
          * was changed in it. Alternatively, it can be used to only re-stuff the frame
          * after CRC was corrupted.
-         * 
+         *
          * @param recalc_crc When true, CRC will be recalculated.
          */
         void UpdateFrame(bool recalc_crc = true);
@@ -440,7 +438,7 @@ class can::BitFrame : public Frame {
          * @param from Starting cycle to move from.
          * @param move_by Number of cycles to move by.
          * @returns Pointer to cycle which is 'move_by' before in frame, than 'from'.
-         * 
+         *
          * E.g. if 'from' is first cycle of first bit of base id, and 'move_by' is equal to
          *      number of clock cycles per-bit time, then pointer to first cycle of SOF
          *      will be returned.
@@ -450,7 +448,7 @@ class can::BitFrame : public Frame {
         /**
          * Compensates recessive to dominat transition within a bit to account for input delay
          * of IUT.
-         * 
+         *
          * Rationale is following:
          *  If LT applies dominant bit exactly at start of bit, as is transmitted by IUT,
          *  then IUT will see this bit only 'input delay' later. If prescaler is small
@@ -458,11 +456,11 @@ class can::BitFrame : public Frame {
          *  SYNC segment. IUT will therefore execute positive resynchronization.
          *  Due to this, all subsequent monitored values will be shifted by an amount of
          *  this "parasitic" resynchronisation.
-         * 
+         *
          *  To avoid this effect, N last cycles of previous bit need to be forced to dominant
          *  (N being IUTs input delay), so that IUT will see synchronization edge right
          *  in SYNC segment.
-         * 
+         *
          * @param from Starting bit which must be transmitted Dominant by IUT.
          * @param input_delay Input delay of DUT in clock cycles.
          */

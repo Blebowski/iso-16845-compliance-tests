@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,29 +20,29 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 30.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.2.5
- * 
+ *
  * @brief This test verifies that the IUT detects a form error when the
  *        transmitted fixed-form bit field is different from the bit it
  *        receives.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      CRC Delimiter, ACK Delimiter, EOF (first, fourth and last one), FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      CRC Delimiter, ACK Delimiter (2 ACK bits used),EOF (first, fourth and
  *      last one), Fixed Stuff bit at CRC17, Fixed Stuff bit at CRC21, FDF = 1
- * 
+ *
  * Elementary test cases:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      There are five elementary tests to perform.
@@ -51,7 +51,7 @@
  *          #3  EOF bit 1
  *          #4  EOF bit 4
  *          #5  EOF bit 7
- * 
+ *
  *  CAN FD enabled
  *      There are 16 elementary tests to perform:
  *          #1  CRC Delimiter
@@ -61,47 +61,34 @@
  *          #5  EOF bit 7
  *      #6-#11  Fixed stuff bit at CRC(17) - (6 bits)
  *      #7-#18  Fixed stuff bit at CRC(21) - (7 bits)
- * 
+ *
  *  Note: This numbering is slightly different that in ISO, but it should be OK
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame. Then, the LT creates a form
  *  error on the fields listed in elementary test cases.
- *  
+ *
  * Response:
  *  The IUT shall generate an error frame at the bit position following the
  *  corrupted bit.
  *  The IUT shall restart the transmission of the frame as soon as the bus is
  *  idle.
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_2_5 : public test_lib::TestBase
+class TestIso_8_2_5 : public test::TestBase
 {
     public:
 
@@ -159,7 +146,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);                    
+            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
 
             /**************************************************************************************
@@ -233,7 +220,7 @@ class TestIso_8_2_5 : public test_lib::TestBase
             StartDriverAndMonitor();
             dut_ifc->SendFrame(golden_frm.get());
             WaitForDriverAndMonitor();
-            
+
             CheckLowerTesterResult();
 
             return FinishElementaryTest();

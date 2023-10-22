@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.8.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.5.3
- * 
+ *
  * @brief The purpose of this test is to verify that a passive state IUT acting
  *        as a transmitter does not detect any error when detecting dominant
  *        bits during the 7 first bit of the error delimiter.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   Elementary tests to perform:
  *      #1 transmitting 1 consecutive dominant bits;
@@ -50,14 +50,14 @@
  *
  * Setup:
  *  The IUT is set to the TEC passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a data frame. Then, the LT causes the
  *  IUT to send a passive error flag in data field.
  *  At the end of error flag, the LT continues transmitting dominant bits
  *  according to elementary test cases.
  *  At this step, the LT waits for (8 + 3) bit time before sending a frame.
- * 
+ *
  * Response:
  *  The IUT shall acknowledge the frame transmitted by the LT.
  *  The IUT shall restart the transmission of the corrupted frame (1 + 7 + 3)
@@ -68,25 +68,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_5_3 : public test_lib::TestBase
+class TestIso_8_5_3 : public test::TestBase
 {
     public:
 
@@ -111,7 +98,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
         {
             uint8_t data_byte = 0x80;
 
-            // Since there is one frame received in between first and third frame, 
+            // Since there is one frame received in between first and third frame,
             // IUT will resynchronize and mismatches in data bit rate can occur. Dont shift
             // bit-rate due to this reason. Alternative is to demand BRP=BRP_FD
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
@@ -209,7 +196,7 @@ class TestIso_8_5_3 : public test_lib::TestBase
 
             CheckLowerTesterResult();
             CheckRxFrame(*golden_frm_2);
-            
+
             return FinishElementaryTest();
         }
 

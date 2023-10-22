@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +20,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.5.2021
- * 
+ *
  * @brief Unit Test for "FrameFlags" class
  *****************************************************************************/
 
@@ -45,7 +45,7 @@ void test_randomization()
     ///////////////////////////////////////////////////////////////////////////////////////////////
     FrameFlags ff1 = FrameFlags();
     ff1.Randomize();
-    
+
     // Check there are no invalid configs
     assert(!(ff1.is_fdf() == FrameType::CanFd && ff1.is_rtr() == RtrFlag::RtrFrame));
     assert(!(ff1.is_fdf() == FrameType::CanFd && ff1.is_esi() == EsiFlag::ErrorPassive));
@@ -54,7 +54,7 @@ void test_randomization()
     // Nothing should be randomized
     ///////////////////////////////////////////////////////////////////////////////////////////////
     FrameFlags ff2 = FrameFlags(FrameType::Can2_0, IdentifierType::Base, RtrFlag::DataFrame,
-                                BrsFlag::DontShift, EsiFlag::ErrorActive);    
+                                BrsFlag::DontShift, EsiFlag::ErrorActive);
     ff2.Randomize();
     assert(ff2.is_fdf() == FrameType::Can2_0 &&
            ff2.is_ide() == IdentifierType::Base &&
@@ -126,7 +126,7 @@ void test_randomization()
     // Randomizes IDE, BRS, ESI, RTR.
     ///////////////////////////////////////////////////////////////////////////////////////////////
     FrameFlags ff9 = FrameFlags(FrameType::CanFd);
-    
+
     ff9.Randomize();
     assert(ff9.is_fdf() == FrameType::CanFd);
 

@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,21 +20,21 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 17.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.2.4
- * 
+ *
  * @brief This test verifies that the IUT detects a stuff error whenever it
  *        receives 6 consecutive bits of the same value until the position of
  *        the CRC delimiter in a base format frame.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *      CAN FD Enabled:
  *          DATA byte 0–63
@@ -42,10 +42,10 @@
  *          IDE = 0
  *          DLC = 15
  *          FDF = 1
- * 
+ *
  * Elementary test cases:
  *  All 1 008 stuff bits within the defined data bytes 1 to 63 will be tested.
- * 
+ *
  *              Data Byte 0               Data bytes 1 – 63
  *      #1          0x10                        0x78
  *      #2          0x78                        0x3C
@@ -55,14 +55,14 @@
  *      #6          0x17                        0xC3
  *      #7          0x43                        0xE1
  *      #8          0x21                        0xF0
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  A single test frame is used for each elementary test. In each elementary
  *  test, the LT forces one of the stuff bits to its complement.
- * 
+ *
  * Response:
  *  The IUT shall generate an active error frame starting at the bit position
  *  following the stuff error.
@@ -72,25 +72,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_2_4 : public test_lib::TestBase
+class TestIso_7_2_4 : public test::TestBase
 {
     public:
 
@@ -161,7 +148,7 @@ class TestIso_7_2_4 : public test_lib::TestBase
             default:
                 break;
             }
-            
+
             frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
                                     RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, 0x555, data);
@@ -203,7 +190,7 @@ class TestIso_7_2_4 : public test_lib::TestBase
                 TestMessage("Testing stuff bit nr: %d", stuff_bit);
                 stuff_bits_in_variant++;
 
-                /* 
+                /*
                  * Copy frame to second frame so that we dont loose modification of bits.
                  * Corrupt only second one.
                  */

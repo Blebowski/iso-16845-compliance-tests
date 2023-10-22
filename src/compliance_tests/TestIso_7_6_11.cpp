@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,39 +20,39 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 18.4.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.6.11
- * 
+ *
  * @brief This test verifies that an error active IUT increases its REC by 8
  *        when detecting a dominant bit as the first bit after sending an error
  *        flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      REC, FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      REC, FDF = 1
- * 
+ *
  * Elementary test cases:
  *      #1 Dominant bit at the bit position following the end of the error flag
  *         sent by the IUT.
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to generate an active error flag in data field. The
  *  LT sends a dominant bit according to elementary test cases.
- * 
+ *
  * Response:
  *  The IUT’s REC value shall be increased by 8 after reception of the dominant
  *  bit sent by the LT.
@@ -62,25 +62,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_6_11 : public test_lib::TestBase
+class TestIso_7_6_11 : public test::TestBase
 {
     public:
 
@@ -118,7 +105,7 @@ class TestIso_7_6_11 : public test_lib::TestBase
             monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
             driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
 
-            /* 
+            /*
              * Insert Dominant bit before first bit of Error delimiter!
              * On monitor, this bit shall be recessive!
              */
@@ -137,10 +124,10 @@ class TestIso_7_6_11 : public test_lib::TestBase
             rec_old = dut_ifc->GetRec();
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
-            
+
             CheckLowerTesterResult();
             CheckNoRxFrame();
-            
+
             /* 1 for original error frame, 8 for dominant bit after error flag */
             CheckRecChange(rec_old, +9);
 

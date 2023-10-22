@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef BIT_H
+#define BIT_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +22,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <iostream>
@@ -39,17 +41,12 @@
 #include "BitTiming.h"
 #include "TimeQuanta.h"
 
-
-#ifndef BIT
-#define BIT
-
-
 /**
  * @class Bit
  * @namespace can
- * 
+ *
  * Class representing single bit on CAN bus.
- * 
+ *
  */
 class can::Bit {
 
@@ -236,7 +233,7 @@ class can::Bit {
         bool ForceTimeQuanta(size_t index, BitPhase bit_phase, BitValue bit_value);
 
         /**
-         * Forces Time Quanta range within a bit phase of a bit to value. 
+         * Forces Time Quanta range within a bit phase of a bit to value.
          * @param start_index Starting Time quanta index to force (within bit phase)
          * @param end_index Ending Time quanta index to force (within bit phase)
          * @param bit_value Value to which Time quantas shall be forced
@@ -331,10 +328,10 @@ class can::Bit {
          */
         BitFrame *parent_;
 
-        /* 
+        /*
          * These hold information about bit timing and fact whether Bit-rate has
          * shifted so they are important for manipulation of bit cycles!
-         * 
+         *
          * Should be provided during creation of Bit and are not copied internally!
          */
         FrameFlags* frame_flags_;

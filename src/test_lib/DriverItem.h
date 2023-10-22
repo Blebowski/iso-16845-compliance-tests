@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef DRIVER_ITEM_H
+#define DRIVER_ITEM_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +22,27 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 27.3.2020
- * 
+ *
  *****************************************************************************/
 
 #include <string>
 #include <chrono>
 
-#include "test_lib.h"
+#include <can_lib.h>
 
-#ifndef DRIVER_ITEM
-#define DRIVER_ITEM
+#include "test.h"
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class DriverItem
  * @brief CAN Agent driver item
- * 
+ *
  * Represents single item to be driver by CAN Agent driver.
  */
-class test_lib::DriverItem
+class test::DriverItem
 {
     public:
         DriverItem(std::chrono::nanoseconds duration, StdLogic value);
@@ -50,7 +51,7 @@ class test_lib::DriverItem
         /**
          * @brief Checks if items has message printed by digital simulator when CAN agent starts
          *        driving this item.
-         * 
+         *
          * @return true if item has message, false otherwise
          */
         bool HasMessage();

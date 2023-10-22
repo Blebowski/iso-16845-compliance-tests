@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 2.10.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 7.4.7
- * 
+ *
  * @brief This test verifies that the IUT generates an overload frame when
  *        detecting a dominant bit on one of the 2 first recessive bits of the
  *        intermission field.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      Intermission field of overload frame, FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      Intermission field of overload frame, FDF = 1
- * 
+ *
  * Elementary test cases:
  *      There are two elementary tests to perform:
  *          #1 intermission field bit 1 dominant;
@@ -49,13 +49,13 @@
  *
  * Setup:
  *  The IUT is left in the default state.
- * 
+ *
  * Execution:
  *  One test frame is used for each of the two elementary tests.
  *  The LT causes the IUT to generate an overload frame after a data frame.
  *  The LT forces one of the 2 first bits of the intermission field after the
  *  overload delimiter of the test frame to a dominant value.
- * 
+ *
  * Response:
  *  The IUT generates an overload frame at the bit position following the
  *  dominant bit.
@@ -65,25 +65,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_7_4_7 : public test_lib::TestBase
+class TestIso_7_4_7 : public test::TestBase
 {
     public:
 
@@ -124,8 +111,8 @@ class TestIso_7_4_7 : public test_lib::TestBase
             driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
             monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
 
-            /* 
-             * There is already 1 intermission bit after EOF, so we have to offset 
+            /*
+             * There is already 1 intermission bit after EOF, so we have to offset
              * intermission index by 1.
              * 1 -> first bit of second intermission,2 -> second bit
              */

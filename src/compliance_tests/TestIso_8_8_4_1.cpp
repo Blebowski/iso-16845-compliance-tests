@@ -1,18 +1,18 @@
-/***************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/*****************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,44 +20,44 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 14.1.2021
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.8.4.1
- * 
+ *
  * @brief The purpose of this test is to verify that there is no synchronization
  *        within 1 bit time if there are two recessive to dominant edges between
  *        two sample points where the first edge comes before the
  *        synchronization segment.
  * @version CAN FD enabled
- * 
+ *
  * Test variables:
  *  CAN FD enabled
- * 
+ *
  *  Sampling_Point(D) and SJW(D) configuration as available by IUT.
  *      ESI = 1
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *  There is one elementary test to perform for at least 1 bit rate configuration.
- * 
+ *
  *  Refer to 6.2.3.
- * 
+ *
  * Setup:
  *  The IUT is left in the default state.
  *  The LT force the IUT to passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  The LT forces the last TQ of Phase_Seg2(D) of BRS bit to dominant.
  *  The LT forces the ESI bit to dominant from the 2nd TQ(D) for
  *  [Prop_Seg(D) + Phase_Seg1(D) − TQ(D)].
- * 
+ *
  * Response:
  *  The modified ESI bit shall be sampled as recessive.
  *  The frame is valid.
@@ -68,25 +68,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_8_4_1 : public test_lib::TestBase
+class TestIso_8_8_4_1 : public test::TestBase
 {
     public:
 

@@ -1,18 +1,20 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+#ifndef ELEMENTARY_TEST_H
+#define ELEMENTARY_TEST_H
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,10 +22,10 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 25.8.2020
- * 
+ *
  *****************************************************************************/
 
 #include <chrono>
@@ -31,26 +33,20 @@
 #include <list>
 #include <memory>
 
-#include "../can_lib/can.h"
-#include "../can_lib/BitTiming.h"
-#include "../can_lib/DutInterface.h"
-#include "../can_lib/BitFrame.h"
+#include <can_lib.h>
 
-#include "test_lib.h"
-
-#ifndef ELEMENTARY_TEST
-#define ELEMENTARY_TEST
+#include "test.h"
 
 using namespace can;
 
 /**
- * @namespace test_lib
+ * @namespace test
  * @class ElementaryTest
  * @brief Elementary test class
- * 
+ *
  * Represents single Elementary test as described in ISO16845-1:2016.
  */
-class test_lib::ElementaryTest
+class test::ElementaryTest
 {
     public:
         ElementaryTest(int index);

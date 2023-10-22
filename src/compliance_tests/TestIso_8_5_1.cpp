@@ -1,18 +1,18 @@
-/****************************************************************************** 
- * 
- * ISO16845 Compliance tests 
+/******************************************************************************
+ *
+ * ISO16845 Compliance tests
  * Copyright (C) 2021-present Ondrej Ille
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this SW component and associated documentation files (the "Component"),
  * to use, copy, modify, merge, publish, distribute the Component for
  * educational, research, evaluation, self-interest purposes. Using the
  * Component for commercial purposes is forbidden unless previously agreed with
  * Copyright holder.
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Component.
- * 
+ *
  * THE COMPONENT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,28 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE COMPONENT OR THE USE OR OTHER DEALINGS
  * IN THE COMPONENT.
- * 
+ *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
  * @date 29.8.2020
- * 
+ *
  *****************************************************************************/
 
 /******************************************************************************
- * 
+ *
  * @test ISO16845 8.5.1
- * 
+ *
  * @brief The purpose of this test is to verify that a passive state IUT acting
  *        as a transmitter does not detect any error when detecting an active
  *        error flag during its own passive error flag.
  * @version Classical CAN, CAN FD Tolerant, CAN FD Enabled
- * 
+ *
  * Test variables:
  *  Classical CAN, CAN FD Tolerant, CAN FD Enabled
  *      FDF = 0
- * 
+ *
  *  CAN FD Enabled
  *      FDF = 1
- * 
+ *
  * Elementary test cases:
  *   The LT replaces one of the 8 recessive bits of the error delimiter by a
  *   dominant bit.
@@ -54,7 +54,7 @@
  *
  * Setup:
  *  The IUT is set to the TEC passive state.
- * 
+ *
  * Execution:
  *  The LT causes the IUT to transmit a frame.
  *  Then, the LT causes the IUT to send a passive error flag in data field.
@@ -62,7 +62,7 @@
  *  flag in date field according to elementary test cases.
  *  At the end of the error flag, the LT waits for (8 + 3) bit time before
  *  sending a frame.
- * 
+ *
  * Response:
  *  The IUT shall acknowledge the last frame transmitted by the LT.
  *****************************************************************************/
@@ -71,25 +71,12 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "../vpi_lib/vpiComplianceLib.hpp"
-
-#include "../test_lib/test_lib.h"
-#include "../test_lib/TestBase.h"
-#include "../test_lib/TestSequence.h"
-#include "../test_lib/DriverItem.h"
-#include "../test_lib/MonitorItem.h"
-#include "../test_lib/TestLoader.h"
-
-#include "../can_lib/can.h"
-#include "../can_lib/Frame.h"
-#include "../can_lib/BitFrame.h"
-#include "../can_lib/FrameFlags.h"
-#include "../can_lib/BitTiming.h"
+#include "TestBase.h"
 
 using namespace can;
-using namespace test_lib;
+using namespace test;
 
-class TestIso_8_5_1 : public test_lib::TestBase
+class TestIso_8_5_1 : public test::TestBase
 {
     public:
 
@@ -123,7 +110,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
-        
+
             golden_frm_2 = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm_2.get());
 
@@ -165,7 +152,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             TestMessage("Inserting Active Error flag to Passive Error flag bit %d to dominant",
                         bit_index_to_corrupt + 1);
-            
+
             driver_bit_frm->InsertActiveErrorFrame(bit_index);
             monitor_bit_frm->InsertPassiveErrorFrame(bit_index);
 
@@ -190,7 +177,7 @@ class TestIso_8_5_1 : public test_lib::TestBase
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
 
-            /***************************************************************************** 
+            /*****************************************************************************
              * Execute test
              *****************************************************************************/
             dut_ifc->SetTec(160);
