@@ -110,6 +110,12 @@ class TestIso_7_1_3 : public test::TestBase
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
             CanAgentSetWaitForMonitor(true);
             CanAgentConfigureTxToRxFeedback(true);
+
+            // Following constraint is not due to model or IUT issues.
+            // It is due to principle of the test, we can't avoid it!
+            // This is
+            assert(data_bit_timing.brp == nominal_bit_timing.brp_ &&
+                   " In this test BRP(N) must be equal to BRP(D) due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
