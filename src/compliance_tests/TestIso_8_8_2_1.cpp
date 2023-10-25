@@ -97,8 +97,11 @@ class TestIso_8_8_2_1 : public test::TestBase
             for (int i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
 
-            // Following constraint is not due model, IUT issues, it is due to principle of the
-            // test, we can't avoid it!
+            // Following constraint is not due to model or IUT issues.
+            // It is due to principle of the test, we can't avoid it!
+            // This is because we are delaying received sequence by up to: 2 x Bit time (D).
+            // If such big delay is applied, and TSEG1(N) is smaller than this number, an
+            // error frame is detected still in Nominal Bit-rate.
             assert(data_bit_timing.GetBitLengthCycles() * 2 <
                    ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
                    " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
@@ -135,13 +138,12 @@ class TestIso_8_8_2_1 : public test::TestBase
                 d *= 2;
             driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
 
-            /* Following way of forcing "original PH2 of res/R0 bit" is shitty preformance-wise!
-             * For each cycle of driven PH2 of R0, we search cycle which is "d" cycles back within
+            /* For each cycle of driven PH2 of R0, we search cycle which is "d" cycles back within
              * whole frame. First "MoveCyclesBack", finds TQ and bit, in which 'orig' cycle is
              * (redundantly multiple times), then it iterates back through bit until it moved
              * for d cycles.
              *
-             * I am aware of the shittines of the solution, but I decided to live with it as
+             * I am aware of performance penalty of the solution, but I decided to live with it as
              * the penalty is just not so big!
              * Alternative would be to have also bottom->up reference in Bit/TQ/Cycle hierarchy.
              * This would allow moving cycle-by-cycle with iterator accross multiple TQs/bits.

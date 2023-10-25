@@ -95,8 +95,11 @@ class TestIso_8_8_2_2 : public test::TestBase
             for (int i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
 
-            // Following constraint is not due model, IUT issues, it is due to principle of the
-            // test, we can't avoid it!
+            // Following constraint is not due to model or IUT issues.
+            // It is due to principle of the test, we can't avoid it!
+            // This is because we are delaying received sequence by up to: 2 x Bit time (D).
+            // If such big delay is applied, and TSEG1(N) is smaller than this number, an
+            // error frame is detected still in Nominal Bit-rate.
             assert(data_bit_timing.GetBitLengthCycles() * 2 <
                    ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
                    " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");

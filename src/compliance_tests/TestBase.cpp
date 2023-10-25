@@ -350,7 +350,11 @@ void test::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem
 void test::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
                             bool nominal, FrameType frame_type)
 {
+    TestMessage("Adding Elementary tests for each sample point...");
+
     int num_sp_points = CalcNumSamplePoints(nominal);
+
+    TestMessage("Number of sample points: %d", num_sp_points);
 
     for (int i = 1; i <= num_sp_points; i++)
         AddElemTest(test_variant, ElementaryTest(i, frame_type));
@@ -781,8 +785,12 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
                                            size_t minimal_ph1)
 {
     BitTiming new_bt;
-
     BitTiming *orig_bt;
+
+    TestMessage("Generating new bit timing for elementary test index: %d", elem_test.index_);
+    TestMessage("Bit timing type: %s", (nominal) ? "Nominal" : "Data");
+    TestMessage("Target Minimal PH1 Length: %d", minimal_ph1);
+
     if (nominal)
         orig_bt = &backup_nominal_bit_timing;
     else
@@ -793,6 +801,8 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
     if (init_ph1 < minimal_ph1)
         init_ph1 = minimal_ph1;
 
+    TestMessage("Actual Minimal PH1 Length: %d", init_ph1);
+
     // If we have N Time Quanta bit time, then we can have at most N - 1 Sample point positions
     // regardless of bit time parameters / constraints. If we have more, this shows we have some
     // additional elementary tests, not just the ones for "each sample point". This situation
@@ -802,15 +812,15 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
              "Invalid test index, can't configure sample point!"));
 
     // Calculate new bit-rate from configured one. Have same bit-rate, but different sample point.
-    // Shift sample point from TSEG1 = 2 or 3 till the end.
+    // Shift sample point from "init_ph1" till the end.
     new_bt.brp_ = orig_bt->brp_;
     new_bt.prop_ = 0;
     new_bt.ph1_ = init_ph1 + elem_test.index_ - 1;
     new_bt.ph2_ = orig_bt->GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
 
-    // Handle cases where we add too many elementary tests and we would make PH2 equal to zero,
-    // putting sample point at the end of bit is stupid!
-    if (new_bt.ph2_ == 0)
+    // Handle cases where we add too many elementary tests and we would make PH2 equal to zero
+    // or even less than zero causing underflow.
+    if (new_bt.ph2_ == 0 || new_bt.ph2_ > 0xFFFF)
         new_bt.ph2_ = 1;
 
     // CTU CAN FD specific constraint for PH2 of nominal bit-rate
@@ -819,6 +829,9 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
         new_bt.ph2_ = 2;
 
     new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, orig_bt->sjw_);
+
+    TestMessage("Original bit timing without shifted sample point:");
+    orig_bt->Print();
 
     TestMessage("New bit timing with shifted sample point:");
     new_bt.Print();
