@@ -122,7 +122,6 @@ class TestIso_7_8_5_3 : public test::TestBase
 
             Bit *crc_delimiter_driver = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
             Bit *crc_delimiter_monitor = mon_bit_frm->GetBitOf(0, BitKind::CrcDelim);
-            Bit *ack_driver = drv_bit_frm->GetBitOf(0, BitKind::Ack);
 
             crc_delimiter_driver->ShortenPhase(BitPhase::Ph2, elem_test.e_);
             crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
@@ -131,9 +130,9 @@ class TestIso_7_8_5_3 : public test::TestBase
             {
                 Bit *ack_monitor = mon_bit_frm->GetBitOf(0, BitKind::Ack);
                 ack_monitor->ForceTQ(0, BitVal::Recessive);
-                //ack_monitor->bit_value_ = BitValue::Recessive;
             }
 
+            Bit *ack_driver = drv_bit_frm->GetBitOf(0, BitKind::Ack);
             for (size_t j = 0; j < nbt.ph2_; j++)
                 ack_driver->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
