@@ -176,12 +176,22 @@ class TestIso_8_1_4 : public test::TestBase
              *      golden_frame which has n-th bit dominant, but IUT is requested to send frame
              *      with this bit recessive (golden_frm_2). Therefore this bit shall be expected
              *      recessive. Bit position is calculated from elementary test index. First 11
-             *      tests are in base identifier, next 18 are in Identifier extension.
+             *      tests are in base identifier, next 18 are in Identifier extension. Indices 30
+             *      and 31 correspond to bits SRR and IDE.
              *   2. Loose arbitration on n-th bit of base identifier in monitored frame. Skip stuff
              *      bits!
              *   3. Compensate IUTs input delay which will cause positive resynchronisation due
              *      to dominant bit being transmitted by IUT at bit in which IUT loses arbitration.
-             *   3. Append second frame as if retransmitted by IUT. This one must be created from
+             *   4. Compensate length of CRC field in the monitored frame. Since the monitored frame
+             *      gets a bit flipped, its original CRC is invalid. The actual CRC value does
+             *      not matter because IUT lost arbitration. However, the original CRC may have
+             *      different length due to possible stuff bits. IUT has lost arbitration, and
+             *      thus it will received the driven frame. But, since in step 5 we append
+             *      retransmitted frame, due to different CRC length we may see the retransmitted
+             *      frame one bit shifted. This would cause monitor mismatch even if DUT behaves
+             *      correctly. We need to make CRC of monitored frame equally long as in the
+             *      driven frame.
+             *   5. Append second frame as if retransmitted by IUT. This one must be created from
              *      frame which was actually issued to IUT
              *************************************************************************************/
             Bit *loosing_bit;
@@ -242,7 +252,21 @@ class TestIso_8_1_4 : public test::TestBase
                     monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
             }
 
+            // Compensate CRC length in monitored frame
+            while (monitor_bit_frm->GetFieldLength(BitType::Crc) <
+                   driver_bit_frm->GetFieldLength(BitType::Crc)) {
+                int index = monitor_bit_frm->GetBitIndex(
+                                monitor_bit_frm->GetBitOf(0, BitType::Crc));
+                monitor_bit_frm->InsertBit(BitType::Crc, BitValue::Recessive, index);
+            }
+
+            while (monitor_bit_frm->GetFieldLength(BitType::Crc) >
+                   driver_bit_frm->GetFieldLength(BitType::Crc)) {
+                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitType::Crc));
+            }
+
             driver_bit_frm_2->TurnReceivedFrame();
+
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
