@@ -80,8 +80,8 @@ class TestIso_7_4_6 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -90,7 +90,7 @@ class TestIso_7_4_6 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                            RtrFlag::DataFrame);
+                            RtrFlag::Data);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -106,17 +106,17 @@ class TestIso_7_4_6 : public test::TestBase
              *   3. Flip 1/2 bit of Intermission after error frame to dominant. Insert expected
              *      overload frame from next bit on.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Intermission)->FlipBitValue();
+            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Interm)->FlipVal();
 
-            monitor_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
-            driver_bit_frm->InsertPassiveErrorFrame(elem_test.index_, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(elem_test.index_, BitKind::Interm);
+            driver_bit_frm->InsertPasErrFrm(elem_test.index_, BitKind::Interm);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

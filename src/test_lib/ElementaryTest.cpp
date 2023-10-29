@@ -45,13 +45,13 @@ test::ElementaryTest::ElementaryTest(int index, std::string msg):
     msg_(msg)
 {}
 
-test::ElementaryTest::ElementaryTest(int index, std::string msg, can::FrameType frame_type):
+test::ElementaryTest::ElementaryTest(int index, std::string msg, can::FrameKind frame_type):
     index_(index),
     msg_(msg),
     frame_type_(frame_type)
 {}
 
-test::ElementaryTest::ElementaryTest(int index, can::FrameType frame_type):
+test::ElementaryTest::ElementaryTest(int index, can::FrameKind frame_type):
     index_(index),
     frame_type_(frame_type)
 {

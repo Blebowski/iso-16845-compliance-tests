@@ -82,7 +82,7 @@ class TestIso_8_8_1_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTestForEachSamplePoint(TestVariant::CanFdEnabled, false, FrameType::Can2_0);
+            AddElemTestForEachSamplePoint(TestVariant::CanFdEnabled, false, FrameKind::Can20);
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
 
@@ -105,7 +105,7 @@ class TestIso_8_8_1_4 : public test::TestBase
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
@@ -115,8 +115,8 @@ class TestIso_8_8_1_4 : public test::TestBase
 
 
             uint8_t data = 0x55;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::DoShift, EsiFlag::ErrAct);
             /* Put exact frame so that we are sure that last bit of CRC is recessive */
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0xAA, &data);
             RandomizeAndPrint(golden_frm.get());
@@ -131,19 +131,19 @@ class TestIso_8_8_1_4 : public test::TestBase
              *   3. Force last TQ of phase before PH2 to recessive. Force fircst BRP(DBT) of PH2
              *      to recessive.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            crc_delim->bit_value_ = BitValue::Dominant;
+            Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            crc_delim->val_ = BitVal::Dominant;
 
             BitPhase prev_phase = crc_delim->PrevBitPhase(BitPhase::Ph2);
-            auto it = crc_delim->GetLastTimeQuantaIterator(prev_phase);
-            it->ForceValue(BitValue::Recessive);
+            auto it = crc_delim->GetLastTQIter(prev_phase);
+            it->ForceVal(BitVal::Recessive);
 
-            TimeQuanta *first_ph2_tq = crc_delim->GetTimeQuanta(BitPhase::Ph2, 0);
+            TimeQuanta *first_ph2_tq = crc_delim->GetTQ(BitPhase::Ph2, 0);
 
             for (size_t i = 0; i < nominal_bit_timing.brp_; i++){
-                first_ph2_tq->ForceCycleValue(i, BitValue::Recessive);
+                first_ph2_tq->ForceCycleValue(i, BitVal::Recessive);
             }
 
             driver_bit_frm->Print(true);

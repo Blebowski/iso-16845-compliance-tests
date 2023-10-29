@@ -79,15 +79,15 @@ class TestIso_7_3_4 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::Data);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -112,20 +112,20 @@ class TestIso_7_3_4 : public test::TestBase
                 bit_to_corrupt = 7;
             TestMessage("Forcing Error Delimiter bit %d to dominant", bit_to_corrupt);
 
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             /* Force n-th bit of Error delimiter to dominant */
-            Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitType::ErrorDelimiter);
+            Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::ErrDelim);
             int bit_index = driver_bit_frm->GetBitIndex(bit);
-            bit->bit_value_ = BitValue::Dominant;
+            bit->val_ = BitVal::Dominant;
 
             /* Insert new error flag from one bit further, both driver and monitor! */
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

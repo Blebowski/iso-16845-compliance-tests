@@ -95,10 +95,10 @@ class TestIso_8_8_1_3 : public test::TestBase
             // Change data sample point. Iterate with sample point:
             //  from: PROP = 1, PH2 = TQ(D) - 2
             //  to: PROP = TQ(D) - 2, PH2 = 1
-            for (size_t i = 0; i < (2 * data_bit_timing.GetBitLengthTimeQuanta()) - 4; i += 2)
+            for (size_t i = 0; i < (2 * data_bit_timing.GetBitLenTQ()) - 4; i += 2)
             {
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 2, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 2, FrameKind::Can20));
             }
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
@@ -119,7 +119,7 @@ class TestIso_8_8_1_3 : public test::TestBase
             test_data_bit_timing.sjw_ = data_bit_timing.sjw_;
             test_data_bit_timing.ph1_ = 0;
             test_data_bit_timing.prop_ = (elem_test.index_ + 1) / 2;
-            test_data_bit_timing.ph2_ = data_bit_timing.GetBitLengthTimeQuanta() -
+            test_data_bit_timing.ph2_ = data_bit_timing.GetBitLenTQ() -
                                         ((elem_test.index_ + 1) / 2) - 1;
 
             /* Re-configure bit-timing for this test so that frames are generated with it! */
@@ -130,15 +130,15 @@ class TestIso_8_8_1_3 : public test::TestBase
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, test_data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Data bit timing for this elementary test:");
             test_data_bit_timing.Print();
 
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             /* To make sure there is at least 1 data byte! */
             golden_frm = std::make_unique<Frame>(*frame_flags, rand() % 0xF + 1);
             RandomizeAndPrint(golden_frm.get());
@@ -156,27 +156,27 @@ class TestIso_8_8_1_3 : public test::TestBase
              *       - Elementary test 1 : Phase 2 to Recessive.
              *       - Elementary test 2 : SYNQ+ PROP + Phase 1 - 1 TQ to Dominant.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             Bit *data_bit;
-            BitValue bit_value;
+            BitVal bit_value;
             if (elem_test.index_ == 1)
-                bit_value = BitValue::Dominant;
+                bit_value = BitVal::Dominant;
             else
-                bit_value = BitValue::Recessive;
+                bit_value = BitVal::Recessive;
 
             do{
-                data_bit = driver_bit_frm->GetRandomBitOf(BitType::Data);
-            } while (data_bit->bit_value_ != bit_value);
+                data_bit = driver_bit_frm->GetRandBitOf(BitKind::Data);
+            } while (data_bit->val_ != bit_value);
 
             if (elem_test.index_ == 1)
             {
                 for (size_t i = 0; i < data_bit_timing.ph2_; i++)
-                    data_bit->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Recessive);
+                    data_bit->ForceTQ(i, BitPhase::Ph2, BitVal::Recessive);
             } else {
                 size_t num_time_quantas = data_bit_timing.prop_ + data_bit_timing.ph1_;
                 for (size_t i = 0; i < num_time_quantas; i++)
-                    data_bit->ForceTimeQuanta(i, BitValue::Dominant);
+                    data_bit->ForceTQ(i, BitVal::Dominant);
             }
 
             driver_bit_frm->Print(true);

@@ -78,8 +78,8 @@ class TestIso_7_1_9 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
         }
 
@@ -107,15 +107,15 @@ class TestIso_7_1_9 : public test::TestBase
              *************************************************************************************/
             if (elem_test.index_ == 1)
             {
-                driver_bit_frm->RemoveBit(2, BitType::Intermission);
-                monitor_bit_frm->RemoveBit(2, BitType::Intermission);
+                driver_bit_frm->RemoveBit(2, BitKind::Interm);
+                monitor_bit_frm->RemoveBit(2, BitKind::Interm);
             }
 
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm_2->ConvRXFrame();
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             /**************************************************************************************
              * Execute test

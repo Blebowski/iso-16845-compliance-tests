@@ -106,9 +106,9 @@ class TestIso_7_6_23 : public test::TestBase
 
             for (int i = 0; i < num_elem_tests; i++)
                 if (i < 3)
-                    elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                    elem_tests[0].push_back(ElementaryTest(i + 1, FrameKind::CanFd));
                 else
-                    elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                    elem_tests[0].push_back(ElementaryTest(i + 1, FrameKind::Can20));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -132,7 +132,7 @@ class TestIso_7_6_23 : public test::TestBase
 
             /* Enable and wait till integration is over again */
             dut_ifc->Enable();
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(2000);
 
             /******************************************************************************
@@ -165,7 +165,7 @@ class TestIso_7_6_23 : public test::TestBase
             }
             RandomizeAndPrint(golden_frm.get());
 
-            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            frame_flags_2 = std::make_unique<FrameFlags>(FrameKind::Can20);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm_2.get());
 
@@ -187,20 +187,20 @@ class TestIso_7_6_23 : public test::TestBase
              **********************************************************************************/
             if (test_variant == TestVariant::CanFdEnabled)
             {
-                driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
             }
 
             driver_bit_frm->UpdateFrame();
             monitor_bit_frm->UpdateFrame();
 
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_2->TurnReceivedFrame();
+            monitor_bit_frm_2->ConvRXFrame();
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

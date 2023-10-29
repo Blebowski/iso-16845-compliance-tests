@@ -77,8 +77,8 @@ class TestIso_8_5_14 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             /* Basic settings where IUT is transmitter */
             SetupMonitorTxTests();
@@ -92,8 +92,8 @@ class TestIso_8_5_14 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                            RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -122,28 +122,28 @@ class TestIso_8_5_14 : public test::TestBase
              *    8 suspend         suspend since IUT is error passive
              * Together, this is 31 bits as described in test description!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            Bit *err_delim = driver_bit_frm->GetBitOf(0, BitType::ErrorDelimiter);
+            Bit *err_delim = driver_bit_frm->GetBitOf(0, BitKind::ErrDelim);
             int bit_index = driver_bit_frm->GetBitIndex(err_delim);
             for (int i = 0; i < 6; i++)
             {
-                driver_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Dominant, bit_index);
-                monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, bit_index);
+                driver_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Dominant, bit_index);
+                monitor_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index);
             }
 
             // Compensate IUTs input delay which would cause positive resynchronisation.
             // 7-th bit of Passive error Flag in driven frame is first bit of second error flag
             driver_bit_frm->CompensateEdgeForInputDelay(
-                driver_bit_frm->GetBitOf(6, BitType::PassiveErrorFlag), dut_input_delay);
+                driver_bit_frm->GetBitOf(6, BitKind::PasErrFlag), dut_input_delay);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            driver_bit_frm->AppendSuspTrans();
+            monitor_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

@@ -75,8 +75,8 @@ class TestIso_8_6_19 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -87,8 +87,8 @@ class TestIso_8_6_19 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                                       EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x400);
             RandomizeAndPrint(golden_frm.get());
 
@@ -107,15 +107,15 @@ class TestIso_8_6_19 : public test::TestBase
              *      driven frame since TX/RX feedback is enabled.
              *   4. Append Retransmitted frame.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
             driver_bit_frm->FlipBitAndCompensate(
-                driver_bit_frm->GetBitOf(6, BitType::BaseIdentifier), dut_input_delay);
+                driver_bit_frm->GetBitOf(6, BitKind::BaseIdent), dut_input_delay);
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::BaseIdentifier);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::BaseIdentifier);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::BaseIdent);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::BaseIdent);
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

@@ -82,8 +82,8 @@ class TestIso_7_6_7 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -104,16 +104,16 @@ class TestIso_7_6_7 : public test::TestBase
              *   3. Flip ACK delimiter in driven frame (on can_tx) to DOMINANT!
              *   4. Insert expected Active error frame from first bit of EOF!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
             if (test_variant == TestVariant::CanFdEnabled)
-                driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                driver_bit_frm->GetBitOf(1, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(0, BitType::AckDelimiter)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::AckDelim)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
+            driver_bit_frm->InsertActErrFrm(0, BitKind::Eof);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Eof);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

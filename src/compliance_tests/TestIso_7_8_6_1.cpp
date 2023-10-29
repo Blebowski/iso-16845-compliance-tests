@@ -96,8 +96,8 @@ class TestIso_7_8_6_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -115,16 +115,16 @@ class TestIso_7_8_6_1 : public test::TestBase
              *         be SJW TQ behind the driven frame and this will be compensated by DUT during
              *         next synchronisations within a frame!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *brs_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *brs_bit_driver = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitKind::Esi);
 
             for (int j = 0; j < elem_test.e_; j++)
-                brs_bit_driver->ForceTimeQuanta(data_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
-                                                BitValue::Dominant);
+                brs_bit_driver->ForceTQ(data_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
+                                                BitVal::Dominant);
 
-            esi_bit->ForceTimeQuanta(0, data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitValue::Recessive);
+            esi_bit->ForceTQ(0, data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

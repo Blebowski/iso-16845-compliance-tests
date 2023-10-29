@@ -96,7 +96,7 @@ class TestIso_7_8_5_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x7F;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -111,17 +111,17 @@ class TestIso_7_8_5_2 : public test::TestBase
              *   3. Force PH2 of 7-th bit of data field to Recessive. This should be a stuff bit.
              *      Do it on driven frame only.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *driver_before_stuff_bit = driver_bit_frm->GetBitOf(5, BitType::Data);
-            Bit *monitor_before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
-            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
+            Bit *driver_before_stuff_bit = driver_bit_frm->GetBitOf(5, BitKind::Data);
+            Bit *monitor_before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitKind::Data);
+            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitKind::Data);
 
             driver_before_stuff_bit->ShortenPhase(BitPhase::Ph2, elem_test.e_);
             monitor_before_stuff_bit->ShortenPhase(BitPhase::Ph2,  elem_test.e_);
 
             for (size_t j = 0; j < data_bit_timing.ph2_; j++)
-                driver_stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

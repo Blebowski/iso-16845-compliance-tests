@@ -81,8 +81,8 @@ class TestIso_7_6_8 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
         }
 
@@ -102,8 +102,8 @@ class TestIso_7_6_8 : public test::TestBase
              *   2. Flip n-th bit of EOF to DOMINANT
              *   3. Insert expected Active error frame from next bit of EOF!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             int bit_to_corrupt;
             if (elem_test.index_ == 1)
@@ -113,11 +113,11 @@ class TestIso_7_6_8 : public test::TestBase
             else
                 bit_to_corrupt = 5;
             TestMessage("Forcing EOF bit %d to Dominant", bit_to_corrupt);
-            driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitType::Eof)->bit_value_ =
-                BitValue::Dominant;
+            driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::Eof)->val_ =
+                BitVal::Dominant;
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::Eof);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::Eof);
+            driver_bit_frm->InsertActErrFrm(bit_to_corrupt, BitKind::Eof);
+            monitor_bit_frm->InsertActErrFrm(bit_to_corrupt, BitKind::Eof);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

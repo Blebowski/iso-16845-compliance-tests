@@ -79,8 +79,8 @@ class TestIso_8_6_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -90,8 +90,8 @@ class TestIso_8_6_3 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                            RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -111,20 +111,20 @@ class TestIso_8_6_3 : public test::TestBase
              *      recessive bits to monitored frame.
              *   4. Append retransmitted frame!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             for (int i = 0; i < 16; i++)
             {
                 int bit_index = driver_bit_frm->GetBitIndex(
-                                    driver_bit_frm->GetBitOf(5, BitType::PassiveErrorFlag));
-                driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, bit_index + 1);
-                monitor_bit_frm->InsertBit(BitType::PassiveErrorFlag, BitValue::Recessive, bit_index + 1);
+                                    driver_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
+                driver_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index + 1);
+                monitor_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index + 1);
             }
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

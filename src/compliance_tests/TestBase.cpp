@@ -39,7 +39,7 @@ using namespace can;
 test::TestBase::TestBase()
 {
     this->dut_ifc = new can::CtuCanFdInterface;
-    this->dut_can_version = can::CanVersion::CanFdEnabled;
+    this->dut_can_version = can::CanVersion::CanFdEna;
     this->test_result = true;
 }
 
@@ -48,21 +48,21 @@ test::TestBase::~TestBase()
     delete this->dut_ifc;
 }
 
-can::FrameType test::TestBase::GetDefaultFrameType(TestVariant &variant)
+can::FrameKind test::TestBase::GetDefaultFrameType(TestVariant &variant)
 {
     switch (variant){
         case TestVariant::Common:
-            return FrameType::Can2_0;   /* Most of tests use CAN 2.0 for common */
+            return FrameKind::Can20;   /* Most of tests use CAN 2.0 for common */
         case TestVariant::Can_2_0:
-            return FrameType::Can2_0;
+            return FrameKind::Can20;
         case TestVariant::CanFdTolerant: /* TODO: Check */
-            return FrameType::Can2_0;
+            return FrameKind::Can20;
         case TestVariant::CanFdEnabled:
-            return FrameType::CanFd;
+            return FrameKind::CanFd;
         default:
             break;
     }
-    return FrameType::Can2_0;
+    return FrameKind::Can20;
 }
 
 
@@ -257,13 +257,13 @@ void test::TestBase::FillTestVariants(VariantMatchingType match_type)
     case VariantMatchingType::OneToOne:
         switch (dut_can_version)
         {
-        case CanVersion::Can_2_0:
+        case CanVersion::Can20:
             test_variants.push_back(TestVariant::Can_2_0);
             break;
-        case CanVersion::CanFdTolerant:
+        case CanVersion::CanFdTol:
             test_variants.push_back(TestVariant::CanFdTolerant);
             break;
-        case CanVersion::CanFdEnabled:
+        case CanVersion::CanFdEna:
             test_variants.push_back(TestVariant::CanFdEnabled);
             break;
         default:
@@ -281,7 +281,7 @@ void test::TestBase::FillTestVariants(VariantMatchingType match_type)
         test_variants.push_back(TestVariant::Common);
         elem_tests.push_back(std::vector<ElementaryTest>());
 
-        if (dut_can_version == CanVersion::CanFdEnabled)
+        if (dut_can_version == CanVersion::CanFdEna)
         {
             test_variants.push_back(TestVariant::CanFdEnabled);
             elem_tests.push_back(std::vector<ElementaryTest>());
@@ -289,28 +289,28 @@ void test::TestBase::FillTestVariants(VariantMatchingType match_type)
         break;
 
     case VariantMatchingType::ClassicalAndFdEnabled:
-        if (dut_can_version == CanVersion::Can_2_0)
+        if (dut_can_version == CanVersion::Can20)
             test_variants.push_back(TestVariant::Can_2_0);
-        if (dut_can_version == CanVersion::CanFdEnabled)
+        if (dut_can_version == CanVersion::CanFdEna)
             test_variants.push_back(TestVariant::CanFdEnabled);
         elem_tests.push_back(std::vector<ElementaryTest>());
         break;
 
     case VariantMatchingType::FdTolerantFdEnabled:
-        if (dut_can_version == CanVersion::CanFdTolerant)
+        if (dut_can_version == CanVersion::CanFdTol)
             test_variants.push_back(TestVariant::CanFdTolerant);
-        if (dut_can_version == CanVersion::CanFdEnabled)
+        if (dut_can_version == CanVersion::CanFdEna)
             test_variants.push_back(TestVariant::CanFdEnabled);
         elem_tests.push_back(std::vector<ElementaryTest>());
         break;
 
     case VariantMatchingType::ClassicalFdCommon:
-        if (dut_can_version == CanVersion::Can_2_0)
+        if (dut_can_version == CanVersion::Can20)
             test_variants.push_back(TestVariant::Can_2_0);
-        if (dut_can_version == CanVersion::CanFdTolerant)
+        if (dut_can_version == CanVersion::CanFdTol)
             test_variants.push_back(TestVariant::CanFdTolerant);
         elem_tests.push_back(std::vector<ElementaryTest>());
-        if (dut_can_version == CanVersion::CanFdEnabled)
+        if (dut_can_version == CanVersion::CanFdEna)
         {
             test_variants.push_back(TestVariant::CanFdTolerant);
             test_variants.push_back(TestVariant::CanFdEnabled);
@@ -319,7 +319,7 @@ void test::TestBase::FillTestVariants(VariantMatchingType match_type)
         break;
 
     case VariantMatchingType::CanFdEnabledOnly:
-        if (dut_can_version == CanVersion::CanFdEnabled)
+        if (dut_can_version == CanVersion::CanFdEna)
         {
             test_variants.push_back(TestVariant::CanFdEnabled);
             elem_tests.push_back(std::vector<ElementaryTest>());
@@ -348,7 +348,7 @@ void test::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem
 
 
 void test::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
-                            bool nominal, FrameType frame_type)
+                            bool nominal, FrameKind frame_type)
 {
     TestMessage("Adding Elementary tests for each sample point...");
 
@@ -445,101 +445,101 @@ bool test::TestBase::CompareFrames(can::Frame &expected_frame, can::Frame &real_
 }
 
 
-BitType test::TestBase::GetRandomBitType(FrameType frame_type, IdentifierType ident_type,
+BitKind test::TestBase::GetRandomBitType(FrameKind frame_type, IdentKind ident_type,
                                             BitField bit_field)
 {
     switch (bit_field)
     {
     case BitField::Sof:
-        return BitType::Sof;
+        return BitKind::Sof;
 
-    case BitField::Arbitration:
-        if (ident_type == IdentifierType::Base)
+    case BitField::Arbit:
+        if (ident_type == IdentKind::Base)
         {
             if (rand() % 2)
-                return BitType::BaseIdentifier;
-            if (frame_type == FrameType::Can2_0)
-                return BitType::Rtr;
-            return BitType::R1;
+                return BitKind::BaseIdent;
+            if (frame_type == FrameKind::Can20)
+                return BitKind::Rtr;
+            return BitKind::R1;
 
         } else {
             switch (rand() % 5)
             {
             case 0:
-                return BitType::BaseIdentifier;
+                return BitKind::BaseIdent;
             case 1:
-                return BitType::Srr;
+                return BitKind::Srr;
             case 2:
-                return BitType::Ide;
+                return BitKind::Ide;
             case 3:
-                return BitType::IdentifierExtension;
+                return BitKind::ExtIdent;
             default:
-                if (frame_type == FrameType::Can2_0)
-                    return BitType::Rtr;
-                return BitType::R1;
+                if (frame_type == FrameKind::Can20)
+                    return BitKind::Rtr;
+                return BitKind::R1;
             }
         }
-        return BitType::BaseIdentifier;
+        return BitKind::BaseIdent;
 
     case BitField::Control:
-        if (frame_type == FrameType::Can2_0)
+        if (frame_type == FrameKind::Can20)
         {
             switch (rand() % 3)
             {
             case 0:
-                if (ident_type == IdentifierType::Base)
-                    return BitType::Ide;
-                return BitType::R1;
+                if (ident_type == IdentKind::Base)
+                    return BitKind::Ide;
+                return BitKind::R1;
             case 1:
-                return BitType::R0;
+                return BitKind::R0;
             default:
-                return BitType::Dlc;
+                return BitKind::Dlc;
             }
 
         } else {
             switch (rand() % 5)
             {
             case 0:
-                return BitType::Edl;
+                return BitKind::Edl;
             case 1:
-                return BitType::R0;
+                return BitKind::R0;
             case 2:
-                return BitType::Brs;
+                return BitKind::Brs;
             case 3:
-                return BitType::Esi;
+                return BitKind::Esi;
             default:
-                return BitType::Dlc;
+                return BitKind::Dlc;
             }
         }
 
     case BitField::Data:
-        return BitType::Data;
+        return BitKind::Data;
 
     case BitField::Crc:
-        if (frame_type == FrameType::CanFd)
+        if (frame_type == FrameKind::CanFd)
         {
             switch (rand() % 3)
             {
             case 0:
-                return BitType::StuffCount;
+                return BitKind::StuffCnt;
             case 1:
-                return BitType::StuffParity;
+                return BitKind::StuffParity;
             default:
-                return BitType::Crc;
+                return BitKind::Crc;
             }
         } else {
-            return BitType::Crc;
+            return BitKind::Crc;
         }
 
     case BitField::Ack:
         if (rand() % 2)
-            return BitType::CrcDelimiter;
-        return BitType::AckDelimiter;
+            return BitKind::CrcDelim;
+        return BitKind::AckDelim;
 
     case BitField::Eof:
-        return BitType::Eof;
+        return BitKind::Eof;
     }
-    return BitType::BaseIdentifier;
+    return BitKind::BaseIdent;
 }
 
 void test::TestBase::CheckRxFrame(Frame &golden_frame)
@@ -597,7 +597,7 @@ void test::TestBase::CheckTecChange(int reference_tec, int delta)
 void test::TestBase::WaitDutErrorActive()
 {
     TestMessage("Waiting till DUT is error active...");
-    while (dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+    while (dut_ifc->GetErrorState() != FaultConfState::ErrAct)
         usleep(100000);
     TestMessage("DUT is error active!");
 }
@@ -752,9 +752,9 @@ size_t test::TestBase::CalcNumSamplePoints(bool nominal)
 {
     int tmp;
     if (nominal)
-        tmp = nominal_bit_timing.GetBitLengthTimeQuanta();
+        tmp = nominal_bit_timing.GetBitLenTQ();
     else
-        tmp = data_bit_timing.GetBitLengthTimeQuanta();
+        tmp = data_bit_timing.GetBitLenTQ();
 
     // Minimal durations (in cycles):
     //  Nominal - TSEG1 = 5, TSEG2 = 3
@@ -808,7 +808,7 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
     // additional elementary tests, not just the ones for "each sample point". This situation
     // does not occur in standard, and if it happened, it was mostly an error in configuration
     // of number of elementary tests. Therefore we forbid this option.
-    assert(((elem_test.index_ < orig_bt->GetBitLengthTimeQuanta()) &&
+    assert(((elem_test.index_ < orig_bt->GetBitLenTQ()) &&
              "Invalid test index, can't configure sample point!"));
 
     // Calculate new bit-rate from configured one. Have same bit-rate, but different sample point.
@@ -816,7 +816,7 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
     new_bt.brp_ = orig_bt->brp_;
     new_bt.prop_ = 0;
     new_bt.ph1_ = init_ph1 + elem_test.index_ - 1;
-    new_bt.ph2_ = orig_bt->GetBitLengthTimeQuanta() - new_bt.ph1_ - 1;
+    new_bt.ph2_ = orig_bt->GetBitLenTQ() - new_bt.ph1_ - 1;
 
     // Handle cases where we add too many elementary tests and we would make PH2 equal to zero
     // or even less than zero causing underflow.

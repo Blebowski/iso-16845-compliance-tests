@@ -97,7 +97,7 @@ class TestIso_7_8_6_3 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -112,21 +112,21 @@ class TestIso_7_8_6_3 : public test::TestBase
              *      DUTs expected resynchronisation).
              *   4. Force PH2 of ACK bit to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *crc_delimiter_driver = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            Bit *crc_delimiter_driver = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitKind::Ack);
 
             for (int j = 0; j < elem_test.e_; j++)
-                crc_delimiter_driver->ForceTimeQuanta(nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
-                                                      BitValue::Dominant);
+                crc_delimiter_driver->ForceTQ(nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
+                                                      BitVal::Dominant);
 
             crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
 
             for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                ack_driver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                ack_driver->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

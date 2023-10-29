@@ -73,8 +73,8 @@ class TestIso_7_2_7 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -93,12 +93,12 @@ class TestIso_7_2_7 : public test::TestBase
              *   2. Force CRC Delimiter to Dominant in driven frame.
              *   3. Insert Active Error frame from ACK delimiter ON in both driven/monitored frame.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::CrcDelim)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
-            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Ack);
+            driver_bit_frm->InsertActErrFrm(0, BitKind::Ack);
 
             /**************************************************************************************
              * Execute test

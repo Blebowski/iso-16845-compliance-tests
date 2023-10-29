@@ -89,8 +89,8 @@ class TestIso_8_1_3 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 11; i++){
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -119,8 +119,8 @@ class TestIso_8_1_3 : public test::TestBase
              * of nominal bit-rate! This would result in slightly shifted monitored frame
              * compared to IUT!
              */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
             RandomizeAndPrint(golden_frm.get());
 
@@ -147,13 +147,13 @@ class TestIso_8_1_3 : public test::TestBase
              *      frame which was actually issued to IUT
              *************************************************************************************/
             Bit *loosing_bit =  monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 1,
-                                                    BitType::BaseIdentifier);
-            loosing_bit->bit_value_ = BitValue::Recessive;
-            monitor_bit_frm->LooseArbitration(loosing_bit);
+                                                    BitKind::BaseIdent);
+            loosing_bit->val_ = BitVal::Recessive;
+            monitor_bit_frm->LooseArbit(loosing_bit);
 
-            loosing_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+            loosing_bit->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

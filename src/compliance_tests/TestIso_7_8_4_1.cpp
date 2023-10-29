@@ -87,7 +87,7 @@ class TestIso_7_8_4_1 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = data_bit_timing.sjw_ + 1;
-                 i <= data_bit_timing.GetBitLengthTimeQuanta() - data_bit_timing.ph2_ - 1;
+                 i <= data_bit_timing.GetBitLenTQ() - data_bit_timing.ph2_ - 1;
                  i++)
             {
                 ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
@@ -104,8 +104,8 @@ class TestIso_7_8_4_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -119,16 +119,16 @@ class TestIso_7_8_4_1 : public test::TestBase
              *   3. Force first e time quantas of ESI bit to Recessive
              *   4. Force ESI from SJW - 1 after sample point till the end to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitType::Esi);
-            esi_bit->bit_value_ = BitValue::Dominant;
+            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitKind::Esi);
+            esi_bit->val_ = BitVal::Dominant;
 
             for (int j = 0; j < elem_test.e_; j++)
-                esi_bit->ForceTimeQuanta(j, BitValue::Recessive);
+                esi_bit->ForceTQ(j, BitVal::Recessive);
 
             for (size_t j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
-                esi_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                esi_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

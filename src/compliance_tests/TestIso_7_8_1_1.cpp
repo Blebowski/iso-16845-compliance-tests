@@ -90,7 +90,7 @@ class TestIso_7_8_1_1 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = 0; i < 2; i++) {
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::Can20));
             }
         }
 
@@ -99,9 +99,9 @@ class TestIso_7_8_1_1 : public test::TestBase
         {
             // CAN FD frame, Shift/ No shift based on elementary test!
             if (elem_test.index_ == 1)
-                frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+                frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             else
-                frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::DontShift);
+                frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x0);
             RandomizeAndPrint(golden_frm.get());
@@ -116,14 +116,14 @@ class TestIso_7_8_1_1 : public test::TestBase
              *   3. Force TSEG1 - 1 of BRS to dominant (first elementary test), or TSEG1 of BRS to
              *      dominant (second elementary test).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_  = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_  = BitVal::Dominant;
 
-            Bit *brs = driver_bit_frm->GetBitOf(0, BitType::Brs);
+            Bit *brs = driver_bit_frm->GetBitOf(0, BitKind::Brs);
 
             // For both set the orig. bit value to recessive so that we
             // see the dominant flipped bits!
-            brs->bit_value_ = BitValue::Recessive;
+            brs->val_ = BitVal::Recessive;
 
             int dominant_pulse_length;
 
@@ -133,7 +133,7 @@ class TestIso_7_8_1_1 : public test::TestBase
                 dominant_pulse_length = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 1;
 
             for (int j = 0; j < dominant_pulse_length; j++)
-                brs->ForceTimeQuanta(j, BitValue::Dominant);
+                brs->ForceTQ(j, BitVal::Dominant);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -56,8 +56,7 @@ extern "C" {
             void Reset();
             bool SetFdStandardType(bool isIso);
             bool SetCanVersion(CanVersion canVersion);
-            void ConfigureBitTiming(can::BitTiming nominal_bit_timing,
-                                    can::BitTiming data_bit_timing);
+            void ConfigureBitTiming(can::BitTiming nbt, can::BitTiming dbt);
             void ConfigureSsp(SspType sspType, int sspOffset);
             void SendFrame(can::Frame *frame);
             can::Frame ReadFrame();
@@ -66,8 +65,8 @@ extern "C" {
             int GetTec();
             void SetRec(int rec);
             void SetTec(int tec);
-            void SetErrorState(can::FaultConfinementState errorState);
-            can::FaultConfinementState GetErrorState();
+            void SetErrorState(can::FaultConfState errorState);
+            can::FaultConfState GetErrorState();
             bool ConfigureProtocolException(bool enable);
             bool ConfigureOneShot(bool enable);
             void SendReintegrationRequest();

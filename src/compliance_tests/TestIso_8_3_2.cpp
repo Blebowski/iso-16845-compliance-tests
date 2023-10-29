@@ -82,8 +82,8 @@ class TestIso_8_3_2 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             SetupMonitorTxTests();
@@ -100,11 +100,11 @@ class TestIso_8_3_2 : public test::TestBase
             };
 
             if (test_variant == TestVariant::Common)
-                frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base,
-                                                           RtrFlag::DataFrame);
+                frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base,
+                                                           RtrFlag::Data);
             else
-                frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                                           EsiFlag::ErrorActive);
+                frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                                           EsiFlag::ErrAct);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, ids[elem_test.index_ - 1],
                                                  &data_byte);
@@ -127,18 +127,18 @@ class TestIso_8_3_2 : public test::TestBase
              *  5. Turn second driven frame (the same) as received. Remove SOF in both driven and
              *     monitored frames. Append after first frame. This checks retransmission.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(6, BitType::Data)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            Bit *last_interm_bit = driver_bit_frm->GetBitOf(2, BitType::Intermission);
+            Bit *last_interm_bit = driver_bit_frm->GetBitOf(2, BitKind::Interm);
             driver_bit_frm->FlipBitAndCompensate(last_interm_bit, dut_input_delay);
 
-            driver_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->RemoveBit(0, BitType::Sof);
-            monitor_bit_frm_2->RemoveBit(0, BitType::Sof);
+            driver_bit_frm_2->ConvRXFrame();
+            driver_bit_frm_2->RemoveBit(0, BitKind::Sof);
+            monitor_bit_frm_2->RemoveBit(0, BitKind::Sof);
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

@@ -94,51 +94,51 @@ class TestIso_7_6_9 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 8; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 6; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        BitType get_rand_arbitration_field()
+        BitKind get_rand_arbitration_field()
         {
             switch (rand() % 5)
             {
             case 0:
-                return BitType::BaseIdentifier;
+                return BitKind::BaseIdent;
             case 1:
-                return BitType::IdentifierExtension;
+                return BitKind::ExtIdent;
             case 2:
-                return BitType::Rtr;
+                return BitKind::Rtr;
             case 3:
-                return BitType::Ide;
+                return BitKind::Ide;
             case 4:
-                return BitType::Srr;
+                return BitKind::Srr;
             default:
                 break;
             }
-            return BitType::BaseIdentifier;
+            return BitKind::BaseIdent;
         }
 
-        BitType get_rand_control_field()
+        BitKind get_rand_control_field()
         {
             switch (rand() % 5)
             {
             case 0:
-                return BitType::R0;
+                return BitKind::R0;
             case 1:
-                return BitType::R1;
+                return BitKind::R1;
             case 2:
-                return BitType::Brs;
+                return BitKind::Brs;
             case 3:
-                return BitType::Esi;
+                return BitKind::Esi;
             case 4:
-                return BitType::Dlc;
+                return BitKind::Dlc;
             default:
                 break;
             }
-            return BitType::Dlc;
+            return BitKind::Dlc;
         }
 
         /**
@@ -149,8 +149,8 @@ class TestIso_7_6_9 : public test::TestBase
          */
         int GenerateFrame(TestVariant test_variant, ElementaryTest elem_test)
         {
-            BitType field = BitType::Sof;
-            BitValue value = BitValue::Dominant;
+            BitKind field = BitKind::Sof;
+            BitVal value = BitVal::Dominant;
 
             if (test_variant == TestVariant::Common)
             {
@@ -159,30 +159,30 @@ class TestIso_7_6_9 : public test::TestBase
                 {
                 case 1:
                 case 5:
-                    field = BitType::BaseIdentifier;
+                    field = BitKind::BaseIdent;
                     //field = get_rand_arbitration_field();
                     break;
                 case 2:
                 case 6:
-                    field = BitType::Dlc;
+                    field = BitKind::Dlc;
                     //field = get_rand_control_field();
                     break;
                 case 3:
                 case 7:
-                    field = BitType::Data;
+                    field = BitKind::Data;
                     break;
                 case 4:
                 case 8:
-                    field = BitType::Crc;
+                    field = BitKind::Crc;
                     break;
                 default:
                     break;
                 }
 
                 if (elem_test.index_ < 5)
-                    value = BitValue::Recessive;
+                    value = BitVal::Recessive;
                 else
-                    value = BitValue::Dominant;
+                    value = BitVal::Dominant;
 
             } else if (test_variant == TestVariant::CanFdEnabled) {
                 assert(elem_test.index_ > 0 && elem_test.index_ < 7);
@@ -190,25 +190,25 @@ class TestIso_7_6_9 : public test::TestBase
                 {
                 case 1:
                 case 4:
-                    field = BitType::BaseIdentifier;
+                    field = BitKind::BaseIdent;
                     //field = get_rand_arbitration_field();
                     break;
                 case 2:
                 case 5:
-                    field = BitType::Dlc;
+                    field = BitKind::Dlc;
                     //field = get_rand_control_field();
                     break;
                 case 3:
                 case 6:
-                    field = BitType::Data;
+                    field = BitKind::Data;
                 default:
                     break;
                 }
 
                 if (elem_test.index_ < 4)
-                    value = BitValue::Recessive;
+                    value = BitVal::Recessive;
                 else
-                    value = BitValue::Dominant;
+                    value = BitVal::Dominant;
             }
 
             /* Corrupting dominant stuff bit in control field is special! We need to make sure that
@@ -220,12 +220,12 @@ class TestIso_7_6_9 : public test::TestBase
              */
             if (test_variant == TestVariant::Common && elem_test.index_ == 6) {
                 frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                                                            IdentifierType::Extended);
+                                                            IdentKind::Ext);
             } else if (test_variant == TestVariant::CanFdEnabled && elem_test.index_ == 5) {
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, BrsFlag::Shift,
-                                                            EsiFlag::ErrorPassive);
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, BrsFlag::DoShift,
+                                                            EsiFlag::ErrPas);
             } else {
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame);
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::Data);
             }
 
             /* Search for stuff bit of desired value in field as given by elementary test.
@@ -256,19 +256,19 @@ class TestIso_7_6_9 : public test::TestBase
                  * R0 bit must be forced to dominant for CAN 2.0 frame */
                 if (test_variant == TestVariant::Common && elem_test.index_ == 6)
                 {
-                    driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                    driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
                     driver_bit_frm->UpdateFrame();
                 }
 
                 num_stuff_bits = driver_bit_frm->GetNumStuffBits(field,
-                                    StuffBitType::NormalStuffBit, value);
+                                    StuffKind::Normal, value);
                 TestMessage("Number of matching stuff bits: %d\n", num_stuff_bits);
             }
             TestBigMessage("Found frame with required stuff-bits!");
 
             monitor_bit_frm = ConvertBitFrame(*golden_frm);
             return driver_bit_frm->GetBitIndex(
-                        driver_bit_frm->GetStuffBit(field, StuffBitType::NormalStuffBit, value));
+                        driver_bit_frm->GetStuffBit(field, StuffKind::Normal, value));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -299,11 +299,11 @@ class TestIso_7_6_9 : public test::TestBase
              *   3. Insert Active Error flag from next bit on to monitored frame. Insert passive
              *      frame to driven frame (TX/RX feedback enabled).
              **************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBit(bit_to_corrupt)->FlipBitValue();
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBit(bit_to_corrupt)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(bit_to_corrupt + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_to_corrupt + 1);
+            driver_bit_frm->InsertPasErrFrm(bit_to_corrupt + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_to_corrupt + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

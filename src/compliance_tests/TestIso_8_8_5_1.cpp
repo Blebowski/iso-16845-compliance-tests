@@ -91,8 +91,8 @@ class TestIso_8_8_5_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                        EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                        EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -108,14 +108,14 @@ class TestIso_8_8_5_1 : public test::TestBase
              *   2. Force first e TQs of ESI to recessive.
              *   3. Force PH2 of ESI to recessive.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *esi = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *esi = driver_bit_frm->GetBitOf(0, BitKind::Esi);
             for (int i = 0; i < elem_test.e_; i++)
-                esi->ForceTimeQuanta(i, BitValue::Recessive);
+                esi->ForceTQ(i, BitVal::Recessive);
 
             for (size_t i = 0; i < data_bit_timing.ph2_; i++)
-                esi->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Recessive);
+                esi->ForceTQ(i, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

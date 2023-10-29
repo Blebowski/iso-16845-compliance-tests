@@ -106,9 +106,9 @@ class TestIso_7_2_5 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (size_t j = 0; j < 3; j++)
-                AddElemTest(TestVariant::Common, ElementaryTest(j + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(j + 1, FrameKind::Can20));
             for (size_t j = 0; j < 6; j++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(j + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(j + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -119,20 +119,20 @@ class TestIso_7_2_5 : public test::TestBase
          *  - Stuff bit
          *  - A bit before stuff bit (if not left out, undesired stuff error will occur)
          */
-        int ChooseCrcBitToCorrupt(BitFrame *bit_frame, BitValue bit_value)
+        int ChooseCrcBitToCorrupt(BitFrame *bit_frame, BitVal bit_value)
         {
             Bit *bit;
             bool is_ok;
             do {
                 is_ok = true;
-                bit = bit_frame->GetRandomBitOf(BitType::Crc);
+                bit = bit_frame->GetRandBitOf(BitKind::Crc);
                 int bit_index = bit_frame->GetBitIndex(bit);
 
-                if (bit->stuff_bit_type_ != StuffBitType::NoStuffBit)
+                if (bit->stuff_kind_ != StuffKind::NoStuff)
                     is_ok = false;
-                if (driver_bit_frm->GetBit(bit_index + 1)->stuff_bit_type_ != StuffBitType::NoStuffBit)
+                if (driver_bit_frm->GetBit(bit_index + 1)->stuff_kind_ != StuffKind::NoStuff)
                     is_ok = false;
-                if (bit->bit_value_ != bit_value)
+                if (bit->val_ != bit_value)
                     is_ok = false;
             } while (!is_ok);
             return bit_frame->GetBitIndex(bit);
@@ -147,8 +147,8 @@ class TestIso_7_2_5 : public test::TestBase
             Bit *drv_bit = driver_bit_frm->GetBit(index);
             Bit *mon_bit = monitor_bit_frm->GetBit(index);
 
-            drv_bit->FlipBitValue();
-            mon_bit->FlipBitValue();
+            drv_bit->FlipVal();
+            mon_bit->FlipVal();
 
             driver_bit_frm->UpdateFrame(false);
             monitor_bit_frm->UpdateFrame(false);
@@ -174,7 +174,7 @@ class TestIso_7_2_5 : public test::TestBase
                 }
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id);
             RandomizeAndPrint(golden_frm.get());
 
@@ -195,26 +195,26 @@ class TestIso_7_2_5 : public test::TestBase
 
             if (test_variant == TestVariant::Common) {
                 if (elem_test.index_ == 1 || elem_test.index_ == 2) {
-                    BitValue bit_value;
+                    BitVal bit_value;
                     if (elem_test.index_ == 1) {
-                        bit_value = BitValue::Dominant;
+                        bit_value = BitVal::Dominant;
                     } else {
-                        bit_value = BitValue::Recessive;
+                        bit_value = BitVal::Recessive;
                     }
 
                     InsertCrcError(ChooseCrcBitToCorrupt(driver_bit_frm.get(), bit_value));
 
                 } else if (elem_test.index_ == 3) {
-                    driver_bit_frm->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Recessive;
+                    driver_bit_frm->GetBitOf(0, BitKind::Sof)->val_ = BitVal::Recessive;
                 }
 
             } else if (test_variant == TestVariant::CanFdEnabled) {
                 if (elem_test.index_ >= 1 && elem_test.index_ <= 4) {
-                    BitValue bit_value;
+                    BitVal bit_value;
                     if (elem_test.index_ == 1 || elem_test.index_ == 3) {
-                        bit_value = BitValue::Dominant;
+                        bit_value = BitVal::Dominant;
                     } else {
-                        bit_value = BitValue::Recessive;
+                        bit_value = BitVal::Recessive;
                     }
 
                     InsertCrcError(ChooseCrcBitToCorrupt(driver_bit_frm.get(), bit_value));
@@ -223,17 +223,17 @@ class TestIso_7_2_5 : public test::TestBase
                     // TODO: Do the shortening to test CRC Issue!
 
                 } else if (elem_test.index_ == 6) {
-                    driver_bit_frm->GetBitOf(0, BitType::StuffParity)->FlipBitValue();
+                    driver_bit_frm->GetBitOf(0, BitKind::StuffParity)->FlipVal();
                     // Stuff bit post stuff parity is inserted with same field type!
-                    driver_bit_frm->GetBitOf(1, BitType::StuffParity)->FlipBitValue();
+                    driver_bit_frm->GetBitOf(1, BitKind::StuffParity)->FlipVal();
                 }
             }
 
-            monitor_bit_frm->TurnReceivedFrame();
-            monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->ConvRXFrame();
+            monitor_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
-            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::Eof);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Eof);
+            driver_bit_frm->InsertPasErrFrm(0, BitKind::Eof);
 
             // TODO: Skip test for CRC issue, will be finished later!
             if (elem_test.index_ == 5)

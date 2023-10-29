@@ -38,8 +38,8 @@ void can::BitFrame::ConstructFrame()
 {
     BuildFrameBits();
 
-    if (frame_flags().is_fdf() == FrameType::Can2_0){
-        CalculateCrc();
+    if (frame_flags().is_fdf() == FrameKind::Can20){
+        CalcCrc();
         UpdateCrcBits();
 
         // We must set CRC before Stuff bits are inserted because in CAN 2.0
@@ -47,35 +47,33 @@ void can::BitFrame::ConstructFrame()
         InsertNormalStuffBits();
     } else {
         InsertNormalStuffBits();
-        SetStuffCount();
+        SetStuffCnt();
         SetStuffParity();
-        InsertStuffCountStuffBits();
-        CalculateCrc();
+        InsertStuffToStuffCnt();
+        CalcCrc();
         UpdateCrcBits();
-        InsertCrcFixedStuffBits();
+        InsertFixedStuffToCrc();
     }
 }
 
 
-can::BitFrame::BitFrame(FrameFlags frame_flags, uint8_t dlc, int identifier,
-                        uint8_t *data, BitTiming* nominal_bit_timing,
-                        BitTiming* data_bit_timing):
-                Frame(frame_flags, dlc, identifier, data)
+can::BitFrame::BitFrame(FrameFlags frame_flags, uint8_t dlc, int ident,
+                        uint8_t *data, BitTiming* nbt, BitTiming* dbt):
+                Frame(frame_flags, dlc, ident, data)
 {
-    nominal_bit_timing_ = nominal_bit_timing;
-    data_bit_timing_ = data_bit_timing;
+    nbt_ = nbt;
+    dbt_ = dbt;
 
     ConstructFrame();
 }
 
 
-can::BitFrame::BitFrame(Frame &frame, BitTiming *nominal_bit_timing,
-                        BitTiming *data_bit_timing):
+can::BitFrame::BitFrame(Frame &frame, BitTiming *nbt, BitTiming *dbt):
                 Frame(frame.frame_flags(), frame.dlc(),
                       frame.identifier(), frame.data())
 {
-    nominal_bit_timing_ = nominal_bit_timing;
-    data_bit_timing_ = data_bit_timing;
+    nbt_ = nbt;
+    dbt_ = dbt;
 
     ConstructFrame();
 }
@@ -83,44 +81,44 @@ can::BitFrame::BitFrame(Frame &frame, BitTiming *nominal_bit_timing,
 
 void can::BitFrame::UpdateCrcBits()
 {
-    std::list<Bit>::iterator bit_it = GetBitOfIterator(0, BitType::Crc);
+    std::list<Bit>::iterator bit_it = GetBitOfIter(0, BitKind::Crc);
     uint32_t tmp_crc = crc();
     int i;
 
-    if (frame_flags_.is_fdf() == FrameType::Can2_0)
+    if (frm_flags_.is_fdf() == FrameKind::Can20)
         i = 14;
-    else if (data_lenght_ > 16)
+    else if (data_len_ > 16)
         i = 20;
     else
         i = 16;
 
-    while (bit_it->bit_type_ == BitType::Crc)
+    while (bit_it->kind_ == BitKind::Crc)
     {
         // CRC should be set in CAN FD frames before stuff bits in CRC are
         // inserted (as CRC affects value of these stuff bits), therefore
         // it is illegal to calculate CRC when stuff bits in it are already
         // inserted!
-        assert(bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit);
+        assert(bit_it->stuff_kind_ == StuffKind::NoStuff);
 
-        bit_it->bit_value_ = (BitValue)((tmp_crc >> i) & 0x1);
+        bit_it->val_ = (BitVal)((tmp_crc >> i) & 0x1);
         i--;
         bit_it++;
     }
 }
 
 
-uint32_t can::BitFrame::base_identifier()
+uint32_t can::BitFrame::base_ident()
 {
-    if (frame_flags_.is_ide() == IdentifierType::Extended)
+    if (frm_flags_.is_ide() == IdentKind::Ext)
         return ((uint32_t)(identifier() >> 18));
     else
         return (uint32_t)identifier();
 }
 
 
-uint32_t can::BitFrame::identifier_extension()
+uint32_t can::BitFrame::ext_ident()
 {
-    if (frame_flags_.is_ide() == IdentifierType::Extended)
+    if (frm_flags_.is_ide() == IdentKind::Ext)
         return (uint32_t)(identifier()) & 0x3FFFF;
     else
         return 0;
@@ -129,48 +127,47 @@ uint32_t can::BitFrame::identifier_extension()
 
 uint8_t can::BitFrame::stuff_count()
 {
-    if (frame_flags_.is_fdf() == FrameType::Can2_0){
+    if (frm_flags_.is_fdf() == FrameKind::Can20){
         std::cerr << "CAN 2.0 frame does not have Stuff count field defined" << std::endl;
         return 0;
     }
-    return stuff_count_;
+    return stuff_cnt_;
 }
 
 
 uint32_t can::BitFrame::crc()
 {
-    if (frame_flags_.is_fdf() == FrameType::Can2_0)
+    if (frm_flags_.is_fdf() == FrameKind::Can20)
         return crc15_;
-    if (data_lenght_ > 16)
+    if (data_len_ > 16)
         return crc21_;
     return crc17_;
 }
 
 
 // LSB represents bit value we want to push
-void can::BitFrame::AppendBit(BitType bit_type, uint8_t bit_val)
+void can::BitFrame::AppendBit(BitKind kind, uint8_t value)
 {
-    BitValue bit_value;
+    BitVal bit_value;
 
-    if ((bit_val % 2) == 0)
-        bit_value = BitValue::Dominant;
+    if ((value % 2) == 0)
+        bit_value = BitVal::Dominant;
     else
-        bit_value = BitValue::Recessive;
+        bit_value = BitVal::Recessive;
 
-    AppendBit(bit_type, bit_value);
+    AppendBit(kind, bit_value);
 }
 
 
-void can::BitFrame::AppendBit(BitType bit_type, BitValue bit_value)
+void can::BitFrame::AppendBit(BitKind kind, BitVal value)
 {
-    bits_.push_back(Bit(this, bit_type, bit_value, &frame_flags_, nominal_bit_timing_,
-                        data_bit_timing_));
+    bits_.push_back(Bit(this, kind, value, &frm_flags_, nbt_, dbt_));
 }
 
 
 void can::BitFrame::AppendBitFrame(can::BitFrame *bit_frame)
 {
-    for (size_t i = 0; i < bit_frame->GetBitCount(); i++)
+    for (size_t i = 0; i < bit_frame->GetLen(); i++)
         // We want to copy the bit, not to refer to original bit frame!
         bits_.push_back(Bit(*bit_frame->GetBit(i)));
 }
@@ -195,99 +192,99 @@ bool can::BitFrame::ClearFrameBits(size_t index)
 void can::BitFrame::BuildFrameBits()
 {
     bits_.clear();
-    AppendBit(BitType::Sof, BitValue::Dominant);
+    AppendBit(BitKind::Sof, BitVal::Dominant);
 
     // Build base ID
-    uint32_t base_id = base_identifier();
+    uint32_t base_id = base_ident();
     for (int i = 10; i >= 0; i--)
-        AppendBit(BitType::BaseIdentifier, base_id >> i);
+        AppendBit(BitKind::BaseIdent, base_id >> i);
 
     // Build RTR/r1/SRR
-    if (frame_flags_.is_ide() == IdentifierType::Extended) {
-        AppendBit(BitType::Srr, BitValue::Recessive);
+    if (frm_flags_.is_ide() == IdentKind::Ext) {
+        AppendBit(BitKind::Srr, BitVal::Recessive);
     } else {
-        if (frame_flags_.is_fdf() == FrameType::CanFd) {
-            AppendBit(BitType::R1, BitValue::Dominant);
+        if (frm_flags_.is_fdf() == FrameKind::CanFd) {
+            AppendBit(BitKind::R1, BitVal::Dominant);
         } else {
-            if (frame_flags_.is_rtr() == RtrFlag::RtrFrame)
-                AppendBit(BitType::Rtr, BitValue::Recessive);
+            if (frm_flags_.is_rtr() == RtrFlag::Rtr)
+                AppendBit(BitKind::Rtr, BitVal::Recessive);
             else
-                AppendBit(BitType::Rtr, BitValue::Dominant);
+                AppendBit(BitKind::Rtr, BitVal::Dominant);
         }
     }
 
     // Build IDE, Extended Identifier and one bit post Extended Identifier
-    if (frame_flags_.is_ide() == IdentifierType::Extended) {
-        AppendBit(BitType::Ide, BitValue::Recessive);
+    if (frm_flags_.is_ide() == IdentKind::Ext) {
+        AppendBit(BitKind::Ide, BitVal::Recessive);
 
-        uint32_t extId = identifier_extension();
+        uint32_t extId = ext_ident();
         for (int i = 17; i >= 0; i--)
-            AppendBit(BitType::IdentifierExtension, extId >> i);
+            AppendBit(BitKind::ExtIdent, extId >> i);
 
-        if (frame_flags_.is_fdf() == FrameType::CanFd) {
-            AppendBit(BitType::R1, BitValue::Dominant);
+        if (frm_flags_.is_fdf() == FrameKind::CanFd) {
+            AppendBit(BitKind::R1, BitVal::Dominant);
         } else {
-            if (frame_flags_.is_rtr() == RtrFlag::RtrFrame) {
-                AppendBit(BitType::Rtr, BitValue::Recessive);
+            if (frm_flags_.is_rtr() == RtrFlag::Rtr) {
+                AppendBit(BitKind::Rtr, BitVal::Recessive);
             } else {
-                AppendBit(BitType::Rtr, BitValue::Dominant);
+                AppendBit(BitKind::Rtr, BitVal::Dominant);
             }
         }
     } else {
-        AppendBit(BitType::Ide, BitValue::Dominant);
+        AppendBit(BitKind::Ide, BitVal::Dominant);
     }
 
     // Build EDL/r0/r1 bit
-    if (frame_flags_.is_fdf() == FrameType::CanFd) {
-        AppendBit(BitType::Edl, BitValue::Recessive);
-    } else if (frame_flags_.is_ide() == IdentifierType::Extended) {
-        AppendBit(BitType::R1, BitValue::Dominant);
+    if (frm_flags_.is_fdf() == FrameKind::CanFd) {
+        AppendBit(BitKind::Edl, BitVal::Recessive);
+    } else if (frm_flags_.is_ide() == IdentKind::Ext) {
+        AppendBit(BitKind::R1, BitVal::Dominant);
     } else {
-        AppendBit(BitType::R0, BitValue::Dominant);
+        AppendBit(BitKind::R0, BitVal::Dominant);
     }
 
     // Build extra r0 past EDL or in Extended Identifier frame
-    if (frame_flags_.is_fdf() == FrameType::CanFd || frame_flags_.is_ide() == IdentifierType::Extended) {
-        AppendBit(BitType::R0, BitValue::Dominant);
+    if (frm_flags_.is_fdf() == FrameKind::CanFd || frm_flags_.is_ide() == IdentKind::Ext) {
+        AppendBit(BitKind::R0, BitVal::Dominant);
     }
 
     // Build BRS and ESI bits
-    if (frame_flags_.is_fdf() == FrameType::CanFd) {
-        if (frame_flags_.is_brs() == BrsFlag::Shift)
-            AppendBit(BitType::Brs, BitValue::Recessive);
+    if (frm_flags_.is_fdf() == FrameKind::CanFd) {
+        if (frm_flags_.is_brs() == BrsFlag::DoShift)
+            AppendBit(BitKind::Brs, BitVal::Recessive);
         else
-            AppendBit(BitType::Brs, BitValue::Dominant);
+            AppendBit(BitKind::Brs, BitVal::Dominant);
 
-        if (frame_flags_.is_esi() == EsiFlag::ErrorActive)
-            AppendBit(BitType::Esi, BitValue::Dominant);
+        if (frm_flags_.is_esi() == EsiFlag::ErrAct)
+            AppendBit(BitKind::Esi, BitVal::Dominant);
         else
-            AppendBit(BitType::Esi, BitValue::Recessive);
+            AppendBit(BitKind::Esi, BitVal::Recessive);
     }
 
     // Build DLC
     for (int i = 3; i >= 0; i--)
-        AppendBit(BitType::Dlc, dlc_ >> i);
+        AppendBit(BitKind::Dlc, dlc_ >> i);
 
     // Build data field
     for (int i = 0; i < data_length(); i++) {
         for (int j = 7; j >= 0; j--)
-            AppendBit(BitType::Data, data(i) >> j);
+            AppendBit(BitKind::Data, data(i) >> j);
     }
 
     // Build Stuff count + parity (put dummy as we don't know number of
     // stuff bits yet)!
-    if (frame_flags_.is_fdf() == FrameType::CanFd)
+    if (frm_flags_.is_fdf() == FrameKind::CanFd)
     {
         for (int i = 0; i < 3; i++)
-            AppendBit(BitType::StuffCount, BitValue::Dominant);
-        AppendBit(BitType::StuffParity, BitValue::Recessive);
+            AppendBit(BitKind::StuffCnt, BitVal::Dominant);
+        AppendBit(BitKind::StuffParity, BitVal::Recessive);
     }
 
     // Build CRC - put dummies so far since we don't have Stuff bits
     // yet, we can't calculate value of CRC for CAN FD frames!
     int crc_length;
 
-    if (frame_flags_.is_fdf() == FrameType::Can2_0)
+    if (frm_flags_.is_fdf() == FrameKind::Can20)
         crc_length = 15;
     else if (data_length() <= 16)
         crc_length = 17;
@@ -295,20 +292,20 @@ void can::BitFrame::BuildFrameBits()
         crc_length = 21;
 
     for (int i = crc_length - 1; i >= 0; i--)
-        AppendBit(BitType::Crc, BitValue::Recessive);
+        AppendBit(BitKind::Crc, BitVal::Recessive);
 
     // Add CRC Delimiter, ACK and ACK Delimiter
-    AppendBit(BitType::CrcDelimiter, BitValue::Recessive);
-    AppendBit(BitType::Ack, BitValue::Recessive);
-    if (frame_flags_.is_fdf() == FrameType::CanFd)
-        AppendBit(BitType::Ack, BitValue::Recessive);
-    AppendBit(BitType::AckDelimiter, BitValue::Recessive);
+    AppendBit(BitKind::CrcDelim, BitVal::Recessive);
+    AppendBit(BitKind::Ack, BitVal::Recessive);
+    if (frm_flags_.is_fdf() == FrameKind::CanFd)
+        AppendBit(BitKind::Ack, BitVal::Recessive);
+    AppendBit(BitKind::AckDelim, BitVal::Recessive);
 
     // Finalize by EOF and by Intermission
     for (int i = 0; i < 7; i++)
-        AppendBit(BitType::Eof, BitValue::Recessive);
+        AppendBit(BitKind::Eof, BitVal::Recessive);
     for (int i = 0; i < 3; i++)
-        AppendBit(BitType::Intermission, BitValue::Recessive);
+        AppendBit(BitKind::Interm, BitVal::Recessive);
 }
 
 
@@ -316,10 +313,10 @@ size_t can::BitFrame::InsertNormalStuffBits()
 {
     std::list<Bit>::iterator bit_it;
     int same_bits = 1;
-    stuff_count_ = 0;
-    BitValue prev_value = BitValue::Dominant; // As if SOF
+    stuff_cnt_ = 0;
+    BitVal prev_value = BitVal::Dominant; // As if SOF
 
-    if (bits_.front().bit_type_ != BitType::Sof) {
+    if (bits_.front().kind_ != BitKind::Sof) {
         std::cerr << "First bit of a frame should be SOF!" << std::endl;
         return 0;
     }
@@ -333,12 +330,12 @@ size_t can::BitFrame::InsertNormalStuffBits()
     {
         // Break when we reach Stuff count (CAN FD) or CRC Delimiter (CAN 2.0).
         // Account also improperly created frame so break on the end!
-        if (bit_it->bit_type_ == BitType::CrcDelimiter ||
-            bit_it->bit_type_ == BitType::StuffCount ||
+        if (bit_it->kind_ == BitKind::CrcDelim ||
+            bit_it->kind_ == BitKind::StuffCnt ||
             bit_it == bits_.end())
             break;
 
-        if (bit_it->bit_value_ == prev_value)
+        if (bit_it->val_ == prev_value)
             same_bits++;
         else
             same_bits = 1;
@@ -351,76 +348,76 @@ size_t can::BitFrame::InsertNormalStuffBits()
             // not be taken into number of stuffed bits!
             auto bit_it_nxt = bit_it;
             bit_it_nxt++;
-            if (bit_it_nxt->bit_type_ == BitType::StuffCount)
+            if (bit_it_nxt->kind_ == BitKind::StuffCnt)
             {
-                prev_value = bit_it->bit_value_;
+                prev_value = bit_it->val_;
                 continue;
             }
 
-            Bit bit = Bit(this, bit_it->bit_type_, bit_it->GetOppositeValue(),
-                          &frame_flags_, nominal_bit_timing_, data_bit_timing_,
-                          StuffBitType::NormalStuffBit);
+            Bit bit = Bit(this, bit_it->kind_, bit_it->GetOppositeVal(),
+                          &frm_flags_, nbt_, dbt_,
+                          StuffKind::Normal);
             bit_it++;
             bit_it = bits_.insert(bit_it, bit);
             same_bits = 1;
 
-            stuff_count_ = (stuff_count_ + 1) % 8;
+            stuff_cnt_ = (stuff_cnt_ + 1) % 8;
         }
-        prev_value = bit_it->bit_value_;
+        prev_value = bit_it->val_;
     }
 
-    return stuff_count_;
+    return stuff_cnt_;
 }
 
 
-void can::BitFrame::InsertStuffCountStuffBits()
+void can::BitFrame::InsertStuffToStuffCnt()
 {
     std::list<Bit>::iterator bit_it;
-    BitValue stuff_bit_value;
+    BitVal stuff_bit_value;
 
-    assert(!(frame_flags_.is_fdf() == FrameType::Can2_0));
+    assert(!(frm_flags_.is_fdf() == FrameKind::Can20));
 
-    for (bit_it = bits_.begin(); bit_it->bit_type_ != BitType::StuffCount; bit_it++)
+    for (bit_it = bits_.begin(); bit_it->kind_ != BitKind::StuffCnt; bit_it++)
         ;
     bit_it--;
-    stuff_bit_value = bit_it->GetOppositeValue();
+    stuff_bit_value = bit_it->GetOppositeVal();
     bit_it++;
 
-    Bit bit = Bit(this, BitType::StuffCount, stuff_bit_value, &frame_flags_,
-                  nominal_bit_timing_, data_bit_timing_, StuffBitType::FixedStuffBit);
+    Bit bit = Bit(this, BitKind::StuffCnt, stuff_bit_value, &frm_flags_,
+                  nbt_, dbt_, StuffKind::Fixed);
     bit_it = bits_.insert(bit_it, bit);
     bit_it++;
 
     // Move one beyond stuff parity and calculate stuff bit post parity
     for (int i = 0; i < 3; i++)
         bit_it++;
-    stuff_bit_value = bit_it->GetOppositeValue();
-    bit_it->GetOppositeValue();
+    stuff_bit_value = bit_it->GetOppositeVal();
+    bit_it->GetOppositeVal();
     bit_it++;
 
-    Bit bit_2 = Bit(this, BitType::StuffParity, stuff_bit_value, &frame_flags_,
-                    nominal_bit_timing_, data_bit_timing_, StuffBitType::FixedStuffBit);
+    Bit bit_2 = Bit(this, BitKind::StuffParity, stuff_bit_value, &frm_flags_,
+                    nbt_, dbt_, StuffKind::Fixed);
     bit_it = bits_.insert(bit_it, bit_2);
 }
 
 
-void can::BitFrame::InsertCrcFixedStuffBits()
+void can::BitFrame::InsertFixedStuffToCrc()
 {
     std::list<Bit>::iterator bit_it;
     int same_bits = 0;
 
     // Search first bit of CRC
-    for (bit_it = bits_.begin(); bit_it->bit_type_ != BitType::Crc; bit_it++)
+    for (bit_it = bits_.begin(); bit_it->kind_ != BitKind::Crc; bit_it++)
         ;
 
-    for (; bit_it->bit_type_ != BitType::CrcDelimiter; ++bit_it)
+    for (; bit_it->kind_ != BitKind::CrcDelim; ++bit_it)
     {
         same_bits++;
         if ((same_bits % 4) == 0)
         {
-            Bit bit = Bit(this, BitType::Crc, bit_it->GetOppositeValue(),
-                          &frame_flags_, nominal_bit_timing_, data_bit_timing_,
-                          StuffBitType::FixedStuffBit);
+            Bit bit = Bit(this, BitKind::Crc, bit_it->GetOppositeVal(),
+                          &frm_flags_, nbt_, dbt_,
+                          StuffKind::Fixed);
             bit_it = bits_.insert(++bit_it, bit);
         }
     }
@@ -428,7 +425,7 @@ void can::BitFrame::InsertCrcFixedStuffBits()
 }
 
 
-uint32_t can::BitFrame::CalculateCrc()
+uint32_t can::BitFrame::CalcCrc()
 {
     std::list<Bit>::iterator bit_it;
     uint32_t crc_nxt_15 = 0;
@@ -443,19 +440,19 @@ uint32_t can::BitFrame::CalculateCrc()
     bit_it = bits_.begin();
     while (true)
     {
-        if (bit_it->bit_type_ == BitType::Crc)
+        if (bit_it->kind_ == BitKind::Crc)
             break;
 
-        BitValue bit_value = bit_it->bit_value_;
+        BitVal bit_value = bit_it->val_;
         crc_nxt_15 = (uint32_t)(bit_value) ^ ((crc15_ >> 14) & 0x1);
         crc_nxt_17 = (uint32_t)(bit_value) ^ ((crc17_ >> 16) & 0x1);
         crc_nxt_21 = (uint32_t)(bit_value) ^ ((crc21_ >> 20) & 0x1);
 
         // Shift left, CRC 15 always without stuff bits
-        if (bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit)
+        if (bit_it->stuff_kind_ == StuffKind::NoStuff)
             crc15_ = (crc15_ << 1);
 
-        if (bit_it->stuff_bit_type_ != StuffBitType::FixedStuffBit)
+        if (bit_it->stuff_kind_ != StuffKind::Fixed)
         {
             crc17_ = (crc17_ << 1);
             crc21_ = (crc21_ << 1);
@@ -466,11 +463,11 @@ uint32_t can::BitFrame::CalculateCrc()
         crc21_ &= 0x1FFFFF;
 
         // Calculate by polynomial
-        if ((crc_nxt_15 == 1) && (bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit))
+        if ((crc_nxt_15 == 1) && (bit_it->stuff_kind_ == StuffKind::NoStuff))
             crc15_ ^= 0xC599;
-        if ((crc_nxt_17 == 1) && (bit_it->stuff_bit_type_ != StuffBitType::FixedStuffBit))
+        if ((crc_nxt_17 == 1) && (bit_it->stuff_kind_ != StuffKind::Fixed))
             crc17_ ^= 0x3685B;
-        if ((crc_nxt_21 == 1) && (bit_it->stuff_bit_type_ != StuffBitType::FixedStuffBit))
+        if ((crc_nxt_21 == 1) && (bit_it->stuff_kind_ != StuffKind::Fixed))
             crc21_ ^= 0x302899;
 
         bit_it++;
@@ -480,26 +477,26 @@ uint32_t can::BitFrame::CalculateCrc()
     //printf("Calculated CRC 17 : 0x%x\n", crc17_);
     //printf("Calculated CRC 21 : 0x%x\n", crc21_);
 
-    if (frame_flags_.is_fdf() == FrameType::Can2_0)
+    if (frm_flags_.is_fdf() == FrameKind::Can20)
         return crc15_;
-    else if (data_lenght_ <= 16)
+    else if (data_len_ <= 16)
         return crc17_;
     else
         return crc21_;
 }
 
 
-bool can::BitFrame::SetStuffCount()
+bool can::BitFrame::SetStuffCnt()
 {
     std::list<Bit>::iterator bit_it;
-    stuff_count_encoded_ = 0;
+    stuff_cnt_encoded_ = 0;
     bit_it = bits_.begin();
 
     // DontShift sense to try to set Stuff count on CAN 2.0 frames!
-    if (frame_flags_.is_fdf() == FrameType::Can2_0)
+    if (frm_flags_.is_fdf() == FrameKind::Can20)
         return false;
 
-    while (bit_it->bit_type_ != BitType::StuffCount && bit_it != bits_.end())
+    while (bit_it->kind_ != BitKind::StuffCnt && bit_it != bits_.end())
         bit_it++;
 
     if (bit_it == bits_.end())
@@ -508,39 +505,39 @@ bool can::BitFrame::SetStuffCount()
         return false;
     }
 
-    assert(stuff_count_ < 8);
+    assert(stuff_cnt_ < 8);
 
-    switch (stuff_count_){
+    switch (stuff_cnt_){
         case 0x0 :
-            stuff_count_encoded_ = 0b000;
+            stuff_cnt_encoded_ = 0b000;
             break;
         case 0x1:
-            stuff_count_encoded_ = 0b001;
+            stuff_cnt_encoded_ = 0b001;
             break;
         case 0x2 :
-            stuff_count_encoded_ = 0b011;
+            stuff_cnt_encoded_ = 0b011;
             break;
         case 0x3 :
-            stuff_count_encoded_ = 0b010;
+            stuff_cnt_encoded_ = 0b010;
             break;
         case 0x4 :
-            stuff_count_encoded_ = 0b110;
+            stuff_cnt_encoded_ = 0b110;
             break;
         case 0x5 :
-            stuff_count_encoded_ = 0b111;
+            stuff_cnt_encoded_ = 0b111;
             break;
         case 0x6 :
-            stuff_count_encoded_ = 0b101;
+            stuff_cnt_encoded_ = 0b101;
             break;
         case 0x7 :
-            stuff_count_encoded_ = 0b100;
+            stuff_cnt_encoded_ = 0b100;
             break;
     };
 
     for (int i = 2; i >= 0; i--)
     {
-        assert(bit_it->bit_type_ == BitType::StuffCount);
-        bit_it->bit_value_ = (BitValue)((stuff_count_encoded_ >> i) & 0x1);
+        assert(bit_it->kind_ == BitKind::StuffCnt);
+        bit_it->val_ = (BitVal)((stuff_cnt_encoded_ >> i) & 0x1);
         bit_it++;
     }
     return true;
@@ -552,40 +549,40 @@ bool can::BitFrame::SetStuffParity()
     std::list<Bit>::iterator bit_it;
     uint8_t val = 0;
 
-    if (frame_flags_.is_fdf() == FrameType::Can2_0)
+    if (frm_flags_.is_fdf() == FrameKind::Can20)
         return false;
 
-    for (bit_it = bits_.begin(); bit_it->bit_type_ != BitType::StuffParity; bit_it++)
+    for (bit_it = bits_.begin(); bit_it->kind_ != BitKind::StuffParity; bit_it++)
         ;
     for (int i = 0; i < 3; i++)
-        val ^= (stuff_count_encoded_ >> i) & 0x1;
-    bit_it->bit_value_ = (BitValue)val;
+        val ^= (stuff_cnt_encoded_ >> i) & 0x1;
+    bit_it->val_ = (BitVal)val;
 
     return true;
 }
 
 
-size_t can::BitFrame::GetBitCount()
+size_t can::BitFrame::GetLen()
 {
     return bits_.size();
 }
 
 
-size_t can::BitFrame::GetFieldLength(BitType bit_type)
+size_t can::BitFrame::GetFieldLen(BitKind bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(),
-                         [bit_type](can::Bit bit) { return bit.bit_type_ == bit_type; });
+                         [bit_type](can::Bit bit) { return bit.kind_ == bit_type; });
 }
 
 
-can::Bit* can::BitFrame::GetRandomBitOf(BitType bit_type)
+can::Bit* can::BitFrame::GetRandBitOf(BitKind bit_type)
 {
-    size_t bit_field_length = GetFieldLength(bit_type);
+    size_t bit_field_length = GetFieldLen(bit_type);
     assert(bit_field_length > 0 && "Frame has no bits of required type!");
 
     std::list<Bit>::iterator bit_it =
         std::find_if(bits_.begin(), bits_.end(),
-                     [bit_type](Bit bit) { return bit.bit_type_ == bit_type; });
+                     [bit_type](Bit bit) { return bit.kind_ == bit_type; });
 
     size_t bit_index = rand() % bit_field_length;
     std::advance(bit_it, bit_index);
@@ -593,14 +590,14 @@ can::Bit* can::BitFrame::GetRandomBitOf(BitType bit_type)
     return &(*bit_it);
 }
 
-can::Bit* can::BitFrame::GetRandomBit(BitValue bit_value)
+can::Bit* can::BitFrame::GetRandBit(BitVal bit_value)
 {
     Bit *bit;
-    int lenght = this->GetBitCount();
+    int lenght = this->GetLen();
     do
     {
         bit = GetBit(rand() % lenght);
-    } while (bit->bit_value_ != bit_value);
+    } while (bit->val_ != bit_value);
     return bit;
 }
 
@@ -614,7 +611,7 @@ can::Bit* can::BitFrame::GetBit(size_t index)
     return &(*bit_it);
 }
 
-std::list<can::Bit>::iterator can::BitFrame::GetBitIterator(size_t index)
+std::list<can::Bit>::iterator can::BitFrame::GetBitIter(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
 
@@ -625,14 +622,14 @@ std::list<can::Bit>::iterator can::BitFrame::GetBitIterator(size_t index)
 }
 
 
-can::Bit* can::BitFrame::GetBitOf(size_t index, BitType bit_type)
+can::Bit* can::BitFrame::GetBitOf(size_t index, BitKind bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     size_t i = 0;
 
     while (bit_it != bits_.end())
     {
-        if (bit_it->bit_type_ == bit_type)
+        if (bit_it->kind_ == bit_type)
             if (i == index) {
                 break;
             } else {
@@ -649,15 +646,15 @@ can::Bit* can::BitFrame::GetBitOf(size_t index, BitType bit_type)
 }
 
 
-can::Bit* can::BitFrame::GetBitOfNoStuffBits(size_t index, BitType bit_type)
+can::Bit* can::BitFrame::GetBitOfNoStuffBits(size_t index, BitKind bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     size_t i = 0;
 
     while (bit_it != bits_.end())
     {
-        if (bit_it->bit_type_ == bit_type &&
-            bit_it->stuff_bit_type_ == StuffBitType::NoStuffBit)
+        if (bit_it->kind_ == bit_type &&
+            bit_it->stuff_kind_ == StuffKind::NoStuff)
             if (i == index) {
                 break;
             } else {
@@ -674,14 +671,14 @@ can::Bit* can::BitFrame::GetBitOfNoStuffBits(size_t index, BitType bit_type)
 }
 
 
-std::list<can::Bit>::iterator can::BitFrame::GetBitOfIterator(size_t index, BitType bit_type)
+std::list<can::Bit>::iterator can::BitFrame::GetBitOfIter(size_t index, BitKind bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     size_t i = 0;
 
     while (bit_it != bits_.end())
     {
-        if (bit_it->bit_type_ == bit_type)
+        if (bit_it->kind_ == bit_type)
             if (i == index) {
                 break;
             } else {
@@ -717,8 +714,8 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if (bit_it->stuff_bit_type_ == StuffBitType::NormalStuffBit ||
-            bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit)
+        if (bit_it->stuff_kind_ == StuffKind::Normal ||
+            bit_it->stuff_kind_ == StuffKind::Fixed)
             i++;
     }
 
@@ -728,7 +725,7 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
     return &(*bit_it);
 }
 
-can::Bit* can::BitFrame::GetStuffBit(int index, BitType bit_type)
+can::Bit* can::BitFrame::GetStuffBit(int index, BitKind bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     int i = 0;
@@ -736,9 +733,9 @@ can::Bit* can::BitFrame::GetStuffBit(int index, BitType bit_type)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if ((bit_it->stuff_bit_type_ == StuffBitType::NormalStuffBit ||
-             bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit) &&
-            (bit_it->bit_type_ == bit_type))
+        if ((bit_it->stuff_kind_ == StuffKind::Normal ||
+             bit_it->stuff_kind_ == StuffKind::Fixed) &&
+            (bit_it->kind_ == bit_type))
             i++;
     }
 
@@ -748,14 +745,14 @@ can::Bit* can::BitFrame::GetStuffBit(int index, BitType bit_type)
     return &(*bit_it);
 }
 
-can::Bit* can::BitFrame::GetStuffBit(BitType bit_type, StuffBitType stuff_bit_type,
-                                     BitValue bit_value)
+can::Bit* can::BitFrame::GetStuffBit(BitKind bit_type, StuffKind stuff_bit_type,
+                                     BitVal bit_value)
 {
     auto bit_it = std::find_if(bits_.begin(), bits_.end(),
                                [bit_type, stuff_bit_type, bit_value] (Bit bit) {
-        if (bit.bit_type_ == bit_type &&
-            bit.bit_value_ == bit_value &&
-            bit.stuff_bit_type_ == stuff_bit_type)
+        if (bit.kind_ == bit_type &&
+            bit.val_ == bit_value &&
+            bit.stuff_kind_ == stuff_bit_type)
             return true;
         return false;
         });
@@ -770,7 +767,7 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if (bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit)
+        if (bit_it->stuff_kind_ == StuffKind::Fixed)
             i++;
     }
 
@@ -781,7 +778,7 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index)
 }
 
 
-can::Bit* can::BitFrame::GetFixedStuffBit(size_t index, BitValue bit_value)
+can::Bit* can::BitFrame::GetFixedStuffBit(size_t index, BitVal bit_value)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
     size_t i = 0;
@@ -789,8 +786,8 @@ can::Bit* can::BitFrame::GetFixedStuffBit(size_t index, BitValue bit_value)
     while (i <= index && bit_it != bits_.end())
     {
         bit_it++;
-        if (bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit &&
-            bit_it->bit_value_ == bit_value)
+        if (bit_it->stuff_kind_ == StuffKind::Fixed &&
+            bit_it->val_ == bit_value)
             i++;
     }
 
@@ -814,10 +811,10 @@ bool can::BitFrame::InsertBit(Bit bit, size_t index)
 }
 
 
-bool can::BitFrame::InsertBit(BitType bit_type, BitValue bit_value, size_t index)
+bool can::BitFrame::InsertBit(BitKind bit_type, BitVal bit_value, size_t index)
 {
-    return InsertBit(Bit(this, bit_type, bit_value, &frame_flags_, nominal_bit_timing_,
-                         data_bit_timing_), index);
+    return InsertBit(Bit(this, bit_type, bit_value, &frm_flags_, nbt_,
+                         dbt_), index);
 }
 
 
@@ -854,7 +851,7 @@ bool can::BitFrame::RemoveBit(size_t index)
 }
 
 
-void can::BitFrame::RemoveBit(size_t index, BitType bit_type)
+void can::BitFrame::RemoveBit(size_t index, BitKind bit_type)
 {
     Bit *bit_to_remove = GetBitOf(index, bit_type);
     assert(bit_to_remove != NULL && "Can't remove bit which is NULL");
@@ -877,12 +874,12 @@ bool can::BitFrame::RemoveBitsFrom(size_t index)
     return true;
 }
 
-void can::BitFrame::RemoveBitsFrom(size_t index, BitType bit_type)
+void can::BitFrame::RemoveBitsFrom(size_t index, BitKind bit_type)
 {
     RemoveBitsFrom(GetBitIndex(GetBitOf(index, bit_type)));
 }
 
-bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
+bool can::BitFrame::InsertErrFlag(size_t index, BitKind error_flag_type)
 {
     Bit *bit = GetBit(index);
 
@@ -890,8 +887,8 @@ bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
      * will never start transmitting error frame right from SOF! */
     assert(index > 0);
 
-    assert(error_flag_type == BitType::ActiveErrorFlag ||
-           error_flag_type == BitType::PassiveErrorFlag);
+    assert(error_flag_type == BitKind::ActErrFlag ||
+           error_flag_type == BitKind::PasErrFlag);
 
     if (bit == nullptr)
         return false;
@@ -905,11 +902,11 @@ bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
     prev_bit->CorrectPh2LenToNominal();
 
     // Insert Error flag of according value
-    BitValue value;
-    if (error_flag_type == BitType::ActiveErrorFlag)
-        value = BitValue::Dominant;
+    BitVal value;
+    if (error_flag_type == BitKind::ActErrFlag)
+        value = BitVal::Dominant;
     else
-        value = BitValue::Recessive;
+        value = BitVal::Recessive;
 
     for (int i = 0; i < 6; i++)
         AppendBit(error_flag_type, value);
@@ -918,69 +915,69 @@ bool can::BitFrame::InsertErrorFlag(size_t index, BitType error_flag_type)
 }
 
 
-bool can::BitFrame::InsertActiveErrorFrame(size_t index)
+bool can::BitFrame::InsertActErrFrm(size_t index)
 {
-    if (InsertErrorFlag(index, BitType::ActiveErrorFlag) == false)
+    if (InsertErrFlag(index, BitKind::ActErrFlag) == false)
         return false;
 
     for (int i = 0; i < 8; i++)
-        AppendBit(BitType::ErrorDelimiter, BitValue::Recessive);
+        AppendBit(BitKind::ErrDelim, BitVal::Recessive);
 
     // Insert intermission
     for (int i = 0; i < 3; i++)
-        AppendBit(BitType::Intermission, BitValue::Recessive);
+        AppendBit(BitKind::Interm, BitVal::Recessive);
 
     return true;
 }
 
-bool can::BitFrame::InsertActiveErrorFrame(size_t index, BitType bit_type)
+bool can::BitFrame::InsertActErrFrm(size_t index, BitKind bit_type)
 {
-    return InsertActiveErrorFrame(GetBitOf(index, bit_type));
+    return InsertActErrFrm(GetBitOf(index, bit_type));
 }
 
-bool can::BitFrame::InsertActiveErrorFrame(Bit *bit)
+bool can::BitFrame::InsertActErrFrm(Bit *bit)
 {
-    return InsertActiveErrorFrame(GetBitIndex(bit));
+    return InsertActErrFrm(GetBitIndex(bit));
 }
 
 
-bool can::BitFrame::InsertPassiveErrorFrame(size_t index)
+bool can::BitFrame::InsertPasErrFrm(size_t index)
 {
-    if (InsertErrorFlag(index, BitType::PassiveErrorFlag) == false)
+    if (InsertErrFlag(index, BitKind::PasErrFlag) == false)
         return false;
 
     for (int i = 0; i < 8; i++)
-        AppendBit(BitType::ErrorDelimiter, BitValue::Recessive);
+        AppendBit(BitKind::ErrDelim, BitVal::Recessive);
 
     for (int i = 0; i < 3; i++)
-        AppendBit(BitType::Intermission, BitValue::Recessive);
+        AppendBit(BitKind::Interm, BitVal::Recessive);
 
     return true;
 }
 
 
-bool can::BitFrame::InsertPassiveErrorFrame(Bit *bit)
+bool can::BitFrame::InsertPasErrFrm(Bit *bit)
 {
-    return InsertPassiveErrorFrame(GetBitIndex(bit));
+    return InsertPasErrFrm(GetBitIndex(bit));
 }
 
 
-bool can::BitFrame::InsertPassiveErrorFrame(size_t index, BitType bit_type)
+bool can::BitFrame::InsertPasErrFrm(size_t index, BitKind bit_type)
 {
-    return InsertPassiveErrorFrame(GetBitOf(index, bit_type));
+    return InsertPasErrFrm(GetBitOf(index, bit_type));
 }
 
 
-bool can::BitFrame::InsertOverloadFrame(size_t index)
+bool can::BitFrame::InsertOvrlFrm(size_t index)
 {
     Bit *bit = GetBit(index);
 
     if (bit == nullptr)
         return false;
 
-    if (bit->bit_type_ != BitType::Intermission &&
-        bit->bit_type_ != BitType::ErrorDelimiter &&
-        bit->bit_type_ != BitType::OverloadDelimiter)
+    if (bit->kind_ != BitKind::Interm &&
+        bit->kind_ != BitKind::ErrDelim &&
+        bit->kind_ != BitKind::OvrlDelim)
     {
         std::cerr << " Can't insert Overload frame to this bit!" << std::endl;
         return false;
@@ -989,38 +986,38 @@ bool can::BitFrame::InsertOverloadFrame(size_t index)
     ClearFrameBits(index);
 
     for (int i = 0; i < 6; i++)
-        AppendBit(BitType::OverloadFlag, BitValue::Dominant);
+        AppendBit(BitKind::OvrlFlag, BitVal::Dominant);
     for (int i = 0; i < 8; i++)
-        AppendBit(BitType::OverloadDelimiter, BitValue::Recessive);
+        AppendBit(BitKind::OvrlDelim, BitVal::Recessive);
 
     for (int i = 0; i < 3; i++)
-        AppendBit(BitType::Intermission, BitValue::Recessive);
+        AppendBit(BitKind::Interm, BitVal::Recessive);
 
     return true;
 }
 
 
-bool can::BitFrame::InsertOverloadFrame(Bit *bit)
+bool can::BitFrame::InsertOvrlFrm(Bit *bit)
 {
-    return InsertOverloadFrame(GetBitIndex(bit));
+    return InsertOvrlFrm(GetBitIndex(bit));
 }
 
 
-bool can::BitFrame::InsertOverloadFrame(size_t index, BitType bit_type)
+bool can::BitFrame::InsertOvrlFrm(size_t index, BitKind bit_type)
 {
-    return InsertOverloadFrame(GetBitOf(index, bit_type));
+    return InsertOvrlFrm(GetBitOf(index, bit_type));
 }
 
 
-void can::BitFrame::AppendSuspendTransmission()
+void can::BitFrame::AppendSuspTrans()
 {
     for (int i = 0; i < 8; i++)
-        AppendBit(Bit(this, BitType::Suspend, BitValue::Recessive,
-            &frame_flags_, nominal_bit_timing_, data_bit_timing_));
+        AppendBit(Bit(this, BitKind::SuspTrans, BitVal::Recessive,
+            &frm_flags_, nbt_, dbt_));
 }
 
 
-bool can::BitFrame::LooseArbitration(size_t index)
+bool can::BitFrame::LooseArbit(size_t index)
 {
     Bit *bit = GetBit(index);
     std::list<Bit>::iterator bit_it = bits_.begin();
@@ -1028,16 +1025,16 @@ bool can::BitFrame::LooseArbitration(size_t index)
     if (bit == nullptr)
         return false;
 
-    BitType bit_type = bit->bit_type_;
-    if (bit_type != BitType::BaseIdentifier &&
-        bit_type != BitType::IdentifierExtension &&
-        bit_type != BitType::Rtr &&
-        bit_type != BitType::Srr &&
-        bit_type != BitType::Ide &&
+    BitKind bit_type = bit->kind_;
+    if (bit_type != BitKind::BaseIdent &&
+        bit_type != BitKind::ExtIdent &&
+        bit_type != BitKind::Rtr &&
+        bit_type != BitKind::Srr &&
+        bit_type != BitKind::Ide &&
 
         /* R1 is not in arbitration, but this is needed for simpler modelling in cases
            when arbitration is lost on RTR bit against FD frames (which have R1 bit there) */
-        bit_type != BitType::R1)
+        bit_type != BitKind::R1)
     {
         std::cerr << "Can't loose arbitration on bit which is not in arbitration field" << std::endl;
         return false;
@@ -1050,75 +1047,75 @@ bool can::BitFrame::LooseArbitration(size_t index)
 
     /* Turn to recessive from this bit further */
     for (; bit_it != bits_.end(); bit_it++)
-        bit_it->bit_value_ = BitValue::Recessive;
+        bit_it->val_ = BitVal::Recessive;
 
-    GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+    GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
     return true;
 }
 
 
-bool can::BitFrame::LooseArbitration(Bit *bit)
+bool can::BitFrame::LooseArbit(Bit *bit)
 {
-    return LooseArbitration(GetBitIndex(bit));
+    return LooseArbit(GetBitIndex(bit));
 }
 
 
-bool can::BitFrame::LooseArbitration(size_t index, BitType bit_type)
+bool can::BitFrame::LooseArbit(size_t index, BitKind bit_type)
 {
-    return LooseArbitration(GetBitOf(index, bit_type));
+    return LooseArbit(GetBitOf(index, bit_type));
 }
 
 
-void can::BitFrame::TurnReceivedFrame()
+void can::BitFrame::ConvRXFrame()
 {
     for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
-        bit_it->bit_value_ = BitValue::Recessive;
+        bit_it->val_ = BitVal::Recessive;
 
-    Bit *bit = GetBitOf(0, BitType::Ack);
+    Bit *bit = GetBitOf(0, BitKind::Ack);
     assert(bit != NULL && "No ACK bit present in frame!");
-    bit->bit_value_ = BitValue::Dominant;
+    bit->val_ = BitVal::Dominant;
 }
 
 
-int can::BitFrame::GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type)
+int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type](Bit bit) {
-        if (bit.bit_type_ == bit_type && bit.stuff_bit_type_ == stuff_bit_type)
+        if (bit.kind_ == bit_type && bit.stuff_kind_ == stuff_bit_type)
             return true;
         return false;
     });
 }
 
 
-int can::BitFrame::GetNumStuffBits(BitType bit_type, StuffBitType stuff_bit_type,
-                                   BitValue bit_value)
+int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
+                                   BitVal bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type, bit_value](Bit bit) {
-        if (bit.bit_type_ == bit_type &&
-            bit.stuff_bit_type_ == stuff_bit_type &&
-            bit.bit_value_ == bit_value)
+        if (bit.kind_ == bit_type &&
+            bit.stuff_kind_ == stuff_bit_type &&
+            bit.val_ == bit_value)
             return true;
         return false;
     });
 }
 
 
-int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type)
+int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type](Bit bit) {
-        if (bit.stuff_bit_type_ == stuff_bit_type)
+        if (bit.stuff_kind_ == stuff_bit_type)
             return true;
         return false;
     });
 }
 
 
-int can::BitFrame::GetNumStuffBits(StuffBitType stuff_bit_type, BitValue bit_value)
+int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type, BitVal bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type, bit_value](Bit bit) {
-        if (bit.stuff_bit_type_ == stuff_bit_type &&
-            bit.bit_value_ == bit_value)
+        if (bit.stuff_kind_ == stuff_bit_type &&
+            bit.val_ == bit_value)
             return true;
         return false;
     });
@@ -1165,12 +1162,12 @@ void can::BitFrame::PrintDetailed(std::chrono::nanoseconds clock_period)
 
     for (auto & bit : bits_)
     {
-        std::chrono::nanoseconds bit_length = bit.GetLengthCycles() * clock_period;
+        std::chrono::nanoseconds bit_length = bit.GetLenCycles() * clock_period;
 
         std::cout
-            << std::setw (20) << bit.GetBitTypeName()
+            << std::setw (20) << bit.GetBitKindName()
             << std::setw (20) << std::to_string(bit_length.count())
-            << std::setw (19) << " " << bit.GetColouredValue() << std::endl;
+            << std::setw (19) << " " << bit.GetColouredVal() << std::endl;
     }
 }
 
@@ -1180,14 +1177,14 @@ void can::BitFrame::UpdateFrame(bool recalc_crc)
 {
     // First remove all stuff bits!
     for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
-        if (bit_it->stuff_bit_type_ == StuffBitType::FixedStuffBit ||
-            bit_it->stuff_bit_type_ == StuffBitType::NormalStuffBit)
+        if (bit_it->stuff_kind_ == StuffKind::Fixed ||
+            bit_it->stuff_kind_ == StuffKind::Normal)
             bit_it = bits_.erase(bit_it);
 
     // Recalculate CRC and add stuff bits!
-    if (frame_flags().is_fdf() == FrameType::Can2_0){
+    if (frame_flags().is_fdf() == FrameKind::Can20){
         if (recalc_crc) {
-            CalculateCrc();
+            CalcCrc();
             UpdateCrcBits();
         }
 
@@ -1196,23 +1193,23 @@ void can::BitFrame::UpdateFrame(bool recalc_crc)
         InsertNormalStuffBits();
     } else {
         InsertNormalStuffBits();
-        SetStuffCount();
+        SetStuffCnt();
         SetStuffParity();
-        InsertStuffCountStuffBits();
+        InsertStuffToStuffCnt();
         if (recalc_crc) {
-            CalculateCrc();
+            CalcCrc();
             UpdateCrcBits();
         }
-        InsertCrcFixedStuffBits();
+        InsertFixedStuffToCrc();
     }
 }
 
 
-can::CycleBitValue* can::BitFrame::MoveCyclesBack(CycleBitValue *from, size_t move_by)
+can::Cycle* can::BitFrame::MoveCyclesBack(Cycle *from, size_t move_by)
 {
     std::list<can::Bit>::iterator curr_bit;
     std::list<can::TimeQuanta>::iterator curr_time_quanta;
-    std::list<can::CycleBitValue>::iterator curr_cycle;
+    std::list<can::Cycle>::iterator curr_cycle;
 
     /* Search for the TQ and bit which contains the cycle */
     //std::cout << "STARTING SEARCH" << std::endl;
@@ -1221,11 +1218,11 @@ can::CycleBitValue* can::BitFrame::MoveCyclesBack(CycleBitValue *from, size_t mo
     while (curr_bit != bits_.end())
     {
         size_t tq_index = 0;
-        curr_time_quanta = curr_bit->GetTimeQuantaIterator(0);
+        curr_time_quanta = curr_bit->GetTQIter(0);
         while (true)
         {
             size_t cycle_index = 0;
-            curr_cycle = curr_time_quanta->GetCycleBitValueIterator(0);
+            curr_cycle = curr_time_quanta->GetCycleBitValIter(0);
             while (true)
             {
                 if (&(*curr_cycle) == from)
@@ -1236,7 +1233,7 @@ can::CycleBitValue* can::BitFrame::MoveCyclesBack(CycleBitValue *from, size_t mo
                 cycle_index++;
                 curr_cycle++;
             }
-            if (tq_index == (curr_bit->GetLengthTimeQuanta() - 1))
+            if (tq_index == (curr_bit->GetLenTQ() - 1))
                 break;
             tq_index++;
             curr_time_quanta++;
@@ -1250,20 +1247,20 @@ found:
     /* Iterate back for required amount of cycles */
     size_t cnt = 0;
     while (cnt < move_by) {
-        if (curr_cycle == curr_time_quanta->GetCycleBitValueIterator(0)) {
-            if (curr_time_quanta == curr_bit->GetTimeQuantaIterator(0)) {
+        if (curr_cycle == curr_time_quanta->GetCycleBitValIter(0)) {
+            if (curr_time_quanta == curr_bit->GetTQIter(0)) {
                 if (curr_bit == bits_.begin()) {
                     assert("Hit start of frame! Cant move so far!" && false);
                 } else {
                     curr_bit--;
-                    curr_time_quanta = curr_bit->GetTimeQuantaIterator(
-                                        curr_bit->GetLengthTimeQuanta() - 1);
-                    curr_cycle = curr_time_quanta->GetCycleBitValueIterator(
+                    curr_time_quanta = curr_bit->GetTQIter(
+                                        curr_bit->GetLenTQ() - 1);
+                    curr_cycle = curr_time_quanta->GetCycleBitValIter(
                                     curr_time_quanta->getLengthCycles() - 1);
                 }
             } else {
                 curr_time_quanta--;
-                curr_cycle = curr_time_quanta->GetCycleBitValueIterator(
+                curr_cycle = curr_time_quanta->GetCycleBitValIter(
                                 curr_time_quanta->getLengthCycles() - 1);
             }
         } else {
@@ -1280,23 +1277,23 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
 {
     [[maybe_unused]] Bit *prev_bit = GetBit(GetBitIndex(from) - 1);
 
-    assert(from->bit_value_ == BitValue::Dominant &&
+    assert(from->val_ == BitVal::Dominant &&
            "Input delay compensation shall end at Dominant bit");
-    assert(prev_bit->bit_value_ == BitValue::Recessive &&
+    assert(prev_bit->val_ == BitVal::Recessive &&
            "Input delay compensation shall start at Recessive bit");
 
-    CycleBitValue *cycle = from->GetTimeQuanta(0)->getCycleBitValue(0);
+    Cycle *cycle = from->GetTQ(0)->getCycleBitValue(0);
     for (int i = 0; i < input_delay; i++)
     {
-        CycleBitValue *compensated_cycle = MoveCyclesBack(cycle, i + 1);
-        compensated_cycle->ForceValue(BitValue::Dominant);
+        Cycle *compensated_cycle = MoveCyclesBack(cycle, i + 1);
+        compensated_cycle->ForceVal(BitVal::Dominant);
     }
 }
 
 
 void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
 {
-    bit->FlipBitValue();
+    bit->FlipVal();
 
     int index = GetBitIndex(bit);
 
@@ -1310,21 +1307,21 @@ void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
     // If this condition is met, then we insert unwanted synchronization edge to IUTs
     // CAN RX stream. Therefore we need to adjust position of this edge accordingly not
     // to cause undesired resynchronization!
-    if (bit->bit_value_ == BitValue::Dominant && prev_bit->bit_value_ == BitValue::Recessive)
+    if (bit->val_ == BitVal::Dominant && prev_bit->val_ == BitVal::Recessive)
         CompensateEdgeForInputDelay(bit, input_delay);
 }
 
 
-void can::BitFrame::PutAcknowledge()
+void can::BitFrame::PutAck()
 {
-    GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+    GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 }
 
 
-void can::BitFrame::PutAcknowledge(int input_delay)
+void can::BitFrame::PutAck(int input_delay)
 {
-    Bit *ack = GetBitOf(0, BitType::Ack);
-    ack->bit_value_ = BitValue::Dominant;
+    Bit *ack = GetBitOf(0, BitKind::Ack);
+    ack->val_ = BitVal::Dominant;
     CompensateEdgeForInputDelay(ack, input_delay);
 }
 
@@ -1339,20 +1336,20 @@ void can::BitFrame::PrintSingleBitField(std::list<Bit>::iterator& bit_it,
     nxtBitIt++;
 
     // Print the bit itself
-    vals->append(" " + bit_it->GetColouredValue() + " ");
-    names->append(bit_it->GetBitTypeName());
+    vals->append(" " + bit_it->GetColouredVal() + " ");
+    names->append(bit_it->GetBitKindName());
     bit_it++;
 
     // Handle stuff bit. If stuff bit is inserted behind a single bit
     // field it is marked with the same bit field!
-    if (nxtBitIt->bit_type_ == bit_it->bit_type_ &&
-        (nxtBitIt->stuff_bit_type_ == StuffBitType::FixedStuffBit ||
-         nxtBitIt->stuff_bit_type_ == StuffBitType::NormalStuffBit))
+    if (nxtBitIt->kind_ == bit_it->kind_ &&
+        (nxtBitIt->stuff_kind_ == StuffKind::Fixed ||
+         nxtBitIt->stuff_kind_ == StuffKind::Normal))
     {
         if (printStuffBits == true)
         {
             names->append(std::string(3, ' '));
-            vals->append(" " + bit_it->GetColouredValue() + " ");
+            vals->append(" " + bit_it->GetColouredVal() + " ");
         }
         bit_it++;
     }
@@ -1366,16 +1363,16 @@ void can::BitFrame::PrintMultiBitField(std::list<Bit>::iterator& bit_it,
     int len = 0;
     int preOffset = 0;
     int postOffset = 0;
-    std::string fieldName = bit_it->GetBitTypeName();
+    std::string fieldName = bit_it->GetBitKindName();
     std::list<Bit>::iterator firstBitIt = bit_it;
 
-    for (; bit_it->bit_type_ == firstBitIt->bit_type_; bit_it++)
+    for (; bit_it->kind_ == firstBitIt->kind_; bit_it++)
     {
-        if (printStuffBits == false && bit_it->stuff_bit_type_ != StuffBitType::NoStuffBit)
+        if (printStuffBits == false && bit_it->stuff_kind_ != StuffKind::NoStuff)
             continue;
 
         len += 2;
-        vals->append(bit_it->GetColouredValue() + " ");
+        vals->append(bit_it->GetColouredVal() + " ");
     }
 
     preOffset = (len - fieldName.length()) / 2;

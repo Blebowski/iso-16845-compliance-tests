@@ -89,7 +89,7 @@ class TestIso_7_7_7 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
             int id = pow(2,11) - 1;
@@ -109,17 +109,17 @@ class TestIso_7_7_7 : public test::TestBase
              *      bit (bit after 2nd stuff bit which had flipped value!). Insert Passive error
              *      frame to driver so that it transmitts all recessive!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
-            first_stuff_bit->GetTimeQuanta(2)->ForceValue(BitValue::Recessive);
+            first_stuff_bit->GetTQ(2)->ForceVal(BitVal::Recessive);
 
             Bit *second_stuff_bit = driver_bit_frm->GetStuffBit(1);
-            second_stuff_bit->bit_value_ = BitValue::Recessive;
+            second_stuff_bit->val_ = BitVal::Recessive;
 
             int index = driver_bit_frm->GetBitIndex(second_stuff_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+            monitor_bit_frm->InsertActErrFrm(index + 1);
+            driver_bit_frm->InsertPasErrFrm(index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

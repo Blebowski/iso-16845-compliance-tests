@@ -149,8 +149,8 @@ class TestIso_7_2_4 : public test::TestBase
                 break;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::DoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, 0x555, data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -164,22 +164,22 @@ class TestIso_7_2_4 : public test::TestBase
              *   3. Insert Active Error frame to monitored frame. Insert Passive Error frame
              *      to driven frame (TX/RX feedback enabled).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffBitType::NormalStuffBit);
+            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffKind::Normal);
 
             /* In FD enabled variant, if last bit of data field is stuff bit, but model has this bit
              * as fixed stuff bit before Stuff count. So count in also each fixed stuff bit even
              * if last bit of data is NOT regular stuff bit. Then total number of stuff bits within
              * FD enabled variant will be higher than in ISO 16845, but this does not mind!
              */
-            Bit *bit = driver_bit_frm->GetBitOf(0, BitType::StuffCount);
+            Bit *bit = driver_bit_frm->GetBitOf(0, BitKind::StuffCnt);
             int index = driver_bit_frm->GetBitIndex(bit);
-            BitValue value = driver_bit_frm->GetBit(index - 1)->bit_value_;
-            if ((value == driver_bit_frm->GetBit(index - 2)->bit_value_) &&
-                (value == driver_bit_frm->GetBit(index - 3)->bit_value_) &&
-                (value == driver_bit_frm->GetBit(index - 4)->bit_value_) &&
-                (value == driver_bit_frm->GetBit(index - 5)->bit_value_))
+            BitVal value = driver_bit_frm->GetBit(index - 1)->val_;
+            if ((value == driver_bit_frm->GetBit(index - 2)->val_) &&
+                (value == driver_bit_frm->GetBit(index - 3)->val_) &&
+                (value == driver_bit_frm->GetBit(index - 4)->val_) &&
+                (value == driver_bit_frm->GetBit(index - 5)->val_))
                 num_stuff_bits++;
 
             /**************************************************************************************
@@ -199,10 +199,10 @@ class TestIso_7_2_4 : public test::TestBase
 
                 Bit *stuff_bit_to_flip = driver_bit_frm_2->GetStuffBit(stuff_bit);
                 int bit_index = driver_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
-                stuff_bit_to_flip->FlipBitValue();
+                stuff_bit_to_flip->FlipVal();
 
-                driver_bit_frm_2->InsertPassiveErrorFrame(bit_index + 1);
-                monitor_bit_frm_2->InsertActiveErrorFrame(bit_index + 1);
+                driver_bit_frm_2->InsertPasErrFrm(bit_index + 1);
+                monitor_bit_frm_2->InsertActErrFrm(bit_index + 1);
 
                 /* Do the test itself */
                 dut_ifc->SetRec(0);

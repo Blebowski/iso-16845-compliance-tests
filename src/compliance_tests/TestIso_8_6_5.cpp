@@ -77,8 +77,8 @@ class TestIso_8_6_5 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -87,7 +87,7 @@ class TestIso_8_6_5 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -100,20 +100,20 @@ class TestIso_8_6_5 : public test::TestBase
              *   2. Force first bit of intermission low (overload condition)
              *   3. Insert 23 dominant bits after the overload flag!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
             driver_bit_frm->FlipBitAndCompensate(
-                driver_bit_frm->GetBitOf(0, BitType::Intermission), dut_input_delay);
+                driver_bit_frm->GetBitOf(0, BitKind::Interm), dut_input_delay);
 
-            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
             for (int i = 0; i < 23; i++)
             {
                 int bit_index = driver_bit_frm->GetBitIndex(
-                                    driver_bit_frm->GetBitOf(5, BitType::OverloadFlag));
-                driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant, bit_index + 1);
-                monitor_bit_frm->InsertBit(BitType::OverloadDelimiter, BitValue::Recessive, bit_index + 1);
+                                    driver_bit_frm->GetBitOf(5, BitKind::OvrlFlag));
+                driver_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Dominant, bit_index + 1);
+                monitor_bit_frm->InsertBit(BitKind::OvrlDelim, BitVal::Recessive, bit_index + 1);
             }
 
             driver_bit_frm->Print(true);

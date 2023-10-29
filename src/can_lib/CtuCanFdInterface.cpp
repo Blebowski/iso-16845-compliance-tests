@@ -105,19 +105,19 @@ bool can::CtuCanFdInterface::SetCanVersion(CanVersion canVersion)
 
     switch (canVersion)
     {
-    case CanVersion::Can_2_0:
+    case CanVersion::Can20:
         data.s.fde = FDE_DISABLE;
         MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
         return true;
         break;
 
-    case CanVersion::CanFdEnabled:
+    case CanVersion::CanFdEna:
         data.s.fde = FDE_ENABLE;
         MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
         return true;
         break;
 
-    case CanVersion::CanFdTolerant:
+    case CanVersion::CanFdTol:
         std::cerr << "CTU CAN FD does not support CAN FD tolerant operation!" << std::endl;
         return false;
         break;
@@ -125,26 +125,25 @@ bool can::CtuCanFdInterface::SetCanVersion(CanVersion canVersion)
     return false;
 }
 
-void can::CtuCanFdInterface::ConfigureBitTiming(can::BitTiming nominal_bit_timing,
-                                                can::BitTiming data_bit_timing)
+void can::CtuCanFdInterface::ConfigureBitTiming(can::BitTiming nbt, can::BitTiming dbt)
 {
     union ctu_can_fd_btr data;
     union ctu_can_fd_btr_fd data_fd;
 
     data.u32 = 0;
-    data.s.brp = nominal_bit_timing.brp_;
-    data.s.ph1 = nominal_bit_timing.ph1_;
-    data.s.ph2 = nominal_bit_timing.ph2_;
-    data.s.sjw = nominal_bit_timing.sjw_;
-    data.s.prop = nominal_bit_timing.prop_;
+    data.s.brp = nbt.brp_;
+    data.s.ph1 = nbt.ph1_;
+    data.s.ph2 = nbt.ph2_;
+    data.s.sjw = nbt.sjw_;
+    data.s.prop = nbt.prop_;
     MemBusAgentWrite32(CTU_CAN_FD_BTR, data.u32);
 
     data_fd.u32 = 0;
-    data_fd.s.brp_fd = data_bit_timing.brp_;
-    data_fd.s.ph1_fd = data_bit_timing.ph1_;
-    data_fd.s.ph2_fd = data_bit_timing.ph2_;
-    data_fd.s.sjw_fd = data_bit_timing.sjw_;
-    data_fd.s.prop_fd = data_bit_timing.prop_;
+    data_fd.s.brp_fd = dbt.brp_;
+    data_fd.s.ph1_fd = dbt.ph1_;
+    data_fd.s.ph2_fd = dbt.ph2_;
+    data_fd.s.sjw_fd = dbt.sjw_;
+    data_fd.s.prop_fd = dbt.prop_;
     MemBusAgentWrite32(CTU_CAN_FD_BTR_FD, data_fd.u32);
 }
 
@@ -156,7 +155,7 @@ void can::CtuCanFdInterface::ConfigureSsp(SspType ssp_type, int ssp_offset)
 
     if (ssp_type == SspType::Disabled)
         ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_NO_SSP;
-    else if (ssp_type == SspType::MeasuredPlusOffset)
+    else if (ssp_type == SspType::MeasAndOffset)
         ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_MEAS_N_OFFSET;
     else if (ssp_type == SspType::Offset)
         ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_OFFSET;
@@ -205,27 +204,27 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
 
     // Frame format word
     frame_format_word.u32 = 0;
-    if (frame->frame_flags().is_fdf() == FrameType::CanFd)
+    if (frame->frame_flags().is_fdf() == FrameKind::CanFd)
         frame_format_word.s.fdf = ctu_can_fd_frame_format_w_fdf::FD_CAN;
     else
         frame_format_word.s.fdf = ctu_can_fd_frame_format_w_fdf::NORMAL_CAN;
 
-    if (frame->frame_flags().is_ide() == IdentifierType::Extended)
+    if (frame->frame_flags().is_ide() == IdentKind::Ext)
         frame_format_word.s.ide = ctu_can_fd_frame_format_w_ide::EXTENDED;
     else
         frame_format_word.s.ide = ctu_can_fd_frame_format_w_ide::BASE;
 
-    if (frame->frame_flags().is_rtr() == RtrFlag::RtrFrame)
+    if (frame->frame_flags().is_rtr() == RtrFlag::Rtr)
         frame_format_word.s.rtr = ctu_can_fd_frame_format_w_rtr::RTR_FRAME;
     else
         frame_format_word.s.rtr = ctu_can_fd_frame_format_w_rtr::NO_RTR_FRAME;
 
-    if (frame->frame_flags().is_brs() == BrsFlag::Shift)
+    if (frame->frame_flags().is_brs() == BrsFlag::DoShift)
         frame_format_word.s.brs = ctu_can_fd_frame_format_w_brs::BR_SHIFT;
     else
         frame_format_word.s.brs = ctu_can_fd_frame_format_w_brs::BR_NO_SHIFT;
 
-    if (frame->frame_flags().is_esi() == EsiFlag::ErrorActive)
+    if (frame->frame_flags().is_esi() == EsiFlag::ErrAct)
         frame_format_word.s.esi_rsv = ctu_can_fd_frame_format_w_esi_rsv::ESI_ERR_ACTIVE;
     else
         frame_format_word.s.esi_rsv = ctu_can_fd_frame_format_w_esi_rsv::ESI_ERR_PASIVE;
@@ -235,7 +234,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     // Identifier word
     identifier_word.u32 = 0;
 
-    if (frame->frame_flags().is_ide() == IdentifierType::Extended)
+    if (frame->frame_flags().is_ide() == IdentKind::Ext)
     {
         identifier_word.s.identifier_base =
             (((uint32_t)frame->identifier()) >> 18) & 0x7FF;
@@ -292,8 +291,8 @@ can::Frame can::CtuCanFdInterface::ReadFrame()
     memset(data, 0, sizeof(data));
 
     // Flags
-    FrameType is_fdf;
-    IdentifierType is_ide;
+    FrameKind is_fdf;
+    IdentKind is_ide;
     RtrFlag is_rtr;
     BrsFlag is_brs;
     EsiFlag is_esi;
@@ -308,34 +307,34 @@ can::Frame can::CtuCanFdInterface::ReadFrame()
 
     // Set flags
     if (frame_format_word.s.fdf == ctu_can_fd_frame_format_w_fdf::FD_CAN)
-        is_fdf = FrameType::CanFd;
+        is_fdf = FrameKind::CanFd;
     else
-        is_fdf = FrameType::Can2_0;
+        is_fdf = FrameKind::Can20;
 
     if (frame_format_word.s.ide == ctu_can_fd_frame_format_w_ide::EXTENDED)
-        is_ide = IdentifierType::Extended;
+        is_ide = IdentKind::Ext;
     else
-        is_ide = IdentifierType::Base;
+        is_ide = IdentKind::Base;
 
     if (frame_format_word.s.rtr == ctu_can_fd_frame_format_w_rtr::RTR_FRAME)
-        is_rtr = RtrFlag::RtrFrame;
+        is_rtr = RtrFlag::Rtr;
     else
-        is_rtr = RtrFlag::DataFrame;
+        is_rtr = RtrFlag::Data;
 
     if (frame_format_word.s.brs == ctu_can_fd_frame_format_w_brs::BR_SHIFT)
-        is_brs = BrsFlag::Shift;
+        is_brs = BrsFlag::DoShift;
     else
-        is_brs = BrsFlag::DontShift;
+        is_brs = BrsFlag::NoShift;
 
     if (frame_format_word.s.esi_rsv == ctu_can_fd_frame_format_w_esi_rsv::ESI_ERR_ACTIVE)
-        is_esi = EsiFlag::ErrorActive;
+        is_esi = EsiFlag::ErrAct;
     else
-        is_esi = EsiFlag::ErrorPassive;
+        is_esi = EsiFlag::ErrPas;
 
     FrameFlags frameFlags = FrameFlags(is_fdf, is_ide, is_rtr, is_brs, is_esi);
 
     // Read identifier
-    if (is_ide == IdentifierType::Extended)
+    if (is_ide == IdentKind::Ext)
         identifier = (identifier_word.s.identifier_base << 18) |
                      identifier_word.s.identifier_ext;
     else
@@ -419,7 +418,7 @@ void can::CtuCanFdInterface::SetTec(int tec)
 }
 
 
-void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
+void can::CtuCanFdInterface::SetErrorState(FaultConfState error_state)
 {
     // Enable test-mode otherwise we will not be able to change REC or TEC!
     union ctu_can_fd_ctr_pres ctr_pres;
@@ -434,15 +433,15 @@ void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
 
     switch (error_state)
     {
-    case FaultConfinementState::ErrorActive:
+    case FaultConfState::ErrAct:
         ctr_pres.s.ctpv = 0;
         break;
 
-    case FaultConfinementState::ErrorPassive:
+    case FaultConfState::ErrPas:
         ctr_pres.s.ctpv = 150;
         break;
 
-    case FaultConfinementState::BusOff:
+    case FaultConfState::BusOff:
         ctr_pres.s.ctpv = 260;
         break;
 
@@ -454,7 +453,7 @@ void can::CtuCanFdInterface::SetErrorState(FaultConfinementState error_state)
 }
 
 
-can::FaultConfinementState can::CtuCanFdInterface::GetErrorState()
+can::FaultConfState can::CtuCanFdInterface::GetErrorState()
 {
     union ctu_can_fd_ewl_erp_fault_state data;
     data.u32 = MemBusAgentRead32(CTU_CAN_FD_EWL);
@@ -463,14 +462,14 @@ can::FaultConfinementState can::CtuCanFdInterface::GetErrorState()
     // HW should signal always only one state!
 
     if (data.s.bof == 1)
-        return FaultConfinementState::BusOff;
+        return FaultConfState::BusOff;
     if (data.s.era == 1)
-        return FaultConfinementState::ErrorActive;
+        return FaultConfState::ErrAct;
     if (data.s.erp == 1)
-        return FaultConfinementState::ErrorPassive;
+        return FaultConfState::ErrPas;
 
     // If we get here, something is wrong with HW!
-    return FaultConfinementState::Invalid;
+    return FaultConfState::Invalid;
 }
 
 

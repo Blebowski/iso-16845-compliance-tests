@@ -34,7 +34,7 @@
 #include "BitFrame.h"
 #include "BitTiming.h"
 #include "CtuCanFdInterface.h"
-#include "CycleBitValue.h"
+#include "Cycle.h"
 #include "DutInterface.h"
 #include "Frame.h"
 #include "FrameFlags.h"

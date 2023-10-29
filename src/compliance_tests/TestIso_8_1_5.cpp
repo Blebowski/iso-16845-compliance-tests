@@ -74,8 +74,8 @@ class TestIso_8_1_5 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             /* Basic setup for tests where IUT transmits */
             SetupMonitorTxTests();
@@ -85,7 +85,7 @@ class TestIso_8_1_5 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -100,19 +100,19 @@ class TestIso_8_1_5 : public test::TestBase
              *   4. Insert 15 recessive bits at the end of Overload delimiter.
              *      This checks that DUT does not retransmitt the frame!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
             driver_bit_frm->CompensateEdgeForInputDelay(
-                driver_bit_frm->GetBitOf(0, BitType::Ack), dut_input_delay);
+                driver_bit_frm->GetBitOf(0, BitKind::Ack), dut_input_delay);
 
-            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitKind::Interm);
             driver_bit_frm->FlipBitAndCompensate(first_interm_bit, dut_input_delay);
 
-            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
-            Bit *overload_end_bit = monitor_bit_frm->GetBitOf(6, BitType::OverloadDelimiter);
+            Bit *overload_end_bit = monitor_bit_frm->GetBitOf(6, BitKind::OvrlDelim);
             int bit_index = monitor_bit_frm->GetBitIndex(overload_end_bit);
             for (int i = 0; i < 15; i++)
-                monitor_bit_frm->InsertBit(BitType::OverloadDelimiter, BitValue::Recessive,
+                monitor_bit_frm->InsertBit(BitKind::OvrlDelim, BitVal::Recessive,
                                             bit_index);
 
             driver_bit_frm->Print(true);

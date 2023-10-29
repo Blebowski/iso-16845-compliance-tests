@@ -82,7 +82,7 @@ class TestIso_8_7_9 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
 
@@ -101,13 +101,13 @@ class TestIso_8_7_9 : public test::TestBase
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
             nominal_bit_timing.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -130,12 +130,12 @@ class TestIso_8_7_9 : public test::TestBase
              *   5. Insert Active Error frame from next bit on.
              *   6. Append retransmitted frame
              *************************************************************************************/
-            Bit *rand_bit = driver_bit_frm->GetRandomBit(BitValue::Dominant);
+            Bit *rand_bit = driver_bit_frm->GetRandBit(BitVal::Dominant);
             int rand_bit_index = driver_bit_frm->GetBitIndex(rand_bit);
 
-            rand_bit->ForceTimeQuanta(0, BitPhase::Ph2, BitValue::Recessive);
-            rand_bit->GetLastTimeQuantaIterator(rand_bit->PrevBitPhase(BitPhase::Ph2))
-                ->ForceValue(BitValue::Recessive);
+            rand_bit->ForceTQ(0, BitPhase::Ph2, BitVal::Recessive);
+            rand_bit->GetLastTQIter(rand_bit->PrevBitPhase(BitPhase::Ph2))
+                ->ForceVal(BitVal::Recessive);
 
             // TODO: Execute compensation of position of inserted two time quanta glitch. We should
             //       take into account IUTs input delay and shift the glitch by dut_input_delay
@@ -147,10 +147,10 @@ class TestIso_8_7_9 : public test::TestBase
             monitor_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2,
                 nominal_bit_timing.sjw_);
 
-            driver_bit_frm->InsertActiveErrorFrame(rand_bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(rand_bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(rand_bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(rand_bit_index + 1);
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

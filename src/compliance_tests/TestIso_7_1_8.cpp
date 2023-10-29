@@ -87,7 +87,7 @@ class TestIso_7_1_8 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1]);
             RandomizeAndPrint(golden_frm.get());
 
@@ -99,8 +99,8 @@ class TestIso_7_1_8 : public test::TestBase
              *   1. Monitor frame as if received, driver frame must have ACK too (TX->RX feedback
              *      disabled).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             /**************************************************************************************
              * Execute test

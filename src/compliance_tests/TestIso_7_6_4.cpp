@@ -75,8 +75,8 @@ class TestIso_7_6_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -98,21 +98,21 @@ class TestIso_7_6_4 : public test::TestBase
              *      of Overload Delimiter). These bits shall be driven on can_tx, but 16
              *      RECESSIVE bits shall be monitored on can_tx.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(6, BitKind::Eof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            driver_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
-            Bit *ovr_delim = driver_bit_frm->GetBitOf(0, BitType::OverloadDelimiter);
+            Bit *ovr_delim = driver_bit_frm->GetBitOf(0, BitKind::OvrlDelim);
             int bit_index = driver_bit_frm->GetBitIndex(ovr_delim);
 
             for (int k = 0; k < 16; k++)
             {
-                driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant, bit_index);
-                monitor_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Recessive, bit_index);
+                driver_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Dominant, bit_index);
+                monitor_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Recessive, bit_index);
             }
 
             driver_bit_frm->Print(true);

@@ -97,9 +97,9 @@ class TestIso_8_1_7 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 10; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             /* Basic setup for tests where IUT transmits */
             SetupMonitorTxTests();
@@ -111,8 +111,8 @@ class TestIso_8_1_7 : public test::TestBase
         {
             if (test_variant == TestVariant::Common)
             {
-                 frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0,
-                                        IdentifierType::Extended, RtrFlag::DataFrame);
+                 frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                                        IdentKind::Ext, RtrFlag::Data);
 
                 // Data, dlcs and identifiers for each iteration
                 uint8_t data[3][8] = {
@@ -141,29 +141,29 @@ class TestIso_8_1_7 : public test::TestBase
                     case 7:
                     case 8:
                     case 9:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                        IdentifierType::Extended, RtrFlag::DataFrame,
-                                        BrsFlag::Shift, EsiFlag::ErrorActive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                        IdentKind::Ext, RtrFlag::Data,
+                                        BrsFlag::DoShift, EsiFlag::ErrAct);
                         break;
 
                     case 3:
                     case 10:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                        IdentifierType::Extended, RtrFlag::DataFrame,
-                                        BrsFlag::Shift, EsiFlag::ErrorPassive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                        IdentKind::Ext, RtrFlag::Data,
+                                        BrsFlag::DoShift, EsiFlag::ErrPas);
                         break;
 
                     case 4:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                        IdentifierType::Extended, RtrFlag::DataFrame,
-                                        BrsFlag::DontShift, EsiFlag::ErrorPassive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                        IdentKind::Ext, RtrFlag::Data,
+                                        BrsFlag::NoShift, EsiFlag::ErrPas);
                         break;
 
                     case 5:
                     case 6:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                        IdentifierType::Extended, RtrFlag::DataFrame,
-                                        BrsFlag::DontShift, EsiFlag::ErrorActive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                        IdentKind::Ext, RtrFlag::Data,
+                                        BrsFlag::NoShift, EsiFlag::ErrAct);
                         break;
 
                     default:
@@ -174,9 +174,9 @@ class TestIso_8_1_7 : public test::TestBase
                 // DUT must be set to error passive state when ErrorPassive
                 // is expected! Otherwise, it would transmitt ESI_ERROR_ACTIVE
                 if (elem_test.index_ == 3 || elem_test.index_ == 4 || elem_test.index_ == 10)
-                    dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+                    dut_ifc->SetErrorState(FaultConfState::ErrPas);
                 else
-                    dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
+                    dut_ifc->SetErrorState(FaultConfState::ErrAct);
 
                 int ids[] = {
                     0x01E38787, 0x11F3C3C3, 0x1079C1E1, 0x083DF0F0, 0x041EF878,
@@ -296,7 +296,7 @@ class TestIso_8_1_7 : public test::TestBase
              *
              * No other modifications are needed as correct stuff generation is verified by model!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

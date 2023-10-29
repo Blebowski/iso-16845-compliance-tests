@@ -97,9 +97,9 @@ class TestIso_8_6_7 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 5; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 7; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
         }
@@ -115,7 +115,7 @@ class TestIso_8_6_7 : public test::TestBase
 
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
                             //IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                            EsiFlag::ErrorActive);
+                            EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
@@ -135,42 +135,42 @@ class TestIso_8_6_7 : public test::TestBase
             switch (elem_test.index_)
             {
             case 1:
-                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
                 break;
             case 2:
-                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::AckDelimiter);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitKind::AckDelim);
                 break;
             case 3:
-                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitType::Eof);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(0, BitKind::Eof);
                 break;
             case 4:
-                bit_to_corrupt = driver_bit_frm->GetBitOf(3, BitType::Eof);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(3, BitKind::Eof);
                 break;
             case 5:
-                bit_to_corrupt = driver_bit_frm->GetBitOf(6, BitType::Eof);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(6, BitKind::Eof);
                 break;
             case 6:
             case 7:
                 do {
-                    bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);
-                } while (bit_to_corrupt->stuff_bit_type_ != StuffBitType::FixedStuffBit);
+                    bit_to_corrupt = driver_bit_frm->GetRandBitOf(BitKind::Crc);
+                } while (bit_to_corrupt->stuff_kind_ != StuffKind::Fixed);
                 break;
             default:
-                bit_to_corrupt = driver_bit_frm->GetRandomBitOf(BitType::Crc);
+                bit_to_corrupt = driver_bit_frm->GetRandBitOf(BitKind::Crc);
                 TestMessage("Invalid Elementary test index: %d", elem_test.index_);
                 break;
             }
 
             /* TX/RX feedback is disabled. We must insert ACK also to driven frame! */
-            driver_bit_frm->PutAcknowledge(dut_input_delay);
+            driver_bit_frm->PutAck(dut_input_delay);
 
             driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm_2->PutAcknowledge(dut_input_delay);
+            driver_bit_frm_2->PutAck(dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

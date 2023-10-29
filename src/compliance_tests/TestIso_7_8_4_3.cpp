@@ -89,7 +89,7 @@ class TestIso_7_8_4_3 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = data_bit_timing.sjw_ + 1;
-                 i <= data_bit_timing.GetBitLengthTimeQuanta() - data_bit_timing.ph2_ - 1;
+                 i <= data_bit_timing.GetBitLenTQ() - data_bit_timing.ph2_ - 1;
                  i++)
             {
                 ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
@@ -105,9 +105,9 @@ class TestIso_7_8_4_3 : public test::TestBase
         {
             // CAN FD frame with bit rate shift, Base ID only and
             uint8_t data_byte = 0x55;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                                       RtrFlag::DataFrame, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                                       RtrFlag::Data, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             // Frame was empirically debugged to have last bit of CRC in 1!
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 50, &data_byte);
             RandomizeAndPrint(golden_frm.get());
@@ -128,15 +128,15 @@ class TestIso_7_8_4_3 : public test::TestBase
              *      bit is ACK which is transmitted recessive by driver so this will act as
              *      remaining recessive part of CRC delimiter!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            crc_delimiter->bit_value_ = BitValue::Dominant;
+            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            crc_delimiter->val_ = BitVal::Dominant;
 
             for (int j = 0; j < elem_test.e_; j++)
-                crc_delimiter->ForceTimeQuanta(j, BitValue::Recessive);
+                crc_delimiter->ForceTQ(j, BitVal::Recessive);
 
-            monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+            monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim)
                 ->LengthenPhase(BitPhase::Sync, data_bit_timing.sjw_);
 
             crc_delimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);

@@ -89,7 +89,7 @@ class TestIso_7_8_4_2 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = data_bit_timing.sjw_ + 1;
-                 i <= data_bit_timing.GetBitLengthTimeQuanta() - data_bit_timing.ph2_ - 1;
+                 i <= data_bit_timing.GetBitLenTQ() - data_bit_timing.ph2_ - 1;
                  i++)
             {
                 ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
@@ -104,7 +104,7 @@ class TestIso_7_8_4_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x7F;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -121,26 +121,26 @@ class TestIso_7_8_4_2 : public test::TestBase
              *   5. Insert active error frame from 8-th data bit further to monitored frame. Insert
              *      passive error frame to driven frame!
              **************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
-            Bit *monitor_stuff_bit = monitor_bit_frm->GetBitOf(6, BitType::Data);
+            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitKind::Data);
+            Bit *monitor_stuff_bit = monitor_bit_frm->GetBitOf(6, BitKind::Data);
 
             // One bit after stuff bit will be recessive due to data byte. Insert
             // passive error frame from one bit further so that model does not modify
             // the stuff bit due to insertion of error frame after bit in data bit rate!
-            Bit *driver_next_bit = driver_bit_frm->GetBitOf(8, BitType::Data);
-            Bit *monitor_next_bit = monitor_bit_frm->GetBitOf(7, BitType::Data);
+            Bit *driver_next_bit = driver_bit_frm->GetBitOf(8, BitKind::Data);
+            Bit *monitor_next_bit = monitor_bit_frm->GetBitOf(7, BitKind::Data);
 
             for (int j = 0; j < elem_test.e_; j++)
-                driver_stuff_bit->ForceTimeQuanta(j, BitValue::Recessive);
+                driver_stuff_bit->ForceTQ(j, BitVal::Recessive);
             for (size_t j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
-                driver_stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
             monitor_stuff_bit->LengthenPhase(BitPhase::Sync, data_bit_timing.sjw_);
 
-            driver_bit_frm->InsertPassiveErrorFrame(driver_next_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(monitor_next_bit);
+            driver_bit_frm->InsertPasErrFrm(driver_next_bit);
+            monitor_bit_frm->InsertActErrFrm(monitor_next_bit);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

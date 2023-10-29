@@ -99,9 +99,9 @@ class TestIso_8_1_6 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 6; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 10; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             /* Basic setup for tests where IUT transmits */
             SetupMonitorTxTests();
@@ -116,12 +116,12 @@ class TestIso_8_1_6 : public test::TestBase
                 /* Last iteration (0x42 CTRL field) indicates RTR frame */
                 RtrFlag rtr_flag;
                 if (elem_test.index_ == 6)
-                    rtr_flag = RtrFlag::RtrFrame;
+                    rtr_flag = RtrFlag::Rtr;
                 else
-                    rtr_flag = RtrFlag::DataFrame;
+                    rtr_flag = RtrFlag::Data;
 
                 frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                                        IdentifierType::Base, rtr_flag);
+                                        IdentKind::Base, rtr_flag);
 
                 /* Data, DLCs and identifiers for each iteration */
                 uint8_t data[6][8] = {
@@ -151,34 +151,34 @@ class TestIso_8_1_6 : public test::TestBase
                     case 7:
                     case 8:
                     case 9:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::DoShift, EsiFlag::ErrAct);
                         break;
 
                     case 3:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::Shift, EsiFlag::ErrorPassive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::DoShift, EsiFlag::ErrPas);
                         break;
 
                     case 4:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::DontShift, EsiFlag::ErrorPassive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::NoShift, EsiFlag::ErrPas);
                         break;
 
                     case 5:
                     case 6:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::NoShift, EsiFlag::ErrAct);
                         break;
 
                     case 10:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
+                        frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::NoShift, EsiFlag::ErrAct);
                         break;
                     default:
                         break;
@@ -188,9 +188,9 @@ class TestIso_8_1_6 : public test::TestBase
                     * Otherwise, it would transmitt ESI_ERROR_ACTIVE
                     */
                 if (elem_test.index_ == 3 || elem_test.index_ == 4)
-                    dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+                    dut_ifc->SetErrorState(FaultConfState::ErrPas);
                 else
-                    dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
+                    dut_ifc->SetErrorState(FaultConfState::ErrAct);
 
                 int ids[10] = {
                     0x78, 0x47C, 0x41E, 0x20F, 0x107, 0x7C3, 0x3E1, 0x1F0, 0x000, 0x7FF
@@ -309,7 +309,7 @@ class TestIso_8_1_6 : public test::TestBase
              *
              * No other modifications are needed as correct stuff generation is verified by model!
              **************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

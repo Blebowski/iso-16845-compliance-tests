@@ -94,9 +94,9 @@ class TestIso_8_2_2 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 14; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 21; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
@@ -107,61 +107,61 @@ class TestIso_8_2_2 : public test::TestBase
         {
             /* Choose frame field per elementary test */
             BitField bit_field_to_corrupt = BitField::Sof;
-            BitValue bit_value_to_corrupt = BitValue::Dominant;
+            BitVal bit_value_to_corrupt = BitVal::Dominant;
             switch (elem_test.index_)
             {
             case 1:
                 bit_field_to_corrupt = BitField::Sof;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             case 2:
-                bit_field_to_corrupt = BitField::Arbitration;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_field_to_corrupt = BitField::Arbit;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             /* In this elementary test, we make sure that Extended ID is corrupted! */
             case 3:
-                bit_field_to_corrupt = BitField::Arbitration;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_field_to_corrupt = BitField::Arbit;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             case 4:
                 bit_field_to_corrupt = BitField::Control;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             case 5:
                 bit_field_to_corrupt = BitField::Control;
-                bit_value_to_corrupt = BitValue::Recessive;
+                bit_value_to_corrupt = BitVal::Recessive;
                 break;
             case 6:
                 bit_field_to_corrupt = BitField::Data;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             case 7:
                 bit_field_to_corrupt = BitField::Data;
-                bit_value_to_corrupt = BitValue::Recessive;
+                bit_value_to_corrupt = BitVal::Recessive;
                 break;
             case 8:
                 bit_field_to_corrupt = BitField::Crc;
-                bit_value_to_corrupt = BitValue::Recessive;
+                bit_value_to_corrupt = BitVal::Recessive;
                 break;
             case 9:
                 bit_field_to_corrupt = BitField::Crc;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             case 10:
                 bit_field_to_corrupt = BitField::Ack;
-                bit_value_to_corrupt = BitValue::Recessive;
+                bit_value_to_corrupt = BitVal::Recessive;
                 break;
             case 11:
                 bit_field_to_corrupt = BitField::Eof;
-                bit_value_to_corrupt = BitValue::Recessive;
+                bit_value_to_corrupt = BitVal::Recessive;
                 break;
             case 12:
                 bit_field_to_corrupt = BitField::Data;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             case 13:
                 bit_field_to_corrupt = BitField::Control;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
 
             /*
@@ -172,14 +172,14 @@ class TestIso_8_2_2 : public test::TestBase
             case 16:
             case 17:
                 bit_field_to_corrupt = BitField::Crc;
-                bit_value_to_corrupt = BitValue::Recessive;
+                bit_value_to_corrupt = BitVal::Recessive;
                 break;
             case 18:
             case 19:
             case 20:
             case 21:
                 bit_field_to_corrupt = BitField::Crc;
-                bit_value_to_corrupt = BitValue::Dominant;
+                bit_value_to_corrupt = BitVal::Dominant;
                 break;
             default:
                 break;
@@ -199,8 +199,8 @@ class TestIso_8_2_2 : public test::TestBase
             }
 
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                                            IdentifierType::Extended, RtrFlag::DataFrame,
-                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                                            IdentKind::Ext, RtrFlag::Data,
+                                            BrsFlag::DoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
             RandomizeAndPrint(golden_frm.get());
 
@@ -221,18 +221,18 @@ class TestIso_8_2_2 : public test::TestBase
              *   4. Insert Active Error flag from next bit on in both driven and monitored frames!
              *   5. Append the same frame after first frame as if retransmitted by IUT!
              **************************************************************************************/
-            driver_bit_frm->PutAcknowledge(dut_input_delay);
+            driver_bit_frm->PutAck(dut_input_delay);
 
             /* Choose random Bit type within some bit field */
-            BitType bit_type = GetRandomBitType(elem_test.frame_type_, IdentifierType::Extended,
+            BitKind bit_type = GetRandomBitType(elem_test.frame_type_, IdentKind::Ext,
                                                 bit_field_to_corrupt);
 
             /* Force extended ID */
             if (elem_test.index_ == 3)
-                bit_type = BitType::IdentifierExtension;
+                bit_type = BitKind::ExtIdent;
 
             /* Search for bit of matching value! */
-            int lenght = driver_bit_frm->GetFieldLength(bit_type);
+            int lenght = driver_bit_frm->GetFieldLen(bit_type);
             int index_in_bitfield = rand() % lenght;
             Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
 
@@ -244,12 +244,12 @@ class TestIso_8_2_2 : public test::TestBase
                 elem_test.index_ == 19 || elem_test.index_ == 20)
             {
                 int attempt_cnt = 0;
-                while (bit_to_corrupt->bit_value_ != bit_value_to_corrupt ||
-                       bit_to_corrupt->stuff_bit_type_ != StuffBitType::FixedStuffBit)
+                while (bit_to_corrupt->val_ != bit_value_to_corrupt ||
+                       bit_to_corrupt->stuff_kind_ != StuffKind::Fixed)
                 {
-                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentifierType::Base,
+                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentKind::Base,
                                                 bit_field_to_corrupt);
-                    lenght = driver_bit_frm->GetFieldLength(bit_type);
+                    lenght = driver_bit_frm->GetFieldLen(bit_type);
                     index_in_bitfield = rand() % lenght;
                     bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                     attempt_cnt++;
@@ -266,28 +266,28 @@ class TestIso_8_2_2 : public test::TestBase
                  * initially, bit type will be picked which does not have bits of this value! This
                  * avoids getting stuck in searching for bit to corrupt!
                  */
-                while (bit_to_corrupt->bit_value_ != bit_value_to_corrupt){
-                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentifierType::Extended,
+                while (bit_to_corrupt->val_ != bit_value_to_corrupt){
+                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentKind::Ext,
                                                 bit_field_to_corrupt);
                     if (elem_test.index_ == 3)
-                        bit_type = BitType::IdentifierExtension;
-                    lenght = driver_bit_frm->GetFieldLength(bit_type);
+                        bit_type = BitKind::ExtIdent;
+                    lenght = driver_bit_frm->GetFieldLen(bit_type);
                     index_in_bitfield = rand() % lenght;
                     bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                 }
             }
 
-            TestMessage("Corrupting bit type: %s", bit_to_corrupt->GetBitTypeName().c_str());
+            TestMessage("Corrupting bit type: %s", bit_to_corrupt->GetBitKindName().c_str());
             TestMessage("Index in bit field: %d", index_in_bitfield);
-            TestMessage("Value to be corrupted: %d", (int)bit_to_corrupt->bit_value_);
+            TestMessage("Value to be corrupted: %d", (int)bit_to_corrupt->val_);
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

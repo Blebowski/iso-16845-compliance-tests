@@ -120,7 +120,7 @@ class TestIso_8_8_2_4 : public test::TestBase
             // This is because we are delaying received sequence by up to: 2 x Bit time (D).
             // If such big delay is applied, and TSEG1(N) is smaller than this number, an
             // error frame is detected still in Nominal Bit-rate.
-            assert(data_bit_timing.GetBitLengthCycles() * 2 <
+            assert(data_bit_timing.GetBitLenCycles() * 2 <
                    ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
                    " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
         }
@@ -128,8 +128,8 @@ class TestIso_8_8_2_4 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, RtrFlag::DataFrame,
-                                                       BrsFlag::Shift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, RtrFlag::Data,
+                                                       BrsFlag::DoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1);
             RandomizeAndPrint(golden_frm.get());
 
@@ -146,24 +146,24 @@ class TestIso_8_8_2_4 : public test::TestBase
              *   3. Insert 2 TQ pulse of correct value around sample point of last bit of CRC.
              *   4. Insert ACK so that frame is correctly transmitted.
              *************************************************************************************/
-            int d = data_bit_timing.GetBitLengthCycles();
+            int d = data_bit_timing.GetBitLenCycles();
             if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
-            driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
+            driver_bit_frm->GetBit(0)->GetTQ(0)->Lengthen(d);
 
-            auto bit_it = driver_bit_frm->GetBitOfIterator(0, BitType::CrcDelimiter);
+            auto bit_it = driver_bit_frm->GetBitOfIter(0, BitKind::CrcDelim);
             bit_it--;
-            BitValue correct_bit_value = bit_it->bit_value_;
-            bit_it->FlipBitValue();
+            BitVal correct_bit_value = bit_it->val_;
+            bit_it->FlipVal();
 
-            auto tq_it = bit_it->GetLastTimeQuantaIterator(BitPhase::Ph1);
+            auto tq_it = bit_it->GetLastTQIter(BitPhase::Ph1);
             // Insert pulse around point which is 2 TQ before sample point.
             tq_it--;
-            tq_it->ForceValue(correct_bit_value);
+            tq_it->ForceVal(correct_bit_value);
             tq_it--;
-            tq_it->ForceValue(correct_bit_value);
+            tq_it->ForceVal(correct_bit_value);
 
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
@@ -188,7 +188,7 @@ class TestIso_8_8_2_4 : public test::TestBase
                  */
                 int ssp_offset = data_bit_timing.brp_ *
                                  (data_bit_timing.prop_ + data_bit_timing.ph1_ -1);
-                dut_ifc->ConfigureSsp(SspType::MeasuredPlusOffset, ssp_offset);
+                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, ssp_offset);
             } else {
                 /* We need to incorporate d into the delay! Also, move offest slightly before
                  * regular sample point so that last bit is not lost due to already disabled
@@ -199,7 +199,7 @@ class TestIso_8_8_2_4 : public test::TestBase
                 dut_ifc->ConfigureSsp(SspType::Offset, ssp_offset);
             }
             dut_ifc->Enable();
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(2000);
 
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

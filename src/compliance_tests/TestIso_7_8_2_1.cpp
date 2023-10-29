@@ -84,7 +84,7 @@ class TestIso_7_8_2_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            size_t num_elem_tests = nominal_bit_timing.GetBitLengthTimeQuanta() -
+            size_t num_elem_tests = nominal_bit_timing.GetBitLenTQ() -
                                     nominal_bit_timing.ph2_ -
                                     nominal_bit_timing.sjw_ -
                                     1;
@@ -101,7 +101,7 @@ class TestIso_7_8_2_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -115,17 +115,17 @@ class TestIso_7_8_2_1 : public test::TestBase
              *      execute hard sync).
              *   3. Set first Prop+Phase1 TQ of BRS to Dominant.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *edl_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Edl);
-            Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Edl);
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
+            Bit *edl_bit_driver = driver_bit_frm->GetBitOf(0, BitKind::Edl);
+            Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Edl);
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
 
             edl_bit_driver->LengthenPhase(BitPhase::Ph2, elem_test.e_);
             edl_bit_monitor->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             for (size_t j = 0; j < (nominal_bit_timing.ph1_ + nominal_bit_timing.prop_); j++)
-                brs_bit->GetTimeQuanta(j)->ForceValue(BitValue::Dominant);
+                brs_bit->GetTQ(j)->ForceVal(BitVal::Dominant);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -89,8 +89,8 @@ class TestIso_8_4_3 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             /* Standard settings for tests where IUT is transmitter */
@@ -108,8 +108,8 @@ class TestIso_8_4_3 : public test::TestBase
                 0x3B
             };
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, ids[elem_test.index_ - 1],
                                                  &data_byte);
             RandomizeAndPrint(golden_frm.get());
@@ -133,26 +133,26 @@ class TestIso_8_4_3 : public test::TestBase
              *  5. Remove SOF bit from retransmitted frame. Append retransmitted frame behind the
              *     first frame. Second driven frame is turned received.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            Bit *last_err_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
+            Bit *last_err_delim_bit = driver_bit_frm->GetBitOf(7, BitKind::ErrDelim);
             driver_bit_frm->FlipBitAndCompensate(last_err_delim_bit, dut_input_delay);
 
             int last_err_delim_index = driver_bit_frm->GetBitIndex(last_err_delim_bit);
-            monitor_bit_frm->InsertOverloadFrame(last_err_delim_index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(last_err_delim_index + 1);
+            monitor_bit_frm->InsertOvrlFrm(last_err_delim_index + 1);
+            driver_bit_frm->InsertPasErrFrm(last_err_delim_index + 1);
 
-            Bit *third_intermission_bit = driver_bit_frm->GetBitOf(2, BitType::Intermission);
+            Bit *third_intermission_bit = driver_bit_frm->GetBitOf(2, BitKind::Interm);
             driver_bit_frm->FlipBitAndCompensate(third_intermission_bit, dut_input_delay);
 
-            driver_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->RemoveBit(driver_bit_frm_2->GetBitOf(0, BitType::Sof));
-            monitor_bit_frm_2->RemoveBit(monitor_bit_frm_2->GetBitOf(0, BitType::Sof));
+            driver_bit_frm_2->ConvRXFrame();
+            driver_bit_frm_2->RemoveBit(driver_bit_frm_2->GetBitOf(0, BitKind::Sof));
+            monitor_bit_frm_2->RemoveBit(monitor_bit_frm_2->GetBitOf(0, BitKind::Sof));
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

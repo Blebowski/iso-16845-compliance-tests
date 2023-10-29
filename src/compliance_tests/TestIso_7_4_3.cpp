@@ -78,8 +78,8 @@ class TestIso_7_4_3 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -88,8 +88,8 @@ class TestIso_7_4_3 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                            IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                            EsiFlag::ErrorPassive);
+                            IdentKind::Base, RtrFlag::Data, BrsFlag::NoShift,
+                            EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -109,31 +109,31 @@ class TestIso_7_4_3 : public test::TestBase
              *      dominant.
              *   4. Insert expected overload frame from next bit on.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             if (elem_test.index_ == 1)
             {
-                driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+                driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-                monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-                driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+                monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+                driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             }
             else
             {
-                driver_bit_frm->GetBitOf(0, BitType::Intermission)->FlipBitValue();
+                driver_bit_frm->GetBitOf(0, BitKind::Interm)->FlipVal();
 
-                monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-                driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+                monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+                driver_bit_frm->InsertPasErrFrm(1, BitKind::Interm);
             }
 
             /* Note that driver contains only passive error flags. Overload is in monitor */
             Bit *last_delim_bit;
-            last_delim_bit = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
-            last_delim_bit->FlipBitValue();
+            last_delim_bit = driver_bit_frm->GetBitOf(7, BitKind::ErrDelim);
+            last_delim_bit->FlipVal();
 
             int bit_index = driver_bit_frm->GetBitIndex(last_delim_bit);
-            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertOverloadFrame(bit_index + 1);
+            driver_bit_frm->InsertPasErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertOvrlFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

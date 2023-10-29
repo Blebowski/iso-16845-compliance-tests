@@ -100,7 +100,7 @@ class TestIso_8_8_2_2 : public test::TestBase
             // This is because we are delaying received sequence by up to: 2 x Bit time (D).
             // If such big delay is applied, and TSEG1(N) is smaller than this number, an
             // error frame is detected still in Nominal Bit-rate.
-            assert(data_bit_timing.GetBitLengthCycles() * 2 <
+            assert(data_bit_timing.GetBitLenCycles() * 2 <
                    ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
                    " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
 
@@ -110,8 +110,8 @@ class TestIso_8_8_2_2 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -132,34 +132,34 @@ class TestIso_8_8_2_2 : public test::TestBase
              *   3. Insert Active Error frame to monitored and driven frames from ESI bit!
              *   4. Append retransmitted frame by IUT!
              *************************************************************************************/
-            int d = data_bit_timing.GetBitLengthCycles();
+            int d = data_bit_timing.GetBitLenCycles();
             if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
-            driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
+            driver_bit_frm->GetBit(0)->GetTQ(0)->Lengthen(d);
 
             size_t force_cycles = nominal_bit_timing.brp_ *
                 (nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 1) - d;
 
-            Bit *brs = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            auto tq = brs->GetTimeQuantaIterator(0);
+            Bit *brs = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            auto tq = brs->GetTQIter(0);
             do
             {
                 if (force_cycles > tq->getLengthCycles())
                 {
-                    tq->ForceValue(BitValue::Dominant);
+                    tq->ForceVal(BitVal::Dominant);
                     force_cycles -= tq->getLengthCycles();
                 } else {
                     for (size_t i = 0; i < force_cycles; i++)
-                        tq->ForceCycleValue(i, BitValue::Dominant);
+                        tq->ForceCycleValue(i, BitVal::Dominant);
                     force_cycles = 0;
                 }
                 tq++;
             } while (force_cycles > 0);
 
-            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Esi);
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Esi);
+            driver_bit_frm->InsertActErrFrm(0, BitKind::Esi);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Esi);
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
@@ -179,7 +179,7 @@ class TestIso_8_8_2_2 : public test::TestBase
                  */
                 int ssp_offset = data_bit_timing.brp_ *
                                  (data_bit_timing.prop_ + data_bit_timing.ph1_ + 1);
-                dut_ifc->ConfigureSsp(SspType::MeasuredPlusOffset, ssp_offset);
+                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, ssp_offset);
             } else {
                 /* We need to incorporate d into the delay! */
                 int ssp_offset = data_bit_timing.brp_ *
@@ -187,7 +187,7 @@ class TestIso_8_8_2_2 : public test::TestBase
                 dut_ifc->ConfigureSsp(SspType::Offset, ssp_offset);
             }
             dut_ifc->Enable();
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(2000);
 
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);

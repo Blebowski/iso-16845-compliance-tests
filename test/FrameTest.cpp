@@ -89,8 +89,8 @@ void test_randomization()
 
 void test_operator_overload()
 {
-    FrameFlags ff1 = FrameFlags(FrameType::CanFd);
-    FrameFlags ff2 = FrameFlags(FrameType::Can2_0);
+    FrameFlags ff1 = FrameFlags(FrameKind::CanFd);
+    FrameFlags ff2 = FrameFlags(FrameKind::Can20);
     uint8_t data_a[4] = {0x00, 0x01, 0x02, 0x03};
     uint8_t data_b[4] = {0x00, 0x01, 0x02, 0x0C};
 

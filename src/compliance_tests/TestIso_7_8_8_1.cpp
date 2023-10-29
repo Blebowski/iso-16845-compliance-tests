@@ -90,8 +90,8 @@ class TestIso_7_8_8_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -105,18 +105,18 @@ class TestIso_7_8_8_1 : public test::TestBase
              *   3. Force 2nd TQ of ESI to Recessive.
              *   4. Force Phase 2 of ESI to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            Bit *brs_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Brs);
-            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *brs_bit_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitKind::Esi);
 
             brs_bit->ShortenPhase(BitPhase::Ph2, 1);
             brs_bit_monitor->ShortenPhase(BitPhase::Ph2, 1);
 
-            esi_bit->ForceTimeQuanta(1, BitValue::Recessive);
-            esi_bit->ForceTimeQuanta(0, data_bit_timing.ph2_ - 1, BitPhase::Ph2,
-                                     BitValue::Recessive);
+            esi_bit->ForceTQ(1, BitVal::Recessive);
+            esi_bit->ForceTQ(0, data_bit_timing.ph2_ - 1, BitPhase::Ph2,
+                                     BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

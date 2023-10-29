@@ -73,8 +73,8 @@ class TestIso_7_6_14 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -93,7 +93,7 @@ class TestIso_7_6_14 : public test::TestBase
              * Modify test frames:
              *   1. Monitor frame as if received.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

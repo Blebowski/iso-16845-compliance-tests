@@ -72,8 +72,8 @@ class TestIso_7_2_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -91,12 +91,12 @@ class TestIso_7_2_1 : public test::TestBase
              *   1. Monitor frame as if received.
              *   2. Insert error frame to monitored/driven frame after first ACK bit.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *ack_bit = monitor_bit_frm->GetBitOf(0, BitType::Ack);
+            Bit *ack_bit = monitor_bit_frm->GetBitOf(0, BitKind::Ack);
             int ack_index = monitor_bit_frm->GetBitIndex(ack_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(ack_index + 1);
-            driver_bit_frm->InsertActiveErrorFrame(ack_index + 1);
+            monitor_bit_frm->InsertActErrFrm(ack_index + 1);
+            driver_bit_frm->InsertActErrFrm(ack_index + 1);
 
             /**************************************************************************************
              * Execute test

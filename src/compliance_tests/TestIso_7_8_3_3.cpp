@@ -99,9 +99,9 @@ class TestIso_7_8_3_3 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x55;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                                       RtrFlag::DataFrame, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                                       RtrFlag::Data, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             // Frame was empirically debugged to have last bit of CRC in 1!
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 50, &data_byte);
             golden_frm->Print();
@@ -122,15 +122,15 @@ class TestIso_7_8_3_3 : public test::TestBase
              *      effect as forcing the bit to Recessive e - 1 after sample point. Next bit is
              *      ACK which is transmitted recessive by driver.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            crc_delimiter->bit_value_ = BitValue::Dominant;
+            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            crc_delimiter->val_ = BitVal::Dominant;
 
             for (int j = 0; j < elem_test.e_; j++)
-                crc_delimiter->ForceTimeQuanta(j, BitValue::Recessive);
+                crc_delimiter->ForceTQ(j, BitVal::Recessive);
 
-            monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+            monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim)
                 ->LengthenPhase(BitPhase::Sync, elem_test.e_);
 
             crc_delimiter->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);

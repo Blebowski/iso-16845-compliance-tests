@@ -72,8 +72,8 @@ class TestIso_7_6_20 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -96,17 +96,17 @@ class TestIso_7_6_20 : public test::TestBase
              *   4. Force 8-th bit of overload delimiter to dominant!
              *   5. Insert next expected overload frame from first bit of Intermission
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(6, BitKind::Eof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            driver_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
-            driver_bit_frm->GetBitOf(7, BitType::OverloadDelimiter)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(7, BitKind::OvrlDelim)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            driver_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -80,8 +80,8 @@ class TestIso_8_4_5 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             /* Standard settings for tests where IUT is transmitter */
@@ -92,7 +92,7 @@ class TestIso_8_4_5 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -114,28 +114,28 @@ class TestIso_8_4_5 : public test::TestBase
              *        This is valid according to ISO spec. since for transmitter frame vaidation
              *        shall occur at the end of EOF!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
-            Bit *first_intermission_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+            Bit *first_intermission_bit = driver_bit_frm->GetBitOf(0, BitKind::Interm);
             driver_bit_frm->FlipBitAndCompensate(first_intermission_bit, dut_input_delay);
 
-            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
             Bit *bit_to_corrupt;
             if (elem_test.index_ == 1){
-                bit_to_corrupt = driver_bit_frm->GetBitOf(1, BitType::OverloadDelimiter);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(1, BitKind::OvrlDelim);
             } else if (elem_test.index_ == 2){
-                bit_to_corrupt = driver_bit_frm->GetBitOf(3, BitType::OverloadDelimiter);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(3, BitKind::OvrlDelim);
             } else {
-                bit_to_corrupt = driver_bit_frm->GetBitOf(6, BitType::OverloadDelimiter);
+                bit_to_corrupt = driver_bit_frm->GetBitOf(6, BitKind::OvrlDelim);
             }
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
-            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertPasErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

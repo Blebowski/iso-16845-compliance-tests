@@ -77,8 +77,8 @@ class TestIso_9_6_2 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
 
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             // This test has IUT as receiver, so no trigger/waiting config is needed!
         }
@@ -87,10 +87,10 @@ class TestIso_9_6_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0xAA, &data_byte);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0xAA, &data_byte);
@@ -118,17 +118,17 @@ class TestIso_9_6_2 : public test::TestBase
              *   5. In driven frame, flip 7-th bit of data field to cause stuff error.
              *   6. Insert Passive Error frame to both driven and monitored frames.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            monitor_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->GetBitOf(6, BitType::Data)->FlipBitValue();
+            monitor_bit_frm_2->ConvRXFrame();
+            driver_bit_frm_2->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm_2->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm_2->InsertPassiveErrorFrame(7, BitType::Data);
+            driver_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
 
 
             TestMessage("First frame");

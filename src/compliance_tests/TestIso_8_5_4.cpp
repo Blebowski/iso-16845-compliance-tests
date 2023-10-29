@@ -79,11 +79,11 @@ class TestIso_8_5_4 : public test::TestBase
             num_elem_tests = 3;
             for (int i = 0; i < num_elem_tests; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1 , FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1 , FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+            dut_ifc->SetErrorState(FaultConfState::ErrPas);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -94,7 +94,7 @@ class TestIso_8_5_4 : public test::TestBase
         {
             /* ESI needed for CAN FD variant */
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                                                       EsiFlag::ErrorPassive);
+                                                       EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -118,7 +118,7 @@ class TestIso_8_5_4 : public test::TestBase
              *   4. Append next frame to driven frame. Append next frame as if received to
              *      monitored frame.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
             int num_suspend_bits = 0;
             switch (elem_test.index_)
@@ -138,14 +138,14 @@ class TestIso_8_5_4 : public test::TestBase
 
             for (int i = 0; i < num_suspend_bits; i++)
             {
-                driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
             }
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm_2->TurnReceivedFrame();
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)
-                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
+            monitor_bit_frm_2->ConvRXFrame();
+            monitor_bit_frm_2->GetBitOf(0, BitKind::Sof)
+                ->GetFirstTQIter(BitPhase::Sync)->Lengthen(dut_input_delay);
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
             driver_bit_frm->Print(true);

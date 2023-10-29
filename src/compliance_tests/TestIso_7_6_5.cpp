@@ -71,8 +71,8 @@ class TestIso_7_6_5 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -92,14 +92,14 @@ class TestIso_7_6_5 : public test::TestBase
              *      transmitted ACK! This is bit error in ACK.
              *   3. Insert expected Active error frame after first bit of ACK
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitKind::Ack);
             int bit_index = driver_bit_frm->GetBitIndex(ack_bit);
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

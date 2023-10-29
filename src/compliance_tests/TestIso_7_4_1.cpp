@@ -77,8 +77,8 @@ class TestIso_7_4_1 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
         }
 
@@ -100,14 +100,14 @@ class TestIso_7_4_1 : public test::TestBase
              *   2. Force 1st/2nd bit of Intermission to DOMINANT.
              *   3. Insert expected overload frame from next bit on!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Intermission)
-                ->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Interm)
+                ->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(elem_test.index_, BitKind::Interm);
+            driver_bit_frm->InsertOvrlFrm(elem_test.index_, BitKind::Interm);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

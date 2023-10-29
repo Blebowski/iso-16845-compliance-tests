@@ -87,7 +87,7 @@ class TestIso_7_8_7_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -100,13 +100,13 @@ class TestIso_7_8_7_1 : public test::TestBase
              *   2. Force second TQ of res bit to recessive.
              *   3. Force Phase2 of res bit to recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             // Res post EDL in model we mark r0 as in original CAN FD 1.0 by Bosch.
-            Bit *res_bit = driver_bit_frm->GetBitOf(0, BitType::R0);
-            res_bit->ForceTimeQuanta(1, BitValue::Recessive);
-            res_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                     BitPhase::Ph2, BitValue::Recessive);
+            Bit *res_bit = driver_bit_frm->GetBitOf(0, BitKind::R0);
+            res_bit->ForceTQ(1, BitVal::Recessive);
+            res_bit->ForceTQ(0, nominal_bit_timing.ph2_ - 1,
+                                     BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -90,7 +90,7 @@ class TestIso_7_7_11 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -108,26 +108,26 @@ class TestIso_7_7_11 : public test::TestBase
              * Note: This is not exactly sequence as described in ISO, there bits are not shortened
              *       but flipped, but overall effect is the same!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            auto tq_it = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
-                            ->GetLastTimeQuantaIterator(BitPhase::Ph2);
+            auto tq_it = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim)
+                            ->GetLastTQIter(BitPhase::Ph2);
             for (int i = 0; i < elem_test.e_; i++)
             {
-                tq_it->ForceValue(BitValue::Dominant);
+                tq_it->ForceVal(BitVal::Dominant);
                 tq_it--;
             }
 
-            monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter)
+            monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim)
                 ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
-            Bit *ack = driver_bit_frm->GetBitOf(0, BitType::Ack);
-            ack->bit_value_ = BitValue::Dominant;
+            Bit *ack = driver_bit_frm->GetBitOf(0, BitKind::Ack);
+            ack->val_ = BitVal::Dominant;
 
-            tq_it = ack->GetLastTimeQuantaIterator(BitPhase::Ph2);
+            tq_it = ack->GetLastTQIter(BitPhase::Ph2);
             for (size_t i = 0; i < elem_test.e_ + nominal_bit_timing.ph2_; i++)
             {
-                tq_it->ForceValue(BitValue::Recessive);
+                tq_it->ForceVal(BitVal::Recessive);
                 tq_it--;
             }
 

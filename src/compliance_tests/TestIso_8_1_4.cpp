@@ -92,8 +92,8 @@ class TestIso_8_1_4 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 31; i++) {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -131,20 +131,20 @@ class TestIso_8_1_4 : public test::TestBase
                 id_lt = (id_iut >> 18) & 0x7FF;
 
             /* On elementary test 31, IUT shall loose on IDE bit. Occurs when LT sends base frame! */
-            IdentifierType ident_type_lt;
+            IdentKind ident_type_lt;
             if (elem_test.index_ == 31)
-                ident_type_lt = IdentifierType::Base;
+                ident_type_lt = IdentKind::Base;
             else
-                ident_type_lt = IdentifierType::Extended;
+                ident_type_lt = IdentKind::Ext;
 
             /* On elementary test 31, IUT shall loose on IDE bit. After Base ID IUT will send
              * recessive SRR. LT must also send recessive bit (RTR) otherwise IUT would loose on
              * SRR and not IDE!
              */
             if (elem_test.index_ == 31)
-                rtr_flag = RtrFlag::RtrFrame;
+                rtr_flag = RtrFlag::Rtr;
             else
-                rtr_flag = RtrFlag::DataFrame;
+                rtr_flag = RtrFlag::Data;
 
             /* In this test, we MUST NOT shift bit-rate! After loosing arbitration, IUT will
              * resynchronize in data bit-rate if granularity of data bit-rate is higher than
@@ -152,10 +152,10 @@ class TestIso_8_1_4 : public test::TestBase
              * compared to IUT!
              */
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, ident_type_lt,
-                                    rtr_flag, BrsFlag::DontShift, EsiFlag::ErrorActive);
+                                    rtr_flag, BrsFlag::NoShift, EsiFlag::ErrAct);
             frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                                    IdentifierType::Extended, rtr_flag, BrsFlag::DontShift,
-                                    EsiFlag::ErrorActive);
+                                    IdentKind::Ext, rtr_flag, BrsFlag::NoShift,
+                                    EsiFlag::ErrAct);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
             RandomizeAndPrint(golden_frm.get());
@@ -198,34 +198,34 @@ class TestIso_8_1_4 : public test::TestBase
 
             if (elem_test.index_ < 12){
                 loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 1,
-                                                        BitType::BaseIdentifier);
+                                                        BitKind::BaseIdent);
             } else if (elem_test.index_ < 30){
                 loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 12,
-                                                        BitType::IdentifierExtension);
+                                                        BitKind::ExtIdent);
             /* Elementary test 30 - loose on SRR */
             } else if (elem_test.index_ == 30) {
-                loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Srr);
+                loosing_bit = monitor_bit_frm->GetBitOf(0, BitKind::Srr);
 
             /* Elementary test 31 - loose on IDE */
             } else if (elem_test.index_ == 31){
-                loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
+                loosing_bit = monitor_bit_frm->GetBitOf(0, BitKind::Ide);
 
             } else {
-                loosing_bit = monitor_bit_frm->GetBitOf(0, BitType::Ide);
+                loosing_bit = monitor_bit_frm->GetBitOf(0, BitKind::Ide);
                 TestMessage("Invalid Elementary test index: %d", elem_test.index_);
             }
 
-            loosing_bit->bit_value_ = BitValue::Recessive;
-            monitor_bit_frm->LooseArbitration(loosing_bit);
+            loosing_bit->val_ = BitVal::Recessive;
+            monitor_bit_frm->LooseArbit(loosing_bit);
 
-            loosing_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+            loosing_bit->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             /* On elementary test 30, IUT shall loose on SRR bit, therefore we must send this bit
              * dominant by LT, so we flip it
              */
             if (elem_test.index_ == 30){
-                Bit *srr_bit = driver_bit_frm->GetBitOf(0, BitType::Srr);
-                srr_bit->bit_value_ = BitValue::Dominant;
+                Bit *srr_bit = driver_bit_frm->GetBitOf(0, BitKind::Srr);
+                srr_bit->val_ = BitVal::Dominant;
                 int index = driver_bit_frm->GetBitIndex(srr_bit);
 
                 /* Forcing SRR low will cause 5 consecutive dominant bits at the end of base ID,
@@ -234,7 +234,7 @@ class TestIso_8_1_4 : public test::TestBase
                  * recalculate CRC!
                  */
                 driver_bit_frm->UpdateFrame();
-                monitor_bit_frm->InsertBit(BitType::Srr, BitValue::Recessive, index + 1);
+                monitor_bit_frm->InsertBit(BitKind::Srr, BitVal::Recessive, index + 1);
             }
 
             /* On elementary test 31, IUT will be sending extended frame with the same base ID as
@@ -247,25 +247,25 @@ class TestIso_8_1_4 : public test::TestBase
              */
             if (elem_test.index_ == 31) {
                 if (test_variant == TestVariant::Common)
-                    monitor_bit_frm->GetBitOf(0, BitType::Rtr)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitKind::Rtr)->val_ = BitVal::Recessive;
                 else
-                    monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                    monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
             }
 
             // Compensate CRC length in monitored frame
-            while (monitor_bit_frm->GetFieldLength(BitType::Crc) <
-                   driver_bit_frm->GetFieldLength(BitType::Crc)) {
+            while (monitor_bit_frm->GetFieldLen(BitKind::Crc) <
+                   driver_bit_frm->GetFieldLen(BitKind::Crc)) {
                 int index = monitor_bit_frm->GetBitIndex(
-                                monitor_bit_frm->GetBitOf(0, BitType::Crc));
-                monitor_bit_frm->InsertBit(BitType::Crc, BitValue::Recessive, index);
+                                monitor_bit_frm->GetBitOf(0, BitKind::Crc));
+                monitor_bit_frm->InsertBit(BitKind::Crc, BitVal::Recessive, index);
             }
 
-            while (monitor_bit_frm->GetFieldLength(BitType::Crc) >
-                   driver_bit_frm->GetFieldLength(BitType::Crc)) {
-                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitType::Crc));
+            while (monitor_bit_frm->GetFieldLen(BitKind::Crc) >
+                   driver_bit_frm->GetFieldLen(BitKind::Crc)) {
+                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitKind::Crc));
             }
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

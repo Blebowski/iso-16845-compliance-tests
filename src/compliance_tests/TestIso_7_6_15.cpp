@@ -71,8 +71,8 @@ class TestIso_7_6_15 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -91,7 +91,7 @@ class TestIso_7_6_15 : public test::TestBase
              * Modify test frames:
              *   1. Monitor frame as if received.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);
@@ -100,7 +100,7 @@ class TestIso_7_6_15 : public test::TestBase
              * Execute test
              *************************************************************************************/
             /* Preset IUT to Error Passive */
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+            dut_ifc->SetErrorState(FaultConfState::ErrPas);
             PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
             RunLowerTester(true, true);
             CheckLowerTesterResult();

@@ -82,7 +82,7 @@ class TestIso_8_7_6 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
 
@@ -100,13 +100,13 @@ class TestIso_8_7_6 : public test::TestBase
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
             nominal_bit_timing.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -128,23 +128,23 @@ class TestIso_8_7_6 : public test::TestBase
              *         quantas after it is executed by the fact that we don not do any
              *         further resynchronizations. Model takes care of it then!
              *****************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             Bit *rand_bit = nullptr;
             Bit *next_bit = nullptr;
             size_t rand_bit_index;
             do {
-                rand_bit = driver_bit_frm->GetRandomBit(BitValue::Recessive);
+                rand_bit = driver_bit_frm->GetRandBit(BitVal::Recessive);
                 rand_bit_index = driver_bit_frm->GetBitIndex(rand_bit);
-                if (rand_bit_index == driver_bit_frm->GetBitCount() - 1)
+                if (rand_bit_index == driver_bit_frm->GetLen() - 1)
                     continue;
                 next_bit = driver_bit_frm->GetBit(rand_bit_index + 1);
-            } while (next_bit == nullptr || next_bit->bit_value_ == BitValue::Recessive);
+            } while (next_bit == nullptr || next_bit->val_ == BitVal::Recessive);
 
             rand_bit->ShortenPhase(BitPhase::Ph2, 1);
             monitor_bit_frm->GetBit(rand_bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
 
-            next_bit->ForceTimeQuanta(1, BitValue::Recessive);
+            next_bit->ForceTQ(1, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

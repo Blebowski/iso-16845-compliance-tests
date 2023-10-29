@@ -75,8 +75,8 @@ class TestIso_8_6_17 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -87,7 +87,7 @@ class TestIso_8_6_17 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -106,16 +106,16 @@ class TestIso_8_6_17 : public test::TestBase
              *   4. Append suspend transmission since IUT is Error passive!
              *   5. Insert retransmitted frame, but with ACK set.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            driver_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
-            monitor_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
+            driver_bit_frm->InsertPasErrFrm(0, BitKind::AckDelim);
+            monitor_bit_frm->InsertPasErrFrm(0, BitKind::AckDelim);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            driver_bit_frm->AppendSuspTrans();
+            monitor_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

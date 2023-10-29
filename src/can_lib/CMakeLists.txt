@@ -17,7 +17,7 @@ add_library(
 
     Bit.cpp
     TimeQuanta.cpp
-    CycleBitValue.cpp
+    Cycle.cpp
     Frame.cpp
     BitFrame.cpp
     FrameFlags.cpp

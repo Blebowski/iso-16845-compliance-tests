@@ -77,8 +77,8 @@ class TestIso_7_6_13 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -102,13 +102,13 @@ class TestIso_7_6_13 : public test::TestBase
              *   4. Flip n-th bit of Overload delimiter to DOMINANT!
              *   5. Insert Active Error frame to both monitored and driven frame!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(6, BitKind::Eof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            driver_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
             /*  Force n-th bit of Overload Delimiter to Dominant */
             int bit_to_corrupt;
@@ -118,13 +118,13 @@ class TestIso_7_6_13 : public test::TestBase
                 bit_to_corrupt = 7;
 
             TestMessage("Forcing Overload delimiter bit %d to recessive", bit_to_corrupt);
-            Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitType::OverloadDelimiter);
+            Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::OvrlDelim);
             int bit_index = driver_bit_frm->GetBitIndex(bit);
-            bit->bit_value_ = BitValue::Dominant;
+            bit->val_ = BitVal::Dominant;
 
             /* Insert Error flag from one bit further, both driver and monitor! */
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

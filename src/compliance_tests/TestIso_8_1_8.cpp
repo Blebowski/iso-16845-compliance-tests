@@ -84,8 +84,8 @@ class TestIso_8_1_8 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -96,7 +96,7 @@ class TestIso_8_1_8 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base);
 
             int gold_ids[] = {
                 0x7B,
@@ -125,18 +125,18 @@ class TestIso_8_1_8 : public test::TestBase
              *      second frame as if received.
              *   4. Remove SOF from 2nd monitored frame.
              *************************************************************************************/
-            Bit *last_id_bit = monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier);
-            monitor_bit_frm->LooseArbitration(last_id_bit);
+            Bit *last_id_bit = monitor_bit_frm->GetBitOfNoStuffBits(10, BitKind::BaseIdent);
+            monitor_bit_frm->LooseArbit(last_id_bit);
 
             /* Compensate input delay, lenghten bit on which arbitration was lost */
-            last_id_bit->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+            last_id_bit->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
-            driver_bit_frm->GetBitOf(2, BitType::Intermission)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(2, BitKind::Interm)->val_ = BitVal::Dominant;
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
 
-            monitor_bit_frm_2->RemoveBit(0, BitType::Sof);
-            driver_bit_frm_2->RemoveBit(0, BitType::Sof);
+            monitor_bit_frm_2->RemoveBit(0, BitKind::Sof);
+            driver_bit_frm_2->RemoveBit(0, BitKind::Sof);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

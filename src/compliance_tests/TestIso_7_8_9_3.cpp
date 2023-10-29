@@ -91,9 +91,9 @@ class TestIso_7_8_9_3 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x49;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                                       RtrFlag::DataFrame, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                                       RtrFlag::Data, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
             // Frame was empirically debugged to have last bit of CRC in 1!
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 50, &data_byte);
             golden_frm->Print();
@@ -108,14 +108,14 @@ class TestIso_7_8_9_3 : public test::TestBase
              *   3. Insert Active error frame to monitor from ACK bit further. Insert Passive error
              *      frame to driver bit from ACK bit further.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            crc_delimiter->ForceTimeQuanta(1, data_bit_timing.ph1_ + data_bit_timing.prop_,
-                                           BitValue::Dominant);
+            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            crc_delimiter->ForceTQ(1, data_bit_timing.ph1_ + data_bit_timing.prop_,
+                                           BitVal::Dominant);
 
-            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::Ack);
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+            driver_bit_frm->InsertPasErrFrm(0, BitKind::Ack);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Ack);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

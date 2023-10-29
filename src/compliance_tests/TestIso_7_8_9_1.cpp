@@ -91,7 +91,7 @@ class TestIso_7_8_9_1 : public test::TestBase
         {
             // Here we have to set Bit rate dont shift because we intend to get BRS dominant,
             // so bit rate should not be shifted!
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::DontShift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -106,18 +106,18 @@ class TestIso_7_8_9_1 : public test::TestBase
              *      resynchronisation edge with phase error 2, but DUT shall ignore it and not
              *      resynchronize because previous bit (r0) was Dominant!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
 
-            brs_bit->bit_value_ = BitValue::Dominant;
+            brs_bit->val_ = BitVal::Dominant;
 
-            brs_bit->ForceTimeQuanta(0, BitValue::Recessive);
-            brs_bit->ForceTimeQuanta(1, BitValue::Recessive);
+            brs_bit->ForceTQ(0, BitVal::Recessive);
+            brs_bit->ForceTQ(1, BitVal::Recessive);
 
             // Force all TQ of PH2 as if no shift occured (this is what frame was generated with)
-            brs_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                     BitPhase::Ph2, BitValue::Recessive);
+            brs_bit->ForceTQ(0, nominal_bit_timing.ph2_ - 1,
+                                     BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

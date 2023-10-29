@@ -92,7 +92,7 @@ class TestIso_7_7_9_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // CAN 2.0 frame, randomize others
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -110,12 +110,12 @@ class TestIso_7_7_9_2 : public test::TestBase
             driver_bit_frm->RemoveBitsFrom(6);
 
             // Set values
-            driver_bit_frm->GetBit(0)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->GetBit(1)->bit_value_ = BitValue::Recessive;
-            driver_bit_frm->GetBit(2)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->GetBit(3)->bit_value_ = BitValue::Recessive;
-            driver_bit_frm->GetBit(4)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->GetBit(5)->bit_value_ = BitValue::Recessive;
+            driver_bit_frm->GetBit(0)->val_ = BitVal::Dominant;
+            driver_bit_frm->GetBit(1)->val_ = BitVal::Recessive;
+            driver_bit_frm->GetBit(2)->val_ = BitVal::Dominant;
+            driver_bit_frm->GetBit(3)->val_ = BitVal::Recessive;
+            driver_bit_frm->GetBit(4)->val_ = BitVal::Dominant;
+            driver_bit_frm->GetBit(5)->val_ = BitVal::Recessive;
 
             // Set glitch lengths
 
@@ -136,17 +136,17 @@ class TestIso_7_7_9_2 : public test::TestBase
 
             driver_bit_frm->GetBit(2)->LengthenPhase(BitPhase::Sync,
                 (nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 2) / 2 - 1);
-            driver_bit_frm->GetBit(2)->GetTimeQuanta(0)->Shorten(1);
+            driver_bit_frm->GetBit(2)->GetTQ(0)->Shorten(1);
 
-            driver_bit_frm->GetBit(3)->GetTimeQuanta(0)->Lengthen(2);
+            driver_bit_frm->GetBit(3)->GetTQ(0)->Lengthen(2);
 
             driver_bit_frm->GetBit(4)->LengthenPhase(BitPhase::Sync,
                 nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ - 3);
 
             // Passive error frame consists of all recessive so this monitors unit
             // will not start transmitting active error frame!
-            monitor_bit_frm->GetBit(0)->bit_value_ = BitValue::Recessive;
-            monitor_bit_frm->InsertPassiveErrorFrame(monitor_bit_frm->GetBit(1));
+            monitor_bit_frm->GetBit(0)->val_ = BitVal::Recessive;
+            monitor_bit_frm->InsertPasErrFrm(monitor_bit_frm->GetBit(1));
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

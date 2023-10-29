@@ -83,7 +83,7 @@ class TestIso_7_1_7 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::FdTolerantFdEnabled);
             for (int i = 0; i < 3; i++)
-                AddElemTest(test_variants[0], ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(test_variants[0], ElementaryTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
             dut_ifc->ConfigureProtocolException(true);
@@ -96,7 +96,7 @@ class TestIso_7_1_7 : public test::TestBase
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
-            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            frame_flags_2 = std::make_unique<FrameFlags>(FrameKind::Can20);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
             RandomizeAndPrint(golden_frm_2.get());
 
@@ -120,15 +120,15 @@ class TestIso_7_1_7 : public test::TestBase
              *************************************************************************************/
             if (test_variant == TestVariant::CanFdEnabled)
             {
-                driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
             }
 
             driver_bit_frm->UpdateFrame();
             monitor_bit_frm->UpdateFrame();
 
-            monitor_bit_frm->TurnReceivedFrame();
-            monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->ConvRXFrame();
+            monitor_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
             /*
              * I think LT must send dominant ACK bit in the first frame although it is not
@@ -149,23 +149,23 @@ class TestIso_7_1_7 : public test::TestBase
              *
              * TODO: Make sure that standard meant it thisway!
              */
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            driver_bit_frm->GetBitOf(1, BitKind::Ack)->val_ = BitVal::Dominant;
 
             if (elem_test.index_ == 1)
             {
-                driver_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
             } else if (elem_test.index_ == 3) {
-                driver_bit_frm->RemoveBit(2, BitType::Intermission);
-                monitor_bit_frm->RemoveBit(2, BitType::Intermission);
+                driver_bit_frm->RemoveBit(2, BitKind::Interm);
+                monitor_bit_frm->RemoveBit(2, BitKind::Interm);
             }
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_2->TurnReceivedFrame();
+            monitor_bit_frm_2->ConvRXFrame();
             if (elem_test.index_ == 3)
-                monitor_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+                monitor_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
@@ -173,7 +173,7 @@ class TestIso_7_1_7 : public test::TestBase
             {
                 driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
                 monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-                monitor_bit_frm_2->TurnReceivedFrame();
+                monitor_bit_frm_2->ConvRXFrame();
                 driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
                 monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
             }

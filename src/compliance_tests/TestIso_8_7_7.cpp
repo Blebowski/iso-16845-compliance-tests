@@ -78,7 +78,7 @@ class TestIso_8_7_7 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
         }
@@ -99,13 +99,13 @@ class TestIso_8_7_7 : public test::TestBase
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
             nominal_bit_timing.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -126,20 +126,20 @@ class TestIso_8_7_7 : public test::TestBase
              *       tion has been done! This behavior has been checked with bug inserted into IUT
              *       and the test really failed!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             // I know this search is performance suicide, but again, we dont give a shit
             // about performance here... It is just a model running on powerfull PC!
-            for (size_t i = 0; i < driver_bit_frm->GetBitCount() - 1; i++)
+            for (size_t i = 0; i < driver_bit_frm->GetLen() - 1; i++)
             {
                 Bit *curr = driver_bit_frm->GetBit(i);
                 Bit *next = driver_bit_frm->GetBit(i + 1);
 
-                if (curr->bit_value_ == BitValue::Recessive &&
-                    next->bit_value_ == BitValue::Dominant)
+                if (curr->val_ == BitVal::Recessive &&
+                    next->val_ == BitVal::Dominant)
                 {
-                    next->GetTimeQuanta(0)->ForceValue(BitValue::Recessive);
-                    next->GetTimeQuanta(1)->ForceValue(BitValue::Recessive);
+                    next->GetTQ(0)->ForceVal(BitVal::Recessive);
+                    next->GetTQ(1)->ForceVal(BitVal::Recessive);
                 }
             }
 

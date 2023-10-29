@@ -79,8 +79,8 @@ class TestIso_8_6_9 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             SetupMonitorTxTests();
@@ -91,8 +91,8 @@ class TestIso_8_6_9 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -111,10 +111,10 @@ class TestIso_8_6_9 : public test::TestBase
              *   4. Insert next error frame from one bit later!
              *   5. Append retransmitted frame.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             int bit_to_flip;
             if (elem_test.index_ == 1)
@@ -124,14 +124,14 @@ class TestIso_8_6_9 : public test::TestBase
             else
                 bit_to_flip = 6;
 
-            Bit *bit = driver_bit_frm->GetBitOf(bit_to_flip, BitType::ErrorDelimiter);
+            Bit *bit = driver_bit_frm->GetBitOf(bit_to_flip, BitKind::ErrDelim);
             int bit_index = driver_bit_frm->GetBitIndex(bit);
             driver_bit_frm->FlipBitAndCompensate(bit, dut_input_delay);
 
-            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertPasErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm_2->PutAcknowledge(dut_input_delay);
+            driver_bit_frm_2->PutAck(dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

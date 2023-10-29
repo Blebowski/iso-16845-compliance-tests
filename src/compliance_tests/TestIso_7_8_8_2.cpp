@@ -92,7 +92,7 @@ class TestIso_7_8_8_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x7F;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -108,18 +108,18 @@ class TestIso_7_8_8_2 : public test::TestBase
              *      stuff bit.
              *   4. Force PH2 of 7-th bit of data field to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *driver_before_stuff_bit = driver_bit_frm->GetBitOf(5, BitType::Data);
-            Bit *monitor_before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
-            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
+            Bit *driver_before_stuff_bit = driver_bit_frm->GetBitOf(5, BitKind::Data);
+            Bit *monitor_before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitKind::Data);
+            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitKind::Data);
 
             driver_before_stuff_bit->ShortenPhase(BitPhase::Ph2, 1);
             monitor_before_stuff_bit->ShortenPhase(BitPhase::Ph2, 1);
 
-            driver_stuff_bit->ForceTimeQuanta(1, BitValue::Recessive);
-            driver_stuff_bit->ForceTimeQuanta(0, data_bit_timing.ph2_ - 1,
-                                              BitPhase::Ph2, BitValue::Recessive);
+            driver_stuff_bit->ForceTQ(1, BitVal::Recessive);
+            driver_stuff_bit->ForceTQ(0, data_bit_timing.ph2_ - 1,
+                                              BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

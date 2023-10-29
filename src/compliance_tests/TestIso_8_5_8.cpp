@@ -75,10 +75,10 @@ class TestIso_8_5_8 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             num_elem_tests = 1;
-            AddElemTest(TestVariant::Common, ElementaryTest(1 , FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1 , FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+            dut_ifc->SetErrorState(FaultConfState::ErrPas);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -91,8 +91,8 @@ class TestIso_8_5_8 : public test::TestBase
             uint8_t data_byte = 0xAA;
 
             /* ESI needed for CAN FD variant */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x44A, &data_byte);
 
             /* This frame should win arbitration */
@@ -120,14 +120,14 @@ class TestIso_8_5_8 : public test::TestBase
              *        A. Common variant - remove one bit
              *   4. Append the same frame, retransmitted.
              *************************************************************************************/
-            monitor_bit_frm->LooseArbitration(0, BitType::BaseIdentifier);
-            monitor_bit_frm->GetBitOf(0, BitType::BaseIdentifier)
-                ->GetFirstTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
+            monitor_bit_frm->LooseArbit(0, BitKind::BaseIdent);
+            monitor_bit_frm->GetBitOf(0, BitKind::BaseIdent)
+                ->GetFirstTQIter(BitPhase::Sync)->Lengthen(dut_input_delay);
 
             if (test_variant == TestVariant::Common)
-                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitType::Data));
+                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitKind::Data));
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

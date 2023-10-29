@@ -62,12 +62,12 @@ void can::BitTiming::Print()
 }
 
 
-size_t can::BitTiming::GetBitLengthTimeQuanta()
+size_t can::BitTiming::GetBitLenTQ()
 {
     return prop_ + ph1_ + ph2_ + 1;
 }
 
-size_t can::BitTiming::GetBitLengthCycles()
+size_t can::BitTiming::GetBitLenCycles()
 {
-    return GetBitLengthTimeQuanta() * brp_;
+    return GetBitLenTQ() * brp_;
 }

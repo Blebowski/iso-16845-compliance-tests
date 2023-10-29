@@ -92,8 +92,8 @@ class TestIso_8_8_4_2 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, RtrFlag::DataFrame,
-                                                        BrsFlag::Shift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, RtrFlag::Data,
+                                                        BrsFlag::DoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0xF);
             RandomizeAndPrint(golden_frm.get());
 
@@ -111,24 +111,24 @@ class TestIso_8_8_4_2 : public test::TestBase
              *   4. Force next bit from 2nd time quanta till one time quanta before sample point
              *      to dominant.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             Bit *random_bit;
             Bit *next_bit;
             do {
-                random_bit = driver_bit_frm->GetRandomBitOf(BitType::Data);
+                random_bit = driver_bit_frm->GetRandBitOf(BitKind::Data);
                 int bit_index = driver_bit_frm->GetBitIndex(random_bit);
                 next_bit = driver_bit_frm->GetBit(bit_index + 1);
-            } while (! (random_bit->bit_value_ == BitValue::Recessive &&
-                        next_bit->bit_value_ == BitValue::Recessive));
+            } while (! (random_bit->val_ == BitVal::Recessive &&
+                        next_bit->val_ == BitVal::Recessive));
 
-            random_bit->ForceTimeQuanta(data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitValue::Dominant);
+            random_bit->ForceTQ(data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitVal::Dominant);
 
             // Note: ISO here says that this bit should be forced from SYNC. But that is clearly
             //       an error, because then there would not be two recessive to dominant edges!
             //       This should be reported to ISO! It should be forces from first bit of
             for (size_t i = 1; i < data_bit_timing.prop_ + data_bit_timing.ph1_; i++)
-                next_bit->ForceTimeQuanta(i, BitValue::Dominant);
+                next_bit->ForceTQ(i, BitVal::Dominant);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

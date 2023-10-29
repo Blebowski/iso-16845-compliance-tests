@@ -101,9 +101,9 @@ class TestIso_7_1_1 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 45; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 80; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -136,8 +136,8 @@ class TestIso_7_1_1 : public test::TestBase
                     break;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                                       RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                                       RtrFlag::Data);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
             RandomizeAndPrint(golden_frm.get());
 
@@ -148,7 +148,7 @@ class TestIso_7_1_1 : public test::TestBase
              * Modify test frames:
              *   1. Turn monitored frame as if received.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -81,9 +81,9 @@ class TestIso_7_1_4 : public test::TestBase
             if (test_variants.size() > 0)
             {
                 if (test_variants[0] == TestVariant::Can_2_0)
-                    AddElemTest(TestVariant::Can_2_0, ElementaryTest(1, FrameType::Can2_0));
+                    AddElemTest(TestVariant::Can_2_0, ElementaryTest(1, FrameKind::Can20));
                 else
-                    AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+                    AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -92,7 +92,7 @@ class TestIso_7_1_4 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -110,20 +110,20 @@ class TestIso_7_1_4 : public test::TestBase
                 /* When node is "Classical CAN" conformant, it shall accept recessive R0 (FDF) and
                  * continue without protocol exception or regarding this frame type as FD Frame!!
                  */
-                driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
             } else {
                 /* R1 bit corresponds to RRS in CAN FD frames. It is bit on position of RTR in
                  * CAN2.0 frames!
                  */
-                driver_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitType::R1)->bit_value_ = BitValue::Recessive;
+                driver_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
             }
 
             driver_bit_frm->UpdateFrame();
             monitor_bit_frm->UpdateFrame();
 
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             /**************************************************************************************
              * Execute test

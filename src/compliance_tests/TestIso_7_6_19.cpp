@@ -72,8 +72,8 @@ class TestIso_7_6_19 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -81,7 +81,7 @@ class TestIso_7_6_19 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::Data);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -97,18 +97,18 @@ class TestIso_7_6_19 : public test::TestBase
              *   4. Force 8-th bit of Error delimiter to Dominant!
              *   5. Insert Overload frame behind the Error delimiter (first bit of Intermission)
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            Bit *err_delim = driver_bit_frm->GetBitOf(7, BitType::ErrorDelimiter);
-            err_delim->bit_value_ = BitValue::Dominant;
+            Bit *err_delim = driver_bit_frm->GetBitOf(7, BitKind::ErrDelim);
+            err_delim->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            driver_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

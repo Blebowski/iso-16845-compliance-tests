@@ -94,7 +94,7 @@ class TestIso_7_7_6 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
             int id = pow(2,11) - 1;
@@ -115,20 +115,20 @@ class TestIso_7_7_6 : public test::TestBase
              *      be at exact position as DUT should transmit it! Insert Passive Error frame to
              *      driver so that it sends all recessive values!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
+            driver_bit_frm->GetBitOf(4, BitKind::BaseIdent)
                 ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
-            monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier)
+            monitor_bit_frm->GetBitOf(4, BitKind::BaseIdent)
                 ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
 
             Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
-            stuff_bit->bit_value_ = BitValue::Recessive;
-            stuff_bit->GetTimeQuanta(0)->ForceValue(BitValue::Dominant);
+            stuff_bit->val_ = BitVal::Recessive;
+            stuff_bit->GetTQ(0)->ForceVal(BitVal::Dominant);
 
             int index = driver_bit_frm->GetBitIndex(stuff_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+            monitor_bit_frm->InsertActErrFrm(index + 1);
+            driver_bit_frm->InsertPasErrFrm(index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

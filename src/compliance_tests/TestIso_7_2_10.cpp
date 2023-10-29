@@ -73,8 +73,8 @@ class TestIso_7_2_10 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 5; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
         }
 
@@ -94,14 +94,14 @@ class TestIso_7_2_10 : public test::TestBase
              *   2. Force 1,2..5-th bit of EOF forced to dominant!
              *   3. Insert Active Error frame from first bit of EOF!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Eof)
-                ->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Eof)
+                ->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertActiveErrorFrame(elem_test.index_, BitType::Eof);
-            driver_bit_frm->InsertActiveErrorFrame(elem_test.index_, BitType::Eof);
+            monitor_bit_frm->InsertActErrFrm(elem_test.index_, BitKind::Eof);
+            driver_bit_frm->InsertActErrFrm(elem_test.index_, BitKind::Eof);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

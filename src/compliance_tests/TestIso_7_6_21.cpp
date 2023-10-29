@@ -77,8 +77,8 @@ class TestIso_7_6_21 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
 
@@ -92,8 +92,8 @@ class TestIso_7_6_21 : public test::TestBase
              * Dont shift bit-rate needed since Transmitted frame after received frame is not
              * handled well with Bit rate shifts due to small resynchronizations in reciver!
              */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0xAB, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -113,23 +113,23 @@ class TestIso_7_6_21 : public test::TestBase
              *   4. Insert Active Error frame from next bit on to driven frame. Insert Passive
              *      Error frame to monitored frame.
              *************************************************************************************/
-            Bit *loosing_bit = driver_bit_frm->GetBitOf(9, BitType::BaseIdentifier);
-            loosing_bit->bit_value_ = BitValue::Dominant;
+            Bit *loosing_bit = driver_bit_frm->GetBitOf(9, BitKind::BaseIdent);
+            loosing_bit->val_ = BitVal::Dominant;
             int bit_index = driver_bit_frm->GetBitIndex(loosing_bit);
 
             // Compensate IUTs input delay - lenghten IUTs monitored bit by its input delay,
             // since IUT will re-synchronize due to this delay on the same bit on which it loses
             // arbitration!
-            monitor_bit_frm->LooseArbitration(bit_index);
-            monitor_bit_frm->GetBit(bit_index + 1)->GetLastTimeQuantaIterator(BitPhase::Sync)
+            monitor_bit_frm->LooseArbit(bit_index);
+            monitor_bit_frm->GetBit(bit_index + 1)->GetLastTQIter(BitPhase::Sync)
                 ->Lengthen(dut_input_delay);
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

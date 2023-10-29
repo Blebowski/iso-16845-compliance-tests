@@ -79,8 +79,8 @@ class TestIso_8_5_15 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             /* Basic settings where IUT is transmitter */
             SetupMonitorTxTests();
@@ -94,12 +94,12 @@ class TestIso_8_5_15 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
 
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                            RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, &data_byte);
 
             driver_bit_frm = ConvertBitFrame(*golden_frm);
@@ -120,25 +120,25 @@ class TestIso_8_5_15 : public test::TestBase
              *   5. Append Suspend transmission to both driven and monitored frames.
              *   6. Append next frame as if retransmitted by IUT.
              **************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->RemoveBitsFrom(7, BitType::Data);
-            monitor_bit_frm->RemoveBitsFrom(7, BitType::Data);
+            driver_bit_frm->RemoveBitsFrom(7, BitKind::Data);
+            monitor_bit_frm->RemoveBitsFrom(7, BitKind::Data);
 
             /* Append 17, but last will be over-written by next passive error frame! */
             for (int i = 0; i < 17; i++)
             {
-                driver_bit_frm->AppendBit(BitType::ActiveErrorFlag, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::ActiveErrorFlag, BitValue::Dominant);
+                driver_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Dominant);
             }
 
-            driver_bit_frm->InsertPassiveErrorFrame(16, BitType::ActiveErrorFlag);
-            monitor_bit_frm->InsertPassiveErrorFrame(16, BitType::ActiveErrorFlag);
+            driver_bit_frm->InsertPasErrFrm(16, BitKind::ActErrFlag);
+            monitor_bit_frm->InsertPasErrFrm(16, BitKind::ActErrFlag);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            driver_bit_frm->AppendSuspTrans();
+            monitor_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

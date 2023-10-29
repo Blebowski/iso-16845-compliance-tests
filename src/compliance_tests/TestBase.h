@@ -167,7 +167,7 @@ class test::TestBase
          ********************************************************************************/
 
         /* Metadata and flags */
-        FrameType frame_type;
+        FrameKind frame_type;
         std::unique_ptr<can::FrameFlags> frame_flags;
         std::unique_ptr<can::FrameFlags> frame_flags_2;
 
@@ -196,7 +196,7 @@ class test::TestBase
         /**
          * Obtains frame type based on test variant.
          */
-        can::FrameType GetDefaultFrameType(TestVariant &variant);
+        can::FrameKind GetDefaultFrameType(TestVariant &variant);
 
         /********************************************************************************
          * Test execution functions
@@ -268,7 +268,7 @@ class test::TestBase
          * @param frame_type Type of frame assigned to each added test.
          */
         void AddElemTestForEachSamplePoint(TestVariant test_variant, bool nominal,
-                                           FrameType frame_type);
+                                           FrameKind frame_type);
 
         /**
          *
@@ -296,7 +296,7 @@ class test::TestBase
         /**
          * @returns random bit type within a bit field.
          */
-        BitType GetRandomBitType(FrameType frame_type, IdentifierType ident_type,
+        BitKind GetRandomBitType(FrameKind frame_type, IdentKind ident_type,
                                  BitField bit_field);
 
         /**

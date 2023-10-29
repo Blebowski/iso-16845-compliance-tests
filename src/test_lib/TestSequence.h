@@ -198,7 +198,7 @@ class test::TestSequence
          * @param message Message to be printed when driving starts.
          */
         void pushDriverValue(std::chrono::nanoseconds duration,
-                             can::BitValue bit_value,
+                             can::BitVal bit_value,
                              std::string message);
 
         /**
@@ -210,7 +210,7 @@ class test::TestSequence
          */
         void pushMonitorValue(std::chrono::nanoseconds duration,
                               std::chrono::nanoseconds sample_rate,
-                              can::BitValue bit_value,
+                              can::BitVal bit_value,
                               std::string message);
 };
 

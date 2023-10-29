@@ -90,7 +90,7 @@ class TestIso_7_8_9_2 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
 
             // Recessive stuff bit on 7-th data bit!
             uint8_t data_byte = 0x80;
@@ -108,14 +108,14 @@ class TestIso_7_8_9_2 : public test::TestBase
              *   3. Insert expected active error frame on monitored frame from 8-th bit of data
              *      field. Insert passive error frame on driven frame!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
-            stuff_bit->ForceTimeQuanta(1, data_bit_timing.prop_ + data_bit_timing.ph1_,
-                                       BitValue::Dominant);
+            Bit *stuff_bit = driver_bit_frm->GetBitOf(6, BitKind::Data);
+            stuff_bit->ForceTQ(1, data_bit_timing.prop_ + data_bit_timing.ph1_,
+                                       BitVal::Dominant);
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -80,7 +80,7 @@ class TestIso_8_8_1_1 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
 
-            AddElemTestForEachSamplePoint(TestVariant::CanFdEnabled, true, FrameType::Can2_0);
+            AddElemTestForEachSamplePoint(TestVariant::CanFdEnabled, true, FrameKind::Can20);
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
             SetupMonitorTxTests();
@@ -99,14 +99,14 @@ class TestIso_8_8_1_1 : public test::TestBase
             dut_ifc->Enable();
 
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
             nominal_bit_timing.Print();
 
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -118,11 +118,11 @@ class TestIso_8_8_1_1 : public test::TestBase
              *   1. Insert ACK to driven frame.
              *   2. Force whole Phase 2 segment of "res" (r0) bit to dominant in driven frame.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *res_bit = driver_bit_frm->GetBitOf(0, BitType::R0);
-            for (size_t i = 0; i < res_bit->GetPhaseLenTimeQuanta(BitPhase::Ph2); i++)
-                res_bit->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Recessive);
+            Bit *res_bit = driver_bit_frm->GetBitOf(0, BitKind::R0);
+            for (size_t i = 0; i < res_bit->GetPhaseLenTQ(BitPhase::Ph2); i++)
+                res_bit->ForceTQ(i, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

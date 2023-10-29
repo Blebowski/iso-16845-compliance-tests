@@ -88,7 +88,7 @@ class TestIso_7_8_7_3 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -101,13 +101,13 @@ class TestIso_7_8_7_3 : public test::TestBase
              *   2. Force second TQ of ACK bit to Recessive.
              *   3. Force Phase2 of ACK bit to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitType::Ack);
-            ack_bit->bit_value_ = BitValue::Dominant;
-            ack_bit->ForceTimeQuanta(1, BitValue::Recessive);
-            ack_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                     BitPhase::Ph2, BitValue::Recessive);
+            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitKind::Ack);
+            ack_bit->val_ = BitVal::Dominant;
+            ack_bit->ForceTQ(1, BitVal::Recessive);
+            ack_bit->ForceTQ(0, nominal_bit_timing.ph2_ - 1,
+                                     BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

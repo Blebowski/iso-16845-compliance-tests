@@ -33,7 +33,7 @@
 #include <list>
 
 #include "can.h"
-#include "CycleBitValue.h"
+#include "Cycle.h"
 
 /**
  * @class TimeQuanta
@@ -49,25 +49,25 @@ class can::TimeQuanta
          *  @param brp Baud rate prescaler (number of cycles within Time quanta)
          *  @param bit_phase Phase of bit to which this time quanta belongs
          */
-        TimeQuanta(Bit *parent, int brp, BitPhase bit_phase);
+        TimeQuanta(Bit *parent, int brp, BitPhase phase);
 
         /**
          * @param brp Baud rate prescaler (number of cycles within Time quanta)
          * @param bit_phase Phase of bit to which this time quanta belongs
          * @param bit_value Bit value of each cycle in time quanta (set as non default value)
          */
-        TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue bit_value);
+        TimeQuanta(Bit *parent, int brp, BitPhase phase, BitVal value);
 
         /**
          * @returns true if any of cycles in this Time quanta contain non-default values.
          */
-        bool HasNonDefaultValues();
+        bool HasNonDefVals();
 
         /**
          * Sets all clock cycle values to default (Cycles with default values inherit value from
          * bit to which they belong).
          */
-        void SetAllDefaultValues();
+        void SetAllDefVals();
 
         /**
          * @returns length of Time quanta in clock cycles.
@@ -79,14 +79,14 @@ class can::TimeQuanta
          * @param index Position of cycle within Time quanta.
          * @returns Pointer to cycle bit value.
          */
-        CycleBitValue *getCycleBitValue(size_t index);
+        Cycle *getCycleBitValue(size_t index);
 
         /**
          * Gets value of cycle
          * @param index Position of cycle within Time Quanta.
          * @returns Iterator pointing to cycle bit value
          */
-        std::list<CycleBitValue>::iterator GetCycleBitValueIterator(size_t index);
+        std::list<Cycle>::iterator GetCycleBitValIter(size_t index);
 
         /**
          * Lengthens time quanta (appends cycles at the end).
@@ -100,7 +100,7 @@ class can::TimeQuanta
          * @param by_cycles number of cycles to lengthen by
          * @param bit_value Value to set appended cycles to.
          */
-        void Lengthen(size_t by_cycles, BitValue bit_value);
+        void Lengthen(size_t by_cycles, BitVal value);
 
         /**
          * Shortens time quanta.
@@ -115,25 +115,27 @@ class can::TimeQuanta
          *
          * Function crashes if cycle_index is larger than number of cycles in Time Quanta.
          */
-        void ForceCycleValue(size_t cycle_index, BitValue bit_value);
+        void ForceCycleValue(size_t cycle_index, BitVal value);
 
         /**
          * Forces value of each cycle within time quanta
          * @param bit_value Value to force time quanta to
          */
-        void ForceValue(BitValue bit_value);
+        void ForceVal(BitVal bit_value);
 
         // Getters
-        inline BitPhase bit_phase() const { return bit_phase_; };
+        inline BitPhase bit_phase() const {
+            return phase_;
+        };
 
     private:
         /* Cycle bit values within time quanta */
-        std::list<CycleBitValue> cycle_bit_values_;
+        std::list<Cycle> cycles_;
 
         /**
          * Phase of bit to which this time quanta belongs.
          */
-        BitPhase bit_phase_;
+        BitPhase phase_;
 
         /* Parent Bit which contains this Time Quanta*/
         Bit *parent_;

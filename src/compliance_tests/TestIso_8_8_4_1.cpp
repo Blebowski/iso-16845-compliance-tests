@@ -93,8 +93,8 @@ class TestIso_8_8_4_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                        EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                        EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -111,17 +111,17 @@ class TestIso_8_8_4_1 : public test::TestBase
              *   3. Force ESI bit to dominant from 2nd TQ to one TQ before sample point.
              *   4. Append suspend transmission.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *brs = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            brs->ForceTimeQuanta(data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitValue::Dominant);
+            Bit *brs = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            brs->ForceTQ(data_bit_timing.ph2_ - 1, BitPhase::Ph2, BitVal::Dominant);
 
-            Bit *esi = driver_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *esi = driver_bit_frm->GetBitOf(0, BitKind::Esi);
             for (size_t i = 1; i < data_bit_timing.prop_ + data_bit_timing.ph1_; i++)
-                esi->ForceTimeQuanta(i, BitValue::Dominant);
+                esi->ForceTQ(i, BitVal::Dominant);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            driver_bit_frm->AppendSuspTrans();
+            monitor_bit_frm->AppendSuspTrans();
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

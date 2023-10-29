@@ -86,7 +86,7 @@ class TestIso_7_2_8 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc;
-            BitValue bit_value;
+            BitVal bit_value;
 
             /* Tests 1,3 -> DLC < 10. Tests 2,4 -> DLC > 10 */
             if (elem_test.index_ % 2 == 0)
@@ -95,11 +95,11 @@ class TestIso_7_2_8 : public test::TestBase
                 dlc = rand() % 10;
 
             if (elem_test.index_ < 3)
-                bit_value = BitValue::Recessive;
+                bit_value = BitVal::Recessive;
             else
-                bit_value = BitValue::Dominant;
+                bit_value = BitVal::Dominant;
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, RtrFlag::Data);
             golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
             RandomizeAndPrint(golden_frm.get());
 
@@ -114,9 +114,9 @@ class TestIso_7_2_8 : public test::TestBase
              *   3. Insert Active Error frame to monitored frame. Insert Passive Error frame to
              *      driven frame (TX/RX feedback enabled).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffBitType::FixedStuffBit,
+            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffKind::Fixed,
                                                                     bit_value);
 
             /**************************************************************************************
@@ -140,10 +140,10 @@ class TestIso_7_2_8 : public test::TestBase
                                             stuff_bit, bit_value);
 
                 int bit_index = driver_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
-                stuff_bit_to_flip->FlipBitValue();
+                stuff_bit_to_flip->FlipVal();
 
-                driver_bit_frm_2->InsertPassiveErrorFrame(bit_index + 1);
-                monitor_bit_frm_2->InsertActiveErrorFrame(bit_index + 1);
+                driver_bit_frm_2->InsertPasErrFrm(bit_index + 1);
+                monitor_bit_frm_2->InsertActErrFrm(bit_index + 1);
 
                 driver_bit_frm_2->Print(true);
                 monitor_bit_frm_2->Print(true);

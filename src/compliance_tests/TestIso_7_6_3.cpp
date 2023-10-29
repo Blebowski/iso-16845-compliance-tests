@@ -75,15 +75,15 @@ class TestIso_7_6_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                            RtrFlag::DataFrame);
+                            RtrFlag::Data);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -100,20 +100,20 @@ class TestIso_7_6_3 : public test::TestBase
              *      Delimiter). These bits shall be driven on can_tx, but 16 RECESSIVE bits shall
              *      be monitored on can_tx.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            Bit *err_delim = driver_bit_frm->GetBitOf(0, BitType::ErrorDelimiter);
+            Bit *err_delim = driver_bit_frm->GetBitOf(0, BitKind::ErrDelim);
             int bit_index = driver_bit_frm->GetBitIndex(err_delim);
 
             for (int k = 0; k < 16; k++)
             {
-                driver_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Dominant, bit_index);
-                monitor_bit_frm->InsertBit(BitType::ActiveErrorFlag, BitValue::Recessive, bit_index);
+                driver_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index);
+                monitor_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Recessive, bit_index);
             }
 
             driver_bit_frm->Print(true);

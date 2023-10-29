@@ -86,7 +86,7 @@ class TestIso_8_2_8 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (int i = 0; i < 1008; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
@@ -140,8 +140,8 @@ class TestIso_8_2_8 : public test::TestBase
             for (int i = 1; i < 64; i++)
                 data[i] = data_rest;
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                        RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                        RtrFlag::Data, BrsFlag::DoShift, EsiFlag::ErrAct);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, 0x555, data);
             RandomizeAndPrint(golden_frm.get());
@@ -161,25 +161,25 @@ class TestIso_8_2_8 : public test::TestBase
              *   4. Append retransmitted frame if one shot mode is not enabled. If it is enabled,
              *      IUT will not retransmitt the frame. This serves to shorten the test time!
              *************************************************************************************/
-            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(BitType::Data,
-                                    StuffBitType::NormalStuffBit);
+            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(BitKind::Data,
+                                    StuffKind::Normal);
             Bit *stuff_bit;
 
             /* It can be that last bit is right after last bit of data!! */
             if (num_stuff_bits > stuff_bit_index)
-                stuff_bit = driver_bit_frm->GetStuffBit(stuff_bit_index, BitType::Data);
+                stuff_bit = driver_bit_frm->GetStuffBit(stuff_bit_index, BitKind::Data);
             else
-                stuff_bit = driver_bit_frm->GetStuffBit(0, BitType::StuffCount);
+                stuff_bit = driver_bit_frm->GetStuffBit(0, BitKind::StuffCnt);
 
-            stuff_bit->FlipBitValue();
+            stuff_bit->FlipVal();
             int bit_index = driver_bit_frm->GetBitIndex(stuff_bit);
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             if (!one_shot_enabled)
             {
-                driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
                 driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
                 monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
             }

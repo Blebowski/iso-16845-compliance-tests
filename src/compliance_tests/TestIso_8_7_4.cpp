@@ -102,7 +102,7 @@ class TestIso_8_7_4 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -130,18 +130,18 @@ class TestIso_8_7_4 : public test::TestBase
             int bit_index;
             do
             {
-                bit_to_shorten = driver_bit_frm->GetRandomBitOf(BitType::BaseIdentifier);
+                bit_to_shorten = driver_bit_frm->GetRandBitOf(BitKind::BaseIdent);
                 bit_index = driver_bit_frm->GetBitIndex(bit_to_shorten);
                 next_bit = driver_bit_frm->GetBit(bit_index + 1);
-            } while (!(bit_to_shorten->bit_value_ == BitValue::Recessive &&
-                        next_bit->bit_value_ == BitValue::Dominant));
+            } while (!(bit_to_shorten->val_ == BitVal::Recessive &&
+                        next_bit->val_ == BitVal::Dominant));
 
             bit_to_shorten->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
             monitor_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2, elem_test.e_ - 1);
             monitor_bit_frm->GetBit(bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
 
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

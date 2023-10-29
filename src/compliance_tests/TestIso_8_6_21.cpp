@@ -76,8 +76,8 @@ class TestIso_8_6_21 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -91,14 +91,14 @@ class TestIso_8_6_21 : public test::TestBase
             uint8_t data_byte = 0x80;
 
             /* Sent by LT */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x50, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
             /* Sent by IUT */
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
+            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0x51, &data_byte);
             RandomizeAndPrint(golden_frm_2.get());
 
@@ -122,21 +122,21 @@ class TestIso_8_6_21 : public test::TestBase
              *      error frame to driven frame (TX/RX feedback enabled).
              *   5. Append retransmitted frame by IUT.
              *************************************************************************************/
-            Bit *last_base_id = monitor_bit_frm->GetBitOfNoStuffBits(10, BitType::BaseIdentifier);
-            last_base_id->bit_value_ = BitValue::Dominant;
+            Bit *last_base_id = monitor_bit_frm->GetBitOfNoStuffBits(10, BitKind::BaseIdent);
+            last_base_id->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->LooseArbitration(last_base_id);
+            monitor_bit_frm->LooseArbit(last_base_id);
 
             // Compensate IUTs input delay, since it will resynchronize due to bits which are
             // further sent by LT.
-            last_base_id->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+            last_base_id->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

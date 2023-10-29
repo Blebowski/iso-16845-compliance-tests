@@ -96,7 +96,7 @@ class TestIso_7_8_2_2 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::DontShift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -110,17 +110,17 @@ class TestIso_7_8_2_2 : public test::TestBase
              *      shall Hard synchronize)
              *   3. Force TSEG2 of BRS to Recessive on driven frame!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *edl_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Edl);
-            Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Edl);
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
+            Bit *edl_bit_driver = driver_bit_frm->GetBitOf(0, BitKind::Edl);
+            Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Edl);
+            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
 
             edl_bit_driver->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             edl_bit_monitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
 
             for (size_t j = 0; j < data_bit_timing.ph2_; j++)
-                brs_bit->GetTimeQuanta(BitPhase::Ph2, j)->ForceValue(BitValue::Recessive);
+                brs_bit->GetTQ(BitPhase::Ph2, j)->ForceVal(BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

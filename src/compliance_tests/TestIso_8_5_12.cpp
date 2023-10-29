@@ -80,8 +80,8 @@ class TestIso_8_5_12 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
             /* Basic settings where IUT is transmitter */
             SetupMonitorTxTests();
@@ -95,8 +95,8 @@ class TestIso_8_5_12 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                            RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -119,56 +119,56 @@ class TestIso_8_5_12 : public test::TestBase
              *      Passive error frame to driven frame (TX/RX feedback enabled, just placeholder)
              *   6. Append retransmitted frame by IUT.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->RemoveBitsFrom(7, BitType::Data);
-            monitor_bit_frm->RemoveBitsFrom(7, BitType::Data);
+            driver_bit_frm->RemoveBitsFrom(7, BitKind::Data);
+            monitor_bit_frm->RemoveBitsFrom(7, BitKind::Data);
 
             for (int i = 0; i < 5; i++)
             {
-                driver_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Dominant);
-                monitor_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Dominant);
+                monitor_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
             }
 
             // Compensate IUTs resynchronisation on first dominant bit caused by its input delay.
-            monitor_bit_frm->GetBitOf(0, BitType::PassiveErrorFlag)
-                ->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+            monitor_bit_frm->GetBitOf(0, BitKind::PasErrFlag)
+                ->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
             for (int i = 0; i < 5; i++)
             {
-                driver_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
             }
 
             for (int i = 0; i < 6; i++)
             {
-                driver_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Dominant);
-                monitor_bit_frm->AppendBit(BitType::PassiveErrorFlag, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Dominant);
+                monitor_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
             }
 
             for (int i = 0; i < 8; i++)
             {
-                driver_bit_frm->AppendBit(BitType::ErrorDelimiter, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::ErrorDelimiter, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::ErrDelim, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::ErrDelim, BitVal::Recessive);
             }
 
-            driver_bit_frm->AppendBit(BitType::Intermission, BitValue::Dominant);
-            monitor_bit_frm->AppendBit(BitType::Intermission, BitValue::Recessive);
+            driver_bit_frm->AppendBit(BitKind::Interm, BitVal::Dominant);
+            monitor_bit_frm->AppendBit(BitKind::Interm, BitVal::Recessive);
 
             /*
              * Following bit is inserted just to be immediately overwritten by overload
              * frame!
              */
-            driver_bit_frm->AppendBit(BitType::Intermission, BitValue::Recessive);
-            monitor_bit_frm->AppendBit(BitType::Intermission, BitValue::Recessive);
+            driver_bit_frm->AppendBit(BitKind::Interm, BitVal::Recessive);
+            monitor_bit_frm->AppendBit(BitKind::Interm, BitVal::Recessive);
 
-            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            driver_bit_frm->AppendSuspTrans();
+            monitor_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

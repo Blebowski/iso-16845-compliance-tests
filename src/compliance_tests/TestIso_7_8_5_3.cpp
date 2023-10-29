@@ -97,7 +97,7 @@ class TestIso_7_8_5_3 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -117,25 +117,25 @@ class TestIso_7_8_5_3 : public test::TestBase
              *      synchronization edge in first TQ of PH2 due to plain causality).
              *   5. Force Phase 2 of ACK to Recessive on driven bit!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *crc_delimiter_driver = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            Bit *crc_delimiter_driver = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitKind::Ack);
 
             crc_delimiter_driver->ShortenPhase(BitPhase::Ph2, elem_test.e_);
             crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
             if ((size_t)elem_test.e_ == nominal_bit_timing.sjw_)
             {
-                Bit *ack_monitor = monitor_bit_frm->GetBitOf(0, BitType::Ack);
-                ack_monitor->ForceTimeQuanta(0, BitValue::Recessive);
+                Bit *ack_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Ack);
+                ack_monitor->ForceTQ(0, BitVal::Recessive);
                 //ack_monitor->bit_value_ = BitValue::Recessive;
             }
 
             for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                ack_driver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                ack_driver->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

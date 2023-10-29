@@ -82,7 +82,7 @@ class TestIso_7_7_9_1 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // CAN 2.0 frame, randomize others
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -98,7 +98,7 @@ class TestIso_7_7_9_1 : public test::TestBase
              *************************************************************************************/
             driver_bit_frm->RemoveBitsFrom(1);
             monitor_bit_frm->RemoveBitsFrom(1);
-            monitor_bit_frm->GetBit(0)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->GetBit(0)->val_ = BitVal::Recessive;
 
             driver_bit_frm->GetBit(0)->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             driver_bit_frm->GetBit(0)->ShortenPhase(BitPhase::Sync, 1);
@@ -107,8 +107,8 @@ class TestIso_7_7_9_1 : public test::TestBase
 
             for (int i = 0; i < 9; i++)
             {
-                monitor_bit_frm->InsertBit(BitType::Sof, BitValue::Recessive, 1);
-                driver_bit_frm->InsertBit(BitType::Sof, BitValue::Recessive, 1);
+                monitor_bit_frm->InsertBit(BitKind::Sof, BitVal::Recessive, 1);
+                driver_bit_frm->InsertBit(BitKind::Sof, BitVal::Recessive, 1);
             }
 
             driver_bit_frm->Print(true);

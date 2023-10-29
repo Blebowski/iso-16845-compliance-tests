@@ -77,10 +77,10 @@ class TestIso_8_5_6 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             num_elem_tests = 1;
-            AddElemTest(TestVariant::Common, ElementaryTest(1 , FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1 , FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+            dut_ifc->SetErrorState(FaultConfState::ErrPas);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -90,7 +90,7 @@ class TestIso_8_5_6 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* ESI needed for CAN FD variant */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -110,18 +110,18 @@ class TestIso_8_5_6 : public test::TestBase
              *   4. Append suspend transmission field to both driven and monitored frames.
              *   5. Append next frame.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
-            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitType::Intermission);
+            Bit *first_interm_bit = driver_bit_frm->GetBitOf(0, BitKind::Interm);
             driver_bit_frm->FlipBitAndCompensate(first_interm_bit, dut_input_delay);
 
-            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-            driver_bit_frm->InsertPassiveErrorFrame(1, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            driver_bit_frm->InsertPasErrFrm(1, BitKind::Interm);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            driver_bit_frm->AppendSuspTrans();
+            monitor_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

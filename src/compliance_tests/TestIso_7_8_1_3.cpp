@@ -92,7 +92,7 @@ class TestIso_7_8_1_3 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
             for (size_t i = 0; i < 2; i++) {
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::Can20));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -101,7 +101,7 @@ class TestIso_7_8_1_3 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -117,9 +117,9 @@ class TestIso_7_8_1_3 : public test::TestBase
              *      delimiter! Insert passive error frame to driver to send
              *      all recessive (TX to RX feedback is turned ON)!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
+            Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
             int bit_index = driver_bit_frm->GetBitIndex(crc_delim);
             int dominant_pulse_lenght;
 
@@ -129,12 +129,12 @@ class TestIso_7_8_1_3 : public test::TestBase
                 dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
 
             for (int j = 0; j < dominant_pulse_lenght; j++)
-                crc_delim->ForceTimeQuanta(j, BitValue::Dominant);
+                crc_delim->ForceTQ(j, BitVal::Dominant);
 
             if (elem_test.index_ == 2)
             {
-                driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-                monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+                driver_bit_frm->InsertPasErrFrm(bit_index + 1);
+                monitor_bit_frm->InsertActErrFrm(bit_index + 1);
             }
 
             driver_bit_frm->Print(true);

@@ -89,7 +89,7 @@ class TestIso_8_7_2 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -106,8 +106,8 @@ class TestIso_8_7_2 : public test::TestBase
             WaitDutErrorActive();
 
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x7FF, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -140,36 +140,36 @@ class TestIso_8_7_2 : public test::TestBase
              *         first bit of second frame will be transmitted recessive. This is emulated
              *         by SOF of second monitored frame!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->ConvRXFrame();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitType::Intermission);
-            Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitType::Intermission);
+            Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitKind::Interm);
+            Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitKind::Interm);
 
             last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             BitPhase prev_phase_drv = last_interm_bit_drv->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_drv->ShortenPhase(prev_phase_drv, 1);
-            last_interm_bit_drv->GetLastTimeQuantaIterator(prev_phase_drv)->Shorten(1);
+            last_interm_bit_drv->GetLastTQIter(prev_phase_drv)->Shorten(1);
 
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
             BitPhase prev_phase_mon = last_interm_bit_mon->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_mon->ShortenPhase(prev_phase_mon, 1);
-            last_interm_bit_mon->GetLastTimeQuantaIterator(prev_phase_mon)->Shorten(1);
+            last_interm_bit_mon->GetLastTQIter(prev_phase_mon)->Shorten(1);
 
-            driver_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm_2->ConvRXFrame();
+            driver_bit_frm_2->GetBitOf(0, BitKind::Sof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->ShortenPhase(BitPhase::Sync, 1);
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm_2->GetBitOf(0, BitKind::Sof)->ShortenPhase(BitPhase::Sync, 1);
+            monitor_bit_frm_2->GetBitOf(0, BitKind::Sof)->val_ = BitVal::Recessive;
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
             driver_bit_frm->CompensateEdgeForInputDelay(
-                driver_bit_frm->GetBitOf(1, BitType::Sof), this->dut_input_delay);
+                driver_bit_frm->GetBitOf(1, BitKind::Sof), this->dut_input_delay);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

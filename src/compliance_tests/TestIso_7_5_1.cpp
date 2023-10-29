@@ -83,8 +83,8 @@ class TestIso_7_5_1 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             dut_ifc->SetTec(140);
@@ -94,8 +94,8 @@ class TestIso_7_5_1 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                            IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
-                            EsiFlag::ErrorPassive);
+                            IdentKind::Base, RtrFlag::Data, BrsFlag::NoShift,
+                            EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &error_data);
             RandomizeAndPrint(golden_frm.get());
 
@@ -122,12 +122,12 @@ class TestIso_7_5_1 : public test::TestBase
              *   7. Append the second frame to original frame. Second driven frame must have ACK
              *      dominant since TX/RX feedback is disabled!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            monitor_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
             int bit_to_corrupt;
             if (elem_test.index_ == 1)
@@ -137,14 +137,14 @@ class TestIso_7_5_1 : public test::TestBase
             else
                 bit_to_corrupt = 5;
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_to_corrupt, BitType::PassiveErrorFlag);
-            monitor_bit_frm->InsertPassiveErrorFrame(bit_to_corrupt, BitType::PassiveErrorFlag);
+            driver_bit_frm->InsertActErrFrm(bit_to_corrupt, BitKind::PasErrFlag);
+            monitor_bit_frm->InsertPasErrFrm(bit_to_corrupt, BitKind::PasErrFlag);
 
-            driver_bit_frm->RemoveBit(2, BitType::Intermission);
+            driver_bit_frm->RemoveBit(2, BitKind::Interm);
 
-            monitor_bit_frm_2->TurnReceivedFrame();
-            monitor_bit_frm_2->RemoveBit(0, BitType::Sof);
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            monitor_bit_frm_2->ConvRXFrame();
+            monitor_bit_frm_2->RemoveBit(0, BitKind::Sof);
+            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());

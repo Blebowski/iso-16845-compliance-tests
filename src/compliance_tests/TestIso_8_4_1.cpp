@@ -80,8 +80,8 @@ class TestIso_8_4_1 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             /* Standard settings for tests where IUT is transmitter */
@@ -98,7 +98,7 @@ class TestIso_8_4_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -116,17 +116,17 @@ class TestIso_8_4_1 : public test::TestBase
              *     This should cover intermission, suspend and some reserve and check that IUT does
              *     not retransmitt the frame!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
-            Bit *interm_bit = driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Intermission);
+            Bit *interm_bit = driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Interm);
             driver_bit_frm->FlipBitAndCompensate(interm_bit, dut_input_delay);
-            monitor_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
-            driver_bit_frm->InsertPassiveErrorFrame(elem_test.index_, BitType::Intermission);
+            monitor_bit_frm->InsertOvrlFrm(elem_test.index_, BitKind::Interm);
+            driver_bit_frm->InsertPasErrFrm(elem_test.index_, BitKind::Interm);
 
             for (int k = 0; k < 15; k++)
             {
-                driver_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
             }
 
             driver_bit_frm->Print(true);

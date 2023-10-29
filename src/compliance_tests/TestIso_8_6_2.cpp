@@ -81,8 +81,8 @@ class TestIso_8_6_2 : public test::TestBase
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             SetupMonitorTxTests();
@@ -91,7 +91,7 @@ class TestIso_8_6_2 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrAct);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -105,13 +105,13 @@ class TestIso_8_6_2 : public test::TestBase
              *   3. Corrupt 1,3,6-th bit of overload flag.
              *   4. Insert Active error frame from one bit further.
              *************************************************************************************/
-            driver_bit_frm->PutAcknowledge(dut_input_delay);
+            driver_bit_frm->PutAck(dut_input_delay);
 
             driver_bit_frm->FlipBitAndCompensate(
-                driver_bit_frm->GetBitOf(0, BitType::Intermission), dut_input_delay);
+                driver_bit_frm->GetBitOf(0, BitKind::Interm), dut_input_delay);
 
-            driver_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
-            monitor_bit_frm->InsertOverloadFrame(1, BitType::Intermission);
+            driver_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
             int bit_index_to_corrupt;
             if (elem_test.index_ == 1)
@@ -122,12 +122,12 @@ class TestIso_8_6_2 : public test::TestBase
                 bit_index_to_corrupt = 5;
 
             Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
-                                                            BitType::OverloadFlag);
-            bit_to_corrupt->bit_value_ = BitValue::Recessive;
+                                                            BitKind::OvrlFlag);
+            bit_to_corrupt->val_ = BitVal::Recessive;
 
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -77,10 +77,10 @@ class TestIso_8_5_5 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             num_elem_tests = 1;
-            AddElemTest(TestVariant::Common, ElementaryTest(1 , FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1 , FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
 
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+            dut_ifc->SetErrorState(FaultConfState::ErrPas);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -91,8 +91,8 @@ class TestIso_8_5_5 : public test::TestBase
         {
             uint8_t data_byte = 0x80;
             /* ESI needed for CAN FD variant */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame,
-                                                       EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::Data,
+                                                       EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -112,20 +112,20 @@ class TestIso_8_5_5 : public test::TestBase
              *   5. Append the same frame for second time to driven and monitored frames. In driven
              *      frame, it is as if received, in monitored as if transmitted.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
             for (int i = 0; i < 8; i++)
             {
-                driver_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::Suspend, BitValue::Recessive);
+                driver_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
+                monitor_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
             }
 
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 

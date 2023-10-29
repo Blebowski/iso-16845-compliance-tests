@@ -91,9 +91,9 @@ class TestIso_7_6_10 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
             for (int i = 0; i < 2; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
@@ -101,7 +101,7 @@ class TestIso_7_6_10 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::Data);
             if (test_variant == TestVariant::Common)
             {
                 golden_frm = std::make_unique<Frame>(*frame_flags);
@@ -132,21 +132,21 @@ class TestIso_7_6_10 : public test::TestBase
             int crc_overall_index;
             Bit *crc_bit;
             do {
-                crc_bit_index = rand() % driver_bit_frm->GetFieldLength(BitType::Crc);
-                crc_bit = driver_bit_frm->GetBitOf(crc_bit_index, BitType::Crc);
+                crc_bit_index = rand() % driver_bit_frm->GetFieldLen(BitKind::Crc);
+                crc_bit = driver_bit_frm->GetBitOf(crc_bit_index, BitKind::Crc);
                 crc_overall_index = driver_bit_frm->GetBitIndex(crc_bit);
-            } while (crc_bit->stuff_bit_type_ != StuffBitType::NoStuffBit);
-            crc_bit->FlipBitValue();
-            monitor_bit_frm->GetBit(crc_overall_index)->FlipBitValue();
+            } while (crc_bit->stuff_kind_ != StuffKind::NoStuff);
+            crc_bit->FlipVal();
+            monitor_bit_frm->GetBit(crc_overall_index)->FlipVal();
 
             driver_bit_frm->UpdateFrame(false);
             monitor_bit_frm->UpdateFrame(false);
 
-            monitor_bit_frm->TurnReceivedFrame();
-            monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            monitor_bit_frm->ConvRXFrame();
+            monitor_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::Eof);
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Eof);
+            driver_bit_frm->InsertPasErrFrm(0, BitKind::Eof);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Eof);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

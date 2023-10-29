@@ -1,3 +1,5 @@
+#ifndef CYCLE_BIT_VALUE_H
+#define CYCLE_BIT_VALUE_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -29,25 +31,56 @@
 #include <iostream>
 
 #include "can.h"
-#include "CycleBitValue.h"
 
-can::CycleBitValue::CycleBitValue(TimeQuanta *parent):
-                    parent_(parent)
-{}
-
-can::CycleBitValue::CycleBitValue(TimeQuanta *parent, BitValue bit_value):
-    parent_(parent),
-    has_default_value_(false),
-    bit_value_(bit_value)
-{}
-
-void can::CycleBitValue::ForceValue(BitValue bit_value)
+/**
+ * @class CycleBitValue
+ * @namespace can
+ *
+ * Represents value of single clock cycle within a time quanta.
+ */
+class can::Cycle
 {
-    has_default_value_ = false;
-    bit_value_ = bit_value;
-}
+    public:
 
-void can::CycleBitValue::ReleaseValue()
-{
-    has_default_value_ = true;
-}
+        /**
+         * Default value for given cycle.
+         */
+        Cycle(TimeQuanta *parent);
+
+        /**
+         * Forced value for given cycle.
+         */
+        Cycle(TimeQuanta *parent, BitVal val);
+
+        /**
+         * Forces value within a cycle
+         * @param val Value to force
+         */
+        void ForceVal(BitVal val);
+
+        /**
+         * Releases value within given cycle (returns to default value)
+         */
+        void ReleaseVal();
+
+        // Getters
+        inline bool has_def_val() const {
+            return has_def_val_;
+        };
+
+        inline BitVal bit_val() const {
+            return val_;
+        };
+
+    protected:
+        /* Time quanta which contains this cycle */
+        TimeQuanta *parent_;
+
+        /* Default value from CanBit should be taken */
+        bool has_def_val_ = true;
+
+        /* If has_default_value_ = false, then cycle has this value */
+        BitVal val_ = BitVal::Recessive;
+};
+
+#endif

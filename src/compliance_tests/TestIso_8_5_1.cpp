@@ -86,8 +86,8 @@ class TestIso_8_5_1 : public test::TestBase
             num_elem_tests = 3;
             for (int i = 0; i < num_elem_tests; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
             }
 
             SetupMonitorTxTests();
@@ -102,8 +102,8 @@ class TestIso_8_5_1 : public test::TestBase
             // Since there is one frame received in between, IUT will resynchronize and
             // mismatches in data bit rate can occur. Dont shift bit-rate due to this
             // reason.
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
 
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
@@ -132,12 +132,12 @@ class TestIso_8_5_1 : public test::TestBase
              *      error in first frame)! It did not retransmitt it during second frame because it
              *      turned receiver due to suspend!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            driver_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
+            monitor_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
             int bit_index_to_corrupt;
             if (elem_test.index_ == 1)
@@ -148,28 +148,28 @@ class TestIso_8_5_1 : public test::TestBase
                 bit_index_to_corrupt = 5;
 
             Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(bit_index_to_corrupt,
-                                    BitType::PassiveErrorFlag);
+                                    BitKind::PasErrFlag);
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
             TestMessage("Inserting Active Error flag to Passive Error flag bit %d to dominant",
                         bit_index_to_corrupt + 1);
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index);
-            monitor_bit_frm->InsertPassiveErrorFrame(bit_index);
+            driver_bit_frm->InsertActErrFrm(bit_index);
+            monitor_bit_frm->InsertPasErrFrm(bit_index);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm_2->TurnReceivedFrame();
+            monitor_bit_frm_2->ConvRXFrame();
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
 
             // Here we need compensation of the second frame which is transmitted by LT
             // from SOF on. This is overally second SOF bit (first is in the first frame)!
             // Since LT starts transmitting the frame now, it will take input delay since
             // edge is seen by IUT, therefore IUT will execute positive resynchronization!
-            monitor_bit_frm->GetBitOf(1, BitType::Sof)
-                ->GetLastTimeQuantaIterator(BitPhase::Sync)->Lengthen(dut_input_delay);
+            monitor_bit_frm->GetBitOf(1, BitKind::Sof)
+                ->GetLastTQIter(BitPhase::Sync)->Lengthen(dut_input_delay);
 
             driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
             monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            driver_bit_frm_2->TurnReceivedFrame();
+            driver_bit_frm_2->ConvRXFrame();
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

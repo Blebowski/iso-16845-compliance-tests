@@ -91,7 +91,7 @@ class TestIso_7_8_8_3 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -105,21 +105,21 @@ class TestIso_7_8_8_3 : public test::TestBase
              *   3. Force 2nd TQ of driven ACK bit to Recessive.
              *   4. Force whole Phase 2 of ACK bit to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *crc_delim_driver = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *crc_delim_monitor = monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            Bit *crc_delim_driver = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *crc_delim_monitor = monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitKind::Ack);
 
             // ACK must be sent dominant since TX/RX feedback is not turned on!
-            ack_bit->bit_value_ = BitValue::Dominant;
+            ack_bit->val_ = BitVal::Dominant;
 
             crc_delim_driver->ShortenPhase(BitPhase::Ph2, 1);
             crc_delim_monitor->ShortenPhase(BitPhase::Ph2, 1);
 
-            ack_bit->ForceTimeQuanta(1, BitValue::Recessive);
-            ack_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                     BitPhase::Ph2, BitValue::Recessive);
+            ack_bit->ForceTQ(1, BitVal::Recessive);
+            ack_bit->ForceTQ(0, nominal_bit_timing.ph2_ - 1,
+                                     BitPhase::Ph2, BitVal::Recessive);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

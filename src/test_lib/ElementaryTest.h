@@ -51,8 +51,8 @@ class test::ElementaryTest
     public:
         ElementaryTest(int index);
         ElementaryTest(int index, std::string msg);
-        ElementaryTest(int index, std::string msg, FrameType frame_type);
-        ElementaryTest(int index, FrameType frame_type);
+        ElementaryTest(int index, std::string msg, FrameKind frame_type);
+        ElementaryTest(int index, FrameKind frame_type);
 
         /* Index of the elementary test (starting from 1. This is the same
          * number as is after # in ISO116845!)
@@ -66,7 +66,7 @@ class test::ElementaryTest
         int e_;
 
         /* Frame type used by the test */
-        FrameType frame_type_;
+        FrameKind frame_type_;
 };
 
 #endif

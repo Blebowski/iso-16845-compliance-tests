@@ -79,7 +79,7 @@ class TestIso_7_7_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::Common);
-            size_t num_elem_tests = nominal_bit_timing.GetBitLengthTimeQuanta() -
+            size_t num_elem_tests = nominal_bit_timing.GetBitLenTQ() -
                                     nominal_bit_timing.ph2_ -
                                     nominal_bit_timing.sjw_ - 1;
 
@@ -97,7 +97,7 @@ class TestIso_7_7_4 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // CAN 2.0 frame, Base identifier, randomize others
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
             int id = pow(2,11) - 1;
@@ -120,8 +120,8 @@ class TestIso_7_7_4 : public test::TestBase
              *      position. Insert passive error frame to driven bit so that it will transmitt
              *      all recessive!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            Bit *before_stuff_bit = driver_bit_frm->GetBitOf(3, BitType::BaseIdentifier);
+            monitor_bit_frm->ConvRXFrame();
+            Bit *before_stuff_bit = driver_bit_frm->GetBitOf(3, BitKind::BaseIdent);
             before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             // Monitor bit as if node re-synchronised by SJW!
@@ -130,7 +130,7 @@ class TestIso_7_7_4 : public test::TestBase
 
             Bit *driver_stuff_bit = driver_bit_frm->GetStuffBit(0);
             for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                driver_stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+                driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
             BitPhase prev_phase = driver_stuff_bit->PrevBitPhase(BitPhase::Ph2);
             int to_be_shortened = elem_test.e_ - nominal_bit_timing.sjw_ + 1;
 
@@ -143,8 +143,8 @@ class TestIso_7_7_4 : public test::TestBase
             }
 
             int index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+            monitor_bit_frm->InsertActErrFrm(index + 1);
+            driver_bit_frm->InsertPasErrFrm(index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

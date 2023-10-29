@@ -80,9 +80,9 @@ class TestIso_7_2_6: public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(2, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
+            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(2, FrameKind::CanFd));
         }
 
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
@@ -118,19 +118,19 @@ class TestIso_7_2_6: public test::TestBase
              *   3. Force CRC Delimiter to dominant.
              *   4. Insert Error frame to position of ACK!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             do {
-                Bit *bit = driver_bit_frm->GetRandomBitOf(BitType::Crc);
+                Bit *bit = driver_bit_frm->GetRandBitOf(BitKind::Crc);
                 int index = driver_bit_frm->GetBitIndex(bit);
 
                 // Ignore stuff bits, and bits just before stuff bits. If we flip bit before
                 // stuff bit, then we cause stuff error too!
-                if (bit->stuff_bit_type_ == StuffBitType::NoStuffBit &&
-                    driver_bit_frm->GetBit(index + 1)->stuff_bit_type_ == StuffBitType::NoStuffBit)
+                if (bit->stuff_kind_ == StuffKind::NoStuff &&
+                    driver_bit_frm->GetBit(index + 1)->stuff_kind_ == StuffKind::NoStuff)
                     {
                         // This should cause only CRC error, no stuff error!
-                        bit->FlipBitValue();
+                        bit->FlipVal();
                         break;
                     }
             } while (true);
@@ -140,10 +140,10 @@ class TestIso_7_2_6: public test::TestBase
             // stuff bits, but keep the CRC (since it contains corrupted bit that we rely on)!
             driver_bit_frm->UpdateFrame(false);
 
-            driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter)->bit_value_ = BitValue::Dominant;
+            driver_bit_frm->GetBitOf(0, BitKind::CrcDelim)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
-            driver_bit_frm->InsertActiveErrorFrame(0, BitType::Ack);
+            monitor_bit_frm->InsertActErrFrm(0, BitKind::Ack);
+            driver_bit_frm->InsertActErrFrm(0, BitKind::Ack);
 
             /**************************************************************************************
              * Execute test

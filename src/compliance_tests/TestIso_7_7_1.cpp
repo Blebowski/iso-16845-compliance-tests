@@ -80,7 +80,7 @@ class TestIso_7_7_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             /* Base ID full of 1s */
             int id = pow(2,11) - 1;
@@ -100,7 +100,7 @@ class TestIso_7_7_1 : public test::TestBase
              *      negative re-synchronization.
              *   5. Insert Error frame from 12-th bit of Identifier (5 + Stuff + 5 + Stuff).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
             Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
             first_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
@@ -116,15 +116,15 @@ class TestIso_7_7_1 : public test::TestBase
             size_t resync_amount = nominal_bit_timing.ph2_;
             if (nominal_bit_timing.sjw_ < resync_amount)
                 resync_amount = nominal_bit_timing.sjw_;
-            monitor_bit_frm->GetBitOf(11, BitType::BaseIdentifier)
+            monitor_bit_frm->GetBitOf(11, BitKind::BaseIdent)
                 ->ShortenPhase(BitPhase::Ph2, resync_amount);
 
             /*
              * Expected error frame on monitor (from start of bit after stuff bit)
              * Driver will have passive error frame -> transmitt all recessive
              */
-            monitor_bit_frm->InsertActiveErrorFrame(12, BitType::BaseIdentifier);
-            driver_bit_frm->InsertPassiveErrorFrame(12, BitType::BaseIdentifier);
+            monitor_bit_frm->InsertActErrFrm(12, BitKind::BaseIdent);
+            driver_bit_frm->InsertPasErrFrm(12, BitKind::BaseIdent);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

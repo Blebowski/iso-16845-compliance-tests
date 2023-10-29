@@ -100,9 +100,9 @@ class TestIso_8_6_6 : public test::TestBase
         {
             FillTestVariants(VariantMatchingType::CommonAndFd);
             for (int i = 0; i < 8; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 10; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
         }
@@ -113,8 +113,8 @@ class TestIso_8_6_6 : public test::TestBase
             do
             {
                 TestBigMessage("Generating random frame...");
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::DataFrame,
-                                                           EsiFlag::ErrorActive);
+                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, RtrFlag::Data,
+                                                           EsiFlag::ErrAct);
                 uint8_t dlc;
 
                 if (test_variant == TestVariant::CanFdEnabled)
@@ -155,57 +155,57 @@ class TestIso_8_6_6 : public test::TestBase
              *   3. Append the same frame again with ACK on driven frame. This emulates retransmi-
              *      tted frame by IUT.
              *************************************************************************************/
-            BitType bit_type_to_corrupt = BitType::Sof;
-            BitValue value_to_corrupt = BitValue::Dominant;
+            BitKind bit_type_to_corrupt = BitKind::Sof;
+            BitVal value_to_corrupt = BitVal::Dominant;
             switch (elem_test.index_)
             {
             case 1:
-                bit_type_to_corrupt = BitType::Sof;
+                bit_type_to_corrupt = BitKind::Sof;
                 break;
             case 2:
-                bit_type_to_corrupt = BitType::BaseIdentifier;
+                bit_type_to_corrupt = BitKind::BaseIdent;
                 break;
             case 3:
-                bit_type_to_corrupt = BitType::Dlc;
+                bit_type_to_corrupt = BitKind::Dlc;
                 break;
             case 4:
-                bit_type_to_corrupt = BitType::Dlc;
-                value_to_corrupt = BitValue::Recessive;
+                bit_type_to_corrupt = BitKind::Dlc;
+                value_to_corrupt = BitVal::Recessive;
                 break;
             case 5:
-                bit_type_to_corrupt = BitType::Data;
+                bit_type_to_corrupt = BitKind::Data;
                 break;
             case 6:
-                bit_type_to_corrupt = BitType::Data;
-                value_to_corrupt = BitValue::Recessive;
+                bit_type_to_corrupt = BitKind::Data;
+                value_to_corrupt = BitVal::Recessive;
                 break;
             case 7:
             case 9:
-                bit_type_to_corrupt = BitType::Crc;
+                bit_type_to_corrupt = BitKind::Crc;
                 break;
             case 8:
             case 10:
-                bit_type_to_corrupt = BitType::Crc;
-                value_to_corrupt = BitValue::Recessive;
+                bit_type_to_corrupt = BitKind::Crc;
+                value_to_corrupt = BitVal::Recessive;
                 break;
             default:
                 break;
             }
 
             /* Find random bit within bitfield with value */
-            Bit *bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
-            while (bit_to_corrupt->bit_value_ != value_to_corrupt ||
-                   bit_to_corrupt->stuff_bit_type_ != StuffBitType::NoStuffBit)
-                bit_to_corrupt = driver_bit_frm->GetRandomBitOf(bit_type_to_corrupt);
+            Bit *bit_to_corrupt = driver_bit_frm->GetRandBitOf(bit_type_to_corrupt);
+            while (bit_to_corrupt->val_ != value_to_corrupt ||
+                   bit_to_corrupt->stuff_kind_ != StuffKind::NoStuff)
+                bit_to_corrupt = driver_bit_frm->GetRandBitOf(bit_type_to_corrupt);
             // TODO: CRC can be possibly all zeroes or all ones causing infinite loop!
 
             driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
             int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertActErrFrm(bit_index + 1);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm_2->PutAcknowledge(dut_input_delay);
+            driver_bit_frm_2->PutAck(dut_input_delay);
 
             driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
             monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());

@@ -96,8 +96,8 @@ class TestIso_7_8_3_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                        EsiFlag::ErrorPassive);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                        EsiFlag::ErrPas);
             golden_frm = std::make_unique<Frame>(*frame_flags);
             RandomizeAndPrint(golden_frm.get());
 
@@ -110,16 +110,16 @@ class TestIso_7_8_3_1 : public test::TestBase
              *   2. Lengthen SYNC phase of ESI by e (both driven and monitored frame).
              *   3. Force Prop + PH1 TQ after initial e TQ to dominant!
              **************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *esi_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Esi);
-            Bit *esi_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *esi_bit_driver = driver_bit_frm->GetBitOf(0, BitKind::Esi);
+            Bit *esi_bit_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Esi);
 
             esi_bit_driver->LengthenPhase(BitPhase::Sync, elem_test.e_);
             esi_bit_monitor->LengthenPhase(BitPhase::Sync, elem_test.e_);
 
             for (size_t j = 0; j < data_bit_timing.prop_ + data_bit_timing.ph1_; j++)
-                esi_bit_driver->ForceTimeQuanta(elem_test.e_ + j, BitValue::Dominant);
+                esi_bit_driver->ForceTQ(elem_test.e_ + j, BitVal::Dominant);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

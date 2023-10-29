@@ -97,7 +97,7 @@ class TestIso_7_8_3_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x7F; // 7th data bit is dominant stuff bit!
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
+            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
             RandomizeAndPrint(golden_frm.get());
 
@@ -117,26 +117,26 @@ class TestIso_7_8_3_2 : public test::TestBase
              *   5. Insert active error frame on monitor from next bit, Insert passive by driver
              *      to send all recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            monitor_bit_frm->ConvRXFrame();
 
-            Bit *before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
+            Bit *before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitKind::Data);
             before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             // 7-th bit should be stuff bit
-            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
-            assert(driver_stuff_bit->bit_value_ == BitValue::Dominant);
+            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitKind::Data);
+            assert(driver_stuff_bit->val_ == BitVal::Dominant);
             int bit_index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
             for (int j = 0; j < elem_test.e_; j++)
-                driver_stuff_bit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);
+                driver_stuff_bit->GetTQ(j)->ForceVal(BitVal::Recessive);
 
             //driver_stuff_bit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
 
             for (size_t j = elem_test.e_ - 1; j < data_bit_timing.ph2_; j++)
-                driver_stuff_bit->GetTimeQuanta(BitPhase::Ph2, j)
-                    ->ForceValue(BitValue::Recessive);
+                driver_stuff_bit->GetTQ(BitPhase::Ph2, j)
+                    ->ForceVal(BitVal::Recessive);
 
-            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 2);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            driver_bit_frm->InsertPasErrFrm(bit_index + 2);
+            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
 
             driver_bit_frm->Print(true);
             monitor_bit_frm->Print(true);

@@ -53,12 +53,12 @@ class can::BitTiming
         /**
          * @returns Overall bit length in Time quantas.
          */
-        size_t GetBitLengthTimeQuanta();
+        size_t GetBitLenTQ();
 
         /**
          * @returns Overall bit length in clock cycles.
          */
-        size_t GetBitLengthCycles();
+        size_t GetBitLenCycles();
 };
 
 #endif
