@@ -26,6 +26,9 @@
  *
  *****************************************************************************/
 
+#include <iostream>
+#include <iomanip>
+
 #include "TestSequence.h"
 
 test::TestSequence::TestSequence(std::chrono::nanoseconds clock_period)
@@ -164,6 +167,13 @@ void test::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
     std::chrono::nanoseconds tseg_1_duration (0);
     std::chrono::nanoseconds tseg_2_duration (0);
 
+    // Currently this function does not support translation with forcing on Bits
+    // with Bit-rate shift, check it!
+    for (size_t i = 0; i < bit->GetLengthTimeQuanta(); i++)
+        for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
+            assert(bit->GetTimeQuanta(i)->getCycleBitValue(j)->has_default_value()
+                    && "Forcing not supported on Bits with Bit-rate shift!");
+
     /* Count Tseg1 duration */
     size_t tseg_1_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Sync);
     tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Prop);
@@ -201,17 +211,58 @@ void test::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 
 void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
+    int time_quantas = bit->GetLengthTimeQuanta();
+    can::BitValue bit_value = bit->bit_value_;
+    can::BitValue last_value = bit_value;
+    can::BitValue current_value;
+    can::TimeQuanta *time_quanta;
+    can::CycleBitValue* cycle_bit_value;
     std::chrono::nanoseconds duration (0);
-
-    for (size_t i = 0; i < bit->GetLengthTimeQuanta(); i++)
-        for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
-            duration += clock_period;
+    int cycles;
 
     // Assume first Time quanta length is the same as rest (which is reasonable)!
     size_t brp = bit->GetTimeQuanta(0)->getLengthCycles();
     std::chrono::nanoseconds sample_rate = brp * clock_period;
 
-    pushMonitorValue(duration, sample_rate, bit->bit_value_, bit->GetBitTypeName());
+    for (int i = 0; i < time_quantas; i++)
+    {
+        time_quanta = bit->GetTimeQuanta(i);
+        cycles = time_quanta->getLengthCycles();
+
+        for (int j = 0; j < cycles; j++)
+        {
+            cycle_bit_value = time_quanta->getCycleBitValue(j);
+
+            // Obtain value of current cycle
+            // Note: This ignores non-default values which are equal to
+            //       its default value (as expected) and merges them into
+            //       single monitored / driven item!
+            if (cycle_bit_value->has_default_value())
+                current_value = bit_value;
+            else
+                current_value = cycle_bit_value->bit_value();
+
+            // Did not detect bit value change -> it still belongs to the same segment
+            // -> legnthen it
+            if (current_value == last_value)
+                duration += clock_period;
+
+            // Detected value change, push previous item
+            if (current_value != last_value)
+            {
+                pushMonitorValue(duration, sample_rate, last_value, bit->GetBitTypeName());
+
+                duration = clock_period;
+                last_value = current_value;
+            }
+
+            // Reach last cycle of bit, push rest
+            if ((i == time_quantas - 1) && (j == cycles - 1))
+            {
+                pushMonitorValue(duration, sample_rate, last_value, bit->GetBitTypeName());
+            }
+        }
+    }
 }
 
 
@@ -219,7 +270,6 @@ void test::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
                                              can::BitValue bit_value,
                                              std::string message)
 {
-    // TODO: This conversion should ideally be separated!
     StdLogic logic_val;
     if (bit_value == can::BitValue::Dominant)
         logic_val = StdLogic::LOGIC_0;
@@ -235,7 +285,6 @@ void test::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
                                               can::BitValue bit_value,
                                               std::string message)
 {
-    // TODO: This conversion should ideally be separated!
     StdLogic logic_val;
     if (bit_value == can::BitValue::Dominant)
         logic_val = StdLogic::LOGIC_0;
@@ -264,26 +313,42 @@ void test::TestSequence::PrintMonitoredValues()
 
 void test::TestSequence::PushDriverValuesToSimulator()
 {
-    for (auto driven_value : driven_values)
+    for (auto &tmp : driven_values)
     {
-        if (driven_value.HasMessage())
-            CanAgentDriverPushItem((char)driven_value.value_, driven_value.duration_,
-                                   driven_value.message_);
+        if (tmp.HasMessage())
+            CanAgentDriverPushItem((char)tmp.value_, tmp.duration_, tmp.message_);
         else
-            CanAgentDriverPushItem((char)driven_value.value_, driven_value.duration_);
+            CanAgentDriverPushItem((char)tmp.value_, tmp.duration_);
     }
 }
 
 
 void test::TestSequence::PushMonitorValuesToSimulator()
 {
-    for (auto monitorValue : monitored_values)
+    for (auto &tmp : monitored_values)
     {
-        if (monitorValue.HasMessage())
-            CanAgentMonitorPushItem((char)monitorValue.value_, monitorValue.duration_,
-                                    monitorValue.sample_rate_, monitorValue.message_);
+        if (tmp.HasMessage())
+            CanAgentMonitorPushItem((char)tmp.value_, tmp.duration_,
+                                    tmp.sample_rate_, tmp.message_);
         else
-            CanAgentMonitorPushItem((char)monitorValue.value_, monitorValue.duration_,
-                                    monitorValue.sample_rate_);
+            CanAgentMonitorPushItem((char)tmp.value_, tmp.duration_,
+                                    tmp.sample_rate_);
     }
+}
+
+void test::TestSequence::Print(bool driven)
+{
+    std::cout
+        << std::setw (20) << "Field"
+        << std::setw (20) << "Value"
+        << std::setw (20) << "Duration (ns)"<< std::endl;
+
+    if (driven) {
+        for (auto &tmp : driven_values)
+            tmp.Print();
+    } else {
+        for (auto &tmp : monitored_values)
+            tmp.Print();
+    }
+
 }
