@@ -28,6 +28,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 
 #include "MonitorItem.h"
 
@@ -62,7 +63,7 @@ bool test::MonitorItem::HasMessage()
 void test::MonitorItem::Print()
 {
     if (HasMessage())
-        std::cout << message_ << std::endl;
-    std::cout << "Value:    " << (char)value_ << std::endl;
-    std::cout << "Duration: " << duration_.count() << " ns" << std::endl;
+        std::cout << std::setw (20) << message_;
+    std::cout << std::setw (20) << (char)value_;
+    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
 }

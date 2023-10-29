@@ -28,6 +28,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 
 #include "DriverItem.h"
 
@@ -59,14 +60,14 @@ bool test::DriverItem::HasMessage()
 void test::DriverItem::Print()
 {
     if (HasMessage() == true)
-        std::cout << message_ << std::endl;
-    if (value_ == StdLogic::LOGIC_0)
-        std::cout << "_";
-    else if (value_ == StdLogic::LOGIC_1)
-        std::cout << "¯";
-    else
-        std::cout << char(value_);
+        std::cout << std::setw (20) << message_;
 
-    std::cout << "Value:    " << (char)value_ << '\n';
-    std::cout << "Duration: " << duration_.count() << " ns" << std::endl;
+    if (value_ == StdLogic::LOGIC_0)
+        std::cout << std::setw (20) << "0";
+    else if (value_ == StdLogic::LOGIC_1)
+        std::cout << std::setw (20) << "1";
+    else
+        std::cout << std::setw (20) << char(value_);
+
+    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
 }

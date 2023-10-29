@@ -108,6 +108,14 @@ class test::TestSequence
          */
         void PushMonitorValuesToSimulator();
 
+
+        /**
+         * @brief Prints test sequence
+         * @param driven True - Prints driven sequence
+         *               False - Prints monitored sequence
+         */
+         void Print(bool driven);
+
     private:
 
         /**
