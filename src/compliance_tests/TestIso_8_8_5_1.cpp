@@ -86,6 +86,9 @@ class TestIso_8_8_5_1 : public test::TestBase
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
             SetupMonitorTxTests();
+
+            assert(dbt.brp_ > 2 &&
+                   "TQ(N) shall bigger than 2 for this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
