@@ -100,11 +100,11 @@ class TestIso_7_1_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 6; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1));
             for (int i = 0; i < 4; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
@@ -114,11 +114,11 @@ class TestIso_7_1_3 : public test::TestBase
             // Following constraint is not due to model or IUT issues.
             // It is due to principle of the test, we can't avoid it!
             // This is
-            assert(data_bit_timing.brp_ == nominal_bit_timing.brp_ &&
+            assert(dbt.brp_ == nbt.brp_ &&
                    " In this test BRP(N) must be equal to BRP(D) due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             IdentKind lt_id_type;
@@ -182,7 +182,7 @@ class TestIso_7_1_3 : public test::TestBase
                 default:
                     break;
                 }
-            } else if (test_variant == TestVariant::CanFdEnabled) {
+            } else if (test_variant == TestVariant::CanFdEna) {
                 switch (elem_test.index_)
                 {
                 case 1:
@@ -225,20 +225,20 @@ class TestIso_7_1_3 : public test::TestBase
             }
 
             /* For IUT */
-            frame_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag,
+            frm_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag,
                                                         EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, iut_id);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x0, iut_id);
+            RandomizeAndPrint(gold_frm.get());
 
             /* For LT */
-            frame_flags_2 = std::make_unique<FrameFlags>(lt_frame_type, lt_id_type, lt_rtr_flag,
+            frm_flags_2 = std::make_unique<FrameFlags>(lt_frame_type, lt_id_type, lt_rtr_flag,
                                                         EsiFlag::ErrAct);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x0, lt_id);
-            RandomizeAndPrint(golden_frm_2.get());
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags_2, 0x0, lt_id);
+            RandomizeAndPrint(gold_frm_2.get());
 
             /* Driven/monitored is derived from LTs frame since this one wins over IUTs frame! */
-            driver_bit_frm = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm_2);
+            drv_bit_frm = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm = ConvBitFrame(*gold_frm_2);
 
             /**************************************************************************************
              * Modify test frames:
@@ -256,52 +256,52 @@ class TestIso_7_1_3 : public test::TestBase
              *************************************************************************************/
 
             /* Initialize to make linter happy! */
-            Bit *bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::Sof);
+            Bit *bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Sof);
             if (test_variant == TestVariant::Common)
             {
                 switch (elem_test.index_)
                 {
                 case 1:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::Rtr);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
                     break;
                 case 2:
                     /* In IUTs frame SRR is on RTR position of driven frame */
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::Rtr);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
                     break;
                 case 3:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::Ide);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Ide);
                     break;
                 case 4:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(
                                             10, BitKind::BaseIdent);
                     break;
                 case 5:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(17,
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(17,
                                         BitKind::ExtIdent);
                     break;
                 case 6:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::Rtr);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
                 default:
                     break;
                 }
-            } else if (test_variant == TestVariant::CanFdEnabled) {
+            } else if (test_variant == TestVariant::CanFdEna) {
                 switch (elem_test.index_)
                 {
                 case 1:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(10,
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(10,
                                         BitKind::BaseIdent);
                     break;
                 case 2:
                     /* In IUTs frame R1 is on position of RTR */
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::R1);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::R1);
                     break;
                 case 3:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(17,
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(17,
                                         BitKind::ExtIdent);
                     break;
                 case 4:
                     /* In IUTs frame R1 is on position of RTR */
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitKind::R1);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::R1);
                 default:
                     break;
                 }
@@ -312,35 +312,35 @@ class TestIso_7_1_3 : public test::TestBase
              * arbitration is lost!
              */
             bit_to_loose_arb->val_ = BitVal::Recessive;
-            monitor_bit_frm->LooseArbit(bit_to_loose_arb);
+            mon_bit_frm->LooseArbit(bit_to_loose_arb);
 
             /* Compensate input delay, lenghten bit on which arbitration was lost */
             bit_to_loose_arb->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            driver_bit_frm_2->ConvRXFrame();
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
+            drv_bit_frm_2->ConvRXFrame();
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
             /* IUTs frame is sent! */
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
             /* Received should be the frame which is sent by LT */
-            CheckRxFrame(*golden_frm_2);
+            CheckRxFrame(*gold_frm_2);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

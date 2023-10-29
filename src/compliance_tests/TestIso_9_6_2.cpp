@@ -75,34 +75,34 @@ class TestIso_9_6_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
 
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 
             // This test has IUT as receiver, so no trigger/waiting config is needed!
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
                                     RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+            frm_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
                                     RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0xAA, &data_byte);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0xAA, &data_byte);
-            golden_frm->Print();
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0xAA, &data_byte);
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags_2, 0x1, 0xAA, &data_byte);
+            gold_frm->Print();
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             // Separate frame is needed for CAN FD enabled variant. This frame is already with
             // IUT being Error passive, so we need frame/frame_flags with ESI error passive!
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm_2);
 
             /**************************************************************************************
              * Modify test frames:
@@ -118,26 +118,26 @@ class TestIso_9_6_2 : public test::TestBase
              *   5. In driven frame, flip 7-th bit of data field to cause stuff error.
              *   6. Insert Passive Error frame to both driven and monitored frames.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
-            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
-            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            monitor_bit_frm_2->ConvRXFrame();
-            driver_bit_frm_2->GetBitOf(6, BitKind::Data)->FlipVal();
+            mon_bit_frm_2->ConvRXFrame();
+            drv_bit_frm_2->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
-            monitor_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
+            drv_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
+            mon_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
 
 
             TestMessage("First frame");
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             TestMessage("Second frame");
-            driver_bit_frm_2->Print(true);
-            monitor_bit_frm_2->Print(true);
+            drv_bit_frm_2->Print(true);
+            mon_bit_frm_2->Print(true);
 
             /**************************************************************************************
              * Execute test
@@ -154,18 +154,18 @@ class TestIso_9_6_2 : public test::TestBase
             {
                 TestMessage("Sending frame nr. : %d", i);
                 int rec_old = dut_ifc->GetRec();
-                PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
+                PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+                RunLT(true, true);
+                CheckLTResult();
                 CheckRecChange(rec_old, +1);
             }
 
             TestMessage("Sending frame which should lead to passive error flag!");
-            PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm_2, *mon_bit_frm_2);
+            RunLT(true, true);
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

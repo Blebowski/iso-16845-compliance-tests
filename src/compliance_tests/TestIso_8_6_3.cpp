@@ -78,29 +78,29 @@ class TestIso_8_6_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
+            FillTestVariants(VariantMatchType::CommonAndFd);
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
                             RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, &data_byte);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -111,41 +111,41 @@ class TestIso_8_6_3 : public test::TestBase
              *      recessive bits to monitored frame.
              *   4. Append retransmitted frame!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
+            drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
-            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             for (int i = 0; i < 16; i++)
             {
-                int bit_index = driver_bit_frm->GetBitIndex(
-                                    driver_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
-                driver_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index + 1);
-                monitor_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index + 1);
+                int bit_index = drv_bit_frm->GetBitIndex(
+                                    drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
+                drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index + 1);
+                mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index + 1);
             }
 
-            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             tec_old = dut_ifc->GetTec();
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
 
-            CheckLowerTesterResult();
+            CheckLTResult();
             /* 8 for first Error frame, 2 * 8 for 16 bits, - 1 for succesfull retransmission */
             CheckTecChange(tec_old, 23);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

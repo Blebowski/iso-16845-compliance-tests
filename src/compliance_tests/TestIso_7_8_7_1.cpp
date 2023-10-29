@@ -78,21 +78,21 @@ class TestIso_7_8_7_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -100,26 +100,26 @@ class TestIso_7_8_7_1 : public test::TestBase
              *   2. Force second TQ of res bit to recessive.
              *   3. Force Phase2 of res bit to recessive.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
             // Res post EDL in model we mark r0 as in original CAN FD 1.0 by Bosch.
-            Bit *res_bit = driver_bit_frm->GetBitOf(0, BitKind::R0);
+            Bit *res_bit = drv_bit_frm->GetBitOf(0, BitKind::R0);
             res_bit->ForceTQ(1, BitVal::Recessive);
-            res_bit->ForceTQ(0, nominal_bit_timing.ph2_ - 1,
+            res_bit->ForceTQ(0, nbt.ph2_ - 1,
                                      BitPhase::Ph2, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Glitch filtering test for positive phase error on res bit");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

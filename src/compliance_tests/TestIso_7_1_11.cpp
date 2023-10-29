@@ -108,25 +108,25 @@ class TestIso_7_1_11 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::ClassicalFdCommon);
+            FillTestVariants(VariantMatchType::ClasCanFdCommon);
             for (const auto &test_variant : test_variants)
             {
                 int num_elem_tests = 0;
-                if (test_variant == TestVariant::Can_2_0)
+                if (test_variant == TestVariant::Can20)
                     num_elem_tests = 7;
-                if (test_variant == TestVariant::CanFdTolerant)
+                if (test_variant == TestVariant::CanFdTol)
                     num_elem_tests = 7;
-                if (test_variant == TestVariant::CanFdEnabled)
+                if (test_variant == TestVariant::CanFdEna)
                     num_elem_tests = 11;
 
                 for (int j = 0; j < num_elem_tests; j++)
-                    AddElemTest(test_variant, ElementaryTest(j + 1));
+                    AddElemTest(test_variant, ElemTest(j + 1));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             int id = 0;
@@ -136,14 +136,14 @@ class TestIso_7_1_11 : public test::TestBase
             /* Variants differ only in value of reserved bit! CAN 2.0 shall accept FDF recessive
              * and CAN FD Tolerant shall go to protocol exception!
              */
-            if (test_variant == TestVariant::Can_2_0 || test_variant == TestVariant::CanFdTolerant)
+            if (test_variant == TestVariant::Can20 || test_variant == TestVariant::CanFdTol)
             {
                 switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x07C30F0F;
                     dlc = 0x8;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Data);
                     for (int i = 1; i < 8; i++)
                         data[i] = 0x3C;
@@ -152,7 +152,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 2:
                     id = 0x07C0F0F0;
                     dlc = 0x1;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Data);
                     data[0] = 0x00;
                     break;
@@ -160,7 +160,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 3:
                     id = 0x01E31717;
                     dlc = 0xF;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Data);
                     for (int i = 0; i < 8; i++)
                         data[i] = 0x0F;
@@ -169,7 +169,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 4:
                     id = 0x01E00FF0;
                     dlc = 0xC;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Data);
                     data[0] = 0x1F;
                     data[1] = 0x0F;
@@ -184,7 +184,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 5:
                     id = 0x1FB80000;
                     dlc = 0x1;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Data);
                     data[0] = 0xA0;
                     break;
@@ -192,14 +192,14 @@ class TestIso_7_1_11 : public test::TestBase
                 case 6:
                     id = 0x00BC540F;
                     dlc = 0x0;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Rtr);
                     break;
 
                 case 7:
                     id = 0x155D5557;
                     dlc = 0xF;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                             IdentKind::Ext, RtrFlag::Rtr);
                     break;
 
@@ -208,14 +208,14 @@ class TestIso_7_1_11 : public test::TestBase
                 }
 
             }
-            else if (test_variant == TestVariant::CanFdEnabled)
+            else if (test_variant == TestVariant::CanFdEna)
             {
                 switch (elem_test.index_)
                 {
                 case 1:
                     id = 0x07C30F0F;
                     dlc = 0xE;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::DoShift, EsiFlag::ErrAct);
                     data[0] = 0xF8;
@@ -226,7 +226,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 2:
                     id = 0x11F3C3C3;
                     dlc = 0x8;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::DoShift, EsiFlag::ErrAct);
                     for (int i = 0; i < 8; i++)
@@ -236,7 +236,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 3:
                     id = 0x1079C1E1;
                     dlc = 0xE;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::DoShift, EsiFlag::ErrPas);
                     for (int i = 0; i < 64; i++)
@@ -246,7 +246,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 4:
                     id = 0x083DF0F0;
                     dlc = 0xF;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::NoShift, EsiFlag::ErrPas);
                     for (int i = 0; i < 64; i++)
@@ -256,7 +256,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 5:
                     id = 0x041EF878;
                     dlc = 0xF;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::NoShift, EsiFlag::ErrAct);
                     for (int i = 0; i < 64; i++)
@@ -266,7 +266,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 6:
                     id = 0x1F0C3C3C;
                     dlc = 0x3;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::NoShift, EsiFlag::ErrAct);
                     for (int i = 0; i < 3; i++)
@@ -276,7 +276,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 7:
                     id = 0x0F861E1E;
                     dlc = 0x3;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::DoShift, EsiFlag::ErrAct);
                     for (int i = 0; i < 3; i++)
@@ -286,7 +286,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 8:
                     id = 0x07C30F0F;
                     dlc = 0x1;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::DoShift, EsiFlag::ErrAct);
                     data[0] = 0xF0;
@@ -295,7 +295,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 9:
                     id = 0x01E38787;
                     dlc = 0x0;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::DoShift, EsiFlag::ErrAct);
                     break;
@@ -303,7 +303,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 10:
                     id = 0x11F3C3C3;
                     dlc = 0x0;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::NoShift, EsiFlag::ErrAct);
                     break;
@@ -311,7 +311,7 @@ class TestIso_7_1_11 : public test::TestBase
                 case 11:
                     id = 0x00000000;
                     dlc = 0x0;
-                    frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                    frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
                                             IdentKind::Ext, RtrFlag::Data,
                                             BrsFlag::NoShift, EsiFlag::ErrPas);
                     break;
@@ -321,11 +321,11 @@ class TestIso_7_1_11 : public test::TestBase
                 }
             }
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id, data);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc, id, data);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -333,32 +333,32 @@ class TestIso_7_1_11 : public test::TestBase
              *   2. Update the frame since number of stuff bits might have changed.
              *   3. Turn monitored frame to received.
              *************************************************************************************/
-            if (test_variant == TestVariant::Can_2_0)
+            if (test_variant == TestVariant::Can20)
             {
                 switch(elem_test.index_)
                 {
                 case 3:
-                    driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
                     break;
 
                 case 4:
-                    driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
-                    driver_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
                     break;
 
                 case 6:
-                    driver_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
                     break;
 
                 case 7:
-                    driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
-                    driver_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
                     break;
 
                 default:
@@ -366,21 +366,21 @@ class TestIso_7_1_11 : public test::TestBase
                 }
 
             }
-            else if (test_variant == TestVariant::CanFdEnabled)
+            else if (test_variant == TestVariant::CanFdEna)
             {
                 switch(elem_test.index_)
                 {
                 case 2:
-                    driver_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
-                    monitor_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
+                    drv_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
+                    mon_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
                     break;
 
                 case 9:
                 case 10:
-                    driver_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
-                    monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
-                    driver_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
-                    monitor_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
+                    drv_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    drv_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
+                    mon_bit_frm->GetBitOf(0, BitKind::Srr)->val_ = BitVal::Dominant;
                     break;
 
 
@@ -389,20 +389,20 @@ class TestIso_7_1_11 : public test::TestBase
                 }
             }
 
-            driver_bit_frm->UpdateFrame();
-            monitor_bit_frm->UpdateFrame();
+            drv_bit_frm->UpdateFrame();
+            mon_bit_frm->UpdateFrame();
 
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

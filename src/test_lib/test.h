@@ -52,9 +52,9 @@ namespace test
     enum class TestVariant
     {
         Common,             /* Common for FD Enabled, Tolerant, 2.0 implementations */
-        Can_2_0,            /* CAN 2.0 only */
-        CanFdTolerant,      /* CAN FD Tolerant */
-        CanFdEnabled        /* CAN FD Enabled */
+        Can20,              /* CAN 2.0 only */
+        CanFdTol,           /* CAN FD Tolerant */
+        CanFdEna            /* CAN FD Enabled */
     };
 
     /*
@@ -62,7 +62,7 @@ namespace test
      * for CAN FD Enabled node only. Other tests require run of CAN FD Enabled and CAN 2.0 variants
      * for CAN FD enabled node.
      */
-    enum class VariantMatchingType
+    enum class VariantMatchType
     {
         /*
          * CAN 2.0          -> CAN 2.0
@@ -90,7 +90,7 @@ namespace test
          * CAN FD Enabled  -> CAN FD Enabled variant
          * CAN FD Tolerant -> No tests
          */
-        ClassicalAndFdEnabled,
+        ClasCanAndFdEna,
 
         /**
          * Classical CAN   -> No tests
@@ -98,21 +98,21 @@ namespace test
          * CAN FD Enabled  -> FD Enabled variant
          *
          */
-        FdTolerantFdEnabled,
+        FdTolAndFdEna,
 
         /*
          * Classical CAN    -> Classical variant
          * CAN FD tolerant  -> CAN FD Tolerant variant
          * CAN FD enabled   -> CAN FD Tolerant + CAN FD enabled variant
          */
-        ClassicalFdCommon,
+        ClasCanFdCommon,
 
         /*
          * Classical CAN    -> No tests
          * CAN FD tolerant  -> No tests
          * CAN FD Enabled   -> CAN FD Tolerant variant
          */
-        CanFdEnabledOnly
+        CanFdEnaOnly
     };
 
     enum class TestResult : int {
@@ -121,12 +121,12 @@ namespace test
         Skipped = 2
     };
 
-    class DriverItem;
-    class MonitorItem;
+    class DrvItem;
+    class MonItem;
     class TestSequence;
 
     class TestBase;
-    class ElementaryTest;
+    class ElemTest;
     class TestDemo;
 
 } // namespace test

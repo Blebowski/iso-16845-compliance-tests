@@ -82,33 +82,33 @@ class TestIso_8_8_3_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
-            ElementaryTest test = ElementaryTest(1);
-            test.e_ = data_bit_timing.sjw_;
-            AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            ElemTest test = ElemTest(1);
+            test.e_ = dbt.sjw_;
+            AddElemTest(TestVariant::CanFdEna, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
 
             SetupMonitorTxTests();
 
-            assert(data_bit_timing.brp_ > 2 &&
+            assert(dbt.brp_ > 2 &&
                    "TQ(D) shall bigger than 2 for this test due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
                                                         EsiFlag::ErrPas);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -117,33 +117,33 @@ class TestIso_8_8_3_1 : public test::TestBase
              *   3. Force first Prop + Ph1 TQs of ESI to dominant.
              *   4. Append suspend transmission.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *brs = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *brs = drv_bit_frm->GetBitOf(0, BitKind::Brs);
             for (int i = 0; i < elem_test.e_; i++)
-                brs->ForceTQ(data_bit_timing.ph2_ - 1 - i, BitPhase::Ph2, BitVal::Dominant);
+                brs->ForceTQ(dbt.ph2_ - 1 - i, BitPhase::Ph2, BitVal::Dominant);
 
-            Bit *esi = driver_bit_frm->GetBitOf(0, BitKind::Esi);
-            for (size_t i = 0; i < data_bit_timing.prop_ + data_bit_timing.ph1_; i++)
+            Bit *esi = drv_bit_frm->GetBitOf(0, BitKind::Esi);
+            for (size_t i = 0; i < dbt.prop_ + dbt.ph1_; i++)
                 esi->ForceTQ(i, BitVal::Dominant);
 
-            driver_bit_frm->AppendSuspTrans();
-            monitor_bit_frm->AppendSuspTrans();
+            drv_bit_frm->AppendSuspTrans();
+            mon_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             dut_ifc->SetRec(150); /* To make sure IUT is error passive */
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

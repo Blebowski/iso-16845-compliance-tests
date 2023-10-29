@@ -81,24 +81,24 @@ class TestIso_7_8_9_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
 
             // Recessive stuff bit on 7-th data bit!
             uint8_t data_byte = 0x80;
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, &data_byte);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -108,26 +108,26 @@ class TestIso_7_8_9_2 : public test::TestBase
              *   3. Insert expected active error frame on monitored frame from 8-th bit of data
              *      field. Insert passive error frame on driven frame!
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *stuff_bit = driver_bit_frm->GetBitOf(6, BitKind::Data);
-            stuff_bit->ForceTQ(1, data_bit_timing.prop_ + data_bit_timing.ph1_,
+            Bit *stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
+            stuff_bit->ForceTQ(1, dbt.prop_ + dbt.ph1_,
                                        BitVal::Dominant);
 
-            driver_bit_frm->InsertPasErrFrm(7, BitKind::Data);
-            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("DontShift synchronisation after dominant bit sampled on Data field bit!");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

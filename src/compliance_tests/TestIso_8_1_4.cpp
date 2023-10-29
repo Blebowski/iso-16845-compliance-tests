@@ -90,10 +90,10 @@ class TestIso_8_1_4 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 31; i++) {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -101,7 +101,7 @@ class TestIso_8_1_4 : public test::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc = 0x1;
@@ -151,24 +151,24 @@ class TestIso_8_1_4 : public test::TestBase
              * of nominal bit-rate! This would result in slightly shifted monitored frame
              * compared to IUT!
              */
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, ident_type_lt,
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, ident_type_lt,
                                     rtr_flag, BrsFlag::NoShift, EsiFlag::ErrAct);
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_,
+            frm_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_kind_,
                                     IdentKind::Ext, rtr_flag, BrsFlag::NoShift,
                                     EsiFlag::ErrAct);
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc, id_lt);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc, id_lt);
+            RandomizeAndPrint(gold_frm.get());
 
             /* This frame is actually given to IUT to send it */
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, dlc, id_iut);
-            RandomizeAndPrint(golden_frm_2.get());
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags_2, dlc, id_iut);
+            RandomizeAndPrint(gold_frm_2.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm_2);
 
             /**************************************************************************************
              * Modify test frames:
@@ -197,26 +197,26 @@ class TestIso_8_1_4 : public test::TestBase
             Bit *loosing_bit;
 
             if (elem_test.index_ < 12){
-                loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 1,
+                loosing_bit = mon_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 1,
                                                         BitKind::BaseIdent);
             } else if (elem_test.index_ < 30){
-                loosing_bit = monitor_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 12,
+                loosing_bit = mon_bit_frm->GetBitOfNoStuffBits(elem_test.index_ - 12,
                                                         BitKind::ExtIdent);
             /* Elementary test 30 - loose on SRR */
             } else if (elem_test.index_ == 30) {
-                loosing_bit = monitor_bit_frm->GetBitOf(0, BitKind::Srr);
+                loosing_bit = mon_bit_frm->GetBitOf(0, BitKind::Srr);
 
             /* Elementary test 31 - loose on IDE */
             } else if (elem_test.index_ == 31){
-                loosing_bit = monitor_bit_frm->GetBitOf(0, BitKind::Ide);
+                loosing_bit = mon_bit_frm->GetBitOf(0, BitKind::Ide);
 
             } else {
-                loosing_bit = monitor_bit_frm->GetBitOf(0, BitKind::Ide);
+                loosing_bit = mon_bit_frm->GetBitOf(0, BitKind::Ide);
                 TestMessage("Invalid Elementary test index: %d", elem_test.index_);
             }
 
             loosing_bit->val_ = BitVal::Recessive;
-            monitor_bit_frm->LooseArbit(loosing_bit);
+            mon_bit_frm->LooseArbit(loosing_bit);
 
             loosing_bit->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
@@ -224,17 +224,17 @@ class TestIso_8_1_4 : public test::TestBase
              * dominant by LT, so we flip it
              */
             if (elem_test.index_ == 30){
-                Bit *srr_bit = driver_bit_frm->GetBitOf(0, BitKind::Srr);
+                Bit *srr_bit = drv_bit_frm->GetBitOf(0, BitKind::Srr);
                 srr_bit->val_ = BitVal::Dominant;
-                int index = driver_bit_frm->GetBitIndex(srr_bit);
+                int index = drv_bit_frm->GetBitIndex(srr_bit);
 
                 /* Forcing SRR low will cause 5 consecutive dominant bits at the end of base ID,
                  * therefore IUT inserts recessive stuff bit. Model does not account for this,
                  * so we must insert one extra bit in monitored frame. For driven frame, we must
                  * recalculate CRC!
                  */
-                driver_bit_frm->UpdateFrame();
-                monitor_bit_frm->InsertBit(BitKind::Srr, BitVal::Recessive, index + 1);
+                drv_bit_frm->UpdateFrame();
+                mon_bit_frm->InsertBit(BitKind::Srr, BitVal::Recessive, index + 1);
             }
 
             /* On elementary test 31, IUT will be sending extended frame with the same base ID as
@@ -247,44 +247,44 @@ class TestIso_8_1_4 : public test::TestBase
              */
             if (elem_test.index_ == 31) {
                 if (test_variant == TestVariant::Common)
-                    monitor_bit_frm->GetBitOf(0, BitKind::Rtr)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::Rtr)->val_ = BitVal::Recessive;
                 else
-                    monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                    mon_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
             }
 
             // Compensate CRC length in monitored frame
-            while (monitor_bit_frm->GetFieldLen(BitKind::Crc) <
-                   driver_bit_frm->GetFieldLen(BitKind::Crc)) {
-                int index = monitor_bit_frm->GetBitIndex(
-                                monitor_bit_frm->GetBitOf(0, BitKind::Crc));
-                monitor_bit_frm->InsertBit(BitKind::Crc, BitVal::Recessive, index);
+            while (mon_bit_frm->GetFieldLen(BitKind::Crc) <
+                   drv_bit_frm->GetFieldLen(BitKind::Crc)) {
+                int index = mon_bit_frm->GetBitIndex(
+                                mon_bit_frm->GetBitOf(0, BitKind::Crc));
+                mon_bit_frm->InsertBit(BitKind::Crc, BitVal::Recessive, index);
             }
 
-            while (monitor_bit_frm->GetFieldLen(BitKind::Crc) >
-                   driver_bit_frm->GetFieldLen(BitKind::Crc)) {
-                monitor_bit_frm->RemoveBit(monitor_bit_frm->GetBitOf(0, BitKind::Crc));
+            while (mon_bit_frm->GetFieldLen(BitKind::Crc) >
+                   drv_bit_frm->GetFieldLen(BitKind::Crc)) {
+                mon_bit_frm->RemoveBit(mon_bit_frm->GetBitOf(0, BitKind::Crc));
             }
 
-            driver_bit_frm_2->ConvRXFrame();
+            drv_bit_frm_2->ConvRXFrame();
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm_2.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            this->dut_ifc->SendFrame(gold_frm_2.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

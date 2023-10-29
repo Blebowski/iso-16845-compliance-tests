@@ -81,44 +81,44 @@ class TestIso_8_5_11 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
 
             /* First frame */
-            frame_flags = std::make_unique<FrameFlags>(
-                elem_test.frame_type_, IdentKind::Base, RtrFlag::Data,
+            frm_flags = std::make_unique<FrameFlags>(
+                elem_test.frame_kind_, IdentKind::Base, RtrFlag::Data,
                 BrsFlag::NoShift, EsiFlag::ErrPas);
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             // In FD enabled variant, the retransmitted frame will be in error active
             // state, so ESI must be different! Other frame flags MUST be the same,
             // otherwise we may get different frames!
-            if (test_variant == TestVariant::CanFdEnabled) {
-                frame_flags_2 = std::make_unique<FrameFlags>(
-                    elem_test.frame_type_, IdentKind::Base, RtrFlag::Data,
+            if (test_variant == TestVariant::CanFdEna) {
+                frm_flags_2 = std::make_unique<FrameFlags>(
+                    elem_test.frame_kind_, IdentKind::Base, RtrFlag::Data,
                     BrsFlag::NoShift, EsiFlag::ErrAct);
 
-                golden_frm->frm_flags_ = *frame_flags_2;
+                gold_frm->frm_flags_ = *frm_flags_2;
             }
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
 
             /**************************************************************************************
@@ -131,26 +131,26 @@ class TestIso_8_5_11 : public test::TestBase
              *
              *   Note: This does not check that frame will be retransmitted before timeout!
              *************************************************************************************/
-            driver_bit_frm->ConvRXFrame();
-            driver_bit_frm->GetBitOf(0, BitKind::AckDelim)->val_ = BitVal::Dominant;
+            drv_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::AckDelim)->val_ = BitVal::Dominant;
 
-            Bit *eof_bit = driver_bit_frm->GetBitOf(0, BitKind::Eof);
-            int eof_start = driver_bit_frm->GetBitIndex(eof_bit);
+            Bit *eof_bit = drv_bit_frm->GetBitOf(0, BitKind::Eof);
+            int eof_start = drv_bit_frm->GetBitIndex(eof_bit);
 
-            driver_bit_frm->InsertPasErrFrm(eof_start);
-            monitor_bit_frm->InsertPasErrFrm(eof_start);
+            drv_bit_frm->InsertPasErrFrm(eof_start);
+            mon_bit_frm->InsertPasErrFrm(eof_start);
 
-            int interm_index = driver_bit_frm->GetBitIndex(
-                                driver_bit_frm->GetBitOf(0, BitKind::Interm));
-            driver_bit_frm->RemoveBitsFrom(interm_index);
-            monitor_bit_frm->RemoveBitsFrom(interm_index);
+            int interm_index = drv_bit_frm->GetBitIndex(
+                                drv_bit_frm->GetBitOf(0, BitKind::Interm));
+            drv_bit_frm->RemoveBitsFrom(interm_index);
+            mon_bit_frm->RemoveBitsFrom(interm_index);
 
             if (elem_test.index_ == 1)
             {
                 for (int i = 0; i < 1408; i++)
                 {
-                    driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                    monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 }
 
                 // IUT specific compensation to exactly match after what time IUT
@@ -160,42 +160,42 @@ class TestIso_8_5_11 : public test::TestBase
                 // TODO: Genealize for other implementations than CTU CAN FD!
                 for (int i = 0; i < 14; i++)
                 {
-                    driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                    monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 }
-                Bit *last = monitor_bit_frm->GetBit(monitor_bit_frm->GetLen() - 1);
+                Bit *last = mon_bit_frm->GetBit(mon_bit_frm->GetLen() - 1);
                 last->GetTQ(0)->Lengthen(dut_input_delay);
 
             } else {
 
                 for (int i = 0; i < 10; i++)
                 {
-                    driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                    monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 }
-                driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
-                monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
+                mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
 
                 for (int i = 0; i < 21; i++)
                 {
-                    driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                    monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 }
-                driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
-                monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
+                mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
 
                 for (int i = 0; i < 127; i++)
                 {
                     for (int j = 0; j < 11; j++)
                     {
-                        driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                        monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                        drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                        mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                     }
-                    driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
-                    monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
+                    mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 }
-                driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
 
                 // IUT specific compensation to exactly match after what time IUT
                 // joins the bus. This checks exactly for given IUT, not the "minimum"
@@ -204,43 +204,43 @@ class TestIso_8_5_11 : public test::TestBase
                 // TODO: Genealize for other implementations than CTU CAN FD!
                 for (int i = 0; i < 11; i++)
                 {
-                    driver_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
-                    monitor_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                    mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 }
-                Bit *last = monitor_bit_frm->GetBit(monitor_bit_frm->GetLen() - 1);
+                Bit *last = mon_bit_frm->GetBit(mon_bit_frm->GetLen() - 1);
                 last->GetTQ(0)->Lengthen(dut_input_delay);
             }
 
             // Re-transmitted frame after reintegration!
-            driver_bit_frm_2->ConvRXFrame();
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm_2->ConvRXFrame();
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /*****************************************************************************
              * Execute test
              *****************************************************************************/
             dut_ifc->SetTec(255); /* just before bus-off */
             dut_ifc->SendReintegrationRequest(); /* Request in advance, DUT will hold it */
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             /* Must restart DUT for next iteration since it is bus off! */
             dut_ifc->Disable();
             dut_ifc->Reset();
-            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nbt, dbt);
             dut_ifc->Enable();
 
             TestMessage("Waiting till DUT is error active!");
             while (dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(2000);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

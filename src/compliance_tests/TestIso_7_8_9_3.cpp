@@ -81,25 +81,25 @@ class TestIso_7_8_9_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x49;
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
                                                        RtrFlag::Data, BrsFlag::DoShift,
                                                        EsiFlag::ErrAct);
             // Frame was empirically debugged to have last bit of CRC in 1!
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 50, &data_byte);
-            golden_frm->Print();
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 50, &data_byte);
+            gold_frm->Print();
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -108,26 +108,26 @@ class TestIso_7_8_9_3 : public test::TestBase
              *   3. Insert Active error frame to monitor from ACK bit further. Insert Passive error
              *      frame to driver bit from ACK bit further.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *crc_delimiter = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
-            crc_delimiter->ForceTQ(1, data_bit_timing.ph1_ + data_bit_timing.prop_,
+            Bit *crc_delimiter = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            crc_delimiter->ForceTQ(1, dbt.ph1_ + dbt.prop_,
                                            BitVal::Dominant);
 
-            driver_bit_frm->InsertPasErrFrm(0, BitKind::Ack);
-            monitor_bit_frm->InsertActErrFrm(0, BitKind::Ack);
+            drv_bit_frm->InsertPasErrFrm(0, BitKind::Ack);
+            mon_bit_frm->InsertActErrFrm(0, BitKind::Ack);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("DontShift synchronisation after dominant bit sampled on CRC delimiter bit!");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

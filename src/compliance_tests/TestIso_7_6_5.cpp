@@ -70,20 +70,20 @@ class TestIso_7_6_5 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
+            FillTestVariants(VariantMatchType::CommonAndFd);
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -92,28 +92,28 @@ class TestIso_7_6_5 : public test::TestBase
              *      transmitted ACK! This is bit error in ACK.
              *   3. Insert expected Active error frame after first bit of ACK
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
-            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitKind::Ack);
-            int bit_index = driver_bit_frm->GetBitIndex(ack_bit);
+            Bit *ack_bit = drv_bit_frm->GetBitOf(0, BitKind::Ack);
+            int bit_index = drv_bit_frm->GetBitIndex(ack_bit);
 
-            driver_bit_frm->InsertActErrFrm(bit_index + 1);
-            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
+            drv_bit_frm->InsertActErrFrm(bit_index + 1);
+            mon_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             rec_old = dut_ifc->GetRec();
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
             CheckRecChange(rec_old, +1);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

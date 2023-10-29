@@ -78,29 +78,29 @@ class TestIso_8_8_5_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
-            ElementaryTest test = ElementaryTest(1);
-            test.e_ = data_bit_timing.sjw_;
-            AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            ElemTest test = ElemTest(1);
+            test.e_ = dbt.sjw_;
+            AddElemTest(TestVariant::CanFdEna, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
             SetupMonitorTxTests();
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
                                                         EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -108,28 +108,28 @@ class TestIso_8_8_5_1 : public test::TestBase
              *   2. Force first e TQs of ESI to recessive.
              *   3. Force PH2 of ESI to recessive.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *esi = driver_bit_frm->GetBitOf(0, BitKind::Esi);
+            Bit *esi = drv_bit_frm->GetBitOf(0, BitKind::Esi);
             for (int i = 0; i < elem_test.e_; i++)
                 esi->ForceTQ(i, BitVal::Recessive);
 
-            for (size_t i = 0; i < data_bit_timing.ph2_; i++)
+            for (size_t i = 0; i < dbt.ph2_; i++)
                 esi->ForceTQ(i, BitPhase::Ph2, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

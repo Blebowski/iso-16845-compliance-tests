@@ -74,15 +74,15 @@ class TestIso_7_2_8 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
             for (int i = 0; i < 4; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc;
@@ -99,12 +99,12 @@ class TestIso_7_2_8 : public test::TestBase
             else
                 bit_value = BitVal::Dominant;
 
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, RtrFlag::Data);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, RtrFlag::Data);
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -114,9 +114,9 @@ class TestIso_7_2_8 : public test::TestBase
              *   3. Insert Active Error frame to monitored frame. Insert Passive Error frame to
              *      driven frame (TX/RX feedback enabled).
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffKind::Fixed,
+            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Fixed,
                                                                     bit_value);
 
             /**************************************************************************************
@@ -132,33 +132,33 @@ class TestIso_7_2_8 : public test::TestBase
                  * Copy frame to second frame so that we dont loose modification of bits.
                  * Corrupt only second one.
                  */
-                driver_bit_frm_2 = std::make_unique<BitFrame>(*driver_bit_frm);
-                monitor_bit_frm_2 = std::make_unique<BitFrame>(*monitor_bit_frm);
+                drv_bit_frm_2 = std::make_unique<BitFrame>(*drv_bit_frm);
+                mon_bit_frm_2 = std::make_unique<BitFrame>(*mon_bit_frm);
 
                 /* Skip stuff bits whose value is not matching */
-                Bit *stuff_bit_to_flip = driver_bit_frm_2->GetFixedStuffBit(
+                Bit *stuff_bit_to_flip = drv_bit_frm_2->GetFixedStuffBit(
                                             stuff_bit, bit_value);
 
-                int bit_index = driver_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
                 stuff_bit_to_flip->FlipVal();
 
-                driver_bit_frm_2->InsertPasErrFrm(bit_index + 1);
-                monitor_bit_frm_2->InsertActErrFrm(bit_index + 1);
+                drv_bit_frm_2->InsertPasErrFrm(bit_index + 1);
+                mon_bit_frm_2->InsertActErrFrm(bit_index + 1);
 
-                driver_bit_frm_2->Print(true);
-                monitor_bit_frm_2->Print(true);
+                drv_bit_frm_2->Print(true);
+                mon_bit_frm_2->Print(true);
 
                 /* Do the test itself */
                 dut_ifc->SetRec(0);
-                PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
+                PushFramesToLT(*drv_bit_frm_2, *mon_bit_frm_2);
+                RunLT(true, true);
+                CheckLTResult();
 
-                driver_bit_frm_2.reset();
-                monitor_bit_frm_2.reset();
+                drv_bit_frm_2.reset();
+                mon_bit_frm_2.reset();
             }
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

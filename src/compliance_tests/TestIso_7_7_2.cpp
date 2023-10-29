@@ -75,9 +75,9 @@ class TestIso_7_7_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLenTQ(); i++){
-                ElementaryTest test = ElementaryTest(i + 1, FrameKind::Can20);
+            FillTestVariants(VariantMatchType::Common);
+            for (size_t i = 0; i < nbt.GetBitLenTQ(); i++){
+                ElemTest test = ElemTest(i + 1, FrameKind::Can20);
                 test.e_ = i + 1;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
@@ -86,20 +86,20 @@ class TestIso_7_7_2 : public test::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base);
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base);
 
             /* Base ID = 0x0 */
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x0);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0x0);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -116,51 +116,51 @@ class TestIso_7_7_2 : public test::TestBase
              *      monitored frame. Insert Passive error frame to driven frame.
              *   8. Append second frame to first frame.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(4, BitKind::BaseIdent)->FlipVal();
+            drv_bit_frm->GetBitOf(4, BitKind::BaseIdent)->FlipVal();
 
-            driver_bit_frm->InsertPasErrFrm(5, BitKind::BaseIdent);
-            monitor_bit_frm->InsertActErrFrm(5, BitKind::BaseIdent);
+            drv_bit_frm->InsertPasErrFrm(5, BitKind::BaseIdent);
+            mon_bit_frm->InsertActErrFrm(5, BitKind::BaseIdent);
 
             /* Clear all phases and keep only SYNC. Then lengthen SYNC accordingly! */
-            Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitKind::Interm);
-            Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitKind::Interm);
+            Bit *last_interm_bit_drv = drv_bit_frm->GetBitOf(2, BitKind::Interm);
+            Bit *last_interm_bit_mon = mon_bit_frm->GetBitOf(2, BitKind::Interm);
 
-            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-            last_interm_bit_drv->ShortenPhase(BitPhase::Ph1, nominal_bit_timing.ph1_);
-            last_interm_bit_drv->ShortenPhase(BitPhase::Prop, nominal_bit_timing.prop_);
+            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
+            last_interm_bit_drv->ShortenPhase(BitPhase::Ph1, nbt.ph1_);
+            last_interm_bit_drv->ShortenPhase(BitPhase::Prop, nbt.prop_);
 
-            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-            last_interm_bit_mon->ShortenPhase(BitPhase::Ph1, nominal_bit_timing.ph1_);
-            last_interm_bit_mon->ShortenPhase(BitPhase::Prop, nominal_bit_timing.prop_);
+            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
+            last_interm_bit_mon->ShortenPhase(BitPhase::Ph1, nbt.ph1_);
+            last_interm_bit_mon->ShortenPhase(BitPhase::Prop, nbt.prop_);
 
             last_interm_bit_drv->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);
             last_interm_bit_mon->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);
 
-            monitor_bit_frm_2->ConvRXFrame();
+            mon_bit_frm_2->ConvRXFrame();
 
-            driver_bit_frm_2->GetBitOf(4, BitKind::BaseIdent)->FlipVal();
+            drv_bit_frm_2->GetBitOf(4, BitKind::BaseIdent)->FlipVal();
 
-            driver_bit_frm_2->InsertPasErrFrm(5, BitKind::BaseIdent);
-            monitor_bit_frm_2->InsertActErrFrm(5, BitKind::BaseIdent);
+            drv_bit_frm_2->InsertPasErrFrm(5, BitKind::BaseIdent);
+            mon_bit_frm_2->InsertActErrFrm(5, BitKind::BaseIdent);
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /*****************************************************************************
              * Execute test
              *****************************************************************************/
             dut_ifc->SetRec(0);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
             /* No frame shall be received by IUT since both had errors in it! */
             CheckNoRxFrame();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

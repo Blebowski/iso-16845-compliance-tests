@@ -79,51 +79,51 @@ class TestIso_8_8_1_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
             // Elementary test for each possible positon of sample point between: (2, NTQ-1)
             // Note that this test verifies BRS bit, so we need to alternate also data bit timing!
             // This will then affect overall bit-rate!
-            for (size_t i = 0; i < nominal_bit_timing.GetBitLenTQ() - 2; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::Can20));
+            for (size_t i = 0; i < nbt.GetBitLenTQ() - 2; i++)
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::Can20));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
 
             SetupMonitorTxTests();
 
-            assert(nominal_bit_timing.brp_ > 2 &&
+            assert(nbt.brp_ > 2 &&
                    "TQ(N) shall bigger than 2 for this test due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // Calculate new bit-rate from configured one. Modify PROP and PH2 of Nominal bit-rate
             // Modify only PH2 of data bit-rate! This will keep the same nominal bit-rate but
             // change Data bit-rate
-            test_nom_bit_timing.brp_ = nominal_bit_timing.brp_;
-            test_nom_bit_timing.sjw_ = nominal_bit_timing.sjw_;
+            test_nom_bit_timing.brp_ = nbt.brp_;
+            test_nom_bit_timing.sjw_ = nbt.sjw_;
             test_nom_bit_timing.ph1_ = 0;
             test_nom_bit_timing.prop_ = elem_test.index_;
-            test_nom_bit_timing.ph2_ = nominal_bit_timing.GetBitLenTQ() - elem_test.index_ - 1;
+            test_nom_bit_timing.ph2_ = nbt.GetBitLenTQ() - elem_test.index_ - 1;
 
-            test_data_bit_timing.brp_ = data_bit_timing.brp_;
-            test_data_bit_timing.sjw_ = data_bit_timing.sjw_;
+            test_data_bit_timing.brp_ = dbt.brp_;
+            test_data_bit_timing.sjw_ = dbt.sjw_;
             test_data_bit_timing.ph1_ = 0;
 
             // If we have BRP_FD = 1, then with index 1, TSEG1 is only 2 which is not enough, and it
             // is below minimal possible bit-rate for Data bit time! Therefore we demand +1 for PROP,
             // therefore having TSEG1 min in DBT = 3 TQ!
             test_data_bit_timing.prop_ = elem_test.index_ + 1;
-            test_data_bit_timing.ph2_ = nominal_bit_timing.GetBitLenTQ() - elem_test.index_;
+            test_data_bit_timing.ph2_ = nbt.GetBitLenTQ() - elem_test.index_;
 
             /* Re-configure bit-timing for this test so that frames are generated with it! */
-            this->nominal_bit_timing = test_nom_bit_timing;
-            this->data_bit_timing = test_data_bit_timing;
+            this->nbt = test_nom_bit_timing;
+            this->dbt = test_data_bit_timing;
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(test_nom_bit_timing, dbt);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
@@ -134,39 +134,39 @@ class TestIso_8_8_1_2 : public test::TestBase
             TestMessage("Data bit timing for this elementary test:");
             test_data_bit_timing.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
                                                        EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
              *   1. Insert ACK to driven frame.
              *   2. Force SYNC + Prop + Ph1 - 1 starting time quantas of BRS to Dominant.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
-            size_t num_time_quantas = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_;
+            Bit *brs_bit = drv_bit_frm->GetBitOf(0, BitKind::Brs);
+            size_t num_time_quantas = nbt.prop_ + nbt.ph1_;
             for (size_t i = 0; i < num_time_quantas; i++)
                 brs_bit->ForceTQ(i, BitVal::Dominant);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

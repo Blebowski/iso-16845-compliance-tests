@@ -77,9 +77,9 @@ class TestIso_8_6_15 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
+            FillTestVariants(VariantMatchType::CommonAndFd);
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -87,15 +87,15 @@ class TestIso_8_6_15 : public test::TestBase
             dut_ifc->SetTec(8);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -105,37 +105,37 @@ class TestIso_8_6_15 : public test::TestBase
              *   4. Force last bit of overload delimiter (8-th) to dominant.
              *   5. Insert next expected overload frame!
              *************************************************************************************/
-            driver_bit_frm->ConvRXFrame();
+            drv_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->FlipBitAndCompensate(
-                driver_bit_frm->GetBitOf(0, BitKind::Interm), dut_input_delay);
+            drv_bit_frm->FlipBitAndCompensate(
+                drv_bit_frm->GetBitOf(0, BitKind::Interm), dut_input_delay);
 
-            driver_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
-            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            drv_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            mon_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
-            driver_bit_frm->FlipBitAndCompensate(
-                driver_bit_frm->GetBitOf(7, BitKind::OvrlDelim), dut_input_delay);
+            drv_bit_frm->FlipBitAndCompensate(
+                drv_bit_frm->GetBitOf(7, BitKind::OvrlDelim), dut_input_delay);
 
             /* Next bit is 2nd intermission bit overally! */
-            driver_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
-            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            drv_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            mon_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             tec_old = dut_ifc->GetTec();
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
 
-            CheckLowerTesterResult();
+            CheckLTResult();
             CheckTecChange(tec_old, -1);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

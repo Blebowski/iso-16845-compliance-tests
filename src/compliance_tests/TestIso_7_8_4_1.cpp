@@ -85,32 +85,32 @@ class TestIso_7_8_4_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            for (size_t i = data_bit_timing.sjw_ + 1;
-                 i <= data_bit_timing.GetBitLenTQ() - data_bit_timing.ph2_ - 1;
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            for (size_t i = dbt.sjw_ + 1;
+                 i <= dbt.GetBitLenTQ() - dbt.ph2_ - 1;
                  i++)
             {
-                ElementaryTest test = ElementaryTest(i - data_bit_timing.sjw_);
+                ElemTest test = ElemTest(i - dbt.sjw_);
                 test.e_ = i;
-                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+                AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert(nominal_bit_timing.brp_ == data_bit_timing.brp_ &&
+            assert(nbt.brp_ == dbt.brp_ &&
                    "TQ(N) shall equal TQ(D) for this test due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
                                                        EsiFlag::ErrPas);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -119,30 +119,30 @@ class TestIso_7_8_4_1 : public test::TestBase
              *   3. Force first e time quantas of ESI bit to Recessive
              *   4. Force ESI from SJW - 1 after sample point till the end to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitKind::Esi);
+            Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
             esi_bit->val_ = BitVal::Dominant;
 
             for (int j = 0; j < elem_test.e_; j++)
                 esi_bit->ForceTQ(j, BitVal::Recessive);
 
-            for (size_t j = data_bit_timing.sjw_ - 1; j < data_bit_timing.ph2_; j++)
+            for (size_t j = dbt.sjw_ - 1; j < dbt.ph2_; j++)
                 esi_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ESI positive resynchronisation with phase error: %d",
                         elem_test.e_);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

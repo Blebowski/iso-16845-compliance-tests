@@ -48,16 +48,16 @@ test::TestBase::~TestBase()
     delete this->dut_ifc;
 }
 
-can::FrameKind test::TestBase::GetDefaultFrameType(TestVariant &variant)
+can::FrameKind test::TestBase::GetDefFrameKind(TestVariant &variant)
 {
     switch (variant){
         case TestVariant::Common:
             return FrameKind::Can20;   /* Most of tests use CAN 2.0 for common */
-        case TestVariant::Can_2_0:
+        case TestVariant::Can20:
             return FrameKind::Can20;
-        case TestVariant::CanFdTolerant: /* TODO: Check */
+        case TestVariant::CanFdTol: /* TODO: Check */
             return FrameKind::Can20;
-        case TestVariant::CanFdEnabled:
+        case TestVariant::CanFdEna:
             return FrameKind::CanFd;
         default:
             break;
@@ -71,9 +71,9 @@ void test::TestBase::ConfigureTest()
     TestMessage("TestBase: Configuration Entered");
 
     TestMessage("Querying test configuration from TB:");
-    this->dut_clock_period = TestControllerAgentGetCfgDutClockPeriod();
+    this->dut_clk_period = TestControllerAgentGetCfgDutClockPeriod();
     TestMessage("DUT clock period:");
-    std::cout << this->dut_clock_period.count() << " ns" << std::endl;
+    std::cout << this->dut_clk_period.count() << " ns" << std::endl;
 
     // TODO: Query input delay from TB, and eventually from VIP configuration !!!
     this->dut_input_delay = 2;
@@ -83,17 +83,17 @@ void test::TestBase::ConfigureTest()
     // TODO: Query DUTs information processing time from TB!
     this->dut_ipt = 2;
 
-    this->nominal_bit_timing.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
-    this->nominal_bit_timing.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
-    this->nominal_bit_timing.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");
-    this->nominal_bit_timing.ph2_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH2");
-    this->nominal_bit_timing.sjw_ = TestControllerAgentGetBitTimingElement("CFG_DUT_SJW");
+    this->nbt.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
+    this->nbt.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
+    this->nbt.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");
+    this->nbt.ph2_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH2");
+    this->nbt.sjw_ = TestControllerAgentGetBitTimingElement("CFG_DUT_SJW");
 
-    this->data_bit_timing.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP_FD");
-    this->data_bit_timing.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP_FD");
-    this->data_bit_timing.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1_FD");
-    this->data_bit_timing.ph2_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH2_FD");
-    this->data_bit_timing.sjw_ = TestControllerAgentGetBitTimingElement("CFG_DUT_SJW_FD");
+    this->dbt.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP_FD");
+    this->dbt.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP_FD");
+    this->dbt.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1_FD");
+    this->dbt.ph2_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH2_FD");
+    this->dbt.sjw_ = TestControllerAgentGetBitTimingElement("CFG_DUT_SJW_FD");
 
     this->seed = TestControllerAgentGetSeed();
     TestMessage("Seed: %d", this->seed);
@@ -101,13 +101,13 @@ void test::TestBase::ConfigureTest()
     srand(seed);
 
     TestMessage("Nominal Bit Timing configuration from TB:");
-    this->nominal_bit_timing.Print();
+    this->nbt.Print();
     TestMessage("Data Bit Timing configuration from TB:");
-    this->data_bit_timing.Print();
+    this->dbt.Print();
 
     // Create backup, so that we can change the actual bit-timing by test.
-    backup_nominal_bit_timing = nominal_bit_timing;
-    backup_data_bit_timing = data_bit_timing;
+    bckp_nbt = nbt;
+    bckp_dbt = dbt;
 
     TestMessage("Configuring Reset agent, executing reset");
     ResetAgentPolaritySet(0);
@@ -115,7 +115,7 @@ void test::TestBase::ConfigureTest()
     ResetAgentDeassert();
 
     TestMessage("Configuring Clock generator agent");
-    ClockAgentSetPeriod(std::chrono::nanoseconds(this->dut_clock_period));
+    ClockAgentSetPeriod(std::chrono::nanoseconds(this->dut_clk_period));
     ClockAgentSetJitter(std::chrono::nanoseconds(0));
     ClockAgentSetDuty(50);
     ClockAgentStart();
@@ -136,7 +136,7 @@ void test::TestBase::ConfigureTest()
     // Default Monitor delay (used for RX tests), must correspond to IUTs input delay!
     // Then if driver starts at time T, monitor will start at proper time t + x, where
     // x corresponds to input delay. Due to this, monitor will be in sync with IUT exactly!
-    CanAgentSetMonitorInputDelay(dut_input_delay * dut_clock_period);
+    CanAgentSetMonitorInputDelay(dut_input_delay * dut_clk_period);
 
     // Most of TCs use driver and monitor simultaneously, therefore there is no
     // need to configure Trigger in each of them!
@@ -144,21 +144,21 @@ void test::TestBase::ConfigureTest()
 
     TestMessage("Configuring DUT");
     this->dut_ifc->Reset();
-    this->dut_ifc->ConfigureBitTiming(this->nominal_bit_timing, this->data_bit_timing);
+    this->dut_ifc->ConfigureBitTiming(this->nbt, this->dbt);
     this->dut_ifc->ConfigureSsp(SspType::Disabled, 0);
     this->dut_ifc->SetCanVersion(this->dut_can_version);
 
     TestMessage("Enabling DUT");
     this->dut_ifc->Enable();
 
-    WaitDutErrorActive();
+    WaitDutErrAct();
 
     TestMessage("DUT ON! Test can start!");
     TestMessage("TestBase: Configuration Exiting");
 }
 
 
-void test::TestBase::SetupTestEnvironment()
+void test::TestBase::SetupTestEnv()
 {
     TestBigMessage("Base test config...");
     TestBase::ConfigureTest();
@@ -184,7 +184,7 @@ void test::TestBase::SetupMonitorTxTests()
 
 int test::TestBase::Run()
 {
-    SetupTestEnvironment();
+    SetupTestEnv();
 
     int variant_index = 0;
 
@@ -224,7 +224,7 @@ int test::TestBase::Run()
 }
 
 
-int test::TestBase::FinishElementaryTest()
+int test::TestBase::FinishElemTest()
 {
     if (test_result)
         return 0;
@@ -250,79 +250,79 @@ test::TestResult test::TestBase::FinishTest(TestResult test_result)
     return (TestResult) test_result;
 }
 
-void test::TestBase::FillTestVariants(VariantMatchingType match_type)
+void test::TestBase::FillTestVariants(VariantMatchType match_type)
 {
     switch (match_type)
     {
-    case VariantMatchingType::OneToOne:
+    case VariantMatchType::OneToOne:
         switch (dut_can_version)
         {
         case CanVersion::Can20:
-            test_variants.push_back(TestVariant::Can_2_0);
+            test_variants.push_back(TestVariant::Can20);
             break;
         case CanVersion::CanFdTol:
-            test_variants.push_back(TestVariant::CanFdTolerant);
+            test_variants.push_back(TestVariant::CanFdTol);
             break;
         case CanVersion::CanFdEna:
-            test_variants.push_back(TestVariant::CanFdEnabled);
+            test_variants.push_back(TestVariant::CanFdEna);
             break;
         default:
             break;
         }
-        elem_tests.push_back(std::vector<ElementaryTest>());
+        elem_tests.push_back(std::vector<ElemTest>());
         break;
 
-    case VariantMatchingType::Common:
+    case VariantMatchType::Common:
         test_variants.push_back(TestVariant::Common);
-        elem_tests.push_back(std::vector<ElementaryTest>());
+        elem_tests.push_back(std::vector<ElemTest>());
         break;
 
-    case VariantMatchingType::CommonAndFd:
+    case VariantMatchType::CommonAndFd:
         test_variants.push_back(TestVariant::Common);
-        elem_tests.push_back(std::vector<ElementaryTest>());
+        elem_tests.push_back(std::vector<ElemTest>());
 
         if (dut_can_version == CanVersion::CanFdEna)
         {
-            test_variants.push_back(TestVariant::CanFdEnabled);
-            elem_tests.push_back(std::vector<ElementaryTest>());
+            test_variants.push_back(TestVariant::CanFdEna);
+            elem_tests.push_back(std::vector<ElemTest>());
         }
         break;
 
-    case VariantMatchingType::ClassicalAndFdEnabled:
+    case VariantMatchType::ClasCanAndFdEna:
         if (dut_can_version == CanVersion::Can20)
-            test_variants.push_back(TestVariant::Can_2_0);
+            test_variants.push_back(TestVariant::Can20);
         if (dut_can_version == CanVersion::CanFdEna)
-            test_variants.push_back(TestVariant::CanFdEnabled);
-        elem_tests.push_back(std::vector<ElementaryTest>());
+            test_variants.push_back(TestVariant::CanFdEna);
+        elem_tests.push_back(std::vector<ElemTest>());
         break;
 
-    case VariantMatchingType::FdTolerantFdEnabled:
+    case VariantMatchType::FdTolAndFdEna:
         if (dut_can_version == CanVersion::CanFdTol)
-            test_variants.push_back(TestVariant::CanFdTolerant);
+            test_variants.push_back(TestVariant::CanFdTol);
         if (dut_can_version == CanVersion::CanFdEna)
-            test_variants.push_back(TestVariant::CanFdEnabled);
-        elem_tests.push_back(std::vector<ElementaryTest>());
+            test_variants.push_back(TestVariant::CanFdEna);
+        elem_tests.push_back(std::vector<ElemTest>());
         break;
 
-    case VariantMatchingType::ClassicalFdCommon:
+    case VariantMatchType::ClasCanFdCommon:
         if (dut_can_version == CanVersion::Can20)
-            test_variants.push_back(TestVariant::Can_2_0);
+            test_variants.push_back(TestVariant::Can20);
         if (dut_can_version == CanVersion::CanFdTol)
-            test_variants.push_back(TestVariant::CanFdTolerant);
-        elem_tests.push_back(std::vector<ElementaryTest>());
+            test_variants.push_back(TestVariant::CanFdTol);
+        elem_tests.push_back(std::vector<ElemTest>());
         if (dut_can_version == CanVersion::CanFdEna)
         {
-            test_variants.push_back(TestVariant::CanFdTolerant);
-            test_variants.push_back(TestVariant::CanFdEnabled);
-            elem_tests.push_back(std::vector<ElementaryTest>());
+            test_variants.push_back(TestVariant::CanFdTol);
+            test_variants.push_back(TestVariant::CanFdEna);
+            elem_tests.push_back(std::vector<ElemTest>());
         }
         break;
 
-    case VariantMatchingType::CanFdEnabledOnly:
+    case VariantMatchType::CanFdEnaOnly:
         if (dut_can_version == CanVersion::CanFdEna)
         {
-            test_variants.push_back(TestVariant::CanFdEnabled);
-            elem_tests.push_back(std::vector<ElementaryTest>());
+            test_variants.push_back(TestVariant::CanFdEna);
+            elem_tests.push_back(std::vector<ElemTest>());
         }
 
     default:
@@ -331,7 +331,7 @@ void test::TestBase::FillTestVariants(VariantMatchingType match_type)
 }
 
 
-void test::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test)
+void test::TestBase::AddElemTest(TestVariant test_variant, ElemTest &&elem_test)
 {
     int i = 0;
     for (auto &test_variant_it : test_variants)
@@ -347,17 +347,17 @@ void test::TestBase::AddElemTest(TestVariant test_variant, ElementaryTest &&elem
 }
 
 
-void test::TestBase::AddElemTestForEachSamplePoint(TestVariant test_variant,
+void test::TestBase::AddElemTestForEachSP(TestVariant test_variant,
                             bool nominal, FrameKind frame_type)
 {
     TestMessage("Adding Elementary tests for each sample point...");
 
-    int num_sp_points = CalcNumSamplePoints(nominal);
+    int num_sp_points = CalcNumSPs(nominal);
 
     TestMessage("Number of sample points: %d", num_sp_points);
 
     for (int i = 1; i <= num_sp_points; i++)
-        AddElemTest(test_variant, ElementaryTest(i, frame_type));
+        AddElemTest(test_variant, ElemTest(i, frame_type));
 }
 
 
@@ -393,23 +393,23 @@ size_t test::TestBase::GetDefaultMinPh1(BitTiming *orig_bt, bool nominal)
 }
 
 
-BitTiming test::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal)
+BitTiming test::TestBase::GenerateSPForTest(const ElemTest &elem_test, bool nominal)
 {
     return GenerateBitTiming(elem_test, nominal, 0);
 }
 
 
-BitTiming test::TestBase::GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal,
+BitTiming test::TestBase::GenerateSPForTest(const ElemTest &elem_test, bool nominal,
                                                          size_t minimal_ph1)
 {
     return GenerateBitTiming(elem_test, nominal, minimal_ph1);
 }
 
 
-std::unique_ptr<BitFrame> test::TestBase::ConvertBitFrame(Frame &golden_frame)
+std::unique_ptr<BitFrame> test::TestBase::ConvBitFrame(Frame &golden_frame)
 {
     return std::make_unique<BitFrame>(
-        golden_frame, &nominal_bit_timing, &data_bit_timing);
+        golden_frame, &nbt, &dbt);
 }
 
 
@@ -594,7 +594,7 @@ void test::TestBase::CheckTecChange(int reference_tec, int delta)
 }
 
 
-void test::TestBase::WaitDutErrorActive()
+void test::TestBase::WaitDutErrAct()
 {
     TestMessage("Waiting till DUT is error active...");
     while (dut_ifc->GetErrorState() != FaultConfState::ErrAct)
@@ -603,20 +603,20 @@ void test::TestBase::WaitDutErrorActive()
 }
 
 
-void test::TestBase::ReconfigureDutBitTiming()
+void test::TestBase::ReconfDutBitTiming()
 {
     dut_ifc->Disable();
-    dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+    dut_ifc->ConfigureBitTiming(nbt, dbt);
     dut_ifc->Enable();
 }
 
 
-void test::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
+void test::TestBase::PushFramesToLT(can::BitFrame &driver_bit_frame,
                                                  can::BitFrame &monitor_bit_frame)
 {
     TestSequence *test_sequence;
 
-    test_sequence = new TestSequence(this->dut_clock_period, driver_bit_frame, monitor_bit_frame);
+    test_sequence = new TestSequence(this->dut_clk_period, driver_bit_frame, monitor_bit_frame);
 
 #ifndef NDEBUG
     TestMessage(std::string(80, '*').c_str());
@@ -639,14 +639,14 @@ void test::TestBase::PushFramesToLowerTester(can::BitFrame &driver_bit_frame,
 }
 
 
-int test::TestBase::RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+int test::TestBase::RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                                     [[maybe_unused]] const TestVariant &test_variant)
 {
     return 0;
 }
 
 
-void test::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
+void test::TestBase::RunLT(bool start_driver, bool start_monitor)
 {
 
     // Note: It is important to start monitor first because it waits for driver
@@ -666,21 +666,21 @@ void test::TestBase::RunLowerTester(bool start_driver, bool start_monitor)
 }
 
 
-void test::TestBase::StartDriverAndMonitor()
+void test::TestBase::StartDrvAndMon()
 {
     CanAgentMonitorStart();
     CanAgentDriverStart();
 }
 
 
-void test::TestBase::WaitForDriverAndMonitor()
+void test::TestBase::WaitForDrvAndMon()
 {
     CanAgentMonitorWaitFinish();
     CanAgentDriverWaitFinish();
 }
 
 
-void test::TestBase::CheckLowerTesterResult()
+void test::TestBase::CheckLTResult()
 {
     CanAgentCheckResult();
     CanAgentMonitorStop();
@@ -700,7 +700,7 @@ void test::TestBase::PrintTestInfo()
     TestMessage("Total number of elementary tests: %d", num_elem_tests);
 }
 
-void test::TestBase::PrintElemTestInfo(ElementaryTest elem_test)
+void test::TestBase::PrintElemTestInfo(ElemTest elem_test)
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Elementary Test index: %d", elem_test.index_);
@@ -712,13 +712,13 @@ void test::TestBase::PrintVariantInfo(TestVariant test_variant)
 {
     switch (test_variant)
     {
-        case TestVariant::Can_2_0:
+        case TestVariant::Can20:
             TestBigMessage("Test variant: CAN 2.0!");
             break;
-        case TestVariant::CanFdEnabled:
+        case TestVariant::CanFdEna:
             TestBigMessage("Test variant: CAN FD Enabled!");
             break;
-        case TestVariant::CanFdTolerant:
+        case TestVariant::CanFdTol:
             TestBigMessage("Test variant: CAN FD Tolerant");
             break;
         case TestVariant::Common:
@@ -739,41 +739,41 @@ void test::TestBase::RandomizeAndPrint(Frame *frame)
 
 void test::TestBase::FreeTestObjects()
 {
-    golden_frm.reset();
-    golden_frm_2.reset();
-    driver_bit_frm.reset();
-    driver_bit_frm_2.reset();
-    monitor_bit_frm.reset();
-    monitor_bit_frm_2.reset();
+    gold_frm.reset();
+    gold_frm_2.reset();
+    drv_bit_frm.reset();
+    drv_bit_frm_2.reset();
+    mon_bit_frm.reset();
+    mon_bit_frm_2.reset();
 }
 
 
-size_t test::TestBase::CalcNumSamplePoints(bool nominal)
+size_t test::TestBase::CalcNumSPs(bool nominal)
 {
     int tmp;
     if (nominal)
-        tmp = nominal_bit_timing.GetBitLenTQ();
+        tmp = nbt.GetBitLenTQ();
     else
-        tmp = data_bit_timing.GetBitLenTQ();
+        tmp = dbt.GetBitLenTQ();
 
     // Minimal durations (in cycles):
     //  Nominal - TSEG1 = 5, TSEG2 = 3
     //  Data - TSEG1 = 3, TSEG2 = 2
     if (nominal)
     {
-        if (nominal_bit_timing.brp_ == 1) {
+        if (nbt.brp_ == 1) {
             return tmp - 7;
-        } else if (nominal_bit_timing.brp_ == 2) {
+        } else if (nbt.brp_ == 2) {
             return tmp - 4;
-        } else if ((nominal_bit_timing.brp_ == 3) || (nominal_bit_timing.brp_ == 4)) {
+        } else if ((nbt.brp_ == 3) || (nbt.brp_ == 4)) {
             return tmp - 2;
         } else {
             return tmp - 1;
         }
     } else {
-        if (data_bit_timing.brp_ == 1) {
+        if (dbt.brp_ == 1) {
             return tmp - 4;
-        } else if (data_bit_timing.brp_ == 2) {
+        } else if (dbt.brp_ == 2) {
             return tmp - 2;
         } else {
             return tmp - 1;
@@ -781,7 +781,7 @@ size_t test::TestBase::CalcNumSamplePoints(bool nominal)
     }
 }
 
-BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, bool nominal,
+BitTiming test::TestBase::GenerateBitTiming(const ElemTest &elem_test, bool nominal,
                                            size_t minimal_ph1)
 {
     BitTiming new_bt;
@@ -792,9 +792,9 @@ BitTiming test::TestBase::GenerateBitTiming(const ElementaryTest &elem_test, boo
     TestMessage("Target Minimal PH1 Length: %d", minimal_ph1);
 
     if (nominal)
-        orig_bt = &backup_nominal_bit_timing;
+        orig_bt = &bckp_nbt;
     else
-        orig_bt = &backup_data_bit_timing;
+        orig_bt = &bckp_dbt;
 
     size_t init_ph1 = GetDefaultMinPh1(orig_bt, nominal);
 

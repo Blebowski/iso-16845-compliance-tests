@@ -79,30 +79,30 @@ class TestIso_7_7_6 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            size_t num_elem_tests = nominal_bit_timing.ph2_ - nominal_bit_timing.sjw_;
+            FillTestVariants(VariantMatchType::Common);
+            size_t num_elem_tests = nbt.ph2_ - nbt.sjw_;
             for (size_t i = 0; i < num_elem_tests; i++)
             {
-                ElementaryTest test = ElementaryTest(i + 1);
-                test.e_ = nominal_bit_timing.sjw_ + i + 1;
+                ElemTest test = ElemTest(i + 1);
+                test.e_ = nbt.sjw_ + i + 1;
                 elem_tests[0].push_back(test);
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
             int id = pow(2,11) - 1;
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -115,32 +115,32 @@ class TestIso_7_7_6 : public test::TestBase
              *      be at exact position as DUT should transmit it! Insert Passive Error frame to
              *      driver so that it sends all recessive values!
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(4, BitKind::BaseIdent)
+            drv_bit_frm->GetBitOf(4, BitKind::BaseIdent)
                 ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
-            monitor_bit_frm->GetBitOf(4, BitKind::BaseIdent)
-                ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+            mon_bit_frm->GetBitOf(4, BitKind::BaseIdent)
+                ->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
 
-            Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
+            Bit *stuff_bit = drv_bit_frm->GetStuffBit(0);
             stuff_bit->val_ = BitVal::Recessive;
             stuff_bit->GetTQ(0)->ForceVal(BitVal::Dominant);
 
-            int index = driver_bit_frm->GetBitIndex(stuff_bit);
-            monitor_bit_frm->InsertActErrFrm(index + 1);
-            driver_bit_frm->InsertPasErrFrm(index + 1);
+            int index = drv_bit_frm->GetBitIndex(stuff_bit);
+            mon_bit_frm->InsertActErrFrm(index + 1);
+            drv_bit_frm->InsertPasErrFrm(index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing negative phase error: %d", elem_test.e_);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

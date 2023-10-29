@@ -22,39 +22,48 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 25.8.2020
+ * @date 27.3.2020
  *
  *****************************************************************************/
 
 #include <chrono>
-#include <string>
-#include <list>
-#include <memory>
+#include <iostream>
+#include <iomanip>
 
-#include "ElementaryTest.h"
+#include "MonItem.h"
 
-test::ElementaryTest::ElementaryTest(int index) :
-    index_(index)
+test::MonItem::MonItem(std::chrono::nanoseconds duration, StdLogic value,
+                       std::chrono::nanoseconds sample_rate)
 {
-    msg_ = "Elementary test: ";
-    msg_ += std::to_string(index);
+    this->duration_ = duration;
+    this->sample_rate_ = sample_rate;
+    this->value_ = value;
+    this->message_ = std::string();
 }
 
-test::ElementaryTest::ElementaryTest(int index, std::string msg):
-    index_(index),
-    msg_(msg)
-{}
 
-test::ElementaryTest::ElementaryTest(int index, std::string msg, can::FrameKind frame_type):
-    index_(index),
-    msg_(msg),
-    frame_type_(frame_type)
-{}
-
-test::ElementaryTest::ElementaryTest(int index, can::FrameKind frame_type):
-    index_(index),
-    frame_type_(frame_type)
+test::MonItem::MonItem(std::chrono::nanoseconds duration, StdLogic value,
+                       std::chrono::nanoseconds sample_rate, std::string message)
 {
-    msg_ = "Elementary test: ";
-    msg_ += std::to_string(index);
+    this->duration_ = duration;
+    this->sample_rate_ = sample_rate;
+    this->value_ = value;
+    this->message_ = message;
+}
+
+
+bool test::MonItem::HasMessage()
+{
+    if (message_.size() > 0)
+        return true;
+    return false;
+}
+
+
+void test::MonItem::Print()
+{
+    if (HasMessage())
+        std::cout << std::setw (20) << message_;
+    std::cout << std::setw (20) << (char)value_;
+    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
 }

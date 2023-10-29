@@ -81,22 +81,22 @@ class TestIso_7_8_8_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1));
 
             // Note: In this TC TX to RX feedback cant be enabled, since DUT
             //       would corrupt test pattern by IUT in ACK field!
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -105,11 +105,11 @@ class TestIso_7_8_8_3 : public test::TestBase
              *   3. Force 2nd TQ of driven ACK bit to Recessive.
              *   4. Force whole Phase 2 of ACK bit to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *crc_delim_driver = driver_bit_frm->GetBitOf(0, BitKind::CrcDelim);
-            Bit *crc_delim_monitor = monitor_bit_frm->GetBitOf(0, BitKind::CrcDelim);
-            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitKind::Ack);
+            Bit *crc_delim_driver = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *crc_delim_monitor = mon_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *ack_bit = drv_bit_frm->GetBitOf(0, BitKind::Ack);
 
             // ACK must be sent dominant since TX/RX feedback is not turned on!
             ack_bit->val_ = BitVal::Dominant;
@@ -118,22 +118,22 @@ class TestIso_7_8_8_3 : public test::TestBase
             crc_delim_monitor->ShortenPhase(BitPhase::Ph2, 1);
 
             ack_bit->ForceTQ(1, BitVal::Recessive);
-            ack_bit->ForceTQ(0, nominal_bit_timing.ph2_ - 1,
+            ack_bit->ForceTQ(0, nbt.ph2_ - 1,
                                      BitPhase::Ph2, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ACK bit glitch filtering on negative phase error");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
 
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

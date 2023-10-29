@@ -85,23 +85,23 @@ class TestIso_7_8_2_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            ElementaryTest test = ElementaryTest(1);
-            test.e_ = nominal_bit_timing.ph2_;
-            AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            ElemTest test = ElemTest(1);
+            test.e_ = nbt.ph2_;
+            AddElemTest(TestVariant::CanFdEna, std::move(test));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -110,30 +110,30 @@ class TestIso_7_8_2_2 : public test::TestBase
              *      shall Hard synchronize)
              *   3. Force TSEG2 of BRS to Recessive on driven frame!
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *edl_bit_driver = driver_bit_frm->GetBitOf(0, BitKind::Edl);
-            Bit *edl_bit_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Edl);
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *edl_bit_driver = drv_bit_frm->GetBitOf(0, BitKind::Edl);
+            Bit *edl_bit_monitor = mon_bit_frm->GetBitOf(0, BitKind::Edl);
+            Bit *brs_bit = drv_bit_frm->GetBitOf(0, BitKind::Brs);
 
-            edl_bit_driver->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
-            edl_bit_monitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            edl_bit_driver->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
+            edl_bit_monitor->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
 
-            for (size_t j = 0; j < data_bit_timing.ph2_; j++)
+            for (size_t j = 0; j < dbt.ph2_; j++)
                 brs_bit->GetTQ(BitPhase::Ph2, j)->ForceVal(BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing 'res' bit hard-sync with negative phase error");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -77,27 +77,27 @@ class TestIso_7_1_4 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::ClassicalAndFdEnabled);
+            FillTestVariants(VariantMatchType::ClasCanAndFdEna);
             if (test_variants.size() > 0)
             {
-                if (test_variants[0] == TestVariant::Can_2_0)
-                    AddElemTest(TestVariant::Can_2_0, ElementaryTest(1, FrameKind::Can20));
+                if (test_variants[0] == TestVariant::Can20)
+                    AddElemTest(TestVariant::Can20, ElemTest(1, FrameKind::Can20));
                 else
-                    AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
+                    AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -105,35 +105,35 @@ class TestIso_7_1_4 : public test::TestBase
              *   2. Update frames since by sending different bit value, CRC might have changed.
              *   3. Monitor frame as if received (IUT is receiving)
              *************************************************************************************/
-            if (test_variant == TestVariant::Can_2_0)
+            if (test_variant == TestVariant::Can20)
             {
                 /* When node is "Classical CAN" conformant, it shall accept recessive R0 (FDF) and
                  * continue without protocol exception or regarding this frame type as FD Frame!!
                  */
-                driver_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                drv_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                mon_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
             } else {
                 /* R1 bit corresponds to RRS in CAN FD frames. It is bit on position of RTR in
                  * CAN2.0 frames!
                  */
-                driver_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                drv_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
+                mon_bit_frm->GetBitOf(0, BitKind::R1)->val_ = BitVal::Recessive;
             }
 
-            driver_bit_frm->UpdateFrame();
-            monitor_bit_frm->UpdateFrame();
+            drv_bit_frm->UpdateFrame();
+            mon_bit_frm->UpdateFrame();
 
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

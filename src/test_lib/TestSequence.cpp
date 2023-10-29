@@ -276,7 +276,7 @@ void test::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
     else
         logic_val = StdLogic::LOGIC_1;
 
-    driven_values.push_back(DriverItem(duration, logic_val, message));
+    driven_values.push_back(DrvItem(duration, logic_val, message));
 }
 
 
@@ -291,7 +291,7 @@ void test::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
     else
         logic_val = StdLogic::LOGIC_1;
 
-    monitored_values.push_back(MonitorItem(duration, logic_val, sample_rate, message));
+    monitored_values.push_back(MonItem(duration, logic_val, sample_rate, message));
 }
 
 

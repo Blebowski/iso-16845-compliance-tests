@@ -88,26 +88,26 @@ class TestIso_7_8_1_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
             for (size_t i = 0; i < 2; i++) {
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::Can20));
             }
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // CAN FD frame, Shift/ No shift based on elementary test!
             if (elem_test.index_ == 1)
-                frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
+                frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
             else
-                frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
+                frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::NoShift);
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x0);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0x0);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -116,10 +116,10 @@ class TestIso_7_8_1_1 : public test::TestBase
              *   3. Force TSEG1 - 1 of BRS to dominant (first elementary test), or TSEG1 of BRS to
              *      dominant (second elementary test).
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
-            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_  = BitVal::Dominant;
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_  = BitVal::Dominant;
 
-            Bit *brs = driver_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *brs = drv_bit_frm->GetBitOf(0, BitKind::Brs);
 
             // For both set the orig. bit value to recessive so that we
             // see the dominant flipped bits!
@@ -128,15 +128,15 @@ class TestIso_7_8_1_1 : public test::TestBase
             int dominant_pulse_length;
 
             if (elem_test.index_ == 1)
-                dominant_pulse_length = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_;
+                dominant_pulse_length = nbt.prop_ + nbt.ph1_;
             else
-                dominant_pulse_length = nominal_bit_timing.prop_ + nominal_bit_timing.ph1_ + 1;
+                dominant_pulse_length = nbt.prop_ + nbt.ph1_ + 1;
 
             for (int j = 0; j < dominant_pulse_length; j++)
                 brs->ForceTQ(j, BitVal::Dominant);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
@@ -146,11 +146,11 @@ class TestIso_7_8_1_1 : public test::TestBase
             else
                 TestMessage("Testing BRS sampled Dominant");
 
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

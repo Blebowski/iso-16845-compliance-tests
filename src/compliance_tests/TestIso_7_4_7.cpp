@@ -76,24 +76,24 @@ class TestIso_7_4_7 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -104,35 +104,35 @@ class TestIso_7_4_7 : public test::TestBase
              *   4. Force 1 or 2 bit of intermission after overload frame to dominant.
              *   5. Insert next overload frame from next bit on!
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(0, BitKind::Interm)->FlipVal();
+            drv_bit_frm->GetBitOf(0, BitKind::Interm)->FlipVal();
 
-            driver_bit_frm->InsertPasErrFrm(1, BitKind::Interm);
-            monitor_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
+            drv_bit_frm->InsertPasErrFrm(1, BitKind::Interm);
+            mon_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
             /*
              * There is already 1 intermission bit after EOF, so we have to offset
              * intermission index by 1.
              * 1 -> first bit of second intermission,2 -> second bit
              */
-            driver_bit_frm->GetBitOf(elem_test.index_, BitKind::Interm)->FlipVal();
+            drv_bit_frm->GetBitOf(elem_test.index_, BitKind::Interm)->FlipVal();
 
-            driver_bit_frm->InsertPasErrFrm(elem_test.index_ + 1, BitKind::Interm);
-            monitor_bit_frm->InsertOvrlFrm(elem_test.index_ + 1, BitKind::Interm);
+            drv_bit_frm->InsertPasErrFrm(elem_test.index_ + 1, BitKind::Interm);
+            mon_bit_frm->InsertOvrlFrm(elem_test.index_ + 1, BitKind::Interm);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

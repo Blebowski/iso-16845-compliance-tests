@@ -79,13 +79,13 @@ class TestIso_7_2_6: public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameKind::Can20));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameKind::CanFd));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(2, FrameKind::CanFd));
+            FillTestVariants(VariantMatchType::CommonAndFd);
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(2, FrameKind::CanFd));
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc;
@@ -104,12 +104,12 @@ class TestIso_7_2_6: public test::TestBase
                 dlc = (rand() % 5) + 11;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -118,16 +118,16 @@ class TestIso_7_2_6: public test::TestBase
              *   3. Force CRC Delimiter to dominant.
              *   4. Insert Error frame to position of ACK!
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
             do {
-                Bit *bit = driver_bit_frm->GetRandBitOf(BitKind::Crc);
-                int index = driver_bit_frm->GetBitIndex(bit);
+                Bit *bit = drv_bit_frm->GetRandBitOf(BitKind::Crc);
+                int index = drv_bit_frm->GetBitIndex(bit);
 
                 // Ignore stuff bits, and bits just before stuff bits. If we flip bit before
                 // stuff bit, then we cause stuff error too!
                 if (bit->stuff_kind_ == StuffKind::NoStuff &&
-                    driver_bit_frm->GetBit(index + 1)->stuff_kind_ == StuffKind::NoStuff)
+                    drv_bit_frm->GetBit(index + 1)->stuff_kind_ == StuffKind::NoStuff)
                     {
                         // This should cause only CRC error, no stuff error!
                         bit->FlipVal();
@@ -138,21 +138,21 @@ class TestIso_7_2_6: public test::TestBase
             // If we are in CAN 2.0, then flipping also non-stuff bit can cause change of
             // CRC lenght since number of stuff bits can change! Therefore, we need to recalculate
             // stuff bits, but keep the CRC (since it contains corrupted bit that we rely on)!
-            driver_bit_frm->UpdateFrame(false);
+            drv_bit_frm->UpdateFrame(false);
 
-            driver_bit_frm->GetBitOf(0, BitKind::CrcDelim)->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::CrcDelim)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertActErrFrm(0, BitKind::Ack);
-            driver_bit_frm->InsertActErrFrm(0, BitKind::Ack);
+            mon_bit_frm->InsertActErrFrm(0, BitKind::Ack);
+            drv_bit_frm->InsertActErrFrm(0, BitKind::Ack);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

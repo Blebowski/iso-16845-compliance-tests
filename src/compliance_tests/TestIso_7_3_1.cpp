@@ -73,24 +73,24 @@ class TestIso_7_3_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_,
                             RtrFlag::Data);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 1, &error_data);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 1, &error_data);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             TestMessage("Prolonging Active Error flag by: %d", (3 * (elem_test.index_ - 1)) + 1);
 
@@ -103,12 +103,12 @@ class TestIso_7_3_1 : public test::TestBase
              *   4. Prolong Active error flag by 1,4,7 bits respectively.
              *      Prolong Monitored error delimier by 1,4,7 Recessive bits!
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
+            drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            monitor_bit_frm->InsertActErrFrm(7, BitKind::Data);
-            driver_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             int num_bits_to_insert;
             if (elem_test.index_ == 1)
@@ -119,31 +119,31 @@ class TestIso_7_3_1 : public test::TestBase
                 num_bits_to_insert = 7;
 
             /* Prolong driven frame by 1,4,7 DOMINANT bits */
-            int drv_last_err_flg_index = driver_bit_frm->GetBitIndex(
-                driver_bit_frm->GetBitOf(5, BitKind::ActErrFlag));
+            int drv_last_err_flg_index = drv_bit_frm->GetBitIndex(
+                drv_bit_frm->GetBitOf(5, BitKind::ActErrFlag));
             for (int k = 0; k < num_bits_to_insert; k++)
-                driver_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant,
+                drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant,
                                             drv_last_err_flg_index);
 
             /* Prolong monitored frame by 1,4,7 RECESSIVE bits */
-            int mon_last_err_flg_index = monitor_bit_frm->GetBitIndex(
-                monitor_bit_frm->GetBitOf(0, BitKind::ErrDelim));
+            int mon_last_err_flg_index = mon_bit_frm->GetBitIndex(
+                mon_bit_frm->GetBitOf(0, BitKind::ErrDelim));
             for (int k = 0; k < num_bits_to_insert; k++)
-                monitor_bit_frm->InsertBit(BitKind::ErrDelim, BitVal::Recessive,
+                mon_bit_frm->InsertBit(BitKind::ErrDelim, BitVal::Recessive,
                                             mon_last_err_flg_index);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
             CheckNoRxFrame();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

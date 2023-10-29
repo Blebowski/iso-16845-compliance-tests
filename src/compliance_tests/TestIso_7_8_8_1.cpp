@@ -81,22 +81,22 @@ class TestIso_7_8_8_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
                                                        EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -105,31 +105,31 @@ class TestIso_7_8_8_1 : public test::TestBase
              *   3. Force 2nd TQ of ESI to Recessive.
              *   4. Force Phase 2 of ESI to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitKind::Brs);
-            Bit *brs_bit_monitor = monitor_bit_frm->GetBitOf(0, BitKind::Brs);
-            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitKind::Esi);
+            Bit *brs_bit = drv_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *brs_bit_monitor = mon_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
 
             brs_bit->ShortenPhase(BitPhase::Ph2, 1);
             brs_bit_monitor->ShortenPhase(BitPhase::Ph2, 1);
 
             esi_bit->ForceTQ(1, BitVal::Recessive);
-            esi_bit->ForceTQ(0, data_bit_timing.ph2_ - 1, BitPhase::Ph2,
+            esi_bit->ForceTQ(0, dbt.ph2_ - 1, BitPhase::Ph2,
                                      BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Glitch filtering test for negative phase error on ESI bit");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

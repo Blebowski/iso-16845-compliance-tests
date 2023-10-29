@@ -81,37 +81,37 @@ class TestIso_8_7_6 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameKind::Can20);
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTestForEachSP(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
 
-            assert((nominal_bit_timing.brp_ > 2 &&
+            assert((nbt.brp_ > 2 &&
                     "BRP Nominal must be bigger than 2 in this test due to test architecture!"));
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true, 2);
+            nbt = GenerateSPForTest(elem_test, true, 2);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nbt, dbt);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
             while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            nominal_bit_timing.Print();
+            nbt.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /******************************************************************************
              * Modify test frames:
@@ -128,37 +128,37 @@ class TestIso_8_7_6 : public test::TestBase
              *         quantas after it is executed by the fact that we don not do any
              *         further resynchronizations. Model takes care of it then!
              *****************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             Bit *rand_bit = nullptr;
             Bit *next_bit = nullptr;
             size_t rand_bit_index;
             do {
-                rand_bit = driver_bit_frm->GetRandBit(BitVal::Recessive);
-                rand_bit_index = driver_bit_frm->GetBitIndex(rand_bit);
-                if (rand_bit_index == driver_bit_frm->GetLen() - 1)
+                rand_bit = drv_bit_frm->GetRandBit(BitVal::Recessive);
+                rand_bit_index = drv_bit_frm->GetBitIndex(rand_bit);
+                if (rand_bit_index == drv_bit_frm->GetLen() - 1)
                     continue;
-                next_bit = driver_bit_frm->GetBit(rand_bit_index + 1);
+                next_bit = drv_bit_frm->GetBit(rand_bit_index + 1);
             } while (next_bit == nullptr || next_bit->val_ == BitVal::Recessive);
 
             rand_bit->ShortenPhase(BitPhase::Ph2, 1);
-            monitor_bit_frm->GetBit(rand_bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
+            mon_bit_frm->GetBit(rand_bit_index + 1)->ShortenPhase(BitPhase::Sync, 1);
 
             next_bit->ForceTQ(1, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /*****************************************************************************
              * Execute test
              *****************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

@@ -74,7 +74,7 @@ class test::TestBase
         /**
          * Clock period to be set in TB.
          */
-        std::chrono::nanoseconds dut_clock_period;
+        std::chrono::nanoseconds dut_clk_period;
 
         /**
          * Input delay of DUT. Corresponds to time it takes to signal from can_rx
@@ -98,14 +98,14 @@ class test::TestBase
          * CAN Bus bit timing. By default contains bit timing queryied from TB.
          * If test requires other bit timing, it will modify it!
          */
-        can::BitTiming nominal_bit_timing;
-        can::BitTiming data_bit_timing;
+        can::BitTiming nbt;
+        can::BitTiming dbt;
 
         /**
          * Backup bit timing. Always contains bit timing queryied from TB.
          */
-        can::BitTiming backup_nominal_bit_timing;
-        can::BitTiming backup_data_bit_timing;
+        can::BitTiming bckp_nbt;
+        can::BitTiming bckp_dbt;
 
         /**
          * Test name
@@ -126,7 +126,7 @@ class test::TestBase
         /**
          * Number of elementary tests (usually within single test variant)!
          */
-        int num_elem_tests;
+        int n_elem_tests;
 
         /**
          * Test variants to be run. E.g. if DUT is CAN FD Enabled, CAN 2.0 and CAN FD
@@ -137,7 +137,7 @@ class test::TestBase
         /**
          * Elementary test cases to be ran during the test.
          */
-        std::vector<std::vector<ElementaryTest>> elem_tests;
+        std::vector<std::vector<ElemTest>> elem_tests;
 
         /**
          * Test result
@@ -167,25 +167,25 @@ class test::TestBase
          ********************************************************************************/
 
         /* Metadata and flags */
-        FrameKind frame_type;
-        std::unique_ptr<can::FrameFlags> frame_flags;
-        std::unique_ptr<can::FrameFlags> frame_flags_2;
+        FrameKind frm_kind;
+        std::unique_ptr<can::FrameFlags> frm_flags;
+        std::unique_ptr<can::FrameFlags> frm_flags_2;
 
         /* Frames used during test case. */
-        std::unique_ptr<can::Frame> golden_frm;
-        std::unique_ptr<can::Frame> golden_frm_2;
+        std::unique_ptr<can::Frame> gold_frm;
+        std::unique_ptr<can::Frame> gold_frm_2;
 
         /* Bit Frames used by driver (in most of the tests on is used) */
-        std::unique_ptr<can::BitFrame> driver_bit_frm;
-        std::unique_ptr<can::BitFrame> driver_bit_frm_2;
-        std::unique_ptr<can::BitFrame> driver_bit_frm_3;
-        std::unique_ptr<can::BitFrame> driver_bit_frm_4;
+        std::unique_ptr<can::BitFrame> drv_bit_frm;
+        std::unique_ptr<can::BitFrame> drv_bit_frm_2;
+        std::unique_ptr<can::BitFrame> drv_bit_frm_3;
+        std::unique_ptr<can::BitFrame> drv_bit_frm_4;
 
         /* Bit Frame used by monitor (in most of the tests on is used) */
-        std::unique_ptr<can::BitFrame> monitor_bit_frm;
-        std::unique_ptr<can::BitFrame> monitor_bit_frm_2;
-        std::unique_ptr<can::BitFrame> monitor_bit_frm_3;
-        std::unique_ptr<can::BitFrame> monitor_bit_frm_4;
+        std::unique_ptr<can::BitFrame> mon_bit_frm;
+        std::unique_ptr<can::BitFrame> mon_bit_frm_2;
+        std::unique_ptr<can::BitFrame> mon_bit_frm_3;
+        std::unique_ptr<can::BitFrame> mon_bit_frm_4;
 
         /* REC / TEC counters */
         int rec_old;
@@ -196,7 +196,7 @@ class test::TestBase
         /**
          * Obtains frame type based on test variant.
          */
-        can::FrameKind GetDefaultFrameType(TestVariant &variant);
+        can::FrameKind GetDefFrameKind(TestVariant &variant);
 
         /********************************************************************************
          * Test execution functions
@@ -211,7 +211,7 @@ class test::TestBase
          * Runs base test (defualt config) + 'ConfigureTest' to execute test specific
          * config.
          */
-        void SetupTestEnvironment();
+        void SetupTestEnv();
 
         /**
          * Setup VIP monitor (in HDL simulation) for simulations where IUT starts as
@@ -230,12 +230,12 @@ class test::TestBase
         /**
          * Runs single elementary test.
          */
-        virtual int RunElemTest(const ElementaryTest &elem_test, const TestVariant &test_variant);
+        virtual int RunElemTest(const ElemTest &elem_test, const TestVariant &test_variant);
 
         /**
          *
          */
-        virtual int FinishElementaryTest();
+        virtual int FinishElemTest();
 
         /**
          * Cleans test environment. Notifies TestControllent (in simulation) with
@@ -252,12 +252,12 @@ class test::TestBase
         /**
          * Fills 'test_variants' and creates vectors for each variant in 'elem_tests'.
          */
-        void FillTestVariants(VariantMatchingType match_type);
+        void FillTestVariants(VariantMatchType match_type);
 
         /**
          * Adds elementary test to a test variant.
          */
-        void AddElemTest(TestVariant test_variant, ElementaryTest &&elem_test);
+        void AddElemTest(TestVariant test_variant, ElemTest &&elem_test);
 
         /**
          * Adds elementary test for each sample point within a given bit-rate.
@@ -265,27 +265,26 @@ class test::TestBase
          * @param test_variant Test variant in which the test will be added
          * @param nominal True - One test per nominal bit rate sample point
          *                False - One test per data bit rate sample point
-         * @param frame_type Type of frame assigned to each added test.
+         * @param frame_kind Type of frame assigned to each added test.
          */
-        void AddElemTestForEachSamplePoint(TestVariant test_variant, bool nominal,
-                                           FrameKind frame_type);
+        void AddElemTestForEachSP(TestVariant test_variant, bool nominal, FrameKind frame_kind);
 
         /**
          *
          */
-        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal);
+        BitTiming GenerateSPForTest(const ElemTest &elem_test, bool nominal);
 
         /**
          * TODO
          */
-        BitTiming GenerateSamplePointForTest(const ElementaryTest &elem_test, bool nominal,
-                                             size_t minimal_ph1);
+        BitTiming GenerateSPForTest(const ElemTest &elem_test, bool nominal,
+                                    size_t minimal_ph1);
 
         /**
          * Generates bit sequence (bit representation) of CAN frame from frame.
          * Standard bit sequence contains ACK recessive (as if frame was transmitted).
          */
-        std::unique_ptr<BitFrame> ConvertBitFrame(Frame &golden_frame);
+        std::unique_ptr<BitFrame> ConvBitFrame(Frame &golden_frame);
 
         /**
          * Compares two frames.
@@ -296,15 +295,15 @@ class test::TestBase
         /**
          * @returns random bit type within a bit field.
          */
-        BitKind GetRandomBitType(FrameKind frame_type, IdentKind ident_type,
+        BitKind GetRandomBitType(FrameKind frame_kind, IdentKind ident_kind,
                                  BitField bit_field);
 
         /**
          * Reads frame from IUT and checks that it is equal to given frame. Sets
          * 'test_result' to false if not.
-         * @param golden Frame to compare with the one which is read from DUT.
+         * @param gold Frame to compare with the one which is read from DUT.
          */
-        void CheckRxFrame(Frame &golden);
+        void CheckRxFrame(Frame &gold);
 
         /**
          * Checks that IUT has no frame received. Sets 'test_result' to false if
@@ -315,60 +314,60 @@ class test::TestBase
         /**
          * Reads REC counter from IUT and checks it was changed in comparison to
          * reference value. Sets 'test_result' to false if not.
-         * @param reference_rec Reference value (old value)
+         * @param ref_rec Reference value (old value)
          * @param delta Change of REC expected. Positive values check that REC
          *              was incremented, negative that it was decremented.
          */
-        void CheckRecChange(int reference_rec, int delta);
+        void CheckRecChange(int ref_rec, int delta);
 
         /**
          * Reads TEC counter from IUT and checks it was changed in comparison to
          * reference value. Sets 'test_result' to false if not.
-         * @param reference_tec Reference value (old value)
+         * @param ref_tec Reference value (old value)
          * @param delta Change of REC expected. Positive values check that TEC
          *              was incremented, negative that it was decremented.
          */
-        void CheckTecChange(int reference_tec, int delta);
+        void CheckTecChange(int ref_tec, int delta);
 
         /**
          * Poll DUTs Fault confinement state until it becomes error active.
          */
-        void WaitDutErrorActive();
+        void WaitDutErrAct();
 
         /**
          * Disables DUT, configures its bit timing and, re-enables it.
          */
-        void ReconfigureDutBitTiming();
+        void ReconfDutBitTiming();
 
         /**
          * Loads Bit frames to driver and monitor. Pushes it as driver/monitor FIFO items.
-         * @param driver_frame bit frame to be loaded into driver
-         * @param monitor_frame bit frame to be loaded into monitor
+         * @param drv_frame bit frame to be loaded into driver
+         * @param mon_frame bit frame to be loaded into monitor
          */
-        void PushFramesToLowerTester(can::BitFrame &driver_frame, can::BitFrame &monitor_frame);
+        void PushFramesToLT(can::BitFrame &drv_frame, can::BitFrame &mon_frame);
 
         /**
          * Starts driver and/or monitor and waits till they are finished.
          * @param start_driver driver shall be started and waited on
          * @param start_monitor monitor shall be started and waited on
          */
-        void RunLowerTester(bool start_driver, bool start_monitor);
+        void RunLT(bool start_driver, bool start_monitor);
 
         /**
          * Starts driver and monitor.
          */
-        void StartDriverAndMonitor(void);
+        void StartDrvAndMon(void);
 
         /*
          * Waits till driver and monitor are finished with driving.
          */
-        void WaitForDriverAndMonitor(void);
+        void WaitForDrvAndMon(void);
 
         /**
          * Checks lower tester result. If monitor in Lower tester contains mismatches during last
          * monitoring, it prints error report to simulation log!
          */
-        void CheckLowerTesterResult();
+        void CheckLTResult();
 
         /**********************************************************************
          * Print functions.
@@ -382,7 +381,7 @@ class test::TestBase
         /**
          *
          */
-        void PrintElemTestInfo(ElementaryTest elem_test);
+        void PrintElemTestInfo(ElemTest elem_test);
 
         /**
          *
@@ -405,7 +404,7 @@ class test::TestBase
          * Calculates number of possible sample points per bit-rate.
          * @note CTU CAN FDs limit of min(TSEG1) = 3 clock cycles is taken into account.
          */
-        size_t CalcNumSamplePoints(bool nominal);
+        size_t CalcNumSPs(bool nominal);
 
         /**
          * Returns minimal Ph1 duration based on current bit-rate configuration. Minimal
@@ -429,7 +428,7 @@ class test::TestBase
          *
          * DUT considerations are taken into account!
          */
-        BitTiming GenerateBitTiming(const ElementaryTest &elem_test, bool nominal, size_t minimal_ph1);
+        BitTiming GenerateBitTiming(const ElemTest &elem_test, bool is_nominal, size_t minimal_ph1);
 };
 
 #endif

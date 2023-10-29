@@ -1,3 +1,5 @@
+#ifndef ELEMENTARY_TEST_H
+#define ELEMENTARY_TEST_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -22,48 +24,49 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 27.3.2020
+ * @date 25.8.2020
  *
  *****************************************************************************/
 
 #include <chrono>
-#include <iostream>
-#include <iomanip>
+#include <string>
+#include <list>
+#include <memory>
 
-#include "MonitorItem.h"
+#include <can_lib.h>
 
-test::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sample_rate)
+#include "test.h"
+
+using namespace can;
+
+/**
+ * @namespace test
+ * @class ElementaryTest
+ * @brief Elementary test class
+ *
+ * Represents single Elementary test as described in ISO16845-1:2016.
+ */
+class test::ElemTest
 {
-    this->duration_ = duration;
-    this->sample_rate_ = sample_rate;
-    this->value_ = value;
-    this->message_ = std::string();
-}
+    public:
+        ElemTest(int index);
+        ElemTest(int index, std::string msg);
+        ElemTest(int index, std::string msg, FrameKind frame_kind);
+        ElemTest(int index, FrameKind frame_kind);
 
+        /* Index of the elementary test (starting from 1. This is the same
+         * number as is after # in ISO116845!)
+         */
+        int index_;
 
-test::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sample_rate, std::string message)
-{
-    this->duration_ = duration;
-    this->sample_rate_ = sample_rate;
-    this->value_ = value;
-    this->message_ = message;
-}
+        /* String to be printed when this elementary test starts */
+        std::string msg_;
 
+        /* Phase error (used during bit timing tests) */
+        int e_;
 
-bool test::MonitorItem::HasMessage()
-{
-    if (message_.size() > 0)
-        return true;
-    return false;
-}
+        /* Frame type used by the test */
+        FrameKind frame_kind_;
+};
 
-
-void test::MonitorItem::Print()
-{
-    if (HasMessage())
-        std::cout << std::setw (20) << message_;
-    std::cout << std::setw (20) << (char)value_;
-    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
-}
+#endif

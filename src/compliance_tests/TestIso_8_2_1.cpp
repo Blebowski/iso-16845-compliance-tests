@@ -93,17 +93,17 @@ class TestIso_8_2_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 13; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 21; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             /* TX to RX feedback must be disabled since we corrupt dominant bits to Recessive */
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Choose frame field per elementary test */
@@ -203,17 +203,17 @@ class TestIso_8_2_1 : public test::TestBase
                     dlc = 0xC;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base,
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
                                     RtrFlag::Data, BrsFlag::DoShift, EsiFlag::ErrAct);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /* Second frame the same due to retransmission. */
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -223,16 +223,16 @@ class TestIso_8_2_1 : public test::TestBase
              *   4. Insert Active Error flag from next bit on in both driven and monitored frames!
              *   5. Append the same frame after first frame as if retransmitted by IUT!
              *************************************************************************************/
-            driver_bit_frm->PutAck(dut_input_delay);
+            drv_bit_frm->PutAck(dut_input_delay);
 
             /* Choose random Bit type within some bit field */
-            BitKind bit_type = GetRandomBitType(elem_test.frame_type_, IdentKind::Base,
+            BitKind bit_type = GetRandomBitType(elem_test.frame_kind_, IdentKind::Base,
                                                 bit_field_to_corrupt);
 
             /* Search for bit of matching value! */
-            int lenght = driver_bit_frm->GetFieldLen(bit_type);
+            int lenght = drv_bit_frm->GetFieldLen(bit_type);
             int index_in_bitfield = rand() % lenght;
-            Bit *bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
+            Bit *bit_to_corrupt = drv_bit_frm->GetBitOf(index_in_bitfield, bit_type);
 
             /* In following elementary tests we aim for fixed stuff bit of this value!
              * We should have it guaranteed that all following combinations are tested:
@@ -245,11 +245,11 @@ class TestIso_8_2_1 : public test::TestBase
                 while (bit_to_corrupt->val_ != bit_value_to_corrupt ||
                        bit_to_corrupt->stuff_kind_ != StuffKind::Fixed)
                 {
-                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentKind::Base,
+                    bit_type = GetRandomBitType(elem_test.frame_kind_, IdentKind::Base,
                                                 bit_field_to_corrupt);
-                    lenght = driver_bit_frm->GetFieldLen(bit_type);
+                    lenght = drv_bit_frm->GetFieldLen(bit_type);
                     index_in_bitfield = rand() % lenght;
-                    bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
+                    bit_to_corrupt = drv_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                     attempt_cnt++;
 
                     // Due to frame randomization, it can happend that we are searching for
@@ -266,11 +266,11 @@ class TestIso_8_2_1 : public test::TestBase
                  */
                 while (bit_to_corrupt->val_ != bit_value_to_corrupt)
                 {
-                    bit_type = GetRandomBitType(elem_test.frame_type_, IdentKind::Base,
+                    bit_type = GetRandomBitType(elem_test.frame_kind_, IdentKind::Base,
                                                 bit_field_to_corrupt);
-                    lenght = driver_bit_frm->GetFieldLen(bit_type);
+                    lenght = drv_bit_frm->GetFieldLen(bit_type);
                     index_in_bitfield = rand() % lenght;
-                    bit_to_corrupt = driver_bit_frm->GetBitOf(index_in_bitfield, bit_type);
+                    bit_to_corrupt = drv_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                 }
             }
 
@@ -278,31 +278,31 @@ class TestIso_8_2_1 : public test::TestBase
             TestMessage("Index in bit field: %d", index_in_bitfield);
             TestMessage("Value to be corrupted: %d", (int)bit_to_corrupt->val_);
 
-            driver_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
+            drv_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
-            int bit_index = driver_bit_frm->GetBitIndex(bit_to_corrupt);
-            driver_bit_frm->InsertActErrFrm(bit_index + 1);
-            monitor_bit_frm->InsertActErrFrm(bit_index + 1);
+            int bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
+            drv_bit_frm->InsertActErrFrm(bit_index + 1);
+            mon_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             dut_ifc->SetTec(0); /* Avoid turning error passive */
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

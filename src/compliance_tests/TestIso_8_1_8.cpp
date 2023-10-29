@@ -81,11 +81,11 @@ class TestIso_8_1_8 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameKind::Can20));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameKind::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
 
             /* Basic setup for tests where IUT transmits */
@@ -93,10 +93,10 @@ class TestIso_8_1_8 : public test::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentKind::Base);
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base);
 
             int gold_ids[] = {
                 0x7B,
@@ -107,14 +107,14 @@ class TestIso_8_1_8 : public test::TestBase
                 0x3A
             };
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, gold_ids[elem_test.index_ - 1]);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags, 0x0, lt_ids[elem_test.index_ - 1]);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x0, gold_ids[elem_test.index_ - 1]);
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags, 0x0, lt_ids[elem_test.index_ - 1]);
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -125,36 +125,36 @@ class TestIso_8_1_8 : public test::TestBase
              *      second frame as if received.
              *   4. Remove SOF from 2nd monitored frame.
              *************************************************************************************/
-            Bit *last_id_bit = monitor_bit_frm->GetBitOfNoStuffBits(10, BitKind::BaseIdent);
-            monitor_bit_frm->LooseArbit(last_id_bit);
+            Bit *last_id_bit = mon_bit_frm->GetBitOfNoStuffBits(10, BitKind::BaseIdent);
+            mon_bit_frm->LooseArbit(last_id_bit);
 
             /* Compensate input delay, lenghten bit on which arbitration was lost */
             last_id_bit->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
-            driver_bit_frm->GetBitOf(2, BitKind::Interm)->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(2, BitKind::Interm)->val_ = BitVal::Dominant;
 
-            driver_bit_frm_2->ConvRXFrame();
+            drv_bit_frm_2->ConvRXFrame();
 
-            monitor_bit_frm_2->RemoveBit(0, BitKind::Sof);
-            driver_bit_frm_2->RemoveBit(0, BitKind::Sof);
+            mon_bit_frm_2->RemoveBit(0, BitKind::Sof);
+            drv_bit_frm_2->RemoveBit(0, BitKind::Sof);
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            this->dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

@@ -30,9 +30,9 @@
 
 #include "test.h"
 
-#include "DriverItem.h"
-#include "ElementaryTest.h"
-#include "MonitorItem.h"
+#include "DrvItem.h"
+#include "ElemTest.h"
+#include "MonItem.h"
 #include "TestBase.h"
 #include "TestLoader.h"
 #include "TestSequence.h"

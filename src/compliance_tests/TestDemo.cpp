@@ -63,7 +63,7 @@ class test::TestDemo : public TestBase
          *
          * @returns 0 if test should proceed, or 1 if test execution should be aborted.
          */
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /****************************************************************

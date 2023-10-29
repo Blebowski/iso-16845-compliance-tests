@@ -71,24 +71,24 @@ class TestIso_7_7_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTest(TestVariant::Common, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTest(TestVariant::Common, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             /* Base ID full of 1s */
             int id = pow(2,11) - 1;
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -100,44 +100,44 @@ class TestIso_7_7_1 : public test::TestBase
              *      negative re-synchronization.
              *   5. Insert Error frame from 12-th bit of Identifier (5 + Stuff + 5 + Stuff).
              *************************************************************************************/
-            monitor_bit_frm->ConvRXFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
-            first_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            Bit *first_stuff_bit = drv_bit_frm->GetStuffBit(0);
+            first_stuff_bit->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
 
-            Bit *second_stuff_bit = driver_bit_frm->GetStuffBit(1);
-            second_stuff_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            Bit *second_stuff_bit = drv_bit_frm->GetStuffBit(1);
+            second_stuff_bit->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
             BitPhase previous_phase = second_stuff_bit->PrevBitPhase(BitPhase::Ph2);
             second_stuff_bit->ShortenPhase(previous_phase, 1);
 
             /* Compensate the monitored frame as if negative resynchronisation happend.
              * This is due to first bit being shortened by PH2.
              */
-            size_t resync_amount = nominal_bit_timing.ph2_;
-            if (nominal_bit_timing.sjw_ < resync_amount)
-                resync_amount = nominal_bit_timing.sjw_;
-            monitor_bit_frm->GetBitOf(11, BitKind::BaseIdent)
+            size_t resync_amount = nbt.ph2_;
+            if (nbt.sjw_ < resync_amount)
+                resync_amount = nbt.sjw_;
+            mon_bit_frm->GetBitOf(11, BitKind::BaseIdent)
                 ->ShortenPhase(BitPhase::Ph2, resync_amount);
 
             /*
              * Expected error frame on monitor (from start of bit after stuff bit)
              * Driver will have passive error frame -> transmitt all recessive
              */
-            monitor_bit_frm->InsertActErrFrm(12, BitKind::BaseIdent);
-            driver_bit_frm->InsertPasErrFrm(12, BitKind::BaseIdent);
+            mon_bit_frm->InsertActErrFrm(12, BitKind::BaseIdent);
+            drv_bit_frm->InsertPasErrFrm(12, BitKind::BaseIdent);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
             CheckNoRxFrame();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -1,5 +1,3 @@
-#ifndef ELEMENTARY_TEST_H
-#define ELEMENTARY_TEST_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -33,40 +31,30 @@
 #include <list>
 #include <memory>
 
-#include <can_lib.h>
+#include "ElemTest.h"
 
-#include "test.h"
-
-using namespace can;
-
-/**
- * @namespace test
- * @class ElementaryTest
- * @brief Elementary test class
- *
- * Represents single Elementary test as described in ISO16845-1:2016.
- */
-class test::ElementaryTest
+test::ElemTest::ElemTest(int index) :
+    index_(index)
 {
-    public:
-        ElementaryTest(int index);
-        ElementaryTest(int index, std::string msg);
-        ElementaryTest(int index, std::string msg, FrameKind frame_type);
-        ElementaryTest(int index, FrameKind frame_type);
+    msg_ = "Elementary test: ";
+    msg_ += std::to_string(index);
+}
 
-        /* Index of the elementary test (starting from 1. This is the same
-         * number as is after # in ISO116845!)
-         */
-        int index_;
+test::ElemTest::ElemTest(int index, std::string msg):
+    index_(index),
+    msg_(msg)
+{}
 
-        /* String to be printed when this elementary test starts */
-        std::string msg_;
+test::ElemTest::ElemTest(int index, std::string msg, can::FrameKind frame_type):
+    index_(index),
+    msg_(msg),
+    frame_kind_(frame_type)
+{}
 
-        /* Phase error (used during bit timing tests) */
-        int e_;
-
-        /* Frame type used by the test */
-        FrameKind frame_type_;
-};
-
-#endif
+test::ElemTest::ElemTest(int index, can::FrameKind frame_type):
+    index_(index),
+    frame_kind_(frame_type)
+{
+    msg_ = "Elementary test: ";
+    msg_ += std::to_string(index);
+}

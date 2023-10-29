@@ -30,10 +30,10 @@
 #include <iostream>
 #include <iomanip>
 
-#include "DriverItem.h"
+#include "DrvItem.h"
 
 
-test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value):
+test::DrvItem::DrvItem(std::chrono::nanoseconds duration, StdLogic value):
     duration_(duration),
     value_(value)
 {
@@ -41,15 +41,15 @@ test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value):
 }
 
 
-test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value,
-                                  std::string message):
+test::DrvItem::DrvItem(std::chrono::nanoseconds duration, StdLogic value,
+                       std::string message):
     duration_(duration),
     value_(value),
     message_(message)
 {}
 
 
-bool test::DriverItem::HasMessage()
+bool test::DrvItem::HasMessage()
 {
     if (message_.size() > 0)
         return true;
@@ -57,7 +57,7 @@ bool test::DriverItem::HasMessage()
 }
 
 
-void test::DriverItem::Print()
+void test::DrvItem::Print()
 {
     if (HasMessage() == true)
         std::cout << std::setw (20) << message_;
