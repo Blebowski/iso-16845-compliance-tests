@@ -59,7 +59,6 @@
  *   CAN FD Enabled:
  *       #1      FBFF       0xA         0xAA            1:2
  *       #2      FBFF       0xF         0xFF            1:8
- *       #3      CBFF       0xF         0xFF             -
  *
  * Setup:
  *  The IUT is left in the default state.
@@ -96,7 +95,8 @@ class TestIso_7_1_6 : public test::TestBase
             int num_elem_tests = 0;
             if (test_variants[0] == TestVariant::CanFdTolerant)
                 num_elem_tests = 3;
-            else if (test_variants[0] == TestVariant::CanFdEnabled)
+
+            if (test_variants[0] == TestVariant::CanFdEnabled)
                 num_elem_tests = 2;
 
             for (int i = 0; i < num_elem_tests; i++)
@@ -113,15 +113,17 @@ class TestIso_7_1_6 : public test::TestBase
         {
             /**************************************************************************************
              * First configure bit rate. Take configured bit rate for CAN FD and multiply by 8/4 to
-             * get data bit rate. This-way we hope not to get out of DUTs spec for bit timing!
+             * get data bit rate. Then configure protocol exception behavior.
              *************************************************************************************/
             dut_ifc->Disable();
             dut_ifc->ConfigureProtocolException(true);
+
             nominal_bit_timing = data_bit_timing;
             if (elem_test.index_ == 1)
                 nominal_bit_timing.brp_ = data_bit_timing.brp_ * 2;
             else
                 nominal_bit_timing.brp_ = data_bit_timing.brp_ * 8;
+
             dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
             dut_ifc->Enable();
 
@@ -156,7 +158,7 @@ class TestIso_7_1_6 : public test::TestBase
             }
             RandomizeAndPrint(golden_frm.get());
 
-            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::CanFd);
+            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::Can2_0);
             golden_frm_2 = std::make_unique<Frame>(*frame_flags_2);
             RandomizeAndPrint(golden_frm_2.get());
 
