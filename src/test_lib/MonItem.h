@@ -1,5 +1,5 @@
-#ifndef DRIVER_ITEM_H
-#define DRIVER_ITEM_H
+#ifndef MONITOR_ITEM_H
+#define MONITOR_ITEM_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -31,49 +31,56 @@
 #include <string>
 #include <chrono>
 
-#include <can_lib.h>
-
 #include "test.h"
 
 /**
  * @namespace test
- * @class DriverItem
- * @brief CAN Agent driver item
+ * @class MonitorItem
+ * @brief CAN Agent monitor item
  *
- * Represents single item to be driver by CAN Agent driver.
+ * Represents single item to be monitored by CAN Agent monitor.
  */
-class test::DriverItem
+class test::MonItem
 {
     public:
-        DriverItem(std::chrono::nanoseconds duration, StdLogic value);
-        DriverItem(std::chrono::nanoseconds duration, StdLogic value, std::string message);
+        MonItem(std::chrono::nanoseconds duration, StdLogic value,
+                std::chrono::nanoseconds sample_rate);
+        MonItem(std::chrono::nanoseconds duration, StdLogic value,
+                std::chrono::nanoseconds sample_rate, std::string message);
 
         /**
-         * @brief Checks if items has message printed by digital simulator when CAN agent starts
-         *        driving this item.
+         * Checks if item has message which will be printed by digital simulator
+         * when CAN agent starts monitoring this item.
          *
-         * @return true if item has message, false otherwise
+         * @returns true if item has message, false otherwise
          */
         bool HasMessage();
 
         /**
-         * @brief Print item
+         * Prints item
          */
         void Print();
 
         /**
-         * Time for which the item is driven. When this is CAN bit, then this
+         * Time for which the item is monitored. When this is CAN bit, then this
          * represents length of the bit on CAN bus.
          */
         std::chrono::nanoseconds duration_;
 
         /**
-         * Value which is driven by CAN agent driver.
+         * Sample rate of this item. Indicates how often during monitoring of
+         * item CAN agent monitor checks value of can_tx.
+         */
+        std::chrono::nanoseconds sample_rate_;
+
+        /**
+         * Value towards which can_tc shall be checked by CAN agent monitor during monitoring.
          */
         StdLogic value_;
 
         /**
-         * Message to be displayed by digital simulator when driving of item starts.
+         * Message to be displayed by digital simulator when monitoring of item
+         * starts.
          */
         std::string message_;
 };

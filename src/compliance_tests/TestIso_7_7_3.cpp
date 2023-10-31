@@ -78,9 +78,9 @@ class TestIso_7_7_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            for (size_t i = 0; i < nominal_bit_timing.sjw_; i++){
-                ElementaryTest test = ElementaryTest(i + 1);
+            FillTestVariants(VariantMatchType::Common);
+            for (size_t i = 0; i < nbt.sjw_; i++){
+                ElemTest test = ElemTest(i + 1);
                 test.e_ = i + 1;
                 elem_tests[0].push_back(test);
             }
@@ -88,18 +88,18 @@ class TestIso_7_7_3 : public test::TestBase
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             /* Base ID full of 1s, 5th will be dominant stuff bit! */
             int id = pow(2,11) - 1;
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -112,35 +112,35 @@ class TestIso_7_7_3 : public test::TestBase
              *      exactly at expected position! On driver, passive error frame so that it
              *      transmitts all recessive!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *before_stuff_bit = driver_bit_frm->GetBitOf(4, BitType::BaseIdentifier);
+            Bit *before_stuff_bit = drv_bit_frm->GetBitOf(4, BitKind::BaseIdent);
             before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
-            before_stuff_bit = monitor_bit_frm->GetBitOf(4, BitType::BaseIdentifier);
+            before_stuff_bit = mon_bit_frm->GetBitOf(4, BitKind::BaseIdent);
             before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
-            Bit *stuff_bit = driver_bit_frm->GetStuffBit(0);
-            for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+            Bit *stuff_bit = drv_bit_frm->GetStuffBit(0);
+            for (size_t j = 0; j < nbt.ph2_; j++)
+                stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
             BitPhase previous_phase = stuff_bit->PrevBitPhase(BitPhase::Ph2);
-            stuff_bit->GetLastTimeQuantaIterator(previous_phase)
-                ->ForceValue(BitValue::Recessive);
+            stuff_bit->GetLastTQIter(previous_phase)
+                ->ForceVal(BitVal::Recessive);
 
-            int index = driver_bit_frm->GetBitIndex(stuff_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+            int index = drv_bit_frm->GetBitIndex(stuff_bit);
+            mon_bit_frm->InsertActErrFrm(index + 1);
+            drv_bit_frm->InsertPasErrFrm(index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
             CheckNoRxFrame();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

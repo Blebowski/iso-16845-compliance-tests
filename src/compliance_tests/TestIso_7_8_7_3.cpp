@@ -79,21 +79,21 @@ class TestIso_7_8_7_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -101,26 +101,26 @@ class TestIso_7_8_7_3 : public test::TestBase
              *   2. Force second TQ of ACK bit to Recessive.
              *   3. Force Phase2 of ACK bit to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *ack_bit = driver_bit_frm->GetBitOf(0, BitType::Ack);
-            ack_bit->bit_value_ = BitValue::Dominant;
-            ack_bit->ForceTimeQuanta(1, BitValue::Recessive);
-            ack_bit->ForceTimeQuanta(0, nominal_bit_timing.ph2_ - 1,
-                                     BitPhase::Ph2, BitValue::Recessive);
+            Bit *ack_bit = drv_bit_frm->GetBitOf(0, BitKind::Ack);
+            ack_bit->val_ = BitVal::Dominant;
+            ack_bit->ForceTQ(1, BitVal::Recessive);
+            ack_bit->ForceTQ(0, nbt.ph2_ - 1,
+                                     BitPhase::Ph2, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Glitch filtering test for positive phase error on ACK bit");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

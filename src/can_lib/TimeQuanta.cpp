@@ -30,97 +30,97 @@
 #include "can.h"
 
 #include "TimeQuanta.h"
-#include "CycleBitValue.h"
+#include "Cycle.h"
 
 
-can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase):
-    bit_phase_(bit_phase),
+can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase phase):
+    phase_(phase),
     parent_(parent)
 {
     for (int i = 0; i < brp; i++)
-        cycle_bit_values_.push_back(CycleBitValue(this));
+        cycles_.push_back(Cycle(this));
 }
 
 
-can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase bit_phase, BitValue bit_value):
-    bit_phase_(bit_phase),
+can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase phase, BitVal val):
+    phase_(phase),
     parent_(parent)
 {
     for (int i = 0; i < brp; i++)
-        cycle_bit_values_.push_back(CycleBitValue(this, bit_value));
+        cycles_.push_back(Cycle(this, val));
 }
 
 
-bool can::TimeQuanta::HasNonDefaultValues()
+bool can::TimeQuanta::HasNonDefVals()
 {
-    for (auto & cycleBitValue : cycle_bit_values_)
-        if (!cycleBitValue.has_default_value())
+    for (auto & cycle : cycles_)
+        if (!cycle.has_def_val())
             return true;
     return false;
 }
 
 
-void can::TimeQuanta::SetAllDefaultValues()
+void can::TimeQuanta::SetAllDefVals()
 {
-    for (auto & cycleBitValue : cycle_bit_values_)
-        cycleBitValue.ReleaseValue();
+    for (auto & cycle_ : cycles_)
+        cycle_.ReleaseVal();
 }
 
 
 size_t can::TimeQuanta::getLengthCycles()
 {
-    return cycle_bit_values_.size();
+    return cycles_.size();
 }
 
 
-std::list<can::CycleBitValue>::iterator can::TimeQuanta::GetCycleBitValueIterator(size_t index)
+std::list<can::Cycle>::iterator can::TimeQuanta::GetCycleBitValIter(size_t index)
 {
-    assert("Cycle index does not exist!" && index < cycle_bit_values_.size());
-    auto iterator = cycle_bit_values_.begin();
+    assert("Cycle index does not exist!" && index < cycles_.size());
+    auto iterator = cycles_.begin();
     std::advance(iterator, index);
     return iterator;
 }
 
 
-can::CycleBitValue* can::TimeQuanta::getCycleBitValue(size_t index)
+can::Cycle* can::TimeQuanta::getCycleBitValue(size_t index)
 {
-    return &(*GetCycleBitValueIterator(index));
+    return &(*GetCycleBitValIter(index));
 }
 
 
 void can::TimeQuanta::Lengthen(size_t by_cycles)
 {
     for (size_t i = 0; i < by_cycles; i++)
-        cycle_bit_values_.push_back(CycleBitValue(this));
+        cycles_.push_back(Cycle(this));
 }
 
 
-void can::TimeQuanta::Lengthen(size_t by_cycles, BitValue bit_value)
+void can::TimeQuanta::Lengthen(size_t by_cycles, BitVal bit_value)
 {
     for (size_t i = 0; i < by_cycles; i++)
-        cycle_bit_values_.push_back(CycleBitValue(this, bit_value));
+        cycles_.push_back(Cycle(this, bit_value));
 }
 
 
 void can::TimeQuanta::Shorten(size_t by_cycles)
 {
-    size_t by_cycles_constrained = (cycle_bit_values_.size() > by_cycles) ?
-        by_cycles : cycle_bit_values_.size();
+    size_t by_cycles_constrained = (cycles_.size() > by_cycles) ?
+        by_cycles : cycles_.size();
 
     for (size_t i = 0; i < by_cycles_constrained; i++)
-        cycle_bit_values_.pop_back();
+        cycles_.pop_back();
 }
 
 
-void can::TimeQuanta::ForceCycleValue(size_t cycle_index, BitValue bit_value)
+void can::TimeQuanta::ForceCycleValue(size_t cycle_index, BitVal bit_value)
 {
-    auto cycle_bit_value_iterator = GetCycleBitValueIterator(cycle_index);
-    cycle_bit_value_iterator->ForceValue(bit_value);
+    auto cycle_bit_value_iterator = GetCycleBitValIter(cycle_index);
+    cycle_bit_value_iterator->ForceVal(bit_value);
 }
 
 
-void can::TimeQuanta::ForceValue(BitValue bit_value)
+void can::TimeQuanta::ForceVal(BitVal bit_value)
 {
-    for (auto & cycle_bit_value : cycle_bit_values_)
-        cycle_bit_value.ForceValue(bit_value);
+    for (auto & cycle_bit_value : cycles_)
+        cycle_bit_value.ForceVal(bit_value);
 }

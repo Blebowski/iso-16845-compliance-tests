@@ -79,30 +79,30 @@ class TestIso_7_8_3_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            for (size_t i = 1; i <= dbt.sjw_; i++)
             {
-                ElementaryTest test = ElementaryTest(i);
+                ElemTest test = ElemTest(i);
                 test.e_ = i;
-                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+                AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert(nominal_bit_timing.brp_ == data_bit_timing.brp_ &&
+            assert(nbt.brp_ == dbt.brp_ &&
                    "TQ(N) shall equal TQ(D) for this test due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                        EsiFlag::ErrorPassive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                        EsiFlag::ErrPas);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -110,29 +110,29 @@ class TestIso_7_8_3_1 : public test::TestBase
              *   2. Lengthen SYNC phase of ESI by e (both driven and monitored frame).
              *   3. Force Prop + PH1 TQ after initial e TQ to dominant!
              **************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *esi_bit_driver = driver_bit_frm->GetBitOf(0, BitType::Esi);
-            Bit *esi_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Esi);
+            Bit *esi_bit_driver = drv_bit_frm->GetBitOf(0, BitKind::Esi);
+            Bit *esi_bit_monitor = mon_bit_frm->GetBitOf(0, BitKind::Esi);
 
             esi_bit_driver->LengthenPhase(BitPhase::Sync, elem_test.e_);
             esi_bit_monitor->LengthenPhase(BitPhase::Sync, elem_test.e_);
 
-            for (size_t j = 0; j < data_bit_timing.prop_ + data_bit_timing.ph1_; j++)
-                esi_bit_driver->ForceTimeQuanta(elem_test.e_ + j, BitValue::Dominant);
+            for (size_t j = 0; j < dbt.prop_ + dbt.ph1_; j++)
+                esi_bit_driver->ForceTQ(elem_test.e_ + j, BitVal::Dominant);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ESI positive resynchronisation with phase error: %d", elem_test.e_);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -39,20 +39,20 @@ using namespace can;
 
 int main()
 {
-    CycleBitValue cv = CycleBitValue(nullptr, BitValue::Dominant);
-    CycleBitValue cv2 = CycleBitValue(nullptr, BitValue::Recessive);
+    Cycle cv = Cycle(nullptr, BitVal::Dominant);
+    Cycle cv2 = Cycle(nullptr, BitVal::Recessive);
 
-    assert(cv.bit_value() == BitValue::Dominant);
-    assert(cv2.bit_value() == BitValue::Recessive);
+    assert(cv.bit_value() == BitVal::Dominant);
+    assert(cv2.bit_value() == BitVal::Recessive);
 
     // Force and check it was forced
-    cv.ForceValue(BitValue::Recessive);
-    assert(cv.bit_value() == BitValue::Recessive);
-    assert(cv.has_default_value() == false);
+    cv.ForceValue(BitVal::Recessive);
+    assert(cv.bit_value() == BitVal::Recessive);
+    assert(cv.has_def_val() == false);
 
     // Release and check it was released.
     cv.ReleaseValue();
-    assert(cv.has_default_value() == true);
+    assert(cv.has_def_val() == true);
     //assert(cv.bit_value() == BitValue::Dominant);
 
     return 0;

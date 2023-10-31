@@ -84,8 +84,8 @@ class TestIso_8_7_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTestForEachSP(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
@@ -93,24 +93,24 @@ class TestIso_8_7_3 : public test::TestBase
             assert(dut_input_delay == dut_ipt && "Needed due to test assumptions!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
-            ReconfigureDutBitTiming();
-            WaitDutErrorActive();
+            nbt = GenerateSPForTest(elem_test, true);
+            ReconfDutBitTiming();
+            WaitDutErrAct();
 
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                            RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x7FF, &data_byte);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
+                            RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0x7FF, &data_byte);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -126,17 +126,17 @@ class TestIso_8_7_3 : public test::TestBase
              *   6. Append retransmitted frame as if received. Reduce SOF lenght in monitored frame
              *      by 1 TQ since in last bit of intermission, it was prolonged.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            drv_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitType::Intermission);
-            Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitType::Intermission);
+            Bit *last_interm_bit_drv = drv_bit_frm->GetBitOf(2, BitKind::Interm);
+            Bit *last_interm_bit_mon = mon_bit_frm->GetBitOf(2, BitKind::Interm);
 
             // Remove whole PH2
-            while (last_interm_bit_drv->GetPhaseLenTimeQuanta(BitPhase::Ph2) > 0)
+            while (last_interm_bit_drv->GetPhaseLenTQ(BitPhase::Ph2) > 0)
             {
                 last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, 1);
                 last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, 1);
@@ -148,7 +148,7 @@ class TestIso_8_7_3 : public test::TestBase
             // edge will anyway arrive IPT after sample point! By adding IPT to monitored frame,
             // we acccount for IPT in IUTs perception of the synchronization edge on RX!
             // TODO: This works only for controllers which have IPT = Input Delay!
-            last_interm_bit_mon->GetTimeQuanta(last_interm_bit_mon->GetLengthTimeQuanta() - 1)
+            last_interm_bit_mon->GetTQ(last_interm_bit_mon->GetLenTQ() - 1)
                 ->Lengthen(dut_ipt);
 
             /* This trick needs to be done to check that IUT transmits the first TQ recessive.
@@ -157,26 +157,26 @@ class TestIso_8_7_3 : public test::TestBase
              * seconds frame SOF cant be used since "force" is only used on driven bits!
              */
             last_interm_bit_mon->LengthenPhase(BitPhase::Sync, 1);
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->ShortenPhase(BitPhase::Sync, 1);
+            mon_bit_frm_2->GetBitOf(0, BitKind::Sof)->ShortenPhase(BitPhase::Sync, 1);
 
-            driver_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm_2->ConvRXFrame();
+            drv_bit_frm_2->GetBitOf(0, BitKind::Sof)->val_ = BitVal::Dominant;
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

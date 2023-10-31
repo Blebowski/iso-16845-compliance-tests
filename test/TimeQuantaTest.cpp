@@ -41,31 +41,31 @@ void test_forcing()
 {
     TimeQuanta tq = TimeQuanta(nullptr, 10, BitPhase::Ph2);
     assert(tq.getLengthCycles() == 10);
-    assert(tq.HasNonDefaultValues() == false);
+    assert(tq.HasNonDefVals() == false);
 
     // Force all and check it was forced
     for (size_t i = 0; i < tq.getLengthCycles(); i++)
     {
-        assert(tq.getCycleBitValue(i)->bit_value() == BitValue::Recessive);
-        tq.ForceCycleValue(i, BitValue::Dominant);
-        assert(tq.HasNonDefaultValues());
-        assert(tq.getCycleBitValue(i)->bit_value() == BitValue::Dominant);
+        assert(tq.getCycleBitValue(i)->bit_value() == BitVal::Recessive);
+        tq.ForceCycleValue(i, BitVal::Dominant);
+        assert(tq.HasNonDefVals());
+        assert(tq.getCycleBitValue(i)->bit_value() == BitVal::Dominant);
     }
 
     // Release all and check it has been released
-    tq.SetAllDefaultValues();
-    assert(tq.HasNonDefaultValues() == false);
+    tq.SetAllDefVals();
+    assert(tq.HasNonDefVals() == false);
 
     // Check forcing of all values at once
     TimeQuanta tq2 = TimeQuanta(nullptr, 10, BitPhase::Ph1);
-    tq2.ForceValue(BitValue::Dominant);
+    tq2.ForceVal(BitVal::Dominant);
     for (int i = 0; i < 10; i++)
-        assert(tq2.getCycleBitValue(i)->has_default_value() == false);
+        assert(tq2.getCycleBitValue(i)->has_def_val() == false);
 }
 
 void test_shorten_lengthen()
 {
-    TimeQuanta tq = TimeQuanta(nullptr, 10, BitPhase::Ph2, BitValue::Recessive);
+    TimeQuanta tq = TimeQuanta(nullptr, 10, BitPhase::Ph2, BitVal::Recessive);
 
     size_t sum = 0;
     for (int i = 0; i < 10; i++)

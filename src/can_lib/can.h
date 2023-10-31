@@ -32,51 +32,51 @@
 
 namespace can {
 
-    enum class FrameType
+    enum class FrameKind
     {
-        Can2_0,
+        Can20,
         CanFd
     };
 
-    std::ostream &operator<<(std::ostream &os, const FrameType &frame_type);
+    std::ostream &operator<<(std::ostream &os, const FrameKind &frame_kind);
 
-    enum class IdentifierType
+    enum class IdentKind
     {
         Base,
-        Extended
+        Ext
     };
 
-    std::ostream &operator<<(std::ostream &os, const IdentifierType &identifier_type);
+    std::ostream &operator<<(std::ostream &os, const IdentKind &ident_kind);
 
     enum class BrsFlag
     {
-        Shift,
-        DontShift
+        DoShift,
+        NoShift
     };
 
     std::ostream &operator<<(std::ostream &os, const BrsFlag &brs_flag);
 
     enum class RtrFlag
     {
-        DataFrame,
-        RtrFrame
+        Data,
+        Rtr
     };
 
     std::ostream &operator<<(std::ostream &os, const RtrFlag &rtr_flag);
 
     enum class EsiFlag
     {
-        ErrorActive,
-        ErrorPassive
+        ErrAct,
+        ErrPas
     };
 
     std::ostream &operator<<(std::ostream &os, const EsiFlag &esi_flag);
 
-    enum class BitType
+    enum class BitKind
     {
         Sof,
-        BaseIdentifier,
-        IdentifierExtension,
+        BaseIdent,
+        ExtIdent,
         Rtr,
         Ide,
         Srr,
@@ -87,33 +87,33 @@ namespace can {
         Esi,
         Dlc,
         Data,
-        StuffCount,
+        StuffCnt,
         StuffParity,
         Crc,
-        CrcDelimiter,
+        CrcDelim,
         Ack,
-        AckDelimiter,
+        AckDelim,
         Eof,
-        Intermission,
+        Interm,
         Idle,
-        Suspend,
-        ActiveErrorFlag,
-        PassiveErrorFlag,
-        ErrorDelimiter,
-        OverloadFlag,
-        OverloadDelimiter
+        SuspTrans,
+        ActErrFlag,
+        PasErrFlag,
+        ErrDelim,
+        OvrlFlag,
+        OvrlDelim
     };
 
-    struct BitTypeName
+    struct BitKindName
     {
-        BitType bit_type;
+        BitKind kind;
         std::string name;
     };
 
     enum class BitField
     {
         Sof,
-        Arbitration,
+        Arbit,
         Control,
         Data,
         Crc,
@@ -121,16 +121,16 @@ namespace can {
         Eof
     };
 
-    enum class BitValue {
+    enum class BitVal {
         Dominant = 0,
         Recessive = 1
     };
 
-    enum class StuffBitType
+    enum class StuffKind
     {
-        NoStuffBit,
-        NormalStuffBit,
-        FixedStuffBit
+        NoStuff,
+        Normal,
+        Fixed
     };
 
     enum class BitRate
@@ -147,25 +147,25 @@ namespace can {
         Ph2
     };
 
-    enum class FaultConfinementState
+    enum class FaultConfState
     {
-        ErrorActive,
-        ErrorPassive,
-        BusOff,
+        ErrAct,             // Error Active
+        ErrPas,             // Error Passive
+        BusOff,             // Bus-off
         Invalid
     };
 
     enum class SspType {
         Disabled,           // Secondary sample point disabled
         Offset,             // Offset only
-        MeasuredPlusOffset  // Measured value + offset
+        MeasAndOffset       // Measured value + offset
     };
 
     enum class CanVersion
     {
-        Can_2_0,
-        CanFdTolerant,
-        CanFdEnabled
+        Can20,              // CAN 2.0
+        CanFdTol,           // CAN FD Tolerant
+        CanFdEna            // CAN FD Enabled
     };
 
     /* Classes modeling CAN frame:
@@ -184,7 +184,7 @@ namespace can {
 
     class FrameFlags;
 
-    class CycleBitValue;
+    class Cycle;
     class TimeQuanta;
 
     class BitTiming;

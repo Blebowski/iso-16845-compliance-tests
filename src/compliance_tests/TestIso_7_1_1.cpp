@@ -99,16 +99,16 @@ class TestIso_7_1_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 45; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 80; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc = (elem_test.index_ - 1) / 5;
@@ -136,32 +136,32 @@ class TestIso_7_1_1 : public test::TestBase
                     break;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                                       RtrFlag::DataFrame);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc, can_id);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
+                                                       RtrFlag::Data);
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc, can_id);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
              *   1. Turn monitored frame as if received.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

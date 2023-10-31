@@ -32,9 +32,9 @@
 
 using namespace can;
 
-std::ostream& can::operator<<(std::ostream& os, const FrameType &frame_type)
+std::ostream& can::operator<<(std::ostream& os, const FrameKind &frame_kind)
 {
-    if (frame_type == FrameType::Can2_0)
+    if (frame_kind == FrameKind::Can20)
         os << "CAN 2.0";
     else
         os << "CAN FD";
@@ -42,9 +42,9 @@ std::ostream& can::operator<<(std::ostream& os, const FrameType &frame_type)
 }
 
 
-std::ostream& can::operator<<(std::ostream& os, const IdentifierType &identifier_type)
+std::ostream& can::operator<<(std::ostream& os, const IdentKind &ident_kind)
 {
-    if (identifier_type == IdentifierType::Base)
+    if (ident_kind == IdentKind::Base)
         os << "Base";
     else
         os << "Extended";
@@ -54,7 +54,7 @@ std::ostream& can::operator<<(std::ostream& os, const IdentifierType &identifier
 
 std::ostream& can::operator<<(std::ostream& os, const BrsFlag &brs_flag)
 {
-    if (brs_flag == BrsFlag::Shift)
+    if (brs_flag == BrsFlag::DoShift)
         os << "Shift";
     else
         os << "Don't shift";
@@ -64,7 +64,7 @@ std::ostream& can::operator<<(std::ostream& os, const BrsFlag &brs_flag)
 
 std::ostream& can::operator<<(std::ostream& os, const RtrFlag &rtr_flag)
 {
-    if (rtr_flag == RtrFlag::DataFrame)
+    if (rtr_flag == RtrFlag::Data)
         os << "Data frame";
     else
         os << "Remote frame";
@@ -74,7 +74,7 @@ std::ostream& can::operator<<(std::ostream& os, const RtrFlag &rtr_flag)
 
 std::ostream& can::operator<<(std::ostream& os, const EsiFlag &esi_flag)
 {
-    if (esi_flag == EsiFlag::ErrorActive)
+    if (esi_flag == EsiFlag::ErrAct)
         os << "Error Active";
     else
         os << "Error Passive";

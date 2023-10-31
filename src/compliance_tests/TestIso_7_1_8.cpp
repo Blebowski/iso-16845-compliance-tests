@@ -79,38 +79,38 @@ class TestIso_7_1_8 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
+            FillTestVariants(VariantMatchType::Common);
             for (int i = 0; i < 7; i++)
-                 AddElemTest(TestVariant::Common, ElementaryTest(i + 1));
+                 AddElemTest(TestVariant::Common, ElemTest(i + 1));
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1]);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20);
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlcs[elem_test.index_ - 1]);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
              *   1. Monitor frame as if received, driver frame must have ACK too (TX->RX feedback
              *      disabled).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

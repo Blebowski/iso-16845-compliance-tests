@@ -77,11 +77,11 @@ class TestIso_8_4_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 2; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
 
             /* Standard settings for tests where IUT is transmitter */
@@ -95,15 +95,15 @@ class TestIso_8_4_1 : public test::TestBase
             dut_ifc->SetTec(200);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, EsiFlag::ErrPas);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -116,32 +116,32 @@ class TestIso_8_4_1 : public test::TestBase
              *     This should cover intermission, suspend and some reserve and check that IUT does
              *     not retransmitt the frame!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            drv_bit_frm->ConvRXFrame();
 
-            Bit *interm_bit = driver_bit_frm->GetBitOf(elem_test.index_ - 1, BitType::Intermission);
-            driver_bit_frm->FlipBitAndCompensate(interm_bit, dut_input_delay);
-            monitor_bit_frm->InsertOverloadFrame(elem_test.index_, BitType::Intermission);
-            driver_bit_frm->InsertPassiveErrorFrame(elem_test.index_, BitType::Intermission);
+            Bit *interm_bit = drv_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Interm);
+            drv_bit_frm->FlipBitAndCompensate(interm_bit, dut_input_delay);
+            mon_bit_frm->InsertOvrlFrm(elem_test.index_, BitKind::Interm);
+            drv_bit_frm->InsertPasErrFrm(elem_test.index_, BitKind::Interm);
 
             for (int k = 0; k < 15; k++)
             {
-                driver_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
-                monitor_bit_frm->AppendBit(BitType::Idle, BitValue::Recessive);
+                drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
+                mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
             }
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /*****************************************************************************
              * Execute test
              *****************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            this->dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

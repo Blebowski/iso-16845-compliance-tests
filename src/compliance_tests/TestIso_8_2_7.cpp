@@ -73,24 +73,24 @@ class TestIso_8_2_7 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
             for (int i = 0; i < 2; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             /* Basic settings where IUT is transmitter */
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -100,28 +100,28 @@ class TestIso_8_2_7 : public test::TestBase
              *      In elementary test 2 (2 bit ACK):
              *          Flip both ACK bits to Dominant.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            drv_bit_frm->ConvRXFrame();
 
             if (elem_test.index_ == 1)
-                driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+                drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
             else
-                driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+                drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(1, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm->GetBitOf(1, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            this->dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

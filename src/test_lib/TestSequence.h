@@ -37,8 +37,8 @@
 #include <pli_lib.h>
 
 #include "test.h"
-#include "MonitorItem.h"
-#include "DriverItem.h"
+#include "MonItem.h"
+#include "DrvItem.h"
 
 /**
  * @namespace test
@@ -65,7 +65,7 @@ class test::TestSequence
          * @return Pointer to monitor item at position "index". NULL if index is
          *         larger than number of monitor items in sequence.
          */
-        MonitorItem* GetMonitorItem(int index);
+        MonItem* GetMonitorItem(int index);
 
         /**
          * @brief Gets pointer to n-th driver item.
@@ -74,13 +74,13 @@ class test::TestSequence
          * @return Pointer to driver item at position "index". NULL if index is
          *         larger than number of driver items in sequence.
          */
-        DriverItem *GetDriverItem(int index);
+        DrvItem *GetDriverItem(int index);
 
         /**
          * @brief Appends monitor item to driver sequence
          * @param driver_item Item to be apended.
          */
-        void AppendDriverItem(DriverItem driver_item);
+        void AppendDriverItem(DrvItem driver_item);
 
         /**
          * @brief Prints items in driver sequence.
@@ -121,8 +121,8 @@ class test::TestSequence
         /**
          * Vectors of driver/monitor items.
          */
-        std::vector<DriverItem> driven_values;
-        std::vector<MonitorItem> monitored_values;
+        std::vector<DrvItem> driven_values;
+        std::vector<MonItem> monitored_values;
 
         /**
          * Clock period configured in simulator for DUT operation. This
@@ -198,7 +198,7 @@ class test::TestSequence
          * @param message Message to be printed when driving starts.
          */
         void pushDriverValue(std::chrono::nanoseconds duration,
-                             can::BitValue bit_value,
+                             can::BitVal bit_value,
                              std::string message);
 
         /**
@@ -210,7 +210,7 @@ class test::TestSequence
          */
         void pushMonitorValue(std::chrono::nanoseconds duration,
                               std::chrono::nanoseconds sample_rate,
-                              can::BitValue bit_value,
+                              can::BitVal bit_value,
                               std::string message);
 };
 

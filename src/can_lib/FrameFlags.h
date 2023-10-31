@@ -61,68 +61,68 @@ class can::FrameFlags
         /**
          * Nothing is randomized.
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr, BrsFlag is_brs,
+        FrameFlags(FrameKind is_fdf, IdentKind is_ide, RtrFlag is_rtr, BrsFlag is_brs,
                    EsiFlag is_esi);
 
         /**
          * BRS only is randomized
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr, EsiFlag is_esi);
+        FrameFlags(FrameKind is_fdf, IdentKind is_ide, RtrFlag is_rtr, EsiFlag is_esi);
 
         /**
          * IDE is randomized only
          */
-        FrameFlags(FrameType is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi);
+        FrameFlags(FrameKind is_fdf, RtrFlag is_rtr, BrsFlag is_brs, EsiFlag is_esi);
 
         /**
          *  BRS and ESI are randomized (if frame is CAN FD frame)
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide, RtrFlag is_rtr);
+        FrameFlags(FrameKind is_fdf, IdentKind is_ide, RtrFlag is_rtr);
 
         /**
          * Randomizes RTR flag, BRS and ESI
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide);
+        FrameFlags(FrameKind is_fdf, IdentKind is_ide);
 
         /**
          * Randomizes IDE, BRS, ESI
          */
-        FrameFlags(FrameType is_fdf, RtrFlag is_rtr);
+        FrameFlags(FrameKind is_fdf, RtrFlag is_rtr);
 
         /**
          * Randomizes IDE, BRS
          */
-        FrameFlags(FrameType is_fdf, RtrFlag is_rtr, EsiFlag is_esi);
+        FrameFlags(FrameKind is_fdf, RtrFlag is_rtr, EsiFlag is_esi);
 
         /**
          * Randomizes IDE, BRS, ESI, RTR.
          */
-        FrameFlags(FrameType is_fdf);
+        FrameFlags(FrameKind is_fdf);
 
         /**
          * Randomizes FDF, BRS, ESI, RTR
          */
-        FrameFlags(IdentifierType is_ide);
+        FrameFlags(IdentKind is_ide);
 
         /**
          * Randomizes ESI, IDE, RTR
          */
-        FrameFlags(FrameType is_fdf, BrsFlag is_brs);
+        FrameFlags(FrameKind is_fdf, BrsFlag is_brs);
 
         /**
          * Randomizes RTR and IDE
          */
-        FrameFlags(FrameType is_fdf, BrsFlag is_brs, EsiFlag is_esi);
+        FrameFlags(FrameKind is_fdf, BrsFlag is_brs, EsiFlag is_esi);
 
         /**
          * Randomizes BRS, RTR, IDE
          */
-        FrameFlags(FrameType is_fdf, EsiFlag is_esi);
+        FrameFlags(FrameKind is_fdf, EsiFlag is_esi);
 
         /**
          * Randomizes RTR, BRS
          */
-        FrameFlags(FrameType is_fdf, IdentifierType is_ide, EsiFlag is_esi);
+        FrameFlags(FrameKind is_fdf, IdentKind is_ide, EsiFlag is_esi);
 
         /**
          * Randomizes frame flags.
@@ -136,15 +136,29 @@ class can::FrameFlags
         bool operator!=(const FrameFlags rhs);
 
         // Getters
-        inline FrameType is_fdf() const { return is_fdf_; };
-        inline IdentifierType is_ide() const { return is_ide_; };
-        inline RtrFlag is_rtr() const { return is_rtr_; };
-        inline BrsFlag is_brs() const { return is_brs_; };
-        inline EsiFlag is_esi() const { return is_esi_; };
+        inline FrameKind is_fdf() const {
+            return is_fdf_;
+        };
+
+        inline IdentKind is_ide() const {
+            return is_ide_;
+        };
+
+        inline RtrFlag is_rtr() const {
+            return is_rtr_;
+        };
+
+        inline BrsFlag is_brs() const {
+            return is_brs_;
+        };
+
+        inline EsiFlag is_esi() const {
+            return is_esi_;
+        };
 
         // Setters
-        void set_fdf(FrameType is_fdf);
-        void set_ide(IdentifierType is_ide);
+        void set_fdf(FrameKind is_fdf);
+        void set_ide(IdentKind is_ide);
         void set_rtr(RtrFlag is_rtr);
         void set_brs(BrsFlag is_brs);
         void set_esi(EsiFlag is_esi);
@@ -159,11 +173,11 @@ class can::FrameFlags
         void CorrectFlags();
 
         /* CAN frame flags */
-        FrameType is_fdf_ = FrameType::Can2_0;
-        IdentifierType is_ide_ = IdentifierType::Base;
-        RtrFlag is_rtr_ = RtrFlag::DataFrame;
-        BrsFlag is_brs_ = BrsFlag::DontShift;
-        EsiFlag is_esi_ = EsiFlag::ErrorActive;
+        FrameKind is_fdf_ = FrameKind::Can20;
+        IdentKind is_ide_ = IdentKind::Base;
+        RtrFlag is_rtr_ = RtrFlag::Data;
+        BrsFlag is_brs_ = BrsFlag::NoShift;
+        EsiFlag is_esi_ = EsiFlag::ErrAct;
 
         /* Randomization attributes */
         bool randomize_fdf_ = false;
@@ -171,7 +185,6 @@ class can::FrameFlags
         bool randomize_rtr_ = false;
         bool randomize_brs_ = false;
         bool randomize_esi_ = false;
-
 };
 
 #endif

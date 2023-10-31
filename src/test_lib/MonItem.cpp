@@ -1,5 +1,3 @@
-#ifndef ELEMENTARY_TEST_H
-#define ELEMENTARY_TEST_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -24,49 +22,48 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 25.8.2020
+ * @date 27.3.2020
  *
  *****************************************************************************/
 
 #include <chrono>
-#include <string>
-#include <list>
-#include <memory>
+#include <iostream>
+#include <iomanip>
 
-#include <can_lib.h>
+#include "MonItem.h"
 
-#include "test.h"
-
-using namespace can;
-
-/**
- * @namespace test
- * @class ElementaryTest
- * @brief Elementary test class
- *
- * Represents single Elementary test as described in ISO16845-1:2016.
- */
-class test::ElementaryTest
+test::MonItem::MonItem(std::chrono::nanoseconds duration, StdLogic value,
+                       std::chrono::nanoseconds sample_rate)
 {
-    public:
-        ElementaryTest(int index);
-        ElementaryTest(int index, std::string msg);
-        ElementaryTest(int index, std::string msg, FrameType frame_type);
-        ElementaryTest(int index, FrameType frame_type);
+    this->duration_ = duration;
+    this->sample_rate_ = sample_rate;
+    this->value_ = value;
+    this->message_ = std::string();
+}
 
-        /* Index of the elementary test (starting from 1. This is the same
-         * number as is after # in ISO116845!)
-         */
-        int index_;
 
-        /* String to be printed when this elementary test starts */
-        std::string msg_;
+test::MonItem::MonItem(std::chrono::nanoseconds duration, StdLogic value,
+                       std::chrono::nanoseconds sample_rate, std::string message)
+{
+    this->duration_ = duration;
+    this->sample_rate_ = sample_rate;
+    this->value_ = value;
+    this->message_ = message;
+}
 
-        /* Phase error (used during bit timing tests) */
-        int e_;
 
-        /* Frame type used by the test */
-        FrameType frame_type_;
-};
+bool test::MonItem::HasMessage()
+{
+    if (message_.size() > 0)
+        return true;
+    return false;
+}
 
-#endif
+
+void test::MonItem::Print()
+{
+    if (HasMessage())
+        std::cout << std::setw (20) << message_;
+    std::cout << std::setw (20) << (char)value_;
+    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
+}

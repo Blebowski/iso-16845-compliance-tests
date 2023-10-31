@@ -1,3 +1,5 @@
+#ifndef ELEMENTARY_TEST_H
+#define ELEMENTARY_TEST_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -22,32 +24,49 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 27.3.2020
+ * @date 25.8.2020
  *
  *****************************************************************************/
 
-#include <iostream>
+#include <chrono>
+#include <string>
+#include <list>
+#include <memory>
 
-#include "can.h"
-#include "CycleBitValue.h"
+#include <can_lib.h>
 
-can::CycleBitValue::CycleBitValue(TimeQuanta *parent):
-                    parent_(parent)
-{}
+#include "test.h"
 
-can::CycleBitValue::CycleBitValue(TimeQuanta *parent, BitValue bit_value):
-    parent_(parent),
-    has_default_value_(false),
-    bit_value_(bit_value)
-{}
+using namespace can;
 
-void can::CycleBitValue::ForceValue(BitValue bit_value)
+/**
+ * @namespace test
+ * @class ElementaryTest
+ * @brief Elementary test class
+ *
+ * Represents single Elementary test as described in ISO16845-1:2016.
+ */
+class test::ElemTest
 {
-    has_default_value_ = false;
-    bit_value_ = bit_value;
-}
+    public:
+        ElemTest(int index);
+        ElemTest(int index, std::string msg);
+        ElemTest(int index, std::string msg, FrameKind frame_kind);
+        ElemTest(int index, FrameKind frame_kind);
 
-void can::CycleBitValue::ReleaseValue()
-{
-    has_default_value_ = true;
-}
+        /* Index of the elementary test (starting from 1. This is the same
+         * number as is after # in ISO116845!)
+         */
+        int index_;
+
+        /* String to be printed when this elementary test starts */
+        std::string msg_;
+
+        /* Phase error (used during bit timing tests) */
+        int e_;
+
+        /* Frame type used by the test */
+        FrameKind frame_kind_;
+};
+
+#endif

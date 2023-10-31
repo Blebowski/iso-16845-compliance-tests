@@ -87,7 +87,7 @@ class TestIso_8_8_2_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
             /*
              * Test defines only two elementary tests, but each type of SSP shall be tested.
@@ -95,30 +95,30 @@ class TestIso_8_8_2_1 : public test::TestBase
              * elementary test, together 4 tests.
              */
             for (int i = 0; i < 4; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             // Following constraint is not due to model or IUT issues.
             // It is due to principle of the test, we can't avoid it!
             // This is because we are delaying received sequence by up to: 2 x Bit time (D).
             // If such big delay is applied, and TSEG1(N) is smaller than this number, an
             // error frame is detected still in Nominal Bit-rate.
-            assert(data_bit_timing.GetBitLengthCycles() * 2 <
-                   ((nominal_bit_timing.ph1_ + nominal_bit_timing.prop_ + 1) * nominal_bit_timing.brp_) &&
+            assert(dbt.GetBitLenCycles() * 2 <
+                   ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_) &&
                    " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
 
             SetupMonitorTxTests();
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -133,10 +133,10 @@ class TestIso_8_8_2_1 : public test::TestBase
              *      changes to recessive.
              *   3. Insert ACK to driven frame.
              *************************************************************************************/
-            int d = data_bit_timing.GetBitLengthCycles();
+            int d = dbt.GetBitLenCycles();
             if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
-            driver_bit_frm->GetBit(0)->GetTimeQuanta(0)->Lengthen(d);
+            drv_bit_frm->GetBit(0)->GetTQ(0)->Lengthen(d);
 
             /* For each cycle of driven PH2 of R0, we search cycle which is "d" cycles back within
              * whole frame. First "MoveCyclesBack", finds TQ and bit, in which 'orig' cycle is
@@ -148,22 +148,22 @@ class TestIso_8_8_2_1 : public test::TestBase
              * Alternative would be to have also bottom->up reference in Bit/TQ/Cycle hierarchy.
              * This would allow moving cycle-by-cycle with iterator accross multiple TQs/bits.
              */
-            Bit *r0 = driver_bit_frm->GetBitOf(0, BitType::R0);
-            for (size_t i = 0; i < r0->GetPhaseLenTimeQuanta(BitPhase::Ph2); i++)
+            Bit *r0 = drv_bit_frm->GetBitOf(0, BitKind::R0);
+            for (size_t i = 0; i < r0->GetPhaseLenTQ(BitPhase::Ph2); i++)
             {
-                TimeQuanta *tq = r0->GetTimeQuanta(BitPhase::Ph2, i);
+                TimeQuanta *tq = r0->GetTQ(BitPhase::Ph2, i);
                 for (size_t j = 0; j < tq->getLengthCycles(); j++)
                 {
-                    CycleBitValue *orig = tq->getCycleBitValue(j);
-                    CycleBitValue *to = driver_bit_frm->MoveCyclesBack(orig, d);
-                    to->ForceValue(BitValue::Recessive);
+                    Cycle *orig = tq->getCycleBitValue(j);
+                    Cycle *to = drv_bit_frm->MoveCyclesBack(orig, d);
+                    to->ForceVal(BitVal::Recessive);
                 }
             }
 
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
@@ -176,26 +176,26 @@ class TestIso_8_8_2_1 : public test::TestBase
                 /* Offset as if normal sample point, TX/RX delay will be measured and added
                  * by IUT. Offset in clock cycles! (minimal time quanta)
                  */
-                int ssp_offset = data_bit_timing.brp_ *
-                                 (data_bit_timing.prop_ + data_bit_timing.ph1_ + 1);
-                dut_ifc->ConfigureSsp(SspType::MeasuredPlusOffset, ssp_offset);
+                int ssp_offset = dbt.brp_ *
+                                 (dbt.prop_ + dbt.ph1_ + 1);
+                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, ssp_offset);
             } else {
                 /* We need to incorporate d into the delay! */
-                int ssp_offset = data_bit_timing.brp_ *
-                                 (data_bit_timing.prop_ + data_bit_timing.ph1_ + 1) + d;
+                int ssp_offset = dbt.brp_ *
+                                 (dbt.prop_ + dbt.ph1_ + 1) + d;
                 dut_ifc->ConfigureSsp(SspType::Offset, ssp_offset);
             }
             dut_ifc->Enable();
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(2000);
 
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

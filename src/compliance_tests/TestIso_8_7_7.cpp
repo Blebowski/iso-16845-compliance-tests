@@ -77,13 +77,13 @@ class TestIso_8_7_7 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTestForEachSP(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // Minimal lenght of PH1/PROP must be such that the delayed edge by two time
@@ -92,25 +92,25 @@ class TestIso_8_7_7 : public test::TestBase
             // For CTU CAN FD, this is:
             //      input delay (2) + delay of edge due to test (2) + 1 = 5. Minimal
             //      duration of TSEG1 = 5 cycles!!!
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true, 4);
+            nbt = GenerateSPForTest(elem_test, true, 4);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nbt, dbt);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            nominal_bit_timing.Print();
+            nbt.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -126,36 +126,36 @@ class TestIso_8_7_7 : public test::TestBase
              *       tion has been done! This behavior has been checked with bug inserted into IUT
              *       and the test really failed!
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             // I know this search is performance suicide, but again, we dont give a shit
             // about performance here... It is just a model running on powerfull PC!
-            for (size_t i = 0; i < driver_bit_frm->GetBitCount() - 1; i++)
+            for (size_t i = 0; i < drv_bit_frm->GetLen() - 1; i++)
             {
-                Bit *curr = driver_bit_frm->GetBit(i);
-                Bit *next = driver_bit_frm->GetBit(i + 1);
+                Bit *curr = drv_bit_frm->GetBit(i);
+                Bit *next = drv_bit_frm->GetBit(i + 1);
 
-                if (curr->bit_value_ == BitValue::Recessive &&
-                    next->bit_value_ == BitValue::Dominant)
+                if (curr->val_ == BitVal::Recessive &&
+                    next->val_ == BitVal::Dominant)
                 {
-                    next->GetTimeQuanta(0)->ForceValue(BitValue::Recessive);
-                    next->GetTimeQuanta(1)->ForceValue(BitValue::Recessive);
+                    next->GetTQ(0)->ForceVal(BitVal::Recessive);
+                    next->GetTQ(1)->ForceVal(BitVal::Recessive);
                 }
             }
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

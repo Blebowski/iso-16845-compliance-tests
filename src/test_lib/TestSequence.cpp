@@ -68,7 +68,7 @@ test::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
 
 void test::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 {
-    int bit_count = driver_frame.GetBitCount();
+    int bit_count = driver_frame.GetLen();
     can::Bit *bit;
 
     for (int i = 0; i < bit_count; i++)
@@ -81,7 +81,7 @@ void test::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 
 void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 {
-    int bit_count = monitor_frame.GetBitCount();
+    int bit_count = monitor_frame.GetLen();
     can::Bit *bit;
     can::Bit *next_bit;
 
@@ -93,16 +93,16 @@ void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
         if (i < bit_count - 1)
             next_bit = monitor_frame.GetBit(i + 1);
 
-        if (bit->bit_type_ == can::BitType::Brs ||
-            bit->bit_type_ == can::BitType::CrcDelimiter ||
+        if (bit->kind_ == can::BitKind::Brs ||
+            bit->kind_ == can::BitKind::CrcDelim ||
 
             /* Whenever we transmitt error frame, we might switch bit-rate. Even if we
              * dont, then we calculate items as if bit-rate was switched.
              * "appendMonitorBitWithShift" deals calculates lenghts properly based on
              * what is inside the bit!
              */
-            next_bit->bit_type_ == can::BitType::ActiveErrorFlag ||
-            next_bit->bit_type_ == can::BitType::PassiveErrorFlag)
+            next_bit->kind_ == can::BitKind::ActErrFlag ||
+            next_bit->kind_ == can::BitKind::PasErrFlag)
             appendMonitorBitWithShift(bit);
         else
             appendMonitorNotShift(bit);
@@ -112,51 +112,51 @@ void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 
 void test::TestSequence::AppendDriverBit(can::Bit* bit)
 {
-    int time_quantas = bit->GetLengthTimeQuanta();
-    can::BitValue bit_value = bit->bit_value_;
-    can::BitValue last_value = bit_value;
-    can::BitValue current_value;
+    int time_quantas = bit->GetLenTQ();
+    can::BitVal bit_val = bit->val_;
+    can::BitVal last_val = bit_val;
+    can::BitVal curr_val;
     can::TimeQuanta *time_quanta;
-    can::CycleBitValue* cycle_bit_value;
+    can::Cycle* cycle;
     std::chrono::nanoseconds duration (0);
     int cycles;
 
     for (int i = 0; i < time_quantas; i++)
     {
-        time_quanta = bit->GetTimeQuanta(i);
+        time_quanta = bit->GetTQ(i);
         cycles = time_quanta->getLengthCycles();
 
         for (int j = 0; j < cycles; j++)
         {
-            cycle_bit_value = time_quanta->getCycleBitValue(j);
+            cycle = time_quanta->getCycleBitValue(j);
 
             // Obtain value of current cycle
             // Note: This ignores non-default values which are equal to
             //       its default value (as expected) and merges them into
             //       single monitored / driven item!
-            if (cycle_bit_value->has_default_value())
-                current_value = bit_value;
+            if (cycle->has_def_val())
+                curr_val = bit_val;
             else
-                current_value = cycle_bit_value->bit_value();
+                curr_val = cycle->bit_val();
 
             // Did not detect bit value change -> it still belongs to the same segment
             // -> legnthen it
-            if (current_value == last_value)
+            if (curr_val == last_val)
                 duration += clock_period;
 
             // Detected value change, push previous item
-            if (current_value != last_value)
+            if (curr_val != last_val)
             {
-                pushDriverValue(duration, last_value, bit->GetBitTypeName());
+                pushDriverValue(duration, last_val, bit->GetBitKindName());
 
                 duration = clock_period;
-                last_value = current_value;
+                last_val = curr_val;
             }
 
             // Reach last cycle of bit, push rest
             if ((i == time_quantas - 1) && (j == cycles - 1))
             {
-                pushDriverValue(duration, last_value, bit->GetBitTypeName());
+                pushDriverValue(duration, last_val, bit->GetBitKindName());
             }
         }
     }
@@ -169,26 +169,26 @@ void test::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 
     // Currently this function does not support translation with forcing on Bits
     // with Bit-rate shift, check it!
-    for (size_t i = 0; i < bit->GetLengthTimeQuanta(); i++)
-        for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
-            assert(bit->GetTimeQuanta(i)->getCycleBitValue(j)->has_default_value()
+    for (size_t i = 0; i < bit->GetLenTQ(); i++)
+        for (size_t j = 0; j < bit->GetTQ(i)->getLengthCycles(); j++)
+            assert(bit->GetTQ(i)->getCycleBitValue(j)->has_def_val()
                     && "Forcing not supported on Bits with Bit-rate shift!");
 
     /* Count Tseg1 duration */
-    size_t tseg_1_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Sync);
-    tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Prop);
-    tseg_1_len += bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph1);
+    size_t tseg_1_len = bit->GetPhaseLenTQ(can::BitPhase::Sync);
+    tseg_1_len += bit->GetPhaseLenTQ(can::BitPhase::Prop);
+    tseg_1_len += bit->GetPhaseLenTQ(can::BitPhase::Ph1);
 
     /* Count Tseg2 duration */
-    size_t tseg_2_len = bit->GetPhaseLenTimeQuanta(can::BitPhase::Ph2);
+    size_t tseg_2_len = bit->GetPhaseLenTQ(can::BitPhase::Ph2);
 
     /* Count lenghts in nanoseconds */
     for (size_t i = 0; i < tseg_1_len; i++)
-        for (size_t j = 0; j < bit->GetTimeQuanta(i)->getLengthCycles(); j++)
+        for (size_t j = 0; j < bit->GetTQ(i)->getLengthCycles(); j++)
             tseg_1_duration += clock_period;
 
     for (size_t i = 0; i < tseg_2_len; i++)
-        for (size_t j = 0; j < bit->GetTimeQuanta(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
+        for (size_t j = 0; j < bit->GetTQ(can::BitPhase::Ph2, i)->getLengthCycles(); j++)
             tseg_2_duration += clock_period;
 
     // Get sample rate for each phase and push monitor item. Push only if the phase has non-zero
@@ -196,51 +196,51 @@ void test::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
     // to its shortening in the test, we would not be able to query its Time Quanta 0!
     if (tseg_1_duration > std::chrono::nanoseconds(0))
     {
-        size_t brp = bit->GetTimeQuanta(can::BitPhase::Sync, 0)->getLengthCycles();
+        size_t brp = bit->GetTQ(can::BitPhase::Sync, 0)->getLengthCycles();
         std::chrono::nanoseconds sampleRateNominal = brp * clock_period;
-        pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->bit_value_, bit->GetBitTypeName());
+        pushMonitorValue(tseg_1_duration, sampleRateNominal, bit->val_, bit->GetBitKindName());
     }
 
     if (tseg_2_duration > std::chrono::nanoseconds(0))
     {
-        size_t brp_fd = bit->GetTimeQuanta(can::BitPhase::Ph2, 0)->getLengthCycles();
+        size_t brp_fd = bit->GetTQ(can::BitPhase::Ph2, 0)->getLengthCycles();
         std::chrono::nanoseconds sampleRateData = brp_fd * clock_period;
-        pushMonitorValue(tseg_2_duration, sampleRateData, bit->bit_value_, bit->GetBitTypeName());
+        pushMonitorValue(tseg_2_duration, sampleRateData, bit->val_, bit->GetBitKindName());
     }
 }
 
 void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
-    int time_quantas = bit->GetLengthTimeQuanta();
-    can::BitValue bit_value = bit->bit_value_;
-    can::BitValue last_value = bit_value;
-    can::BitValue current_value;
+    int time_quantas = bit->GetLenTQ();
+    can::BitVal bit_val = bit->val_;
+    can::BitVal last_value = bit_val;
+    can::BitVal current_value;
     can::TimeQuanta *time_quanta;
-    can::CycleBitValue* cycle_bit_value;
+    can::Cycle* cycle;
     std::chrono::nanoseconds duration (0);
     int cycles;
 
     // Assume first Time quanta length is the same as rest (which is reasonable)!
-    size_t brp = bit->GetTimeQuanta(0)->getLengthCycles();
+    size_t brp = bit->GetTQ(0)->getLengthCycles();
     std::chrono::nanoseconds sample_rate = brp * clock_period;
 
     for (int i = 0; i < time_quantas; i++)
     {
-        time_quanta = bit->GetTimeQuanta(i);
+        time_quanta = bit->GetTQ(i);
         cycles = time_quanta->getLengthCycles();
 
         for (int j = 0; j < cycles; j++)
         {
-            cycle_bit_value = time_quanta->getCycleBitValue(j);
+            cycle = time_quanta->getCycleBitValue(j);
 
             // Obtain value of current cycle
             // Note: This ignores non-default values which are equal to
             //       its default value (as expected) and merges them into
             //       single monitored / driven item!
-            if (cycle_bit_value->has_default_value())
-                current_value = bit_value;
+            if (cycle->has_def_val())
+                current_value = bit_val;
             else
-                current_value = cycle_bit_value->bit_value();
+                current_value = cycle->bit_val();
 
             // Did not detect bit value change -> it still belongs to the same segment
             // -> legnthen it
@@ -250,7 +250,7 @@ void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
             // Detected value change, push previous item
             if (current_value != last_value)
             {
-                pushMonitorValue(duration, sample_rate, last_value, bit->GetBitTypeName());
+                pushMonitorValue(duration, sample_rate, last_value, bit->GetBitKindName());
 
                 duration = clock_period;
                 last_value = current_value;
@@ -259,7 +259,7 @@ void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
             // Reach last cycle of bit, push rest
             if ((i == time_quantas - 1) && (j == cycles - 1))
             {
-                pushMonitorValue(duration, sample_rate, last_value, bit->GetBitTypeName());
+                pushMonitorValue(duration, sample_rate, last_value, bit->GetBitKindName());
             }
         }
     }
@@ -267,31 +267,31 @@ void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
 
 
 void test::TestSequence::pushDriverValue(std::chrono::nanoseconds duration,
-                                             can::BitValue bit_value,
+                                             can::BitVal bit_value,
                                              std::string message)
 {
     StdLogic logic_val;
-    if (bit_value == can::BitValue::Dominant)
+    if (bit_value == can::BitVal::Dominant)
         logic_val = StdLogic::LOGIC_0;
     else
         logic_val = StdLogic::LOGIC_1;
 
-    driven_values.push_back(DriverItem(duration, logic_val, message));
+    driven_values.push_back(DrvItem(duration, logic_val, message));
 }
 
 
 void test::TestSequence::pushMonitorValue(std::chrono::nanoseconds duration,
                                               std::chrono::nanoseconds sample_rate,
-                                              can::BitValue bit_value,
+                                              can::BitVal bit_value,
                                               std::string message)
 {
     StdLogic logic_val;
-    if (bit_value == can::BitValue::Dominant)
+    if (bit_value == can::BitVal::Dominant)
         logic_val = StdLogic::LOGIC_0;
     else
         logic_val = StdLogic::LOGIC_1;
 
-    monitored_values.push_back(MonitorItem(duration, logic_val, sample_rate, message));
+    monitored_values.push_back(MonItem(duration, logic_val, sample_rate, message));
 }
 
 

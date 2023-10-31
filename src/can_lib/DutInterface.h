@@ -78,8 +78,7 @@ class can::DutInterface
          * @param nominal_bit_timing Bit timing parameters for nominal bit rate
          * @param data_bit_timing Bit timing parameters for data bit rate
          */
-        virtual void ConfigureBitTiming(BitTiming nominal_bit_timing,
-                                        BitTiming data_bit_timing) = 0;
+        virtual void ConfigureBitTiming(BitTiming nbt, BitTiming dbt) = 0;
 
         /**
          * Configures secondary sampling point.
@@ -139,12 +138,12 @@ class can::DutInterface
          * this function shall issue frames so that DUT will reach required state!
          * @param fault_state state to be set
          */
-        virtual void SetErrorState(FaultConfinementState fault_state) = 0;
+        virtual void SetErrorState(FaultConfState fault_state) = 0;
 
         /**
          * @returns Fault confinement state of DUT.
          */
-        virtual FaultConfinementState GetErrorState() = 0;
+        virtual FaultConfState GetErrorState() = 0;
 
         /**
          * Configures PEX (Protocol exception).

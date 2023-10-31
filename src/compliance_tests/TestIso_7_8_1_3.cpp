@@ -90,23 +90,23 @@ class TestIso_7_8_1_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
             for (size_t i = 0; i < 2; i++) {
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::Can20));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -117,28 +117,28 @@ class TestIso_7_8_1_3 : public test::TestBase
              *      delimiter! Insert passive error frame to driver to send
              *      all recessive (TX to RX feedback is turned ON)!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *crc_delim = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            int bit_index = driver_bit_frm->GetBitIndex(crc_delim);
+            Bit *crc_delim = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            int bit_index = drv_bit_frm->GetBitIndex(crc_delim);
             int dominant_pulse_lenght;
 
             if (elem_test.index_ == 1)
-                dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_;
+                dominant_pulse_lenght = dbt.prop_ + dbt.ph1_;
             else
-                dominant_pulse_lenght = data_bit_timing.prop_ + data_bit_timing.ph1_ + 1;
+                dominant_pulse_lenght = dbt.prop_ + dbt.ph1_ + 1;
 
             for (int j = 0; j < dominant_pulse_lenght; j++)
-                crc_delim->ForceTimeQuanta(j, BitValue::Dominant);
+                crc_delim->ForceTQ(j, BitVal::Dominant);
 
             if (elem_test.index_ == 2)
             {
-                driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-                monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+                drv_bit_frm->InsertPasErrFrm(bit_index + 1);
+                mon_bit_frm->InsertActErrFrm(bit_index + 1);
             }
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
@@ -148,15 +148,15 @@ class TestIso_7_8_1_3 : public test::TestBase
             else
                 TestMessage("Testing CRC delimiter bit sampled Dominant");
 
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
             // Read received frame from DUT and compare with sent frame
             // (first elementary test only, second one ends with error frame)
             if (elem_test.index_ == 1)
-                CheckRxFrame(*golden_frm);
+                CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

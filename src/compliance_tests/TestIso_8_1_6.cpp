@@ -97,18 +97,18 @@ class TestIso_8_1_6 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 6; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
             for (int i = 0; i < 10; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             /* Basic setup for tests where IUT transmits */
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             if (test_variant == TestVariant::Common)
@@ -116,12 +116,12 @@ class TestIso_8_1_6 : public test::TestBase
                 /* Last iteration (0x42 CTRL field) indicates RTR frame */
                 RtrFlag rtr_flag;
                 if (elem_test.index_ == 6)
-                    rtr_flag = RtrFlag::RtrFrame;
+                    rtr_flag = RtrFlag::Rtr;
                 else
-                    rtr_flag = RtrFlag::DataFrame;
+                    rtr_flag = RtrFlag::Data;
 
-                frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_,
-                                        IdentifierType::Base, rtr_flag);
+                frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_,
+                                        IdentKind::Base, rtr_flag);
 
                 /* Data, DLCs and identifiers for each iteration */
                 uint8_t data[6][8] = {
@@ -138,10 +138,10 @@ class TestIso_8_1_6 : public test::TestBase
                 int ids[6] = {
                     0x78, 0x41F, 0x47F, 0x758, 0x777, 0x7EF
                 };
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1],
+                gold_frm = std::make_unique<Frame>(*frm_flags, dlcs[elem_test.index_ - 1],
                                     ids[elem_test.index_ - 1], data[elem_test.index_ -1]);
 
-            } else if (test_variant == TestVariant::CanFdEnabled) {
+            } else if (test_variant == TestVariant::CanFdEna) {
 
                 /* Flags based on elementary test */
                 switch(elem_test.index_)
@@ -151,34 +151,34 @@ class TestIso_8_1_6 : public test::TestBase
                     case 7:
                     case 8:
                     case 9:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::Shift, EsiFlag::ErrorActive);
+                        frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::DoShift, EsiFlag::ErrAct);
                         break;
 
                     case 3:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::Shift, EsiFlag::ErrorPassive);
+                        frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::DoShift, EsiFlag::ErrPas);
                         break;
 
                     case 4:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::DontShift, EsiFlag::ErrorPassive);
+                        frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::NoShift, EsiFlag::ErrPas);
                         break;
 
                     case 5:
                     case 6:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
+                        frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::NoShift, EsiFlag::ErrAct);
                         break;
 
                     case 10:
-                        frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd,
-                                            IdentifierType::Base, RtrFlag::DataFrame,
-                                            BrsFlag::DontShift, EsiFlag::ErrorActive);
+                        frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd,
+                                            IdentKind::Base, RtrFlag::Data,
+                                            BrsFlag::NoShift, EsiFlag::ErrAct);
                         break;
                     default:
                         break;
@@ -188,9 +188,9 @@ class TestIso_8_1_6 : public test::TestBase
                     * Otherwise, it would transmitt ESI_ERROR_ACTIVE
                     */
                 if (elem_test.index_ == 3 || elem_test.index_ == 4)
-                    dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+                    dut_ifc->SetErrorState(FaultConfState::ErrPas);
                 else
-                    dut_ifc->SetErrorState(FaultConfinementState::ErrorActive);
+                    dut_ifc->SetErrorState(FaultConfState::ErrAct);
 
                 int ids[10] = {
                     0x78, 0x47C, 0x41E, 0x20F, 0x107, 0x7C3, 0x3E1, 0x1F0, 0x000, 0x7FF
@@ -293,15 +293,15 @@ class TestIso_8_1_6 : public test::TestBase
                 uint8_t dlcs[10] = {
                     0xE, 0x8, 0xE, 0xF, 0xF, 0x3, 0x3, 0x1, 0x0, (uint8_t)(rand() % 0xF)
                 };
-                golden_frm = std::make_unique<Frame>(*frame_flags, dlcs[elem_test.index_ - 1],
+                gold_frm = std::make_unique<Frame>(*frm_flags, dlcs[elem_test.index_ - 1],
                                     ids[elem_test.index_ - 1], data[elem_test.index_ - 1]);
             }
 
             /* Randomize will have no effect since everything is specified */
-            RandomizeAndPrint(golden_frm.get());
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -309,22 +309,22 @@ class TestIso_8_1_6 : public test::TestBase
              *
              * No other modifications are needed as correct stuff generation is verified by model!
              **************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
+            drv_bit_frm->ConvRXFrame();
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            this->dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            this->dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

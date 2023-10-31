@@ -14,9 +14,9 @@
 add_library(
     TEST_LIB OBJECT
 
-    DriverItem.cpp
-    MonitorItem.cpp
+    DrvItem.cpp
+    MonItem.cpp
     TestSequence.cpp
     TestLoader.cpp
-    ElementaryTest.cpp
+    ElemTest.cpp
 )

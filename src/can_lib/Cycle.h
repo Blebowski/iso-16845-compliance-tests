@@ -1,3 +1,5 @@
+#ifndef CYCLE_BIT_VALUE_H
+#define CYCLE_BIT_VALUE_H
 /******************************************************************************
  *
  * ISO16845 Compliance tests
@@ -26,44 +28,59 @@
  *
  *****************************************************************************/
 
-#include <chrono>
 #include <iostream>
-#include <iomanip>
 
-#include "MonitorItem.h"
+#include "can.h"
 
-test::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sample_rate)
+/**
+ * @class CycleBitValue
+ * @namespace can
+ *
+ * Represents value of single clock cycle within a time quanta.
+ */
+class can::Cycle
 {
-    this->duration_ = duration;
-    this->sample_rate_ = sample_rate;
-    this->value_ = value;
-    this->message_ = std::string();
-}
+    public:
 
+        /**
+         * Default value for given cycle.
+         */
+        Cycle(TimeQuanta *parent);
 
-test::MonitorItem::MonitorItem(std::chrono::nanoseconds duration, StdLogic value,
-                                   std::chrono::nanoseconds sample_rate, std::string message)
-{
-    this->duration_ = duration;
-    this->sample_rate_ = sample_rate;
-    this->value_ = value;
-    this->message_ = message;
-}
+        /**
+         * Forced value for given cycle.
+         */
+        Cycle(TimeQuanta *parent, BitVal val);
 
+        /**
+         * Forces value within a cycle
+         * @param val Value to force
+         */
+        void ForceVal(BitVal val);
 
-bool test::MonitorItem::HasMessage()
-{
-    if (message_.size() > 0)
-        return true;
-    return false;
-}
+        /**
+         * Releases value within given cycle (returns to default value)
+         */
+        void ReleaseVal();
 
+        // Getters
+        inline bool has_def_val() const {
+            return has_def_val_;
+        };
 
-void test::MonitorItem::Print()
-{
-    if (HasMessage())
-        std::cout << std::setw (20) << message_;
-    std::cout << std::setw (20) << (char)value_;
-    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
-}
+        inline BitVal bit_val() const {
+            return val_;
+        };
+
+    protected:
+        /* Time quanta which contains this cycle */
+        TimeQuanta *parent_;
+
+        /* Default value from CanBit should be taken */
+        bool has_def_val_ = true;
+
+        /* If has_default_value_ = false, then cycle has this value */
+        BitVal val_ = BitVal::Recessive;
+};
+
+#endif

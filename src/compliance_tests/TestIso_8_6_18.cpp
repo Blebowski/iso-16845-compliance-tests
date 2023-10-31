@@ -76,26 +76,26 @@ class TestIso_8_6_18 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            FillTestVariants(VariantMatchType::CommonAndFd);
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, EsiFlag::ErrorPassive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, EsiFlag::ErrPas);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -111,39 +111,39 @@ class TestIso_8_6_18 : public test::TestBase
              *   6. Append suspend transmission since IUT is Error passive!
              *   7. Insert retransmitted frame, but with ACK set.
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            drv_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            driver_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
-            monitor_bit_frm->InsertPassiveErrorFrame(0, BitType::AckDelimiter);
+            drv_bit_frm->InsertPasErrFrm(0, BitKind::AckDelim);
+            mon_bit_frm->InsertPasErrFrm(0, BitKind::AckDelim);
 
-            Bit *last_err_flg_bit = driver_bit_frm->GetBitOf(5, BitType::PassiveErrorFlag);
-            driver_bit_frm->FlipBitAndCompensate(last_err_flg_bit, dut_input_delay);
+            Bit *last_err_flg_bit = drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag);
+            drv_bit_frm->FlipBitAndCompensate(last_err_flg_bit, dut_input_delay);
 
-            int bit_index = driver_bit_frm->GetBitIndex(last_err_flg_bit);
-            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertPassiveErrorFrame(bit_index + 1);
+            int bit_index = drv_bit_frm->GetBitIndex(last_err_flg_bit);
+            drv_bit_frm->InsertPasErrFrm(bit_index + 1);
+            mon_bit_frm->InsertPasErrFrm(bit_index + 1);
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            drv_bit_frm->AppendSuspTrans();
+            mon_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm_2->ConvRXFrame();
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            dut_ifc->SetErrorState(FaultConfinementState::ErrorPassive);
+            dut_ifc->SetErrorState(FaultConfState::ErrPas);
             tec_old = dut_ifc->GetTec();
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             /*
              * +8 for ACK error followed by dominant bit during passive error flag,
@@ -151,7 +151,7 @@ class TestIso_8_6_18 : public test::TestBase
              */
             CheckTecChange(tec_old, +7);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

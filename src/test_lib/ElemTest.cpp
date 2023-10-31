@@ -22,52 +22,39 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 27.3.2020
+ * @date 25.8.2020
  *
  *****************************************************************************/
 
 #include <chrono>
-#include <iostream>
-#include <iomanip>
+#include <string>
+#include <list>
+#include <memory>
 
-#include "DriverItem.h"
+#include "ElemTest.h"
 
-
-test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value):
-    duration_(duration),
-    value_(value)
+test::ElemTest::ElemTest(int index) :
+    index_(index)
 {
-    message_ = std::string();
+    msg_ = "Elementary test: ";
+    msg_ += std::to_string(index);
 }
 
-
-test::DriverItem::DriverItem(std::chrono::nanoseconds duration, StdLogic value,
-                                  std::string message):
-    duration_(duration),
-    value_(value),
-    message_(message)
+test::ElemTest::ElemTest(int index, std::string msg):
+    index_(index),
+    msg_(msg)
 {}
 
+test::ElemTest::ElemTest(int index, std::string msg, can::FrameKind frame_type):
+    index_(index),
+    msg_(msg),
+    frame_kind_(frame_type)
+{}
 
-bool test::DriverItem::HasMessage()
+test::ElemTest::ElemTest(int index, can::FrameKind frame_type):
+    index_(index),
+    frame_kind_(frame_type)
 {
-    if (message_.size() > 0)
-        return true;
-    return false;
-}
-
-
-void test::DriverItem::Print()
-{
-    if (HasMessage() == true)
-        std::cout << std::setw (20) << message_;
-
-    if (value_ == StdLogic::LOGIC_0)
-        std::cout << std::setw (20) << "0";
-    else if (value_ == StdLogic::LOGIC_1)
-        std::cout << std::setw (20) << "1";
-    else
-        std::cout << std::setw (20) << char(value_);
-
-    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
+    msg_ = "Elementary test: ";
+    msg_ += std::to_string(index);
 }

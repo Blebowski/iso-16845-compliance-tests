@@ -80,27 +80,27 @@ class TestIso_7_8_5_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            for (size_t i = 1; i <= dbt.sjw_; i++)
             {
-                ElementaryTest test = ElementaryTest(i);
+                ElemTest test = ElemTest(i);
                 test.e_ = i;
-                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+                AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift,
-                                                       EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift,
+                                                       EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -110,33 +110,33 @@ class TestIso_7_8_5_1 : public test::TestBase
              *     Note: e is negative, therefore this step will actually force Recessive only
              *           in Phase2! This compenstates 'e' of shortening!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *brs_bit = driver_bit_frm->GetBitOf(0, BitType::Brs);
-            Bit *esi_bit = driver_bit_frm->GetBitOf(0, BitType::Esi);
-            Bit *brs_bit_monitor = monitor_bit_frm->GetBitOf(0, BitType::Brs);
+            Bit *brs_bit = drv_bit_frm->GetBitOf(0, BitKind::Brs);
+            Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
+            Bit *brs_bit_monitor = mon_bit_frm->GetBitOf(0, BitKind::Brs);
 
             brs_bit->ShortenPhase(BitPhase::Ph2, elem_test.e_);
             brs_bit_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
 
             // In test, e is negative, we have abs(e), so we need to add, not subract.
-            int start_tq = 1 + data_bit_timing.prop_ + data_bit_timing.ph1_ + elem_test.e_;
-            for (size_t j = start_tq; j < brs_bit->GetLengthTimeQuanta(); j++)
-                esi_bit->ForceTimeQuanta(j, BitValue::Recessive);
+            int start_tq = 1 + dbt.prop_ + dbt.ph1_ + elem_test.e_;
+            for (size_t j = start_tq; j < brs_bit->GetLenTQ(); j++)
+                esi_bit->ForceTQ(j, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ESI negative resynchronisation with phase error: %d",
                          elem_test.e_);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -94,26 +94,26 @@ class TestIso_7_6_23 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::FdTolerantFdEnabled);
+            FillTestVariants(VariantMatchType::FdTolAndFdEna);
 
             int num_elem_tests;
-            if (test_variants[0] == TestVariant::CanFdTolerant)
+            if (test_variants[0] == TestVariant::CanFdTol)
                 num_elem_tests = 3;
-            else if (test_variants[0] == TestVariant::CanFdEnabled)
+            else if (test_variants[0] == TestVariant::CanFdEna)
                 num_elem_tests = 2;
             else
                 num_elem_tests = 0;
 
             for (int i = 0; i < num_elem_tests; i++)
                 if (i < 3)
-                    elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::CanFd));
+                    elem_tests[0].push_back(ElemTest(i + 1, FrameKind::CanFd));
                 else
-                    elem_tests[0].push_back(ElementaryTest(i + 1, FrameType::Can2_0));
+                    elem_tests[0].push_back(ElemTest(i + 1, FrameKind::Can20));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /******************************************************************************
@@ -123,23 +123,23 @@ class TestIso_7_6_23 : public test::TestBase
              *****************************************************************************/
             dut_ifc->Disable();
             dut_ifc->ConfigureProtocolException(true);
-            nominal_bit_timing = data_bit_timing;
+            nbt = dbt;
             if (elem_test.index_ == 1)
-                nominal_bit_timing.brp_ = data_bit_timing.brp_ * 2;
+                nbt.brp_ = dbt.brp_ * 2;
             else
-                nominal_bit_timing.brp_ = data_bit_timing.brp_ * 8;
-            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+                nbt.brp_ = dbt.brp_ * 8;
+            dut_ifc->ConfigureBitTiming(nbt, dbt);
 
             /* Enable and wait till integration is over again */
             dut_ifc->Enable();
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(2000);
 
             /******************************************************************************
              * Generate frames!
              *****************************************************************************/
             // Approriate Frame type is generated in ConfigureTest!
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
 
             if (elem_test.index_ == 1)
             {
@@ -151,7 +151,7 @@ class TestIso_7_6_23 : public test::TestBase
                                     0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
                                     0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
                                     0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
-                golden_frm = std::make_unique<Frame>(*frame_flags, 0xA, data);
+                gold_frm = std::make_unique<Frame>(*frm_flags, 0xA, data);
             } else {
                 uint8_t data[64] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -161,16 +161,16 @@ class TestIso_7_6_23 : public test::TestBase
                                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
                                     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-                golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, data);
+                gold_frm = std::make_unique<Frame>(*frm_flags, 0xF, data);
             }
-            RandomizeAndPrint(golden_frm.get());
+            RandomizeAndPrint(gold_frm.get());
 
-            frame_flags_2 = std::make_unique<FrameFlags>(FrameType::Can2_0);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm_2.get());
+            frm_flags_2 = std::make_unique<FrameFlags>(FrameKind::Can20);
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm_2.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**********************************************************************************
              * Modify test frames:
@@ -185,37 +185,37 @@ class TestIso_7_6_23 : public test::TestBase
              *      receives 11 consecutive recessive bits!
              *   5. Append second frame directly after first frame as if transmitted by LT.
              **********************************************************************************/
-            if (test_variant == TestVariant::CanFdEnabled)
+            if (test_variant == TestVariant::CanFdEna)
             {
-                driver_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
-                monitor_bit_frm->GetBitOf(0, BitType::R0)->bit_value_ = BitValue::Recessive;
+                drv_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
+                mon_bit_frm->GetBitOf(0, BitKind::R0)->val_ = BitVal::Recessive;
             }
 
-            driver_bit_frm->UpdateFrame();
-            monitor_bit_frm->UpdateFrame();
+            drv_bit_frm->UpdateFrame();
+            mon_bit_frm->UpdateFrame();
 
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            monitor_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Recessive;
+            mon_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_2->TurnReceivedFrame();
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm_2->ConvRXFrame();
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
             /**********************************************************************************
              * Execute test
              *********************************************************************************/
             dut_ifc->SetRec(9);
             rec_old = dut_ifc->GetRec();
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm_2);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm_2);
             CheckRecChange(rec_old, -1);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

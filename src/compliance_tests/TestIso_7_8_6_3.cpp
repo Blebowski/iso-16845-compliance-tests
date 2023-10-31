@@ -83,26 +83,26 @@ class TestIso_7_8_6_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            for (size_t i = nominal_bit_timing.sjw_ + 1; i <= nominal_bit_timing.ph2_; i++)
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            for (size_t i = nbt.sjw_ + 1; i <= nbt.ph2_; i++)
             {
-                ElementaryTest test = ElementaryTest(i - nominal_bit_timing.sjw_);
+                ElemTest test = ElemTest(i - nbt.sjw_);
                 test.e_ = i;
-                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+                AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -112,35 +112,35 @@ class TestIso_7_8_6_3 : public test::TestBase
              *      DUTs expected resynchronisation).
              *   4. Force PH2 of ACK bit to Recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            Bit *crc_delimiter_driver = driver_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *crc_delimiter_monitor = monitor_bit_frm->GetBitOf(0, BitType::CrcDelimiter);
-            Bit *ack_driver = driver_bit_frm->GetBitOf(0, BitType::Ack);
+            Bit *crc_delimiter_driver = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *crc_delimiter_monitor = mon_bit_frm->GetBitOf(0, BitKind::CrcDelim);
+            Bit *ack_driver = drv_bit_frm->GetBitOf(0, BitKind::Ack);
 
             for (int j = 0; j < elem_test.e_; j++)
-                crc_delimiter_driver->ForceTimeQuanta(nominal_bit_timing.ph2_ - 1 - j, BitPhase::Ph2,
-                                                      BitValue::Dominant);
+                crc_delimiter_driver->ForceTQ(nbt.ph2_ - 1 - j, BitPhase::Ph2,
+                                                      BitVal::Dominant);
 
-            crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+            crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
 
-            for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                ack_driver->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+            for (size_t j = 0; j < nbt.ph2_; j++)
+                ack_driver->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing ACK negative resynchronisation with phase error: %d",
                          elem_test.e_);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
-            CheckRxFrame(*golden_frm);
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
+            CheckRxFrame(*gold_frm);
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

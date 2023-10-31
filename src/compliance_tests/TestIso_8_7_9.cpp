@@ -81,41 +81,41 @@ class TestIso_8_7_9 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTestForEachSP(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
 
-            assert(nominal_bit_timing.brp_ > 2 &&
+            assert(nbt.brp_ > 2 &&
                    "TQ(N) shall bigger than 2 for this test due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // Generate test specific bit timing
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
+            nbt = GenerateSPForTest(elem_test, true);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nbt, dbt);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            nominal_bit_timing.Print();
+            nbt.Print();
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -130,12 +130,12 @@ class TestIso_8_7_9 : public test::TestBase
              *   5. Insert Active Error frame from next bit on.
              *   6. Append retransmitted frame
              *************************************************************************************/
-            Bit *rand_bit = driver_bit_frm->GetRandomBit(BitValue::Dominant);
-            int rand_bit_index = driver_bit_frm->GetBitIndex(rand_bit);
+            Bit *rand_bit = drv_bit_frm->GetRandBit(BitVal::Dominant);
+            int rand_bit_index = drv_bit_frm->GetBitIndex(rand_bit);
 
-            rand_bit->ForceTimeQuanta(0, BitPhase::Ph2, BitValue::Recessive);
-            rand_bit->GetLastTimeQuantaIterator(rand_bit->PrevBitPhase(BitPhase::Ph2))
-                ->ForceValue(BitValue::Recessive);
+            rand_bit->ForceTQ(0, BitPhase::Ph2, BitVal::Recessive);
+            rand_bit->GetLastTQIter(rand_bit->PrevBitPhase(BitPhase::Ph2))
+                ->ForceVal(BitVal::Recessive);
 
             // TODO: Execute compensation of position of inserted two time quanta glitch. We should
             //       take into account IUTs input delay and shift the glitch by dut_input_delay
@@ -143,30 +143,30 @@ class TestIso_8_7_9 : public test::TestBase
             //       around the sample point from its perception!
             //       If we do this, we no more need min TQ(N) == 2!
 
-            rand_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
-            monitor_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2,
-                nominal_bit_timing.sjw_);
+            rand_bit->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
+            mon_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2,
+                nbt.sjw_);
 
-            driver_bit_frm->InsertActiveErrorFrame(rand_bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(rand_bit_index + 1);
+            drv_bit_frm->InsertActErrFrm(rand_bit_index + 1);
+            mon_bit_frm->InsertActErrFrm(rand_bit_index + 1);
 
-            driver_bit_frm_2->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm_2->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

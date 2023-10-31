@@ -74,20 +74,20 @@ class TestIso_7_6_4 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            FillTestVariants(VariantMatchType::CommonAndFd);
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -98,40 +98,40 @@ class TestIso_7_6_4 : public test::TestBase
              *      of Overload Delimiter). These bits shall be driven on can_tx, but 16
              *      RECESSIVE bits shall be monitored on can_tx.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm->GetBitOf(6, BitKind::Eof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            mon_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            drv_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
-            Bit *ovr_delim = driver_bit_frm->GetBitOf(0, BitType::OverloadDelimiter);
-            int bit_index = driver_bit_frm->GetBitIndex(ovr_delim);
+            Bit *ovr_delim = drv_bit_frm->GetBitOf(0, BitKind::OvrlDelim);
+            int bit_index = drv_bit_frm->GetBitIndex(ovr_delim);
 
             for (int k = 0; k < 16; k++)
             {
-                driver_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Dominant, bit_index);
-                monitor_bit_frm->InsertBit(BitType::OverloadFlag, BitValue::Recessive, bit_index);
+                drv_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Dominant, bit_index);
+                mon_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Recessive, bit_index);
             }
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             rec_old = dut_ifc->GetRec();
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
             /*
              * Receiver will make received frame valid on 6th bit of EOF! Therefore at
              * point where Error occurs, frame was already received OK and should be
              * readable!
              */
-            CheckRxFrame(*golden_frm);
+            CheckRxFrame(*gold_frm);
 
             /*
              * For first iteration we start from 0 so there will be no decrement on
@@ -144,6 +144,6 @@ class TestIso_7_6_4 : public test::TestBase
                 CheckRecChange(rec_old, +15);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

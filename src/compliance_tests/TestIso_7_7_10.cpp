@@ -78,25 +78,25 @@ class TestIso_7_7_10 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTest(TestVariant::Common, ElementaryTest(1));
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTest(TestVariant::Common, ElemTest(1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID - first 5 bits recessive, next 6 dominant
             // this gives ID with dominant bits after first stuff bit!
             int id = 0b11111000000;
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -106,30 +106,30 @@ class TestIso_7_7_10 : public test::TestBase
              *   4. Insert Active Error flag one bit after 2nd stuff bit! Insert Passive Error
              *      flag to driver so that it transmitts all recessive!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *first_stuff_bit = driver_bit_frm->GetStuffBit(0);
-            int tq_position = first_stuff_bit->GetLengthTimeQuanta() - nominal_bit_timing.ph2_ + 1;
-            first_stuff_bit->GetTimeQuanta(tq_position - 1)->ForceValue(BitValue::Recessive);
+            Bit *first_stuff_bit = drv_bit_frm->GetStuffBit(0);
+            int tq_position = first_stuff_bit->GetLenTQ() - nbt.ph2_ + 1;
+            first_stuff_bit->GetTQ(tq_position - 1)->ForceVal(BitVal::Recessive);
 
-            Bit *second_stuff_bit = driver_bit_frm->GetStuffBit(1);
-            second_stuff_bit->bit_value_ = BitValue::Dominant;
-            int index = driver_bit_frm->GetBitIndex(second_stuff_bit);
+            Bit *second_stuff_bit = drv_bit_frm->GetStuffBit(1);
+            second_stuff_bit->val_ = BitVal::Dominant;
+            int index = drv_bit_frm->GetBitIndex(second_stuff_bit);
 
-            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+            mon_bit_frm->InsertActErrFrm(index + 1);
+            drv_bit_frm->InsertPasErrFrm(index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing glitch filtering on negative phase error!");
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

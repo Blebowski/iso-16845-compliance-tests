@@ -100,11 +100,11 @@ class TestIso_7_1_3 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 6; i++)
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1));
             for (int i = 0; i < 4; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(10));
@@ -114,108 +114,108 @@ class TestIso_7_1_3 : public test::TestBase
             // Following constraint is not due to model or IUT issues.
             // It is due to principle of the test, we can't avoid it!
             // This is
-            assert(data_bit_timing.brp_ == nominal_bit_timing.brp_ &&
+            assert(dbt.brp_ == nbt.brp_ &&
                    " In this test BRP(N) must be equal to BRP(D) due to test architecture!");
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            IdentifierType lt_id_type;
-            IdentifierType iut_id_type;
+            IdentKind lt_id_type;
+            IdentKind iut_id_type;
 
-            RtrFlag lt_rtr_flag = RtrFlag::DataFrame;
-            RtrFlag iut_rtr_flag = RtrFlag::DataFrame;
+            RtrFlag lt_rtr_flag = RtrFlag::Data;
+            RtrFlag iut_rtr_flag = RtrFlag::Data;
 
             int lt_id;
             int iut_id;
 
-            FrameType lt_frame_type;
-            FrameType iut_frame_type;
+            FrameKind lt_frame_type;
+            FrameKind iut_frame_type;
 
             if (test_variant == TestVariant::Common)
             {
-                lt_frame_type = FrameType::Can2_0;
-                iut_frame_type = FrameType::Can2_0;
+                lt_frame_type = FrameKind::Can20;
+                iut_frame_type = FrameKind::Can20;
 
                 switch (elem_test.index_)
                 {
                 case 1:
-                    lt_id_type = IdentifierType::Base;
-                    iut_id_type = IdentifierType::Base;
-                    iut_rtr_flag = RtrFlag::RtrFrame;
+                    lt_id_type = IdentKind::Base;
+                    iut_id_type = IdentKind::Base;
+                    iut_rtr_flag = RtrFlag::Rtr;
                     lt_id = rand() % (int)pow(2, 11);
                     iut_id = lt_id;
                     break;
                 case 2:
-                    lt_id_type = IdentifierType::Base;
-                    iut_id_type = IdentifierType::Extended;
+                    lt_id_type = IdentKind::Base;
+                    iut_id_type = IdentKind::Ext;
                     lt_id = rand() % (int)pow(2, 11);
                     iut_id = (lt_id << 18);
                     break;
                 case 3:
-                    lt_id_type = IdentifierType::Base;
-                    iut_id_type = IdentifierType::Extended;
-                    lt_rtr_flag = RtrFlag::RtrFrame;
+                    lt_id_type = IdentKind::Base;
+                    iut_id_type = IdentKind::Ext;
+                    lt_rtr_flag = RtrFlag::Rtr;
                     lt_id = rand() % (int)pow(2, 11);
                     iut_id = (lt_id << 18);
                     break;
                 case 4:
-                    lt_id_type = IdentifierType::Extended;
-                    iut_id_type = IdentifierType::Base;
+                    lt_id_type = IdentKind::Ext;
+                    iut_id_type = IdentKind::Base;
                     iut_id = 0x7FF;
                     lt_id = (0x7FE << 18);
                     break;
                 case 5:
-                    lt_id_type = IdentifierType::Extended;
-                    iut_id_type = IdentifierType::Extended;
+                    lt_id_type = IdentKind::Ext;
+                    iut_id_type = IdentKind::Ext;
                     lt_id = 0x1FFFFFFE;
                     iut_id = 0x1FFFFFFF;
                     break;
                 case 6:
-                    lt_id_type = IdentifierType::Extended;
-                    iut_id_type = IdentifierType::Extended;
-                    iut_rtr_flag = RtrFlag::RtrFrame;
+                    lt_id_type = IdentKind::Ext;
+                    iut_id_type = IdentKind::Ext;
+                    iut_rtr_flag = RtrFlag::Rtr;
                     lt_id = rand() % (int)pow(2, 29);
                     iut_id = lt_id;
                     break;
                 default:
                     break;
                 }
-            } else if (test_variant == TestVariant::CanFdEnabled) {
+            } else if (test_variant == TestVariant::CanFdEna) {
                 switch (elem_test.index_)
                 {
                 case 1:
-                    lt_frame_type = FrameType::Can2_0;
-                    iut_frame_type = FrameType::CanFd;
-                    lt_id_type = IdentifierType::Base;
-                    iut_id_type = IdentifierType::Base;
+                    lt_frame_type = FrameKind::Can20;
+                    iut_frame_type = FrameKind::CanFd;
+                    lt_id_type = IdentKind::Base;
+                    iut_id_type = IdentKind::Base;
                     lt_id = 0x3FE;
                     iut_id = 0x3FF;
                     break;
                 case 2:
-                    lt_frame_type = FrameType::CanFd;
-                    iut_frame_type = FrameType::Can2_0;
-                    lt_id_type = IdentifierType::Base;
-                    iut_id_type = IdentifierType::Base;
+                    lt_frame_type = FrameKind::CanFd;
+                    iut_frame_type = FrameKind::Can20;
+                    lt_id_type = IdentKind::Base;
+                    iut_id_type = IdentKind::Base;
                     lt_id = rand() % (int)pow(2, 11);
                     iut_id = lt_id;
-                    iut_rtr_flag = RtrFlag::RtrFrame;
+                    iut_rtr_flag = RtrFlag::Rtr;
                     break;
                 case 3:
-                    lt_frame_type = FrameType::Can2_0;
-                    iut_frame_type = FrameType::CanFd;
-                    lt_id_type = IdentifierType::Extended;
-                    iut_id_type = IdentifierType::Extended;
+                    lt_frame_type = FrameKind::Can20;
+                    iut_frame_type = FrameKind::CanFd;
+                    lt_id_type = IdentKind::Ext;
+                    iut_id_type = IdentKind::Ext;
                     lt_id = 0x1FFFFFFE;
                     iut_id = 0x1FFFFFFF;
                     break;
                 case 4:
-                    lt_frame_type = FrameType::CanFd;
-                    iut_frame_type = FrameType::Can2_0;
-                    lt_id_type = IdentifierType::Extended;
-                    iut_id_type = IdentifierType::Extended;
-                    iut_rtr_flag = RtrFlag::RtrFrame;
+                    lt_frame_type = FrameKind::CanFd;
+                    iut_frame_type = FrameKind::Can20;
+                    lt_id_type = IdentKind::Ext;
+                    iut_id_type = IdentKind::Ext;
+                    iut_rtr_flag = RtrFlag::Rtr;
                     lt_id = rand() % (int)pow(2, 29);
                     iut_id = lt_id;
                     break;
@@ -225,20 +225,20 @@ class TestIso_7_1_3 : public test::TestBase
             }
 
             /* For IUT */
-            frame_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag,
-                                                        EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x0, iut_id);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(iut_frame_type, iut_id_type, iut_rtr_flag,
+                                                        EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x0, iut_id);
+            RandomizeAndPrint(gold_frm.get());
 
             /* For LT */
-            frame_flags_2 = std::make_unique<FrameFlags>(lt_frame_type, lt_id_type, lt_rtr_flag,
-                                                        EsiFlag::ErrorActive);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x0, lt_id);
-            RandomizeAndPrint(golden_frm_2.get());
+            frm_flags_2 = std::make_unique<FrameFlags>(lt_frame_type, lt_id_type, lt_rtr_flag,
+                                                        EsiFlag::ErrAct);
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags_2, 0x0, lt_id);
+            RandomizeAndPrint(gold_frm_2.get());
 
             /* Driven/monitored is derived from LTs frame since this one wins over IUTs frame! */
-            driver_bit_frm = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm_2);
+            drv_bit_frm = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm = ConvBitFrame(*gold_frm_2);
 
             /**************************************************************************************
              * Modify test frames:
@@ -256,52 +256,52 @@ class TestIso_7_1_3 : public test::TestBase
              *************************************************************************************/
 
             /* Initialize to make linter happy! */
-            Bit *bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Sof);
+            Bit *bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Sof);
             if (test_variant == TestVariant::Common)
             {
                 switch (elem_test.index_)
                 {
                 case 1:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Rtr);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
                     break;
                 case 2:
                     /* In IUTs frame SRR is on RTR position of driven frame */
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Rtr);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
                     break;
                 case 3:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Ide);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Ide);
                     break;
                 case 4:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(
-                                            10, BitType::BaseIdentifier);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(
+                                            10, BitKind::BaseIdent);
                     break;
                 case 5:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(17,
-                                        BitType::IdentifierExtension);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(17,
+                                        BitKind::ExtIdent);
                     break;
                 case 6:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::Rtr);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
                 default:
                     break;
                 }
-            } else if (test_variant == TestVariant::CanFdEnabled) {
+            } else if (test_variant == TestVariant::CanFdEna) {
                 switch (elem_test.index_)
                 {
                 case 1:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(10,
-                                        BitType::BaseIdentifier);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(10,
+                                        BitKind::BaseIdent);
                     break;
                 case 2:
                     /* In IUTs frame R1 is on position of RTR */
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::R1);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::R1);
                     break;
                 case 3:
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOfNoStuffBits(17,
-                                        BitType::IdentifierExtension);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOfNoStuffBits(17,
+                                        BitKind::ExtIdent);
                     break;
                 case 4:
                     /* In IUTs frame R1 is on position of RTR */
-                    bit_to_loose_arb = monitor_bit_frm->GetBitOf(0, BitType::R1);
+                    bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::R1);
                 default:
                     break;
                 }
@@ -311,36 +311,36 @@ class TestIso_7_1_3 : public test::TestBase
              * In all frames monitored bits shall be equal to driven bits up to point where
              * arbitration is lost!
              */
-            bit_to_loose_arb->bit_value_ = BitValue::Recessive;
-            monitor_bit_frm->LooseArbitration(bit_to_loose_arb);
+            bit_to_loose_arb->val_ = BitVal::Recessive;
+            mon_bit_frm->LooseArbit(bit_to_loose_arb);
 
             /* Compensate input delay, lenghten bit on which arbitration was lost */
-            bit_to_loose_arb->GetLastTimeQuantaIterator(BitPhase::Ph2)->Lengthen(dut_input_delay);
+            bit_to_loose_arb->GetLastTQIter(BitPhase::Ph2)->Lengthen(dut_input_delay);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            driver_bit_frm_2->TurnReceivedFrame();
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
+            drv_bit_frm_2->ConvRXFrame();
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
             /* IUTs frame is sent! */
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
             /* Received should be the frame which is sent by LT */
-            CheckRxFrame(*golden_frm_2);
+            CheckRxFrame(*gold_frm_2);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

@@ -82,37 +82,37 @@ class TestIso_8_7_8 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTestForEachSP(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Generate test-specific bit timing with shifted sample point */
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
+            nbt = GenerateSPForTest(elem_test, true);
 
             // Reconfigure DUT with new Bit time config with same bit-rate but other SP.
             dut_ifc->Disable();
-            dut_ifc->ConfigureBitTiming(nominal_bit_timing, data_bit_timing);
+            dut_ifc->ConfigureBitTiming(nbt, dbt);
             dut_ifc->Enable();
             TestMessage("Waiting till DUT is error active!");
-            while (this->dut_ifc->GetErrorState() != FaultConfinementState::ErrorActive)
+            while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)
                 usleep(100000);
 
             TestMessage("Nominal bit timing for this elementary test:");
-            nominal_bit_timing.Print();
+            nbt.Print();
 
             uint8_t data_byte = 0x55;
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, RtrFlag::DataFrame,
-                                                       EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, &data_byte);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, RtrFlag::Data,
+                                                       EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, &data_byte);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -124,41 +124,41 @@ class TestIso_8_7_8 : public test::TestBase
              *      but following bit length is effectively lengthened for IUT, so that IUT will
              *      not have remaining phase error to synchronize away during next bits.
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(1, BitType::Data)
-                ->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+            drv_bit_frm->GetBitOf(1, BitKind::Data)
+                ->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
 
             // Due to input delay of DUT, the DUT will see the synchronization edge later, and thus
             // we need t expect that. Monitored frame must be shortened as resynchronization really
             // occurs! This does not corrupt the result of the test (next edge really occurs
             //  two bit times + PH2 - SJW ).
-            Bit *mon_bit = monitor_bit_frm->GetBitOf(1, BitType::Data);
-            mon_bit->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.sjw_);
+            Bit *mon_bit = mon_bit_frm->GetBitOf(1, BitKind::Data);
+            mon_bit->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
             if (mon_bit->GetPhaseLenCycles(BitPhase::Ph2) <= dut_input_delay) {
-                auto tq = mon_bit->GetLastTimeQuantaIterator(BitPhase::Ph2);
+                auto tq = mon_bit->GetLastTQIter(BitPhase::Ph2);
                 tq->Lengthen(
                     dut_input_delay - mon_bit->GetPhaseLenCycles(BitPhase::Ph2) + 1);
             }
 
-            Bit *drv_bit = driver_bit_frm->GetBitOf(1, BitType::Data);
-            for (size_t i = 0; i < drv_bit->GetPhaseLenTimeQuanta(BitPhase::Ph2); i++)
-                drv_bit->ForceTimeQuanta(i, BitPhase::Ph2, BitValue::Dominant);
+            Bit *drv_bit = drv_bit_frm->GetBitOf(1, BitKind::Data);
+            for (size_t i = 0; i < drv_bit->GetPhaseLenTQ(BitPhase::Ph2); i++)
+                drv_bit->ForceTQ(i, BitPhase::Ph2, BitVal::Dominant);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
 
-            CheckLowerTesterResult();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

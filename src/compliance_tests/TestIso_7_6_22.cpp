@@ -75,18 +75,18 @@ class TestIso_7_6_22 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
             for (int i = 0; i < 4; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t dlc;
-            BitValue bit_value;
+            BitVal bit_value;
 
             /* Tests 1,3 -> DLC < 10. Tests 2,4 -> DLC > 10 */
             if (elem_test.index_ % 2 == 0)
@@ -95,16 +95,16 @@ class TestIso_7_6_22 : public test::TestBase
                 dlc = rand() % 10;
 
             if (elem_test.index_ < 3)
-                bit_value = BitValue::Recessive;
+                bit_value = BitVal::Recessive;
             else
-                bit_value = BitValue::Dominant;
+                bit_value = BitVal::Dominant;
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, RtrFlag::DataFrame);
-            golden_frm = std::make_unique<Frame>(*frame_flags, dlc);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, RtrFlag::Data);
+            gold_frm = std::make_unique<Frame>(*frm_flags, dlc);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -114,9 +114,9 @@ class TestIso_7_6_22 : public test::TestBase
              *   3. Insert Active Error frame to monitored frame. Insert Passive Error frame to
              *      driven frame (TX/RX feedback enabled).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffBitType::FixedStuffBit,
+            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Fixed,
                                                                  bit_value);
             printf("Number of fixed stuff bits matching: %d\n", num_stuff_bits);
 
@@ -132,33 +132,33 @@ class TestIso_7_6_22 : public test::TestBase
                  * Copy frame to second frame so that we dont loose modification of bits.
                  * Corrupt only second one.
                  */
-                driver_bit_frm_2 = std::make_unique<BitFrame>(*driver_bit_frm);
-                monitor_bit_frm_2 = std::make_unique<BitFrame>(*monitor_bit_frm);
+                drv_bit_frm_2 = std::make_unique<BitFrame>(*drv_bit_frm);
+                mon_bit_frm_2 = std::make_unique<BitFrame>(*mon_bit_frm);
 
                 /* Get stuff bit on 'stuff_bit' position */
-                Bit *stuff_bit_to_flip = driver_bit_frm_2->GetFixedStuffBit(stuff_bit, bit_value);
+                Bit *stuff_bit_to_flip = drv_bit_frm_2->GetFixedStuffBit(stuff_bit, bit_value);
 
-                int bit_index = driver_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
-                stuff_bit_to_flip->FlipBitValue();
+                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                stuff_bit_to_flip->FlipVal();
 
-                driver_bit_frm_2->InsertPassiveErrorFrame(bit_index + 1);
-                monitor_bit_frm_2->InsertActiveErrorFrame(bit_index + 1);
+                drv_bit_frm_2->InsertPasErrFrm(bit_index + 1);
+                mon_bit_frm_2->InsertActErrFrm(bit_index + 1);
 
-                driver_bit_frm_2->Print(true);
-                monitor_bit_frm_2->Print(true);
+                drv_bit_frm_2->Print(true);
+                mon_bit_frm_2->Print(true);
 
                 /* Test itself */
                 rec_old = dut_ifc->GetRec();
-                PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
-                RunLowerTester(true, true);
+                PushFramesToLT(*drv_bit_frm_2, *mon_bit_frm_2);
+                RunLT(true, true);
 
-                CheckLowerTesterResult();
+                CheckLTResult();
                 CheckRecChange(rec_old, +1);
                 if (test_result == false)
                     return false;
             }
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -88,34 +88,34 @@ class TestIso_8_7_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            AddElemTestForEachSamplePoint(TestVariant::Common, true, FrameType::Can2_0);
+            FillTestVariants(VariantMatchType::Common);
+            AddElemTestForEachSP(TestVariant::Common, true, FrameKind::Can20);
 
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert((nominal_bit_timing.brp_ > 1 &&
+            assert((nbt.brp_ > 1 &&
                     "BRP Nominal must be bigger than 1 in this test due to test architecture!"));
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            nominal_bit_timing = GenerateSamplePointForTest(elem_test, true);
-            ReconfigureDutBitTiming();
-            WaitDutErrorActive();
+            nbt = GenerateSPForTest(elem_test, true);
+            ReconfDutBitTiming();
+            WaitDutErrAct();
 
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0x7FF, &data_byte);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
+                                RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0x7FF, &data_byte);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -140,50 +140,50 @@ class TestIso_8_7_2 : public test::TestBase
              *         first bit of second frame will be transmitted recessive. This is emulated
              *         by SOF of second monitored frame!
              *************************************************************************************/
-            driver_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
+            drv_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
+            drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            Bit *last_interm_bit_drv = driver_bit_frm->GetBitOf(2, BitType::Intermission);
-            Bit *last_interm_bit_mon = monitor_bit_frm->GetBitOf(2, BitType::Intermission);
+            Bit *last_interm_bit_drv = drv_bit_frm->GetBitOf(2, BitKind::Interm);
+            Bit *last_interm_bit_mon = mon_bit_frm->GetBitOf(2, BitKind::Interm);
 
-            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            last_interm_bit_drv->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
             BitPhase prev_phase_drv = last_interm_bit_drv->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_drv->ShortenPhase(prev_phase_drv, 1);
-            last_interm_bit_drv->GetLastTimeQuantaIterator(prev_phase_drv)->Shorten(1);
+            last_interm_bit_drv->GetLastTQIter(prev_phase_drv)->Shorten(1);
 
-            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nominal_bit_timing.ph2_);
+            last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
             BitPhase prev_phase_mon = last_interm_bit_mon->PrevBitPhase(BitPhase::Ph2);
             last_interm_bit_mon->ShortenPhase(prev_phase_mon, 1);
-            last_interm_bit_mon->GetLastTimeQuantaIterator(prev_phase_mon)->Shorten(1);
+            last_interm_bit_mon->GetLastTQIter(prev_phase_mon)->Shorten(1);
 
-            driver_bit_frm_2->TurnReceivedFrame();
-            driver_bit_frm_2->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm_2->ConvRXFrame();
+            drv_bit_frm_2->GetBitOf(0, BitKind::Sof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->ShortenPhase(BitPhase::Sync, 1);
-            monitor_bit_frm_2->GetBitOf(0, BitType::Sof)->bit_value_ = BitValue::Recessive;
+            mon_bit_frm_2->GetBitOf(0, BitKind::Sof)->ShortenPhase(BitPhase::Sync, 1);
+            mon_bit_frm_2->GetBitOf(0, BitKind::Sof)->val_ = BitVal::Recessive;
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
 
-            driver_bit_frm->CompensateEdgeForInputDelay(
-                driver_bit_frm->GetBitOf(1, BitType::Sof), this->dut_input_delay);
+            drv_bit_frm->CompensateEdgeForInputDelay(
+                drv_bit_frm->GetBitOf(1, BitKind::Sof), this->dut_input_delay);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /*****************************************************************************
              * Execute test
              *****************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 
 };

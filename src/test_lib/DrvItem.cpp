@@ -22,39 +22,52 @@
  * IN THE COMPONENT.
  *
  * @author Ondrej Ille, <ondrej.ille@gmail.com>
- * @date 25.8.2020
+ * @date 27.3.2020
  *
  *****************************************************************************/
 
 #include <chrono>
-#include <string>
-#include <list>
-#include <memory>
+#include <iostream>
+#include <iomanip>
 
-#include "ElementaryTest.h"
+#include "DrvItem.h"
 
-test::ElementaryTest::ElementaryTest(int index) :
-    index_(index)
+
+test::DrvItem::DrvItem(std::chrono::nanoseconds duration, StdLogic value):
+    duration_(duration),
+    value_(value)
 {
-    msg_ = "Elementary test: ";
-    msg_ += std::to_string(index);
+    message_ = std::string();
 }
 
-test::ElementaryTest::ElementaryTest(int index, std::string msg):
-    index_(index),
-    msg_(msg)
+
+test::DrvItem::DrvItem(std::chrono::nanoseconds duration, StdLogic value,
+                       std::string message):
+    duration_(duration),
+    value_(value),
+    message_(message)
 {}
 
-test::ElementaryTest::ElementaryTest(int index, std::string msg, can::FrameType frame_type):
-    index_(index),
-    msg_(msg),
-    frame_type_(frame_type)
-{}
 
-test::ElementaryTest::ElementaryTest(int index, can::FrameType frame_type):
-    index_(index),
-    frame_type_(frame_type)
+bool test::DrvItem::HasMessage()
 {
-    msg_ = "Elementary test: ";
-    msg_ += std::to_string(index);
+    if (message_.size() > 0)
+        return true;
+    return false;
+}
+
+
+void test::DrvItem::Print()
+{
+    if (HasMessage() == true)
+        std::cout << std::setw (20) << message_;
+
+    if (value_ == StdLogic::LOGIC_0)
+        std::cout << std::setw (20) << "0";
+    else if (value_ == StdLogic::LOGIC_1)
+        std::cout << std::setw (20) << "1";
+    else
+        std::cout << std::setw (20) << char(value_);
+
+    std::cout << std::setw (20) << std::dec << duration_.count() << " ns\n";
 }

@@ -76,23 +76,23 @@ class TestIso_7_4_5 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
             for (int i = 0; i < 3; i++)
             {
-                AddElemTest(TestVariant::Common, ElementaryTest(i + 1, FrameType::Can2_0));
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1, FrameType::CanFd));
+                AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_);
-            golden_frm = std::make_unique<Frame>(*frame_flags);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
+            gold_frm = std::make_unique<Frame>(*frm_flags);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -102,13 +102,13 @@ class TestIso_7_4_5 : public test::TestBase
              *   4. Flip n-th bit of Overload delimiter to DOMINANT!
              *   5. Insert Active Error frame to both monitored and driven frame!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            driver_bit_frm->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
+            mon_bit_frm->ConvRXFrame();
+            drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            driver_bit_frm->GetBitOf(6, BitType::Eof)->bit_value_ = BitValue::Dominant;
+            drv_bit_frm->GetBitOf(6, BitKind::Eof)->val_ = BitVal::Dominant;
 
-            monitor_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
-            driver_bit_frm->InsertOverloadFrame(0, BitType::Intermission);
+            mon_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
+            drv_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
             int bit_to_corrupt;
             if (elem_test.index_ == 1)
@@ -120,31 +120,31 @@ class TestIso_7_4_5 : public test::TestBase
 
             TestMessage("Forcing Overload delimiter bit %d to recessive", bit_to_corrupt);
 
-            Bit *bit = driver_bit_frm->GetBitOf(bit_to_corrupt - 1, BitType::OverloadDelimiter);
-            int bit_index = driver_bit_frm->GetBitIndex(bit);
-            bit->bit_value_ = BitValue::Dominant;
+            Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::OvrlDelim);
+            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            bit->val_ = BitVal::Dominant;
 
-            driver_bit_frm->InsertActiveErrorFrame(bit_index + 1);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            drv_bit_frm->InsertActErrFrm(bit_index + 1);
+            mon_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
             /*
              * Receiver will make received frame valid on 6th bit of EOF! Therefore at
              * point where Error occurs, frame was already received OK and should be
              * readable!
              */
-            CheckRxFrame(*golden_frm);
+            CheckRxFrame(*gold_frm);
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

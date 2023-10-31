@@ -83,14 +83,14 @@ class TestIso_7_2_4 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
             for (int i = 0; i < 8; i++)
-                AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(i + 1));
+                AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data[64] = {};
@@ -149,13 +149,13 @@ class TestIso_7_2_4 : public test::TestBase
                 break;
             }
 
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::Shift, EsiFlag::ErrorActive);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0xF, 0x555, data);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::DoShift, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0xF, 0x555, data);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -164,22 +164,22 @@ class TestIso_7_2_4 : public test::TestBase
              *   3. Insert Active Error frame to monitored frame. Insert Passive Error frame
              *      to driven frame (TX/RX feedback enabled).
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = driver_bit_frm->GetNumStuffBits(StuffBitType::NormalStuffBit);
+            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
 
             /* In FD enabled variant, if last bit of data field is stuff bit, but model has this bit
              * as fixed stuff bit before Stuff count. So count in also each fixed stuff bit even
              * if last bit of data is NOT regular stuff bit. Then total number of stuff bits within
              * FD enabled variant will be higher than in ISO 16845, but this does not mind!
              */
-            Bit *bit = driver_bit_frm->GetBitOf(0, BitType::StuffCount);
-            int index = driver_bit_frm->GetBitIndex(bit);
-            BitValue value = driver_bit_frm->GetBit(index - 1)->bit_value_;
-            if ((value == driver_bit_frm->GetBit(index - 2)->bit_value_) &&
-                (value == driver_bit_frm->GetBit(index - 3)->bit_value_) &&
-                (value == driver_bit_frm->GetBit(index - 4)->bit_value_) &&
-                (value == driver_bit_frm->GetBit(index - 5)->bit_value_))
+            Bit *bit = drv_bit_frm->GetBitOf(0, BitKind::StuffCnt);
+            int index = drv_bit_frm->GetBitIndex(bit);
+            BitVal value = drv_bit_frm->GetBit(index - 1)->val_;
+            if ((value == drv_bit_frm->GetBit(index - 2)->val_) &&
+                (value == drv_bit_frm->GetBit(index - 3)->val_) &&
+                (value == drv_bit_frm->GetBit(index - 4)->val_) &&
+                (value == drv_bit_frm->GetBit(index - 5)->val_))
                 num_stuff_bits++;
 
             /**************************************************************************************
@@ -194,27 +194,27 @@ class TestIso_7_2_4 : public test::TestBase
                  * Copy frame to second frame so that we dont loose modification of bits.
                  * Corrupt only second one.
                  */
-                driver_bit_frm_2 = std::make_unique<BitFrame>(*driver_bit_frm);
-                monitor_bit_frm_2 = std::make_unique<BitFrame>(*monitor_bit_frm);
+                drv_bit_frm_2 = std::make_unique<BitFrame>(*drv_bit_frm);
+                mon_bit_frm_2 = std::make_unique<BitFrame>(*mon_bit_frm);
 
-                Bit *stuff_bit_to_flip = driver_bit_frm_2->GetStuffBit(stuff_bit);
-                int bit_index = driver_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
-                stuff_bit_to_flip->FlipBitValue();
+                Bit *stuff_bit_to_flip = drv_bit_frm_2->GetStuffBit(stuff_bit);
+                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                stuff_bit_to_flip->FlipVal();
 
-                driver_bit_frm_2->InsertPassiveErrorFrame(bit_index + 1);
-                monitor_bit_frm_2->InsertActiveErrorFrame(bit_index + 1);
+                drv_bit_frm_2->InsertPasErrFrm(bit_index + 1);
+                mon_bit_frm_2->InsertActErrFrm(bit_index + 1);
 
                 /* Do the test itself */
                 dut_ifc->SetRec(0);
-                PushFramesToLowerTester(*driver_bit_frm_2, *monitor_bit_frm_2);
-                RunLowerTester(true, true);
-                CheckLowerTesterResult();
+                PushFramesToLT(*drv_bit_frm_2, *mon_bit_frm_2);
+                RunLT(true, true);
+                CheckLTResult();
 
-                driver_bit_frm_2.reset();
-                monitor_bit_frm_2.reset();
+                drv_bit_frm_2.reset();
+                mon_bit_frm_2.reset();
             }
             FreeTestObjects();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

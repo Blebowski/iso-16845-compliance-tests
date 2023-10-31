@@ -78,34 +78,34 @@ class TestIso_7_7_4 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::Common);
-            size_t num_elem_tests = nominal_bit_timing.GetBitLengthTimeQuanta() -
-                                    nominal_bit_timing.ph2_ -
-                                    nominal_bit_timing.sjw_ - 1;
+            FillTestVariants(VariantMatchType::Common);
+            size_t num_elem_tests = nbt.GetBitLenTQ() -
+                                    nbt.ph2_ -
+                                    nbt.sjw_ - 1;
 
             for (size_t i = 0; i < num_elem_tests; i++)
             {
-                ElementaryTest test = ElementaryTest(i + 1);
-                test.e_ = nominal_bit_timing.sjw_ + 1 + i;
+                ElemTest test = ElemTest(i + 1);
+                test.e_ = nbt.sjw_ + 1 + i;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             // CAN 2.0 frame, Base identifier, randomize others
-            frame_flags = std::make_unique<FrameFlags>(FrameType::Can2_0, IdentifierType::Base);
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
             int id = pow(2,11) - 1;
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, id);
-            RandomizeAndPrint(golden_frm.get());
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -120,19 +120,19 @@ class TestIso_7_7_4 : public test::TestBase
              *      position. Insert passive error frame to driven bit so that it will transmitt
              *      all recessive!
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
-            Bit *before_stuff_bit = driver_bit_frm->GetBitOf(3, BitType::BaseIdentifier);
+            mon_bit_frm->ConvRXFrame();
+            Bit *before_stuff_bit = drv_bit_frm->GetBitOf(3, BitKind::BaseIdent);
             before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             // Monitor bit as if node re-synchronised by SJW!
-            Bit *monitor_stuff_bit = monitor_bit_frm->GetStuffBit(0);
-            monitor_stuff_bit->LengthenPhase(BitPhase::Sync, nominal_bit_timing.sjw_);
+            Bit *monitor_stuff_bit = mon_bit_frm->GetStuffBit(0);
+            monitor_stuff_bit->LengthenPhase(BitPhase::Sync, nbt.sjw_);
 
-            Bit *driver_stuff_bit = driver_bit_frm->GetStuffBit(0);
-            for (size_t j = 0; j < nominal_bit_timing.ph2_; j++)
-                driver_stuff_bit->ForceTimeQuanta(j, BitPhase::Ph2, BitValue::Recessive);
+            Bit *driver_stuff_bit = drv_bit_frm->GetStuffBit(0);
+            for (size_t j = 0; j < nbt.ph2_; j++)
+                driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
             BitPhase prev_phase = driver_stuff_bit->PrevBitPhase(BitPhase::Ph2);
-            int to_be_shortened = elem_test.e_ - nominal_bit_timing.sjw_ + 1;
+            int to_be_shortened = elem_test.e_ - nbt.sjw_ + 1;
 
             int shortened = driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened);
 
@@ -142,12 +142,12 @@ class TestIso_7_7_4 : public test::TestBase
                 driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened - shortened);
             }
 
-            int index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
-            monitor_bit_frm->InsertActiveErrorFrame(index + 1);
-            driver_bit_frm->InsertPassiveErrorFrame(index + 1);
+            int index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
+            mon_bit_frm->InsertActErrFrm(index + 1);
+            drv_bit_frm->InsertPasErrFrm(index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
@@ -155,10 +155,10 @@ class TestIso_7_7_4 : public test::TestBase
             // Clean REC so that errors don't accumulate over testing!
             TestMessage("Testing positive phase error: %d", elem_test.e_);
             dut_ifc->SetRec(0);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -82,27 +82,27 @@ class TestIso_7_8_3_2 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CanFdEnabledOnly);
-            for (size_t i = 1; i <= data_bit_timing.sjw_; i++)
+            FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            for (size_t i = 1; i <= dbt.sjw_; i++)
             {
-                ElementaryTest test = ElementaryTest(i);
+                ElemTest test = ElemTest(i);
                 test.e_ = i;
-                AddElemTest(TestVariant::CanFdEnabled, std::move(test));
+                AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
             CanAgentConfigureTxToRxFeedback(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x7F; // 7th data bit is dominant stuff bit!
-            frame_flags = std::make_unique<FrameFlags>(FrameType::CanFd, BrsFlag::Shift);
-            golden_frm = std::make_unique<Frame>(*frame_flags, 1, &data_byte);
-            RandomizeAndPrint(golden_frm.get());
+            frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, BrsFlag::DoShift);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 1, &data_byte);
+            RandomizeAndPrint(gold_frm.get());
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
             /**************************************************************************************
              * Modify test frames:
@@ -117,39 +117,39 @@ class TestIso_7_8_3_2 : public test::TestBase
              *   5. Insert active error frame on monitor from next bit, Insert passive by driver
              *      to send all recessive.
              *************************************************************************************/
-            monitor_bit_frm->TurnReceivedFrame();
+            mon_bit_frm->ConvRXFrame();
 
-            Bit *before_stuff_bit = monitor_bit_frm->GetBitOf(5, BitType::Data);
+            Bit *before_stuff_bit = mon_bit_frm->GetBitOf(5, BitKind::Data);
             before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
 
             // 7-th bit should be stuff bit
-            Bit *driver_stuff_bit = driver_bit_frm->GetBitOf(6, BitType::Data);
-            assert(driver_stuff_bit->bit_value_ == BitValue::Dominant);
-            int bit_index = driver_bit_frm->GetBitIndex(driver_stuff_bit);
+            Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
+            assert(driver_stuff_bit->val_ == BitVal::Dominant);
+            int bit_index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
             for (int j = 0; j < elem_test.e_; j++)
-                driver_stuff_bit->GetTimeQuanta(j)->ForceValue(BitValue::Recessive);
+                driver_stuff_bit->GetTQ(j)->ForceVal(BitVal::Recessive);
 
             //driver_stuff_bit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
 
-            for (size_t j = elem_test.e_ - 1; j < data_bit_timing.ph2_; j++)
-                driver_stuff_bit->GetTimeQuanta(BitPhase::Ph2, j)
-                    ->ForceValue(BitValue::Recessive);
+            for (size_t j = elem_test.e_ - 1; j < dbt.ph2_; j++)
+                driver_stuff_bit->GetTQ(BitPhase::Ph2, j)
+                    ->ForceVal(BitVal::Recessive);
 
-            driver_bit_frm->InsertPassiveErrorFrame(bit_index + 2);
-            monitor_bit_frm->InsertActiveErrorFrame(bit_index + 1);
+            drv_bit_frm->InsertPasErrFrm(bit_index + 2);
+            mon_bit_frm->InsertActErrFrm(bit_index + 1);
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             TestMessage("Testing Data byte positive resynchronisation with phase error: %d",
                         elem_test.e_);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            RunLowerTester(true, true);
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            RunLT(true, true);
+            CheckLTResult();
 
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };

@@ -75,42 +75,42 @@ class TestIso_9_6_1 : public test::TestBase
 
         void ConfigureTest()
         {
-            FillTestVariants(VariantMatchingType::CommonAndFd);
+            FillTestVariants(VariantMatchType::CommonAndFd);
 
-            AddElemTest(TestVariant::Common, ElementaryTest(1, FrameType::Can2_0));
-            AddElemTest(TestVariant::CanFdEnabled, ElementaryTest(1, FrameType::CanFd));
+            AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
+            AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
             CanAgentSetMonitorInputDelay(std::chrono::nanoseconds(0));
             CanAgentSetWaitForMonitor(true);
         }
 
-        int RunElemTest([[maybe_unused]] const ElementaryTest &elem_test,
+        int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             uint8_t data_byte = 0x80;
-            frame_flags = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorActive);
-            frame_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_type_, IdentifierType::Base,
-                                    RtrFlag::DataFrame, BrsFlag::DontShift, EsiFlag::ErrorPassive);
+            frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
+            frm_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
+                                    RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrPas);
 
-            golden_frm = std::make_unique<Frame>(*frame_flags, 0x1, 0xAA, &data_byte);
-            golden_frm_2 = std::make_unique<Frame>(*frame_flags_2, 0x1, 0xAA, &data_byte);
-            golden_frm->Print();
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0xAA, &data_byte);
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags_2, 0x1, 0xAA, &data_byte);
+            gold_frm->Print();
 
-            driver_bit_frm = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm = ConvertBitFrame(*golden_frm);
+            drv_bit_frm = ConvBitFrame(*gold_frm);
+            mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            driver_bit_frm_2 = ConvertBitFrame(*golden_frm);
-            monitor_bit_frm_2 = ConvertBitFrame(*golden_frm);
+            drv_bit_frm_2 = ConvBitFrame(*gold_frm);
+            mon_bit_frm_2 = ConvBitFrame(*gold_frm);
 
             // Separate frame is needed for CAN FD enabled variant. This frame is already with
             // IUT being Error passive, so we need frame/frame_flags with ESI error passive!
-            driver_bit_frm_3 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_3 = ConvertBitFrame(*golden_frm_2);
+            drv_bit_frm_3 = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm_3 = ConvBitFrame(*gold_frm_2);
 
-            driver_bit_frm_4 = ConvertBitFrame(*golden_frm_2);
-            monitor_bit_frm_4 = ConvertBitFrame(*golden_frm_2);
+            drv_bit_frm_4 = ConvBitFrame(*gold_frm_2);
+            mon_bit_frm_4 = ConvBitFrame(*gold_frm_2);
 
             /**************************************************************************************
              * Modify test frames:
@@ -126,52 +126,52 @@ class TestIso_9_6_1 : public test::TestBase
              *   6. Append one more frame with ACK bit set (so that IUT will not retransmitt
              *      indefinitely).
              *************************************************************************************/
-            driver_bit_frm->GetBitOf(6, BitType::Data)->FlipBitValue();
-            driver_bit_frm_2->GetBitOf(6, BitType::Data)->FlipBitValue();
+            drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
+            drv_bit_frm_2->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            driver_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm->InsertActiveErrorFrame(7, BitType::Data);
-            driver_bit_frm_2->InsertActiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm_2->InsertActiveErrorFrame(7, BitType::Data);
+            drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
+            drv_bit_frm_2->InsertActErrFrm(7, BitKind::Data);
+            mon_bit_frm_2->InsertActErrFrm(7, BitKind::Data);
 
             for (int i = 0; i < 15; i++)
             {
-                driver_bit_frm->AppendBitFrame(driver_bit_frm_2.get());
-                monitor_bit_frm->AppendBitFrame(monitor_bit_frm_2.get());
+                drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
+                mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());
             }
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            drv_bit_frm->AppendSuspTrans();
+            mon_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_3->GetBitOf(6, BitType::Data)->FlipBitValue();
-            driver_bit_frm_3->InsertPassiveErrorFrame(7, BitType::Data);
-            monitor_bit_frm_3->InsertPassiveErrorFrame(7, BitType::Data);
+            drv_bit_frm_3->GetBitOf(6, BitKind::Data)->FlipVal();
+            drv_bit_frm_3->InsertPasErrFrm(7, BitKind::Data);
+            mon_bit_frm_3->InsertPasErrFrm(7, BitKind::Data);
 
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_3.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_3.get());
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_3.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_3.get());
 
-            driver_bit_frm->AppendSuspendTransmission();
-            monitor_bit_frm->AppendSuspendTransmission();
+            drv_bit_frm->AppendSuspTrans();
+            mon_bit_frm->AppendSuspTrans();
 
-            driver_bit_frm_4->GetBitOf(0, BitType::Ack)->bit_value_ = BitValue::Dominant;
-            driver_bit_frm->AppendBitFrame(driver_bit_frm_4.get());
-            monitor_bit_frm->AppendBitFrame(monitor_bit_frm_4.get());
+            drv_bit_frm_4->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
+            drv_bit_frm->AppendBitFrame(drv_bit_frm_4.get());
+            mon_bit_frm->AppendBitFrame(mon_bit_frm_4.get());
 
-            driver_bit_frm->Print(true);
-            monitor_bit_frm->Print(true);
+            drv_bit_frm->Print(true);
+            mon_bit_frm->Print(true);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
             dut_ifc->SetRec(127);
             dut_ifc->SetTec(0);
-            PushFramesToLowerTester(*driver_bit_frm, *monitor_bit_frm);
-            StartDriverAndMonitor();
-            dut_ifc->SendFrame(golden_frm.get());
-            WaitForDriverAndMonitor();
-            CheckLowerTesterResult();
+            PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
+            StartDrvAndMon();
+            dut_ifc->SendFrame(gold_frm.get());
+            WaitForDrvAndMon();
+            CheckLTResult();
 
             FreeTestObjects();
-            return FinishElementaryTest();
+            return FinishElemTest();
         }
 };
