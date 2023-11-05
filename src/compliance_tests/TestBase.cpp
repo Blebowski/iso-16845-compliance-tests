@@ -830,6 +830,22 @@ BitTiming test::TestBase::GenerateBitTiming(const ElemTest &elem_test, bool nomi
 
     new_bt.sjw_ = std::min<size_t>(new_bt.ph2_, orig_bt->sjw_);
 
+    // CTU CAN FD specific limits for bit timings
+    // TODO: Make this universal for all controllers!
+    if (nominal) {
+        new_bt.prop_ = (new_bt.prop_ > 63)  ? 63  : new_bt.prop_;
+        new_bt.ph1_  = (new_bt.ph1_  > 63)  ? 63  : new_bt.ph1_;
+        new_bt.ph2_  = (new_bt.ph2_  > 63)  ? 63  : new_bt.ph2_;
+        new_bt.sjw_  = (new_bt.sjw_  > 31)  ? 31  : new_bt.sjw_;
+        new_bt.brp_  = (new_bt.brp_  > 255) ? 255 : new_bt.brp_;
+    } else {
+        new_bt.prop_ = (new_bt.prop_ > 63)  ? 63  : new_bt.prop_;
+        new_bt.ph1_  = (new_bt.ph1_  > 31)  ? 63  : new_bt.ph1_;
+        new_bt.ph2_  = (new_bt.ph2_  > 31)  ? 63  : new_bt.ph2_;
+        new_bt.sjw_  = (new_bt.sjw_  > 31)  ? 31  : new_bt.sjw_;
+        new_bt.brp_  = (new_bt.brp_  > 255) ? 255 : new_bt.brp_;
+    }
+
     TestMessage("Original bit timing without shifted sample point:");
     orig_bt->Print();
 
