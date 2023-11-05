@@ -83,7 +83,7 @@ void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 {
     int bit_count = monitor_frame.GetLen();
     can::Bit *bit;
-    can::Bit *next_bit;
+    can::Bit *next_bit = nullptr;
 
     for (int i = 0; i < bit_count; i++)
     {

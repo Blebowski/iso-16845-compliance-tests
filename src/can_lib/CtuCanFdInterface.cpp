@@ -276,7 +276,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     cur_txt_buf += 1;
     cur_txt_buf %= num_txt_buffers_;
 
-    assert(cur_txt_buf >= 0 && cur_txt_buf < num_txt_buffers_);
+    assert(cur_txt_buf < num_txt_buffers_);
 }
 
 

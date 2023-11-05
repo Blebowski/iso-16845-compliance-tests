@@ -64,6 +64,7 @@ void ProcessPliClkCallback();
  */
 void sw_control_req_callback(PLI_CB_ARG)
 {
+    UNUSED_PLI_CB_ARG
     pli_printf(PLI_INFO, "Simulator requests passing control to SW!\n");
     pli_drive_str_value(PLI_SIGNAL_CONTROL_GNT, "1");
     pli_printf(PLI_INFO, "Control passed to SW\n");
@@ -99,6 +100,7 @@ void sw_control_req_callback(PLI_CB_ARG)
  */
 void pli_clk_callback(PLI_CB_ARG)
 {
+    UNUSED_PLI_CB_ARG
     ProcessPliClkCallback();
 }
 
@@ -155,6 +157,7 @@ int register_pli_clk_cb()
  */
 void pli_start_of_sim(PLI_CB_ARG)
 {
+    UNUSED_PLI_CB_ARG
     pli_printf(PLI_INFO, "Simulation start callback\n");
 
     pli_printf(PLI_INFO, "Registering callback for control to SW\n");
@@ -173,6 +176,7 @@ void pli_start_of_sim(PLI_CB_ARG)
  */
 void pli_end_of_sim(PLI_CB_ARG)
 {
+    UNUSED_PLI_CB_ARG
     pli_printf(PLI_INFO, "End of simulation callback SW\n");
     hman_cleanup();
 }

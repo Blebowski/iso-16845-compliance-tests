@@ -92,6 +92,7 @@
 #define T_PLI_REASON PLI_INT32
 #define T_PLI_CB_ARGS void
 #define PLI_CB_ARG T_PLI_CB_ARGS
+#define UNUSED_PLI_CB_ARG
 
 // Properties
 #define P_PLI_NAME vpiName
@@ -128,6 +129,7 @@
 #define T_PLI_REASON vhpiCbReasonT
 #define T_PLI_CB_ARGS struct vhpiCbDataS*
 #define PLI_CB_ARG T_PLI_CB_ARGS data
+#define UNUSED_PLI_CB_ARG (void)(data);
 
 // Properties
 #define P_PLI_NAME vhpiNameP

@@ -72,7 +72,7 @@ extern "C" {
             void SendReintegrationRequest();
 
             /* Number of TXT buffers. Read by "Enable" */
-            int num_txt_buffers_;
+            unsigned int num_txt_buffers_;
 
             /* Currently used TXT buffer */
             unsigned int cur_txt_buf;

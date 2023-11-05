@@ -57,7 +57,7 @@ class test::ElemTest
         /* Index of the elementary test (starting from 1. This is the same
          * number as is after # in ISO116845!)
          */
-        int index_;
+        size_t index_;
 
         /* String to be printed when this elementary test starts */
         std::string msg_;
