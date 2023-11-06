@@ -122,6 +122,12 @@ class TestIso_8_8_1_3 : public test::TestBase
             test_data_bit_timing.ph2_ = dbt.GetBitLenTQ() -
                                         ((elem_test.index_ + 1) / 2) - 1;
 
+            // Saturate not to get overflow
+            // TODO: Handle for generic controller
+            test_data_bit_timing.prop_ = (test_data_bit_timing.prop_ > 63) ? 63 : test_data_bit_timing.prop_;
+            test_data_bit_timing.ph2_  = (test_data_bit_timing.ph2_  > 31) ? 31 :
+                                         (test_data_bit_timing.ph2_  <  1) ? 1  : test_data_bit_timing.ph2_;
+
             /* Re-configure bit-timing for this test so that frames are generated with it! */
             this->dbt = test_data_bit_timing;
 
