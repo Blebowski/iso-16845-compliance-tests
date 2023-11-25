@@ -116,7 +116,11 @@ class TestIso_7_2_6: public test::TestBase
              *   1. Monitor frame as if received.
              *   2. Force random CRC bit to its opposite value
              *   3. Force CRC Delimiter to dominant.
-             *   4. Insert Error frame to position of ACK!
+             *   4. Compensate length of CRC field in the monitored frame. Since the driven frame
+             *      gets a bit flipped, its original CRC length may have changed. Thus, in the
+             *      monitored frame, we need to make it equal to driven frame, so that LT does
+             *      not expect error frame at wrong position!
+             *   5. Insert Error frame to position of ACK!
              *************************************************************************************/
             mon_bit_frm->ConvRXFrame();
 
@@ -136,11 +140,29 @@ class TestIso_7_2_6: public test::TestBase
             } while (true);
 
             // If we are in CAN 2.0, then flipping also non-stuff bit can cause change of
-            // CRC lenght since number of stuff bits can change! Therefore, we need to recalculate
+            // CRC length since number of stuff bits can change! Therefore, we need to recalculate
             // stuff bits, but keep the CRC (since it contains corrupted bit that we rely on)!
             drv_bit_frm->UpdateFrame(false);
 
             drv_bit_frm->GetBitOf(0, BitKind::CrcDelim)->val_ = BitVal::Dominant;
+
+            // Compensate CRC length in monitored frame ot match length in the driven frame.
+            // Needed because flipping a bit in driven frame may have changed CRC lenght.
+            TestMessage("CRC field length in driven frame: %d"    , drv_bit_frm->GetFieldLen(BitKind::Crc));
+            TestMessage("CRC field length in monitored frame: %d" , mon_bit_frm->GetFieldLen(BitKind::Crc));
+
+            while (mon_bit_frm->GetFieldLen(BitKind::Crc) <
+                   drv_bit_frm->GetFieldLen(BitKind::Crc)) {
+                int index = mon_bit_frm->GetBitIndex(mon_bit_frm->GetBitOf(0, BitKind::Crc));
+                mon_bit_frm->InsertBit(BitKind::Crc, BitVal::Recessive, index);
+                TestMessage("Applying CRC length compenstaion, lengthening CRC by 1 recessive bit...");
+            }
+
+            while (mon_bit_frm->GetFieldLen(BitKind::Crc) >
+                   drv_bit_frm->GetFieldLen(BitKind::Crc)) {
+                mon_bit_frm->RemoveBit(mon_bit_frm->GetBitOf(0, BitKind::Crc));
+                TestMessage("Applying CRC length compenstaion, shortening CRC by 1 recessive bit...");
+            }
 
             mon_bit_frm->InsertActErrFrm(0, BitKind::Ack);
             drv_bit_frm->InsertActErrFrm(0, BitKind::Ack);
