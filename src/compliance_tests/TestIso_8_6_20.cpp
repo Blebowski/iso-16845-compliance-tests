@@ -92,13 +92,13 @@ class TestIso_8_6_20 : public test::TestBase
         {
             /* Sent by LT */
             frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
-                                                       EsiFlag::ErrAct);
+                                                     RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0x50);
             RandomizeAndPrint(gold_frm.get());
 
             /* Sent by IUT */
             frm_flags_2 = std::make_unique<FrameFlags>(elem_test.frame_kind_, IdentKind::Base,
-                                                         EsiFlag::ErrAct);
+                                                       RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
             gold_frm_2 = std::make_unique<Frame>(*frm_flags_2, 0x1, 0x51);
             RandomizeAndPrint(gold_frm_2.get());
 
