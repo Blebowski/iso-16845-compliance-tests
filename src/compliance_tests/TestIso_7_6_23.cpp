@@ -166,7 +166,7 @@ class TestIso_7_6_23 : public test::TestBase
             RandomizeAndPrint(gold_frm.get());
 
             frm_flags_2 = std::make_unique<FrameFlags>(FrameKind::Can20);
-            gold_frm_2 = std::make_unique<Frame>(*frm_flags);
+            gold_frm_2 = std::make_unique<Frame>(*frm_flags_2);
             RandomizeAndPrint(gold_frm_2.get());
 
             drv_bit_frm = ConvBitFrame(*gold_frm);
@@ -177,7 +177,7 @@ class TestIso_7_6_23 : public test::TestBase
              *   1. Modify test frame according to elementary test cases. FD Tolerant variant
              *      needs no modifications since FDF recessive is enough to trigger protocol
              *      exception! FD Enabled needs bit after FDF forced recessive!
-             *   2. Update the frames since this might have changed CRC/lenght.
+             *   2. Update the frames since this might have changed CRC/length.
              *   3. Turn monitored frame as if received!
              *   4. Remove ACK from monitored frame (since IUT is in protocol exception). No
              *      other modifications are needed since if monitored frame is as if received,
