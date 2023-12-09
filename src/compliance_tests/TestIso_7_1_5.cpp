@@ -121,9 +121,10 @@ class TestIso_7_1_5 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
+            uint8_t data = 0xAA;
             frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_,
-                            IdentKind::Ext, RtrFlag::Data);
-            gold_frm = std::make_unique<Frame>(*frm_flags);
+                            IdentKind::Ext, RtrFlag::Data, BrsFlag::NoShift, EsiFlag::ErrAct);
+            gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, 0x55, &data);
             RandomizeAndPrint(gold_frm.get());
 
             drv_bit_frm = ConvBitFrame(*gold_frm);
