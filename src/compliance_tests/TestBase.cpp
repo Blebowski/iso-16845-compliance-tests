@@ -331,7 +331,7 @@ void test::TestBase::FillTestVariants(VariantMatchType match_type)
 }
 
 
-void test::TestBase::AddElemTest(TestVariant test_variant, ElemTest &&elem_test)
+void test::TestBase::AddElemTest(TestVariant test_variant, ElemTest elem_test)
 {
     int i = 0;
     for (auto &test_variant_it : test_variants)

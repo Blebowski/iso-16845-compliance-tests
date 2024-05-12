@@ -257,7 +257,7 @@ class test::TestBase
         /**
          * Adds elementary test to a test variant.
          */
-        void AddElemTest(TestVariant test_variant, ElemTest &&elem_test);
+        void AddElemTest(TestVariant test_variant, ElemTest elem_test);
 
         /**
          * Adds elementary test for each sample point within a given bit-rate.
