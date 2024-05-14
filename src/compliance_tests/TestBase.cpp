@@ -354,7 +354,7 @@ void test::TestBase::AddElemTestForEachSP(TestVariant test_variant,
 
     size_t num_sp_points = CalcNumSPs(nominal);
 
-    TestMessage("Number of sample points: %d", num_sp_points);
+    TestMessage("Number of sample points: %zu", num_sp_points);
 
     for (size_t i = 1; i <= num_sp_points; i++)
         AddElemTest(test_variant, ElemTest(i, frame_type));
@@ -693,17 +693,17 @@ void test::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: %s", test_name.c_str());
-    TestMessage("Number of variants: %d", test_variants.size());
-    int num_elem_tests = 0;
+    TestMessage("Number of variants: %zu", test_variants.size());
+    size_t num_elem_tests = 0;
     for (const auto &variant_tests : elem_tests)
         num_elem_tests += variant_tests.size();
-    TestMessage("Total number of elementary tests: %d", num_elem_tests);
+    TestMessage("Total number of elementary tests: %zu", num_elem_tests);
 }
 
 void test::TestBase::PrintElemTestInfo(ElemTest elem_test)
 {
     TestMessage(std::string(80, '*').c_str());
-    TestMessage("Elementary Test index: %d", elem_test.index_);
+    TestMessage("Elementary Test index: %zu", elem_test.index_);
     //TestMessage("Elementary Test message: %s", elem_test.msg.c_str());
     TestMessage(std::string(80, '*').c_str());
 }
@@ -782,14 +782,14 @@ size_t test::TestBase::CalcNumSPs(bool nominal)
 }
 
 BitTiming test::TestBase::GenerateBitTiming(const ElemTest &elem_test, bool nominal,
-                                           size_t minimal_ph1)
+                                            size_t minimal_ph1)
 {
     BitTiming new_bt;
     BitTiming *orig_bt;
 
-    TestMessage("Generating new bit timing for elementary test index: %d", elem_test.index_);
+    TestMessage("Generating new bit timing for elementary test index: %zu", elem_test.index_);
     TestMessage("Bit timing type: %s", (nominal) ? "Nominal" : "Data");
-    TestMessage("Target Minimal PH1 Length: %d", minimal_ph1);
+    TestMessage("Target Minimal PH1 Length: %zu", minimal_ph1);
 
     if (nominal)
         orig_bt = &bckp_nbt;
@@ -801,7 +801,7 @@ BitTiming test::TestBase::GenerateBitTiming(const ElemTest &elem_test, bool nomi
     if (init_ph1 < minimal_ph1)
         init_ph1 = minimal_ph1;
 
-    TestMessage("Actual Minimal PH1 Length: %d", init_ph1);
+    TestMessage("Actual Minimal PH1 Length: %zu", init_ph1);
 
     // If we have N Time Quanta bit time, then we can have at most N - 1 Sample point positions
     // regardless of bit time parameters / constraints. If we have more, this shows we have some
