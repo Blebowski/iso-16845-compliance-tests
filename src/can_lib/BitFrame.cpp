@@ -707,10 +707,10 @@ size_t can::BitFrame::GetBitIndex(Bit *bit)
 }
 
 
-can::Bit* can::BitFrame::GetStuffBit(int index)
+can::Bit* can::BitFrame::GetStuffBit(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (i <= index && bit_it != bits_.end())
     {
@@ -726,10 +726,10 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
     return &(*bit_it);
 }
 
-can::Bit* can::BitFrame::GetStuffBit(int index, BitKind bit_type)
+can::Bit* can::BitFrame::GetStuffBit(size_t index, BitKind bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (i <= index && bit_it != bits_.end())
     {

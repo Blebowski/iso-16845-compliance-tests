@@ -129,7 +129,7 @@ class can::BitFrame : public Frame {
          * @param index Index of stuff bit within frame (0 - first stuff bit, 1 - second, ...)
          * @returns Pointer to stuff bit
          */
-        Bit* GetStuffBit(int index);
+        Bit* GetStuffBit(size_t index);
 
         /**
          * Obtains stuff bit within a bit field of a frame
@@ -137,7 +137,7 @@ class can::BitFrame : public Frame {
          * @param kind Bit field to search stuff bit for
          * @returns Pointer to stuff bit
          */
-        Bit* GetStuffBit(int index, BitKind kind);
+        Bit* GetStuffBit(size_t index, BitKind kind);
 
         /**
          * Obtains a Stuff bit within a bit field at certain position.
