@@ -101,9 +101,9 @@ class TestIso_7_1_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 6; i++)
+            for (size_t i = 0; i < 6; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1));
-            for (int i = 0; i < 4; i++)
+            for (size_t i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);

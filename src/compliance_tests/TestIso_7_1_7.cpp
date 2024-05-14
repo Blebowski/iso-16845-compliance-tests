@@ -82,7 +82,7 @@ class TestIso_7_1_7 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::FdTolAndFdEna);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
                 AddElemTest(test_variants[0], ElemTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);

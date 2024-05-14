@@ -80,7 +80,7 @@ class TestIso_7_1_8 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::Common);
-            for (int i = 0; i < 7; i++)
+            for (size_t i = 0; i < 7; i++)
                  AddElemTest(TestVariant::Common, ElemTest(i + 1));
         }
 

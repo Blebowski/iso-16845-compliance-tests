@@ -105,9 +105,9 @@ class TestIso_7_1_2 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 45; i++)
+            for (size_t i = 0; i < 45; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 80; i++)
+            for (size_t i = 0; i < 80; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -139,7 +139,7 @@ class TestIso_7_1_2 : public test::TestBase
                     break;
             }
 
-            uint8_t dlc = (elem_test.index_ - 1) / 5;
+            uint8_t dlc = static_cast<uint8_t>((elem_test.index_ - 1) / 5);
 
             frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_,
                             IdentKind::Ext, RtrFlag::Data);
