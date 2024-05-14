@@ -352,11 +352,11 @@ void test::TestBase::AddElemTestForEachSP(TestVariant test_variant,
 {
     TestMessage("Adding Elementary tests for each sample point...");
 
-    int num_sp_points = CalcNumSPs(nominal);
+    size_t num_sp_points = CalcNumSPs(nominal);
 
     TestMessage("Number of sample points: %d", num_sp_points);
 
-    for (int i = 1; i <= num_sp_points; i++)
+    for (size_t i = 1; i <= num_sp_points; i++)
         AddElemTest(test_variant, ElemTest(i, frame_type));
 }
 
@@ -750,7 +750,7 @@ void test::TestBase::FreeTestObjects()
 
 size_t test::TestBase::CalcNumSPs(bool nominal)
 {
-    int tmp;
+    size_t tmp;
     if (nominal)
         tmp = nbt.GetBitLenTQ();
     else

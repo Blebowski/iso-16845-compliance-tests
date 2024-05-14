@@ -68,10 +68,10 @@ test::TestSequence::TestSequence(std::chrono::nanoseconds clock_period,
 
 void test::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 {
-    int bit_count = driver_frame.GetLen();
+    size_t bit_count = driver_frame.GetLen();
     can::Bit *bit;
 
-    for (int i = 0; i < bit_count; i++)
+    for (size_t i = 0; i < bit_count; i++)
     {
         bit = driver_frame.GetBit(i);
         AppendDriverBit(bit);
@@ -81,11 +81,11 @@ void test::TestSequence::AppendDriverFrame(can::BitFrame& driver_frame)
 
 void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 {
-    int bit_count = monitor_frame.GetLen();
+    size_t bit_count = monitor_frame.GetLen();
     can::Bit *bit;
     can::Bit *next_bit = nullptr;
 
-    for (int i = 0; i < bit_count; i++)
+    for (size_t i = 0; i < bit_count; i++)
     {
         bit = monitor_frame.GetBit(i);
 
@@ -112,21 +112,23 @@ void test::TestSequence::AppendMonitorFrame(can::BitFrame& monitor_frame)
 
 void test::TestSequence::AppendDriverBit(can::Bit* bit)
 {
-    int time_quantas = bit->GetLenTQ();
+    size_t time_quantas = bit->GetLenTQ();
+    size_t cycles;
+
     can::BitVal bit_val = bit->val_;
     can::BitVal last_val = bit_val;
     can::BitVal curr_val;
     can::TimeQuanta *time_quanta;
     can::Cycle* cycle;
-    std::chrono::nanoseconds duration (0);
-    int cycles;
 
-    for (int i = 0; i < time_quantas; i++)
+    std::chrono::nanoseconds duration (0);
+
+    for (size_t i = 0; i < time_quantas; i++)
     {
         time_quanta = bit->GetTQ(i);
         cycles = time_quanta->getLengthCycles();
 
-        for (int j = 0; j < cycles; j++)
+        for (size_t j = 0; j < cycles; j++)
         {
             cycle = time_quanta->getCycleBitValue(j);
 
@@ -155,9 +157,7 @@ void test::TestSequence::AppendDriverBit(can::Bit* bit)
 
             // Reach last cycle of bit, push rest
             if ((i == time_quantas - 1) && (j == cycles - 1))
-            {
                 pushDriverValue(duration, last_val, bit->GetBitKindName());
-            }
         }
     }
 }
@@ -211,25 +211,28 @@ void test::TestSequence::appendMonitorBitWithShift(can::Bit *bit)
 
 void test::TestSequence::appendMonitorNotShift(can::Bit *bit)
 {
-    int time_quantas = bit->GetLenTQ();
+    size_t time_quantas = bit->GetLenTQ();
+    size_t cycles;
+
     can::BitVal bit_val = bit->val_;
     can::BitVal last_value = bit_val;
     can::BitVal current_value;
     can::TimeQuanta *time_quanta;
     can::Cycle* cycle;
+
     std::chrono::nanoseconds duration (0);
-    int cycles;
+
 
     // Assume first Time quanta length is the same as rest (which is reasonable)!
     size_t brp = bit->GetTQ(0)->getLengthCycles();
     std::chrono::nanoseconds sample_rate = brp * clock_period;
 
-    for (int i = 0; i < time_quantas; i++)
+    for (size_t i = 0; i < time_quantas; i++)
     {
         time_quanta = bit->GetTQ(i);
         cycles = time_quanta->getLengthCycles();
 
-        for (int j = 0; j < cycles; j++)
+        for (size_t j = 0; j < cycles; j++)
         {
             cycle = time_quanta->getCycleBitValue(j);
 

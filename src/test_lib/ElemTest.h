@@ -49,10 +49,10 @@ using namespace can;
 class test::ElemTest
 {
     public:
-        ElemTest(int index);
-        ElemTest(int index, std::string msg);
-        ElemTest(int index, std::string msg, FrameKind frame_kind);
-        ElemTest(int index, FrameKind frame_kind);
+        ElemTest(size_t index);
+        ElemTest(size_t index, std::string msg);
+        ElemTest(size_t index, std::string msg, FrameKind frame_kind);
+        ElemTest(size_t index, FrameKind frame_kind);
 
         /* Index of the elementary test (starting from 1. This is the same
          * number as is after # in ISO116845!)

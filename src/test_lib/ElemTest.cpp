@@ -33,25 +33,25 @@
 
 #include "ElemTest.h"
 
-test::ElemTest::ElemTest(int index) :
+test::ElemTest::ElemTest(size_t index) :
     index_(index)
 {
     msg_ = "Elementary test: ";
     msg_ += std::to_string(index);
 }
 
-test::ElemTest::ElemTest(int index, std::string msg):
+test::ElemTest::ElemTest(size_t index, std::string msg):
     index_(index),
     msg_(msg)
 {}
 
-test::ElemTest::ElemTest(int index, std::string msg, can::FrameKind frame_type):
+test::ElemTest::ElemTest(size_t index, std::string msg, can::FrameKind frame_type):
     index_(index),
     msg_(msg),
     frame_kind_(frame_type)
 {}
 
-test::ElemTest::ElemTest(int index, can::FrameKind frame_type):
+test::ElemTest::ElemTest(size_t index, can::FrameKind frame_type):
     index_(index),
     frame_kind_(frame_type)
 {
