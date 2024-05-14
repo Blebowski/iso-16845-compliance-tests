@@ -357,7 +357,7 @@ class can::BitFrame : public Frame {
          * @param stuff_kind Type of stuff bit to count (No stuff bit, Fixed, regular)
          * @returns Number of stuff bits within bit field of a frame.
          */
-        int GetNumStuffBits(BitKind kind, StuffKind stuff_kind);
+        size_t GetNumStuffBits(BitKind kind, StuffKind stuff_kind);
 
         /**
          * Gets number of Stuff bits in a bit field of a frame with matching value
@@ -366,14 +366,14 @@ class can::BitFrame : public Frame {
          * @param val Value of bit to check
          * @returns Number of stuff bits within bit field of a frame matching required value
          */
-        int GetNumStuffBits(BitKind kind, StuffKind stuff_kind, BitVal val);
+        size_t GetNumStuffBits(BitKind kind, StuffKind stuff_kind, BitVal val);
 
         /**
          * Gets number of Stuff bits in whole frame
          * @param stuff_kind Type of stuff bit to count (No stuff bit, Fixed, regular)
          * @returns Number of stuff bits within a frame.
          */
-        int GetNumStuffBits(StuffKind stuff_kind);
+        size_t GetNumStuffBits(StuffKind stuff_kind);
 
         /**
          * Gets number of Stuff bits with given value
@@ -381,7 +381,7 @@ class can::BitFrame : public Frame {
          * @param val Consider only bits of this value
          * @returns Number of stuff bits within a frame.
          */
-        int GetNumStuffBits(StuffKind stuff_kind, BitVal val);
+        size_t GetNumStuffBits(StuffKind stuff_kind, BitVal val);
 
         /**
          * @returns CRC of frame. Real CRC is returned based on frame type (CAN 2.0 or FD)!
@@ -586,7 +586,7 @@ class can::BitFrame : public Frame {
          * @param kind type of bit to be appended
          * @param val Bit value to be set (0 - BitType:Dominant, 1 - BitType:Recessive)
          */
-        void AppendBit(BitKind kind, uint8_t val);
+        void AppendBit(BitKind kind, int val);
 
 
         /**

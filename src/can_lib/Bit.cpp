@@ -178,7 +178,7 @@ size_t can::Bit::GetPhaseLenTQ(BitPhase phase)
 
 size_t can::Bit::GetPhaseLenCycles(BitPhase phase)
 {
-    int num_cycles = 0;
+    size_t num_cycles = 0;
 
     for (auto &tq : tqs_)
         if (tq.bit_phase() == phase)

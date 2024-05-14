@@ -145,8 +145,8 @@ uint32_t can::BitFrame::crc()
 }
 
 
-// LSB represents bit value we want to push
-void can::BitFrame::AppendBit(BitKind kind, uint8_t value)
+// LSB represents bit value we want to append
+void can::BitFrame::AppendBit(BitKind kind, int value)
 {
     BitVal bit_value;
 
@@ -361,7 +361,7 @@ size_t can::BitFrame::InsertNormalStuffBits()
             bit_it = bits_.insert(bit_it, bit);
             same_bits = 1;
 
-            stuff_cnt_ = (stuff_cnt_ + 1) % 8;
+            stuff_cnt_ = static_cast<uint8_t>((stuff_cnt_ + 1) % 8);
         }
         prev_value = bit_it->val_;
     }
@@ -593,11 +593,12 @@ can::Bit* can::BitFrame::GetRandBitOf(BitKind bit_type)
 can::Bit* can::BitFrame::GetRandBit(BitVal bit_value)
 {
     Bit *bit;
-    int lenght = this->GetLen();
+    size_t lenght = this->GetLen();
     do
     {
         bit = GetBit(rand() % lenght);
     } while (bit->val_ != bit_value);
+
     return bit;
 }
 
@@ -1078,7 +1079,7 @@ void can::BitFrame::ConvRXFrame()
 }
 
 
-int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
+size_t can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type](Bit bit) {
         if (bit.kind_ == bit_type && bit.stuff_kind_ == stuff_bit_type)
@@ -1088,7 +1089,7 @@ int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
 }
 
 
-int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
+size_t can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
                                    BitVal bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type, bit_value](Bit bit) {
@@ -1101,7 +1102,7 @@ int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
 }
 
 
-int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
+size_t can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type](Bit bit) {
         if (bit.stuff_kind_ == stuff_bit_type)
@@ -1111,7 +1112,7 @@ int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
 }
 
 
-int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type, BitVal bit_value)
+size_t can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type, BitVal bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type, bit_value](Bit bit) {
         if (bit.stuff_kind_ == stuff_bit_type &&
@@ -1295,7 +1296,7 @@ void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
 {
     bit->FlipVal();
 
-    int index = GetBitIndex(bit);
+    size_t index = GetBitIndex(bit);
 
     // If we are flipping bit 0, then there will be no edge introduced!
     if (index == 0)
@@ -1375,7 +1376,7 @@ void can::BitFrame::PrintMultiBitField(std::list<Bit>::iterator& bit_it,
         vals->append(bit_it->GetColouredVal() + " ");
     }
 
-    preOffset = (len - fieldName.length()) / 2;
+    preOffset = (len - static_cast<int>(fieldName.length())) / 2;
     postOffset = preOffset;
     if (fieldName.length() % 2 == 1)
         postOffset++;

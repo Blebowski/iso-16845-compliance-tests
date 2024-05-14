@@ -106,14 +106,14 @@ void can::Frame::Randomize()
     {
         // Constrain here so that we get reasonable frames for CAN 2.0
         if (frame_flags().is_fdf() == FrameKind::CanFd)
-            set_dlc(rand() % 0x9);
+            set_dlc(static_cast<uint8_t>(rand() % 0x9));
         else
-            set_dlc(rand() % 0xF);
+            set_dlc(static_cast<uint8_t>(rand() % 0xF));
     }
 
     if (randomize_data_)
         for (int i = 0; i < data_len_; i++)
-            data_[i] = rand() % 256;
+            data_[i] = static_cast<uint8_t>(rand() % 256);
 }
 
 
@@ -197,7 +197,7 @@ uint8_t can::Frame::ConvDataLenToDlc(int dataLenght)
 {
     for (int i = 0; i < 16; i++){
         if (uint8_t(dlc_to_data_length_table_[i][1]) == dataLenght)
-            return dlc_to_data_length_table_[i][0];
+            return static_cast<uint8_t>(dlc_to_data_length_table_[i][0]);
     }
     return -1;
 }
