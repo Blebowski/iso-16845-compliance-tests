@@ -119,14 +119,14 @@ class TestIso_7_2_5 : public test::TestBase
          *  - Stuff bit
          *  - A bit before stuff bit (if not left out, undesired stuff error will occur)
          */
-        int ChooseCrcBitToCorrupt(BitFrame *bit_frame, BitVal bit_value)
+        size_t ChooseCrcBitToCorrupt(BitFrame *bit_frame, BitVal bit_value)
         {
             Bit *bit;
             bool is_ok;
             do {
                 is_ok = true;
                 bit = bit_frame->GetRandBitOf(BitKind::Crc);
-                int bit_index = bit_frame->GetBitIndex(bit);
+                size_t bit_index = bit_frame->GetBitIndex(bit);
 
                 if (bit->stuff_kind_ != StuffKind::NoStuff)
                     is_ok = false;
@@ -142,7 +142,7 @@ class TestIso_7_2_5 : public test::TestBase
          * Inserts CRC error on bit index position. Flips the bit and updates the frame,
          * so that CRC lenght will be correct as when IUT will receive such sequence!
          */
-        void InsertCrcError(int index)
+        void InsertCrcError(size_t index)
         {
             Bit *drv_bit = drv_bit_frm->GetBit(index);
             Bit *mon_bit = mon_bit_frm->GetBit(index);
@@ -166,11 +166,11 @@ class TestIso_7_2_5 : public test::TestBase
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
                 if (elem_test.index_ == 1 || elem_test.index_ == 3) {
-                    dlc = rand() % 11; // To cause CRC 17
+                    dlc = static_cast<uint8_t>((rand() % 11)); // To cause CRC 17
                 } else if (elem_test.index_ == 2 || elem_test.index_ == 4) {
-                    dlc = rand() % 5 + 11; // To cause CRC 21
+                    dlc = static_cast<uint8_t>(rand() % 5 + 11); // To cause CRC 21
                 } else {
-                    dlc = rand() % 15;
+                    dlc = static_cast<uint8_t>(rand() % 15);
                 }
             }
 

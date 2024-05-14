@@ -71,7 +71,7 @@ class TestIso_7_2_10 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 5; i++)
+            for (size_t i = 0; i < 5; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -97,8 +97,7 @@ class TestIso_7_2_10 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
-            drv_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Eof)
-                ->val_ = BitVal::Dominant;
+            drv_bit_frm->GetBitOf(elem_test.index_ - 1, BitKind::Eof)->val_ = BitVal::Dominant;
 
             mon_bit_frm->InsertActErrFrm(elem_test.index_, BitKind::Eof);
             drv_bit_frm->InsertActErrFrm(elem_test.index_, BitKind::Eof);

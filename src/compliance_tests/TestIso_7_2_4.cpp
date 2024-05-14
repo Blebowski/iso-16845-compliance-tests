@@ -84,7 +84,7 @@ class TestIso_7_2_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -99,49 +99,49 @@ class TestIso_7_2_4 : public test::TestBase
             {
             case 1:
                 data[0] = 0x10;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0x78;
                 break;
 
             case 2:
                 data[0] = 0x78;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0x3C;
                 break;
 
             case 3:
                 data[0] = 0x34;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0x1E;
                 break;
 
             case 4:
                 data[0] = 0x12;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0x0F;
                 break;
 
             case 5:
                 data[0] = 0x0F;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0x87;
                 break;
 
             case 6:
                 data[0] = 0x17;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0xC3;
                 break;
 
             case 7:
                 data[0] = 0x43;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0xE1;
                 break;
 
             case 8:
                 data[0] = 0x21;
-                for (int i = 1; i < 64; i++)
+                for (size_t i = 1; i < 64; i++)
                     data[i] = 0xF0;
                 break;
 
@@ -166,7 +166,7 @@ class TestIso_7_2_4 : public test::TestBase
              *************************************************************************************/
             mon_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
+            size_t num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
 
             /* In FD enabled variant, if last bit of data field is stuff bit, but model has this bit
              * as fixed stuff bit before Stuff count. So count in also each fixed stuff bit even
@@ -174,7 +174,7 @@ class TestIso_7_2_4 : public test::TestBase
              * FD enabled variant will be higher than in ISO 16845, but this does not mind!
              */
             Bit *bit = drv_bit_frm->GetBitOf(0, BitKind::StuffCnt);
-            int index = drv_bit_frm->GetBitIndex(bit);
+            size_t index = drv_bit_frm->GetBitIndex(bit);
             BitVal value = drv_bit_frm->GetBit(index - 1)->val_;
             if ((value == drv_bit_frm->GetBit(index - 2)->val_) &&
                 (value == drv_bit_frm->GetBit(index - 3)->val_) &&
@@ -185,7 +185,7 @@ class TestIso_7_2_4 : public test::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            for (int stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
+            for (size_t stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
             {
                 TestMessage("Testing stuff bit nr: %d", stuff_bit);
                 stuff_bits_in_variant++;
@@ -198,7 +198,7 @@ class TestIso_7_2_4 : public test::TestBase
                 mon_bit_frm_2 = std::make_unique<BitFrame>(*mon_bit_frm);
 
                 Bit *stuff_bit_to_flip = drv_bit_frm_2->GetStuffBit(stuff_bit);
-                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                size_t bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
                 stuff_bit_to_flip->FlipVal();
 
                 drv_bit_frm_2->InsertPasErrFrm(bit_index + 1);

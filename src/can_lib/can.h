@@ -193,6 +193,8 @@ namespace can {
     class DutInterface;
     class CtuCanFdInterface;
 
+#define UNDERFLOW_TH_SIZE_T 1000000
+
 } // namespace can
 
 #endif

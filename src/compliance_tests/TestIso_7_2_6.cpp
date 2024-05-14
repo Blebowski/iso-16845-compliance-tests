@@ -91,7 +91,7 @@ class TestIso_7_2_6: public test::TestBase
             uint8_t dlc;
             if (test_variant == TestVariant::Common)
             {
-                dlc = rand() % 9;
+                dlc = static_cast<uint8_t>(rand() % 9);
             }
             else if (elem_test.index_ == 1)
             {
@@ -101,7 +101,7 @@ class TestIso_7_2_6: public test::TestBase
                     dlc = 0xA;
             } else
             {
-                dlc = (rand() % 5) + 11;
+                dlc = static_cast<uint8_t>((rand() % 5) + 11);
             }
 
             frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_);
@@ -126,7 +126,7 @@ class TestIso_7_2_6: public test::TestBase
 
             do {
                 Bit *bit = drv_bit_frm->GetRandBitOf(BitKind::Crc);
-                int index = drv_bit_frm->GetBitIndex(bit);
+                size_t index = drv_bit_frm->GetBitIndex(bit);
 
                 // Ignore stuff bits, and bits just before stuff bits. If we flip bit before
                 // stuff bit, then we cause stuff error too!
@@ -153,7 +153,7 @@ class TestIso_7_2_6: public test::TestBase
 
             while (mon_bit_frm->GetFieldLen(BitKind::Crc) <
                    drv_bit_frm->GetFieldLen(BitKind::Crc)) {
-                int index = mon_bit_frm->GetBitIndex(mon_bit_frm->GetBitOf(0, BitKind::Crc));
+                size_t index = mon_bit_frm->GetBitIndex(mon_bit_frm->GetBitOf(0, BitKind::Crc));
                 mon_bit_frm->InsertBit(BitKind::Crc, BitVal::Recessive, index);
                 TestMessage("Applying CRC length compenstaion, lengthening CRC by 1 recessive bit...");
             }
