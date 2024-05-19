@@ -84,7 +84,7 @@ class TestIso_7_8_5_1 : public test::TestBase
             for (size_t i = 1; i <= dbt.sjw_; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -116,11 +116,11 @@ class TestIso_7_8_5_1 : public test::TestBase
             Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
             Bit *brs_bit_monitor = mon_bit_frm->GetBitOf(0, BitKind::Brs);
 
-            brs_bit->ShortenPhase(BitPhase::Ph2, elem_test.e_);
-            brs_bit_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+            brs_bit->ShortenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
+            brs_bit_monitor->ShortenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
 
-            // In test, e is negative, we have abs(e), so we need to add, not subract.
-            int start_tq = 1 + dbt.prop_ + dbt.ph1_ + elem_test.e_;
+            // In test, e is negative, we have abs(e), so we need to add, not subtract.
+            size_t start_tq = 1 + dbt.prop_ + dbt.ph1_ + elem_test.e_;
             for (size_t j = start_tq; j < brs_bit->GetLenTQ(); j++)
                 esi_bit->ForceTQ(j, BitVal::Recessive);
 

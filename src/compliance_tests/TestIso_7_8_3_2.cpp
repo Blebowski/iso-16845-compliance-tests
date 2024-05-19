@@ -86,7 +86,7 @@ class TestIso_7_8_3_2 : public test::TestBase
             for (size_t i = 1; i <= dbt.sjw_; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -120,17 +120,19 @@ class TestIso_7_8_3_2 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             Bit *before_stuff_bit = mon_bit_frm->GetBitOf(5, BitKind::Data);
-            before_stuff_bit->LengthenPhase(BitPhase::Ph2, elem_test.e_);
+            before_stuff_bit->LengthenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
 
             // 7-th bit should be stuff bit
             Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
             assert(driver_stuff_bit->val_ == BitVal::Dominant);
-            int bit_index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
-            for (int j = 0; j < elem_test.e_; j++)
+
+            size_t bit_index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
+            for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++)
                 driver_stuff_bit->GetTQ(j)->ForceVal(BitVal::Recessive);
 
             //driver_stuff_bit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
 
+            assert(elem_test.e_ > 0 && "'j' will underflow!");
             for (size_t j = elem_test.e_ - 1; j < dbt.ph2_; j++)
                 driver_stuff_bit->GetTQ(BitPhase::Ph2, j)
                     ->ForceVal(BitVal::Recessive);

@@ -118,8 +118,7 @@ class TestIso_7_8_8_3 : public test::TestBase
             crc_delim_monitor->ShortenPhase(BitPhase::Ph2, 1);
 
             ack_bit->ForceTQ(1, BitVal::Recessive);
-            ack_bit->ForceTQ(0, nbt.ph2_ - 1,
-                                     BitPhase::Ph2, BitVal::Recessive);
+            ack_bit->ForceTQ(0, nbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

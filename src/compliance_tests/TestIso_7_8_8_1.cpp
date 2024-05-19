@@ -115,8 +115,7 @@ class TestIso_7_8_8_1 : public test::TestBase
             brs_bit_monitor->ShortenPhase(BitPhase::Ph2, 1);
 
             esi_bit->ForceTQ(1, BitVal::Recessive);
-            esi_bit->ForceTQ(0, dbt.ph2_ - 1, BitPhase::Ph2,
-                                     BitVal::Recessive);
+            esi_bit->ForceTQ(0, dbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

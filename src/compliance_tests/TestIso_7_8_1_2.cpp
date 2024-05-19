@@ -128,13 +128,13 @@ class TestIso_7_8_1_2 : public test::TestBase
             Bit *data_bit = drv_bit_frm->GetBitOf(1, BitKind::Data);
             data_bit->val_ = BitVal::Recessive;
 
-            int dominant_pulse_length;
+            size_t dominant_pulse_length;
             if (elem_test.index_ == 1)
                 dominant_pulse_length = dbt.prop_ + dbt.ph1_;
             else
                 dominant_pulse_length = dbt.prop_ + dbt.ph1_ + 1;
 
-            for (int j = 0; j < dominant_pulse_length; j++)
+            for (size_t j = 0; j < dominant_pulse_length; j++)
                 data_bit->ForceTQ(j, BitVal::Dominant);
 
             drv_bit_frm->Print(true);

@@ -86,7 +86,7 @@ class TestIso_7_8_5_3 : public test::TestBase
             for (size_t i = 1; i <= nbt.sjw_; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -123,10 +123,10 @@ class TestIso_7_8_5_3 : public test::TestBase
             Bit *crc_delimiter_driver = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
             Bit *crc_delimiter_monitor = mon_bit_frm->GetBitOf(0, BitKind::CrcDelim);
 
-            crc_delimiter_driver->ShortenPhase(BitPhase::Ph2, elem_test.e_);
-            crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+            crc_delimiter_driver->ShortenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
+            crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
 
-            if ((size_t)elem_test.e_ == nbt.sjw_)
+            if (static_cast<size_t>(elem_test.e_) == nbt.sjw_)
             {
                 Bit *ack_monitor = mon_bit_frm->GetBitOf(0, BitKind::Ack);
                 ack_monitor->ForceTQ(0, BitVal::Recessive);

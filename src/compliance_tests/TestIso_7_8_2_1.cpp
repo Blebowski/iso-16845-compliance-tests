@@ -84,6 +84,8 @@ class TestIso_7_8_2_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
+            assert(nbt.GetBitLenTQ() > (nbt.ph2_ + nbt.sjw_) &&
+                    "'num_elem_tests' will underflow. Choose different Bit timing configuration!");
             size_t num_elem_tests = nbt.GetBitLenTQ() -
                                     nbt.ph2_ -
                                     nbt.sjw_ -
@@ -91,7 +93,7 @@ class TestIso_7_8_2_1 : public test::TestBase
             for (size_t i = 1; i <= num_elem_tests; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = nbt.sjw_ + i;
+                test.e_ = static_cast<int>(nbt.sjw_ + i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -121,8 +123,8 @@ class TestIso_7_8_2_1 : public test::TestBase
             Bit *edl_bit_monitor = mon_bit_frm->GetBitOf(0, BitKind::Edl);
             Bit *brs_bit = drv_bit_frm->GetBitOf(0, BitKind::Brs);
 
-            edl_bit_driver->LengthenPhase(BitPhase::Ph2, elem_test.e_);
-            edl_bit_monitor->LengthenPhase(BitPhase::Ph2, elem_test.e_);
+            edl_bit_driver->LengthenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
+            edl_bit_monitor->LengthenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
 
             for (size_t j = 0; j < (nbt.ph1_ + nbt.prop_); j++)
                 brs_bit->GetTQ(j)->ForceVal(BitVal::Dominant);

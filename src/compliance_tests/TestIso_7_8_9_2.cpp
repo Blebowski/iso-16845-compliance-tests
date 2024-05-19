@@ -111,8 +111,7 @@ class TestIso_7_8_9_2 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             Bit *stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
-            stuff_bit->ForceTQ(1, dbt.prop_ + dbt.ph1_,
-                                       BitVal::Dominant);
+            stuff_bit->ForceTQ(1, dbt.prop_ + dbt.ph1_, BitVal::Dominant);
 
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);

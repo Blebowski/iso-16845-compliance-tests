@@ -85,7 +85,7 @@ class TestIso_7_8_5_2 : public test::TestBase
             for (size_t i = 1; i <= dbt.sjw_; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -117,8 +117,8 @@ class TestIso_7_8_5_2 : public test::TestBase
             Bit *monitor_before_stuff_bit = mon_bit_frm->GetBitOf(5, BitKind::Data);
             Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
 
-            driver_before_stuff_bit->ShortenPhase(BitPhase::Ph2, elem_test.e_);
-            monitor_before_stuff_bit->ShortenPhase(BitPhase::Ph2,  elem_test.e_);
+            driver_before_stuff_bit->ShortenPhase(BitPhase::Ph2, static_cast<size_t>(elem_test.e_));
+            monitor_before_stuff_bit->ShortenPhase(BitPhase::Ph2,  static_cast<size_t>(elem_test.e_));
 
             for (size_t j = 0; j < dbt.ph2_; j++)
                 driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);

@@ -93,7 +93,7 @@ class TestIso_7_8_4_3 : public test::TestBase
                  i++)
             {
                 ElemTest test = ElemTest(i - dbt.sjw_);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 

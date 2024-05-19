@@ -87,7 +87,7 @@ class TestIso_7_8_6_2 : public test::TestBase
             for (size_t i = dbt.sjw_ + 1; i <= dbt.ph2_; i++)
             {
                 ElemTest test = ElemTest(i - dbt.sjw_);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -117,9 +117,11 @@ class TestIso_7_8_6_2 : public test::TestBase
             Bit *driver_before_stuff_bit = drv_bit_frm->GetBitOf(5, BitKind::Data);
             Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
 
-            for (int j = 0; j < elem_test.e_; j++)
+            for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++) {
+                assert((dbt.ph2_ >= j + 1) && "'ForceTQ' will underflow");
                 driver_before_stuff_bit->ForceTQ(dbt.ph2_ - 1 - j, BitPhase::Ph2,
                                                          BitVal::Dominant);
+            }
 
             for (size_t j = 0; j < dbt.ph2_; j++)
                 driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);

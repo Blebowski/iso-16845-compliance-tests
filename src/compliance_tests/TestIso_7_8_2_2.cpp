@@ -87,7 +87,7 @@ class TestIso_7_8_2_2 : public test::TestBase
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
             ElemTest test = ElemTest(1);
-            test.e_ = nbt.ph2_;
+            test.e_ = static_cast<int>(nbt.ph2_);
             AddElemTest(TestVariant::CanFdEna, std::move(test));
 
             CanAgentConfigureTxToRxFeedback(true);

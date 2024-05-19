@@ -111,8 +111,7 @@ class TestIso_7_8_9_3 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             Bit *crc_delimiter = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
-            crc_delimiter->ForceTQ(1, dbt.ph1_ + dbt.prop_,
-                                           BitVal::Dominant);
+            crc_delimiter->ForceTQ(1, dbt.ph1_ + dbt.prop_, BitVal::Dominant);
 
             drv_bit_frm->InsertPasErrFrm(0, BitKind::Ack);
             mon_bit_frm->InsertActErrFrm(0, BitKind::Ack);

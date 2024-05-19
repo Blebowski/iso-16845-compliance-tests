@@ -87,7 +87,7 @@ class TestIso_7_8_6_3 : public test::TestBase
             for (size_t i = nbt.sjw_ + 1; i <= nbt.ph2_; i++)
             {
                 ElemTest test = ElemTest(i - nbt.sjw_);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -119,9 +119,10 @@ class TestIso_7_8_6_3 : public test::TestBase
             Bit *crc_delimiter_monitor = mon_bit_frm->GetBitOf(0, BitKind::CrcDelim);
             Bit *ack_driver = drv_bit_frm->GetBitOf(0, BitKind::Ack);
 
-            for (int j = 0; j < elem_test.e_; j++)
-                crc_delimiter_driver->ForceTQ(nbt.ph2_ - 1 - j, BitPhase::Ph2,
-                                                      BitVal::Dominant);
+            for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++) {
+                assert(nbt.ph2_ >= j + 1 && "'ForceTQ' will undreflow");
+                crc_delimiter_driver->ForceTQ(nbt.ph2_ - 1 - j, BitPhase::Ph2, BitVal::Dominant);
+            }
 
             crc_delimiter_monitor->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
 

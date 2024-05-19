@@ -116,8 +116,7 @@ class TestIso_7_8_9_1 : public test::TestBase
             brs_bit->ForceTQ(1, BitVal::Recessive);
 
             // Force all TQ of PH2 as if no shift occured (this is what frame was generated with)
-            brs_bit->ForceTQ(0, nbt.ph2_ - 1,
-                                     BitPhase::Ph2, BitVal::Recessive);
+            brs_bit->ForceTQ(0, nbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);
