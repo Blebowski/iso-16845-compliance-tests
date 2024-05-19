@@ -187,7 +187,7 @@ class TestIso_7_2_4 : public test::TestBase
              *************************************************************************************/
             for (size_t stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
             {
-                TestMessage("Testing stuff bit nr: %d", stuff_bit);
+                TestMessage("Testing stuff bit nr: %zu", stuff_bit);
                 stuff_bits_in_variant++;
 
                 /*

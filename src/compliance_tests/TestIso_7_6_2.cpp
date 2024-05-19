@@ -115,7 +115,7 @@ class TestIso_7_6_2 : public test::TestBase
                 bit_to_corrupt = 3;
             else
                 bit_to_corrupt = 6;
-            TestMessage("Forcing Overload flag bit %d to recessive", bit_to_corrupt);
+            TestMessage("Forcing Overload flag bit %zu to recessive", bit_to_corrupt);
 
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::OvrlFlag);
             size_t bit_index = drv_bit_frm->GetBitIndex(bit);

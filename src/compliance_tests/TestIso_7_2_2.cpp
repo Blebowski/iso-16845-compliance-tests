@@ -386,7 +386,7 @@ class TestIso_7_2_2 : public test::TestBase
             for (size_t stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
             {
                 TestMessage("Testing stuff bit nr: %zu", stuff_bit);
-                TestMessage("Total stuff bits in variant so far: %zu", stuff_bits_in_variant);
+                TestMessage("Total stuff bits in variant so far: %d", stuff_bits_in_variant);
                 stuff_bits_in_variant++;
 
                 /*

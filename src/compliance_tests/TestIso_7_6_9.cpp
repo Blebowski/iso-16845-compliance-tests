@@ -236,7 +236,7 @@ class TestIso_7_6_9 : public test::TestBase
             TestMessage("Value: %d\n", value);
 
             while (num_stuff_bits == 0){
-                std::cout << "Generating frame...\n";
+                TestMessage("Generating frame...\n");
 
                 /* Again, special treament of dominant stuff bit in control field */
                 if ((test_variant == TestVariant::Common && elem_test.index_ == 6) ||
@@ -246,9 +246,6 @@ class TestIso_7_6_9 : public test::TestBase
                     gold_frm = std::make_unique<Frame>(*frm_flags);
                 }
                 gold_frm->Randomize();
-
-                // std::cout << "Identifier: " <<
-                // std::bitset<29>(golden_frm->identifier()).to_string() << std::endl;
 
                 drv_bit_frm = ConvBitFrame(*gold_frm);
 
@@ -262,7 +259,7 @@ class TestIso_7_6_9 : public test::TestBase
 
                 num_stuff_bits = drv_bit_frm->GetNumStuffBits(field,
                                     StuffKind::Normal, value);
-                TestMessage("Number of matching stuff bits: %d\n", num_stuff_bits);
+                TestMessage("Number of matching stuff bits: %zu\n", num_stuff_bits);
             }
             TestBigMessage("Found frame with required stuff-bits!");
 

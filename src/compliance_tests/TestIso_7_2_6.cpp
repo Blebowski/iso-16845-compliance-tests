@@ -148,8 +148,8 @@ class TestIso_7_2_6: public test::TestBase
 
             // Compensate CRC length in monitored frame ot match length in the driven frame.
             // Needed because flipping a bit in driven frame may have changed CRC lenght.
-            TestMessage("CRC field length in driven frame: %d"    , drv_bit_frm->GetFieldLen(BitKind::Crc));
-            TestMessage("CRC field length in monitored frame: %d" , mon_bit_frm->GetFieldLen(BitKind::Crc));
+            TestMessage("CRC field length in driven frame: %zu"    , drv_bit_frm->GetFieldLen(BitKind::Crc));
+            TestMessage("CRC field length in monitored frame: %zu" , mon_bit_frm->GetFieldLen(BitKind::Crc));
 
             while (mon_bit_frm->GetFieldLen(BitKind::Crc) <
                    drv_bit_frm->GetFieldLen(BitKind::Crc)) {

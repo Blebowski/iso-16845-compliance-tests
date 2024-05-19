@@ -122,7 +122,7 @@ class TestIso_7_7_9_2 : public test::TestBase
             // First reduce other phases, we create glitches it from SYNC!
             for (size_t i = 0; i < 5; i++)
             {
-                printf("Setting bit %zu\n", i);
+                TestMessage("Setting bit %zu\n", i);
                 drv_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
                 drv_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Ph1, nbt.ph2_);
                 drv_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Prop, nbt.ph2_);

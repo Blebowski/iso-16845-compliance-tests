@@ -110,7 +110,7 @@ class TestIso_7_3_4 : public test::TestBase
                 bit_to_corrupt = 4;
             else
                 bit_to_corrupt = 7;
-            TestMessage("Forcing Error Delimiter bit %d to dominant", bit_to_corrupt);
+            TestMessage("Forcing Error Delimiter bit %zu to dominant", bit_to_corrupt);
 
             mon_bit_frm->ConvRXFrame();
             drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();

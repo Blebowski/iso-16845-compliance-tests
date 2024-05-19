@@ -73,12 +73,12 @@ void test::TestBase::ConfigureTest()
     TestMessage("Querying test configuration from TB:");
     this->dut_clk_period = TestControllerAgentGetCfgDutClockPeriod();
     TestMessage("DUT clock period:");
-    std::cout << this->dut_clk_period.count() << " ns" << std::endl;
+    TestMessage("%d ns", this->dut_clk_period.count());
 
     // TODO: Query input delay from TB, and eventually from VIP configuration !!!
     this->dut_input_delay = 2;
     TestMessage("DUT input delay:");
-    std::cout << "2 clock cycles" << std::endl;
+    TestMessage("2 clock cycles");
 
     // TODO: Query DUTs information processing time from TB!
     this->dut_ipt = 2;

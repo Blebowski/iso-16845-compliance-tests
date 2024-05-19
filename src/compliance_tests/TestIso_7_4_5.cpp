@@ -118,7 +118,7 @@ class TestIso_7_4_5 : public test::TestBase
             else
                 bit_to_corrupt = 7;
 
-            TestMessage("Forcing Overload delimiter bit %d to recessive", bit_to_corrupt);
+            TestMessage("Forcing Overload delimiter bit %zu to recessive", bit_to_corrupt);
 
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::OvrlDelim);
             size_t bit_index = drv_bit_frm->GetBitIndex(bit);
