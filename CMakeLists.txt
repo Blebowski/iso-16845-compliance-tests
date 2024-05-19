@@ -33,7 +33,17 @@ SET (CMAKE_CXX_STANDARD 17)
 SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 MESSAGE(STATUS "Build type: " CMAKE_BUILD_TYPE)
-add_compile_options(-fPIC -Wall -Wextra -Wpedantic -Wconversion -I -c)
+add_compile_options(-fPIC -Wall
+                          -Wextra
+                          -Wpedantic
+                          -Wconversion
+                          -Wcast-align
+                          -Wdouble-promotion
+                          -Wmaybe-uninitialized
+                          -Wstrict-aliasing
+                          -Wstrict-overflow
+                          -Wunused
+                          -Wunsafe-loop-optimizations -I -c)
 
 IF (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-g -O0)
