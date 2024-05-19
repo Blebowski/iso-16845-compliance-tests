@@ -465,7 +465,7 @@ class can::BitFrame : public Frame {
          * @param from Starting bit which must be transmitted Dominant by IUT.
          * @param input_delay Input delay of DUT in clock cycles.
          */
-        void CompensateEdgeForInputDelay(Bit *from, int input_delay);
+        void CompensateEdgeForInputDelay(Bit *from, size_t input_delay);
 
         /**
          * Flips bit value. If bit was flipped from Recessive to Dominant,then compensates
@@ -473,7 +473,7 @@ class can::BitFrame : public Frame {
          * @param bit Bit to be flipped
          * @param input_delay Input delay of iUT in clock cycles
          */
-        void FlipBitAndCompensate(Bit *bit, int input_delay);
+        void FlipBitAndCompensate(Bit *bit, size_t input_delay);
 
         /**
          * Acknowledges the frame (forces ACK low).
@@ -484,7 +484,7 @@ class can::BitFrame : public Frame {
          * Acknowledges the frame (forces ACK low), and compensates IUTs input delay
          * on ACK bit.
          */
-        void PutAck(int input_delay);
+        void PutAck(size_t input_delay);
 
     private:
         /* Bits within a frame */

@@ -112,9 +112,9 @@ class TestIso_8_2_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 6; i++)
+            for (size_t i = 0; i < 6; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 10; i++)
+            for (size_t i = 0; i < 10; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -141,7 +141,7 @@ class TestIso_8_2_3 : public test::TestBase
                     frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20,
                                         IdentKind::Base, RtrFlag::Data);
                     data[0] = 0x01;
-                    for (int i = 1; i < 8; i++)
+                    for (size_t i = 1; i < 8; i++)
                         data[i] = 0xE1;
                     break;
 
@@ -315,14 +315,14 @@ class TestIso_8_2_3 : public test::TestBase
             drv_bit_frm->UpdateFrame();
             mon_bit_frm->UpdateFrame();
 
-            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
+            size_t num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
 
             /*****************************************************************************
              * Execute test
              ****************************************************************************/
-            for (int stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
+            for (size_t stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
             {
-                TestMessage("Testing stuff bit nr: %d", stuff_bit);
+                TestMessage("Testing stuff bit nr: %zu", stuff_bit);
                 stuff_bits_in_variant++;
 
                 /*
@@ -333,7 +333,7 @@ class TestIso_8_2_3 : public test::TestBase
                 mon_bit_frm_2 = std::make_unique<BitFrame>(*mon_bit_frm);
 
                 Bit *stuff_bit_to_flip = drv_bit_frm_2->GetStuffBit(stuff_bit);
-                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                size_t bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
                 stuff_bit_to_flip->FlipVal();
 
                 if (is_err_passive)

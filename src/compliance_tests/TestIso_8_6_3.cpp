@@ -116,10 +116,10 @@ class TestIso_8_6_3 : public test::TestBase
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            for (int i = 0; i < 16; i++)
+            for (size_t i = 0; i < 16; i++)
             {
-                int bit_index = drv_bit_frm->GetBitIndex(
-                                    drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
+                size_t bit_index = drv_bit_frm->GetBitIndex(
+                                        drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index + 1);
                 mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index + 1);
             }

@@ -126,15 +126,15 @@ class TestIso_8_7_1 : public test::TestBase
             drv_bit_frm->PutAck(dut_input_delay);
 
             Bit *bit_to_corrupt = drv_bit_frm->GetBitOf(1, BitKind::Data);
-            int start_index = nbt.prop_ + nbt.ph1_ + 2;
-            int end_index = bit_to_corrupt->GetLenTQ();
+            size_t start_index = nbt.prop_ + nbt.ph1_ + 2;
+            size_t end_index = bit_to_corrupt->GetLenTQ();
             bit_to_corrupt->ForceTQ(start_index, end_index, BitVal::Recessive);
 
             bit_to_corrupt = drv_bit_frm_2->GetBitOf(1, BitKind::Data);
             start_index = nbt.prop_ + nbt.ph1_;
             bit_to_corrupt->ForceTQ(start_index, end_index, BitVal::Recessive);
 
-            int cycles_length = bit_to_corrupt->GetTQ(start_index - 1)->getLengthCycles();
+            size_t cycles_length = bit_to_corrupt->GetTQ(start_index - 1)->getLengthCycles();
             bit_to_corrupt->GetTQ(start_index - 1)->ForceCycleValue(cycles_length - 1,
                 BitVal::Recessive);
 

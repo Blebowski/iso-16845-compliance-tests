@@ -99,9 +99,9 @@ class TestIso_8_6_6 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 10; i++)
+            for (size_t i = 0; i < 10; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -121,13 +121,13 @@ class TestIso_8_6_6 : public test::TestBase
                 {
                     /* To achieve CRC17 or CRC21 in elem tests 7-10 of Can FD Enabled variant */
                     if (elem_test.index_ == 7 || elem_test.index_ == 8)
-                        dlc = (rand() % 0xA) + 1;
+                        dlc = static_cast<uint8_t>((rand() % 0xA) + 1);
                     else if (elem_test.index_ == 9 || elem_test.index_ == 10)
-                        dlc = (rand() % 5) + 0xB;
+                        dlc = static_cast<uint8_t>((rand() % 5) + 0xB);
                     else
-                        dlc = rand() % 0xF;
+                        dlc = static_cast<uint8_t>(rand() % 0xF);
                     } else {
-                        dlc = rand() % 8 + 1;
+                        dlc = static_cast<uint8_t>(rand() % 8 + 1);
                     }
                     gold_frm = std::make_unique<Frame>(*frm_flags, dlc);
                     RandomizeAndPrint(gold_frm.get());
@@ -200,7 +200,7 @@ class TestIso_8_6_6 : public test::TestBase
             // TODO: CRC can be possibly all zeroes or all ones causing infinite loop!
 
             drv_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
-            int bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);
             mon_bit_frm->InsertActErrFrm(bit_index + 1);

@@ -1274,7 +1274,7 @@ found:
 }
 
 
-void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
+void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, size_t input_delay)
 {
     [[maybe_unused]] Bit *prev_bit = GetBit(GetBitIndex(from) - 1);
 
@@ -1284,7 +1284,7 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
            "Input delay compensation shall start at Recessive bit");
 
     Cycle *cycle = from->GetTQ(0)->getCycleBitValue(0);
-    for (int i = 0; i < input_delay; i++)
+    for (size_t i = 0; i < input_delay; i++)
     {
         Cycle *compensated_cycle = MoveCyclesBack(cycle, i + 1);
         compensated_cycle->ForceVal(BitVal::Dominant);
@@ -1292,7 +1292,7 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
 }
 
 
-void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
+void can::BitFrame::FlipBitAndCompensate(Bit *bit, size_t input_delay)
 {
     bit->FlipVal();
 
@@ -1319,7 +1319,7 @@ void can::BitFrame::PutAck()
 }
 
 
-void can::BitFrame::PutAck(int input_delay)
+void can::BitFrame::PutAck(size_t input_delay)
 {
     Bit *ack = GetBitOf(0, BitKind::Ack);
     ack->val_ = BitVal::Dominant;

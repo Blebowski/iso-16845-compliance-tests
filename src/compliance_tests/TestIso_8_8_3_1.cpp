@@ -85,7 +85,7 @@ class TestIso_8_8_3_1 : public test::TestBase
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
             ElemTest test = ElemTest(1);
-            test.e_ = dbt.sjw_;
+            test.e_ = static_cast<int>(dbt.sjw_);
             AddElemTest(TestVariant::CanFdEna, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
@@ -120,7 +120,7 @@ class TestIso_8_8_3_1 : public test::TestBase
             drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
             Bit *brs = drv_bit_frm->GetBitOf(0, BitKind::Brs);
-            for (int i = 0; i < elem_test.e_; i++)
+            for (size_t i = 0; i < static_cast<size_t>(elem_test.e_); i++)
                 brs->ForceTQ(dbt.ph2_ - 1 - i, BitPhase::Ph2, BitVal::Dominant);
 
             Bit *esi = drv_bit_frm->GetBitOf(0, BitKind::Esi);

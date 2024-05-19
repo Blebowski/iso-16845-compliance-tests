@@ -148,8 +148,7 @@ class TestIso_8_7_3 : public test::TestBase
             // edge will anyway arrive IPT after sample point! By adding IPT to monitored frame,
             // we acccount for IPT in IUTs perception of the synchronization edge on RX!
             // TODO: This works only for controllers which have IPT = Input Delay!
-            last_interm_bit_mon->GetTQ(last_interm_bit_mon->GetLenTQ() - 1)
-                ->Lengthen(dut_ipt);
+            last_interm_bit_mon->GetTQ(last_interm_bit_mon->GetLenTQ() - 1)->Lengthen(dut_ipt);
 
             /* This trick needs to be done to check that IUT transmits the first TQ recessive.
              * During this TQ, LT still sends the hard sync edge. This corresponds to

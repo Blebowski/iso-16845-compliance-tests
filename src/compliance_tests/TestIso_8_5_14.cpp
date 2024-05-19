@@ -128,8 +128,8 @@ class TestIso_8_5_14 : public test::TestBase
             mon_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
             Bit *err_delim = drv_bit_frm->GetBitOf(0, BitKind::ErrDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(err_delim);
-            for (int i = 0; i < 6; i++)
+            size_t bit_index = drv_bit_frm->GetBitIndex(err_delim);
+            for (size_t i = 0; i < 6; i++)
             {
                 drv_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Dominant, bit_index);
                 mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index);

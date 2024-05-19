@@ -96,9 +96,9 @@ class TestIso_8_6_7 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 5; i++)
+            for (size_t i = 0; i < 5; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 7; i++)
+            for (size_t i = 0; i < 7; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -109,9 +109,9 @@ class TestIso_8_6_7 : public test::TestBase
         {
             uint8_t dlc;
             if (elem_test.index_ < 7)
-                dlc = rand() % 0x9;
+                dlc = static_cast<uint8_t>(rand() % 0x9);
             else
-                dlc = (rand() % 0x4) + 11;
+                dlc = static_cast<uint8_t>((rand() % 0x4) + 11);
 
             frm_flags = std::make_unique<FrameFlags>(elem_test.frame_kind_,
                             //IdentifierType::Base, RtrFlag::DataFrame, BrsFlag::DontShift,
@@ -157,7 +157,7 @@ class TestIso_8_6_7 : public test::TestBase
                 break;
             default:
                 bit_to_corrupt = drv_bit_frm->GetRandBitOf(BitKind::Crc);
-                TestMessage("Invalid Elementary test index: %d", elem_test.index_);
+                TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
                 break;
             }
 
@@ -165,7 +165,7 @@ class TestIso_8_6_7 : public test::TestBase
             drv_bit_frm->PutAck(dut_input_delay);
 
             drv_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
-            int bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);
             mon_bit_frm->InsertActErrFrm(bit_index + 1);

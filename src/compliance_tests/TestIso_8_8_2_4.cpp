@@ -110,7 +110,7 @@ class TestIso_8_8_2_4 : public test::TestBase
              * We have options: Offset, Offset + Measured. This gives us two options for each
              * elementary test, together 4 tests.
              */
-            for (int i = 0; i < 4; i++)
+            for (size_t i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             SetupMonitorTxTests();
@@ -146,7 +146,7 @@ class TestIso_8_8_2_4 : public test::TestBase
              *   3. Insert 2 TQ pulse of correct value around sample point of last bit of CRC.
              *   4. Insert ACK so that frame is correctly transmitted.
              *************************************************************************************/
-            int d = dbt.GetBitLenCycles();
+            size_t d = dbt.GetBitLenCycles();
             if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
             drv_bit_frm->GetBit(0)->GetTQ(0)->Lengthen(d);
@@ -186,17 +186,15 @@ class TestIso_8_8_2_4 : public test::TestBase
                  * TX/RX delay will be measured and added by IUT. Offset in clock cycles!
                  * (minimal time quanta)
                  */
-                int ssp_offset = dbt.brp_ *
-                                 (dbt.prop_ + dbt.ph1_ -1);
-                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, ssp_offset);
+                size_t ssp_offset = dbt.brp_ * (dbt.prop_ + dbt.ph1_ -1);
+                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, static_cast<int>(ssp_offset));
             } else {
                 /* We need to incorporate d into the delay! Also, move offest slightly before
                  * regular sample point so that last bit is not lost due to already disabled
                  * SSP at CRC delimiter!
                  */
-                int ssp_offset = dbt.brp_ *
-                                 (dbt.prop_ + dbt.ph1_ - 1) + d;
-                dut_ifc->ConfigureSsp(SspType::Offset, ssp_offset);
+                size_t ssp_offset = dbt.brp_ * (dbt.prop_ + dbt.ph1_ - 1) + d;
+                dut_ifc->ConfigureSsp(SspType::Offset, static_cast<int>(ssp_offset));
             }
             dut_ifc->Enable();
             while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)

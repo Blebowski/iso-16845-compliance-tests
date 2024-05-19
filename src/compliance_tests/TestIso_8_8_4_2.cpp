@@ -117,7 +117,7 @@ class TestIso_8_8_4_2 : public test::TestBase
             Bit *next_bit;
             do {
                 random_bit = drv_bit_frm->GetRandBitOf(BitKind::Data);
-                int bit_index = drv_bit_frm->GetBitIndex(random_bit);
+                size_t bit_index = drv_bit_frm->GetBitIndex(random_bit);
                 next_bit = drv_bit_frm->GetBit(bit_index + 1);
             } while (! (random_bit->val_ == BitVal::Recessive &&
                         next_bit->val_ == BitVal::Recessive));

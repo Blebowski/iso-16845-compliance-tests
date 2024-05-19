@@ -134,7 +134,7 @@ class TestIso_9_6_1 : public test::TestBase
             drv_bit_frm_2->InsertActErrFrm(7, BitKind::Data);
             mon_bit_frm_2->InsertActErrFrm(7, BitKind::Data);
 
-            for (int i = 0; i < 15; i++)
+            for (size_t i = 0; i < 15; i++)
             {
                 drv_bit_frm->AppendBitFrame(drv_bit_frm_2.get());
                 mon_bit_frm->AppendBitFrame(mon_bit_frm_2.get());

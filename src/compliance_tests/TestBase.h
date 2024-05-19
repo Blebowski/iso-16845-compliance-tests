@@ -124,11 +124,6 @@ class test::TestBase
         can::CanVersion dut_can_version;
 
         /**
-         * Number of elementary tests (usually within single test variant)!
-         */
-        int n_elem_tests;
-
-        /**
          * Test variants to be run. E.g. if DUT is CAN FD Enabled, CAN 2.0 and CAN FD
          * variants needs to be run in most cases.
          */

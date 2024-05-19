@@ -93,9 +93,9 @@ class TestIso_8_2_2 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 14; i++)
+            for (size_t i = 0; i < 14; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 21; i++)
+            for (size_t i = 0; i < 21; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -188,7 +188,7 @@ class TestIso_8_2_2 : public test::TestBase
             /* Choose dlc based on elementary test */
             uint8_t dlc;
             if (elem_test.index_ < 14) {
-                dlc = (rand() % 7) + 1; /* To make sure at least 1! */
+                dlc = static_cast<uint8_t>((rand() % 7) + 1); /* To make sure at least 1! */
             } else {
                 /* Distribute DLC so that following elementary tests get CRC17 */
                 if (elem_test.index_ == 14 || elem_test.index_ == 15 ||
@@ -232,8 +232,8 @@ class TestIso_8_2_2 : public test::TestBase
                 bit_type = BitKind::ExtIdent;
 
             /* Search for bit of matching value! */
-            int lenght = drv_bit_frm->GetFieldLen(bit_type);
-            int index_in_bitfield = rand() % lenght;
+            size_t length = drv_bit_frm->GetFieldLen(bit_type);
+            size_t index_in_bitfield = static_cast<size_t>(rand()) % length;
             Bit *bit_to_corrupt = drv_bit_frm->GetBitOf(index_in_bitfield, bit_type);
 
             /* In following elementary tests we aim for fixed stuff bit of this value!
@@ -243,14 +243,14 @@ class TestIso_8_2_2 : public test::TestBase
             if (elem_test.index_ == 15 || elem_test.index_ == 16 ||
                 elem_test.index_ == 19 || elem_test.index_ == 20)
             {
-                int attempt_cnt = 0;
+                size_t attempt_cnt = 0;
                 while (bit_to_corrupt->val_ != bit_value_to_corrupt ||
                        bit_to_corrupt->stuff_kind_ != StuffKind::Fixed)
                 {
                     bit_type = GetRandomBitType(elem_test.frame_kind_, IdentKind::Base,
                                                 bit_field_to_corrupt);
-                    lenght = drv_bit_frm->GetFieldLen(bit_type);
-                    index_in_bitfield = rand() % lenght;
+                    length = drv_bit_frm->GetFieldLen(bit_type);
+                    index_in_bitfield = rand() % length;
                     bit_to_corrupt = drv_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                     attempt_cnt++;
 
@@ -271,17 +271,17 @@ class TestIso_8_2_2 : public test::TestBase
                                                 bit_field_to_corrupt);
                     if (elem_test.index_ == 3)
                         bit_type = BitKind::ExtIdent;
-                    lenght = drv_bit_frm->GetFieldLen(bit_type);
-                    index_in_bitfield = rand() % lenght;
+                    length = drv_bit_frm->GetFieldLen(bit_type);
+                    index_in_bitfield = rand() % length;
                     bit_to_corrupt = drv_bit_frm->GetBitOf(index_in_bitfield, bit_type);
                 }
             }
 
             TestMessage("Corrupting bit type: %s", bit_to_corrupt->GetBitKindName().c_str());
-            TestMessage("Index in bit field: %d", index_in_bitfield);
+            TestMessage("Index in bit field: %zu", index_in_bitfield);
             TestMessage("Value to be corrupted: %d", (int)bit_to_corrupt->val_);
 
-            int bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
             drv_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);

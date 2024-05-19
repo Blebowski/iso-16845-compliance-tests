@@ -74,7 +74,7 @@ class TestIso_8_2_7 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
-            for (int i = 0; i < 2; i++)
+            for (size_t i = 0; i < 2; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             /* Basic settings where IUT is transmitter */

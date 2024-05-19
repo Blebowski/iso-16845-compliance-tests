@@ -79,7 +79,7 @@ class TestIso_8_3_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -126,7 +126,7 @@ class TestIso_8_3_4 : public test::TestBase
             drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            int bit_index_to_flip;
+            size_t bit_index_to_flip;
             if (elem_test.index_ == 1)
                 bit_index_to_flip = 2;
             else if (elem_test.index_ == 2)
@@ -134,11 +134,10 @@ class TestIso_8_3_4 : public test::TestBase
             else
                 bit_index_to_flip = 7;
 
-            Bit *bit_to_flip = drv_bit_frm->GetBitOf(bit_index_to_flip - 1,
-                                                        BitKind::ErrDelim);
+            Bit *bit_to_flip = drv_bit_frm->GetBitOf(bit_index_to_flip - 1, BitKind::ErrDelim);
             drv_bit_frm->FlipBitAndCompensate(bit_to_flip, dut_input_delay);
 
-            int next_error_flag_index = drv_bit_frm->GetBitIndex(bit_to_flip) + 1;
+            size_t next_error_flag_index = drv_bit_frm->GetBitIndex(bit_to_flip) + 1;
 
             drv_bit_frm->InsertActErrFrm(next_error_flag_index);
             mon_bit_frm->InsertActErrFrm(next_error_flag_index);

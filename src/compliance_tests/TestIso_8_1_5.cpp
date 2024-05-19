@@ -110,10 +110,9 @@ class TestIso_8_1_5 : public test::TestBase
             mon_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
             Bit *overload_end_bit = mon_bit_frm->GetBitOf(6, BitKind::OvrlDelim);
-            int bit_index = mon_bit_frm->GetBitIndex(overload_end_bit);
-            for (int i = 0; i < 15; i++)
-                mon_bit_frm->InsertBit(BitKind::OvrlDelim, BitVal::Recessive,
-                                            bit_index);
+            size_t bit_index = mon_bit_frm->GetBitIndex(overload_end_bit);
+            for (size_t i = 0; i < 15; i++)
+                mon_bit_frm->InsertBit(BitKind::OvrlDelim, BitVal::Recessive, bit_index);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

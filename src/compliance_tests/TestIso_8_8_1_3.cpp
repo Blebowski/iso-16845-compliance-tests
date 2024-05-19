@@ -123,7 +123,7 @@ class TestIso_8_8_1_3 : public test::TestBase
                                         ((elem_test.index_ + 1) / 2) - 1;
 
             // Saturate not to get overflow
-            // TODO: Handle for generic controller
+            // TODO: Handle for arbitrary controller, not only CTU CAN FD!
             test_data_bit_timing.prop_ = (test_data_bit_timing.prop_ > 63) ? 63 : test_data_bit_timing.prop_;
             test_data_bit_timing.ph2_  = (test_data_bit_timing.ph2_  > 31) ? 31 :
                                          (test_data_bit_timing.ph2_  <  1) ? 1  : test_data_bit_timing.ph2_;

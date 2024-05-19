@@ -85,7 +85,7 @@ class TestIso_8_6_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 5; i++)
+            for (size_t i = 0; i < 5; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -126,7 +126,7 @@ class TestIso_8_6_4 : public test::TestBase
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            int num_bits_to_insert = 0;
+            size_t num_bits_to_insert = 0;
             switch (elem_test.index_)
             {
             case 1:
@@ -148,10 +148,10 @@ class TestIso_8_6_4 : public test::TestBase
                 break;
             }
 
-            for (int i = 0; i < num_bits_to_insert; i++)
+            for (size_t i = 0; i < num_bits_to_insert; i++)
             {
-                int bit_index = drv_bit_frm->GetBitIndex(
-                                    drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
+                size_t bit_index = drv_bit_frm->GetBitIndex(
+                                        drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag));
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index + 1);
                 mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index + 1);
             }
@@ -160,7 +160,7 @@ class TestIso_8_6_4 : public test::TestBase
             drv_bit_frm->CompensateEdgeForInputDelay(
                 drv_bit_frm->GetBitOf(0, BitKind::ActErrFlag), dut_input_delay);
 
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
