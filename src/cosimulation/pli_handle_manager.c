@@ -142,7 +142,7 @@ static T_PLI_HANDLE hman_create_ctu_vip_signal_handle(const char *signal_name)
     // VCS VHDL signals are converted to upper-case
     char *curr = full_name;
     while (*curr) {
-        *curr = toupper((unsigned char) *curr);
+        *curr = (char)toupper((unsigned char) *curr);
         curr++;
     }
 
@@ -203,7 +203,7 @@ static struct hlist_node* hman_add_handle_to_list(T_PLI_HANDLE handle, const cha
         }
 
         strcpy(list_head->signal_name, signal_name);
-        list_head->signal_size = PLI_GET(P_PLI_SIZE, handle);
+        list_head->signal_size = (size_t) PLI_GET(P_PLI_SIZE, handle);
 
         return list_head;
     }
@@ -226,7 +226,7 @@ static struct hlist_node* hman_add_handle_to_list(T_PLI_HANDLE handle, const cha
         return NULL;
     }
 
-    current->signal_size = PLI_GET(P_PLI_SIZE, handle);
+    current->signal_size = (size_t) PLI_GET(P_PLI_SIZE, handle);
     strcpy(current->signal_name, signal_name);
 
     return current;

@@ -56,7 +56,7 @@
 struct hlist_node {
     T_PLI_HANDLE handle;
     char *signal_name;
-    int signal_size;
+    size_t signal_size;
     struct hlist_node *next;
 };
 

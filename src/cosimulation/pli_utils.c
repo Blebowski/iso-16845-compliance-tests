@@ -83,12 +83,12 @@ int pli_drive_str_value(const char *signal_name, const char *value)
 
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
 
-    int len = node->signal_size;
+    size_t len = node->signal_size;
 
     // Allocate Buffers
     unsigned *tmp = pli_malloc(sizeof(unsigned) * len);
     unsigned *tmp2 = pli_malloc(sizeof(unsigned) * len);
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         tmp[i] = 0x2;
         tmp2[i] = 0x2;
     }
@@ -99,14 +99,14 @@ int pli_drive_str_value(const char *signal_name, const char *value)
 
     // Flip bits
     if (len > 1) {
-        for (int i = 0; i < len; i += 8)
+        for (size_t i = 0; i < len; i += 8)
             tmp2[i] = tmp[len - i - 1];
     } else {
         tmp2[0] = tmp[0];
     }
 
     vhpiValueT vhpi_value;
-    vhpi_value.bufSize = sizeof(unsigned) * len;
+    vhpi_value.bufSize = (vhpiIntT)(sizeof(unsigned) * len);
 
     if (len == 1) {
         vhpi_value.format = vhpiEnumVal;
@@ -144,10 +144,10 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
 
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
 
-    int len = node->signal_size;
+    size_t len = node->signal_size;
 
     vhpiValueT vhpi_value;
-    vhpi_value.bufSize = len;
+    vhpi_value.bufSize = (vhpiIntT)len;
     vhpi_value.format = vhpiRawData;
 
     vhpi_get_value(node->handle, &vhpi_value);
@@ -155,7 +155,7 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
     // Convert VCS raw to std_logic string
     char *tmp = pli_malloc(len + 1);
     memset(tmp, 0, len + 1);
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         char *bit = (char*)(vhpi_value.value.ptr) + i;
         tmp[i] = raw_to_std_logic_char(*bit);
     }
@@ -163,7 +163,7 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
     // Flip bit order word.
     char *tmp2 = pli_malloc(len + 1);
     memset(tmp2, 0, len + 1);
-    for (int i = 0; i < len; i ++)
+    for (size_t i = 0; i < len; i ++)
         tmp2[i] = tmp[len - i - 1];
 
     // Caller must satisfy sufficient length of ret_value buffer
@@ -244,10 +244,10 @@ void pli_printf(t_pli_msg_severity severity, const char *fmt, ...)
 
 #if PLI_KIND == PLI_KIND_GHDL_VPI
         vpi_printf("%s ", PLI_TAG);
-        vpi_printf(tmp);
+        vpi_printf("%s", tmp);
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
         vhpi_printf("%s ", PLI_TAG);
-        vhpi_printf(tmp);
+        vhpi_printf("%s ", tmp);
 #endif
         va_end(args);
     }
