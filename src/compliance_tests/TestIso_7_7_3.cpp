@@ -94,7 +94,7 @@ class TestIso_7_7_3 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             /* Base ID full of 1s, 5th will be dominant stuff bit! */
-            int id = static_cast<int>(pow(2, 11)) - 1;
+            int id = CAN_BASE_ID_ALL_ONES;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 

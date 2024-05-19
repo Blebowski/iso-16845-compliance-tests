@@ -96,10 +96,10 @@ void can::Frame::Randomize()
 
     if (randomize_ident_)
     {
-        int max_ident_pow = 11;
-        if (frame_flags().is_ide() == IdentKind::Ext)
-            max_ident_pow = 29;
-        set_identifier(rand() % ((int)pow(2, max_ident_pow)));
+        int max_ident_pow = (frame_flags().is_ide() == IdentKind::Ext) ?
+                                CAN_EXTENDED_ID_MAX : CAN_BASE_ID_MAX;
+
+        set_identifier(rand() % max_ident_pow);
     }
 
     if (randomize_dlc_)

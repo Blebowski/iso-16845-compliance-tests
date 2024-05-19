@@ -193,7 +193,9 @@ namespace can {
     class DutInterface;
     class CtuCanFdInterface;
 
-#define UNDERFLOW_TH_SIZE_T 1000000
+#define CAN_BASE_ID_MAX 2048
+#define CAN_EXTENDED_ID_MAX 536870912
+#define CAN_BASE_ID_ALL_ONES 0b11111111111
 
 } // namespace can
 

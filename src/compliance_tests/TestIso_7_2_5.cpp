@@ -157,7 +157,7 @@ class TestIso_7_2_5 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            int id = rand() % (int)pow(2, 11);
+            int id = rand() % CAN_BASE_ID_MAX;
             uint8_t dlc = 0x0;
 
             if (test_variant == TestVariant::Common) {

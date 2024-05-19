@@ -134,7 +134,7 @@ class TestIso_8_1_2 : public test::TestBase
                     id = 0x1FFFFFFF;
                     break;
                 case 4:
-                    id = rand() % ((int)pow(2, 29));
+                    id = rand() % CAN_EXTENDED_ID_MAX;
                     break;
                 default:
                     break;

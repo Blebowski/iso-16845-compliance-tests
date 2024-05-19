@@ -134,8 +134,8 @@ class TestIso_8_6_6 : public test::TestBase
 
             // We repeat generating random frame as long as we have any of the fields
             // whose non-stuff bits we could possibly flip with all zeroes or all ones!
-            } while (gold_frm->identifier() == (pow(2, 11) - 1) ||
-                     gold_frm->identifier() == (pow(2, 29) - 1) ||
+            } while (gold_frm->identifier() == (CAN_BASE_ID_MAX - 1) ||
+                     gold_frm->identifier() == (CAN_EXTENDED_ID_MAX - 1) ||
                      gold_frm->dlc() == 0x0 ||
                      gold_frm->dlc() == 0xF ||
                      gold_frm->data(0) == 0x00 ||

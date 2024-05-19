@@ -132,7 +132,7 @@ class TestIso_7_1_2 : public test::TestBase
                     can_id = 0x1FFFFFFF;
                     break;
                 case 5:
-                    can_id = rand() % (int)pow(2, 29);
+                    can_id = rand() % CAN_EXTENDED_ID_MAX;
                     break;
                 default:
                     can_id = 0x0;

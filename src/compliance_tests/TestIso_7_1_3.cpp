@@ -144,20 +144,20 @@ class TestIso_7_1_3 : public test::TestBase
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Base;
                     iut_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = lt_id;
                     break;
                 case 2:
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Ext;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = (lt_id << 18);
                     break;
                 case 3:
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Ext;
                     lt_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = (lt_id << 18);
                     break;
                 case 4:
@@ -176,7 +176,7 @@ class TestIso_7_1_3 : public test::TestBase
                     lt_id_type = IdentKind::Ext;
                     iut_id_type = IdentKind::Ext;
                     iut_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 29);
+                    lt_id = rand() % CAN_EXTENDED_ID_MAX;
                     iut_id = lt_id;
                     break;
                 default:
@@ -198,7 +198,7 @@ class TestIso_7_1_3 : public test::TestBase
                     iut_frame_type = FrameKind::Can20;
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Base;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = lt_id;
                     iut_rtr_flag = RtrFlag::Rtr;
                     break;
@@ -216,7 +216,7 @@ class TestIso_7_1_3 : public test::TestBase
                     lt_id_type = IdentKind::Ext;
                     iut_id_type = IdentKind::Ext;
                     iut_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 29);
+                    lt_id = rand() % CAN_EXTENDED_ID_MAX;
                     iut_id = lt_id;
                     break;
                 default:
