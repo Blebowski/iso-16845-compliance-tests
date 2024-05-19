@@ -79,7 +79,7 @@ class TestIso_7_5_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -121,7 +121,7 @@ class TestIso_7_5_3 : public test::TestBase
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            int num_bits_to_insert;
+            size_t num_bits_to_insert;
             if (elem_test.index_ == 1)
                 num_bits_to_insert = 1;
             else if (elem_test.index_ == 2)
@@ -129,9 +129,9 @@ class TestIso_7_5_3 : public test::TestBase
             else
                 num_bits_to_insert = 7;
 
-            for (int i = 0; i < num_bits_to_insert; i++)
+            for (size_t i = 0; i < num_bits_to_insert; i++)
             {
-                int bit_index = drv_bit_frm->GetBitIndex(
+                size_t bit_index = drv_bit_frm->GetBitIndex(
                                     drv_bit_frm->GetBitOf(0, BitKind::ErrDelim));
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index);
                 mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, bit_index);

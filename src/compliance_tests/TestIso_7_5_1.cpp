@@ -81,7 +81,7 @@ class TestIso_7_5_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -129,7 +129,7 @@ class TestIso_7_5_1 : public test::TestBase
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            int bit_to_corrupt;
+            size_t bit_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_to_corrupt = 0;
             else if (elem_test.index_ == 2)
