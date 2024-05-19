@@ -76,7 +76,7 @@ class TestIso_7_3_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -102,7 +102,7 @@ class TestIso_7_3_3 : public test::TestBase
              *   4. Flip 1st, 3rd or 6th bit of Active Error flag to RECESSIVE.
              *   5. Insert next Error frame one bit after form error in Error flag!
              *************************************************************************************/
-            int bit_to_corrupt;
+            size_t bit_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_to_corrupt = 1;
             else if (elem_test.index_ == 2)
@@ -121,7 +121,7 @@ class TestIso_7_3_3 : public test::TestBase
 
             /* Force n-th bit of Active Error flag on can_rx (driver) to RECESSIVE */
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::ActErrFlag);
-            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit);
             bit->val_ = BitVal::Recessive;
 
             /* Insert new error flag from one bit further, both driver and monitor! */

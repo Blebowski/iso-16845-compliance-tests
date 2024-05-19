@@ -74,7 +74,7 @@ class TestIso_7_3_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -92,7 +92,8 @@ class TestIso_7_3_1 : public test::TestBase
             drv_bit_frm = ConvBitFrame(*gold_frm);
             mon_bit_frm = ConvBitFrame(*gold_frm);
 
-            TestMessage("Prolonging Active Error flag by: %d", (3 * (elem_test.index_ - 1)) + 1);
+            size_t prolonged_by = (3 * (elem_test.index_ - 1)) + 1;
+            TestMessage("Prolonging Active Error flag by: %zu", prolonged_by);
 
             /**************************************************************************************
              * Modify test frames:
@@ -110,7 +111,7 @@ class TestIso_7_3_1 : public test::TestBase
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
             drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            int num_bits_to_insert;
+            size_t num_bits_to_insert;
             if (elem_test.index_ == 1)
                 num_bits_to_insert = 1;
             else if (elem_test.index_ == 2)
@@ -119,16 +120,16 @@ class TestIso_7_3_1 : public test::TestBase
                 num_bits_to_insert = 7;
 
             /* Prolong driven frame by 1,4,7 DOMINANT bits */
-            int drv_last_err_flg_index = drv_bit_frm->GetBitIndex(
+            size_t drv_last_err_flg_index = drv_bit_frm->GetBitIndex(
                 drv_bit_frm->GetBitOf(5, BitKind::ActErrFlag));
-            for (int k = 0; k < num_bits_to_insert; k++)
+            for (size_t k = 0; k < num_bits_to_insert; k++)
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant,
                                             drv_last_err_flg_index);
 
             /* Prolong monitored frame by 1,4,7 RECESSIVE bits */
-            int mon_last_err_flg_index = mon_bit_frm->GetBitIndex(
+            size_t mon_last_err_flg_index = mon_bit_frm->GetBitIndex(
                 mon_bit_frm->GetBitOf(0, BitKind::ErrDelim));
-            for (int k = 0; k < num_bits_to_insert; k++)
+            for (size_t k = 0; k < num_bits_to_insert; k++)
                 mon_bit_frm->InsertBit(BitKind::ErrDelim, BitVal::Recessive,
                                             mon_last_err_flg_index);
 
