@@ -74,7 +74,7 @@ class TestIso_7_6_2 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -108,7 +108,7 @@ class TestIso_7_6_2 : public test::TestBase
             drv_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
             /* Force n-th bit of Overload flag on can_rx (driver) to RECESSIVE */
-            int bit_to_corrupt;
+            size_t bit_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_to_corrupt = 1;
             else if (elem_test.index_ == 2)
@@ -118,7 +118,7 @@ class TestIso_7_6_2 : public test::TestBase
             TestMessage("Forcing Overload flag bit %d to recessive", bit_to_corrupt);
 
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::OvrlFlag);
-            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit);
             bit->val_ = BitVal::Recessive;
 
             /* Insert Error flag from one bit further, both driver and monitor! */

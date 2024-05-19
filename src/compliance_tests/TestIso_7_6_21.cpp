@@ -115,7 +115,7 @@ class TestIso_7_6_21 : public test::TestBase
              *************************************************************************************/
             Bit *loosing_bit = drv_bit_frm->GetBitOf(9, BitKind::BaseIdent);
             loosing_bit->val_ = BitVal::Dominant;
-            int bit_index = drv_bit_frm->GetBitIndex(loosing_bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(loosing_bit);
 
             // Compensate IUTs input delay - lenghten IUTs monitored bit by its input delay,
             // since IUT will re-synchronize due to this delay on the same bit on which it loses

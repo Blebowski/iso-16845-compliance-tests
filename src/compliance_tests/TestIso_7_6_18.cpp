@@ -107,9 +107,9 @@ class TestIso_7_6_18 : public test::TestBase
             drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             Bit *err_delim = drv_bit_frm->GetBitOf(0, BitKind::ErrDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(err_delim);
+            size_t bit_index = drv_bit_frm->GetBitIndex(err_delim);
 
-            for (int k = 0; k < 7; k++)
+            for (size_t k = 0; k < 7; k++)
             {
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index);
                 mon_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Recessive, bit_index);

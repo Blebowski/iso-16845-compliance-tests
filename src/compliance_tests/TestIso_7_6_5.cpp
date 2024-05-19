@@ -96,7 +96,7 @@ class TestIso_7_6_5 : public test::TestBase
             drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Recessive;
 
             Bit *ack_bit = drv_bit_frm->GetBitOf(0, BitKind::Ack);
-            int bit_index = drv_bit_frm->GetBitIndex(ack_bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(ack_bit);
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);
             mon_bit_frm->InsertActErrFrm(bit_index + 1);

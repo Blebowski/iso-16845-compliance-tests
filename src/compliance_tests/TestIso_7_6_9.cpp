@@ -93,9 +93,9 @@ class TestIso_7_6_9 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 6; i++)
+            for (size_t i = 0; i < 6; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -147,7 +147,7 @@ class TestIso_7_6_9 : public test::TestBase
          * @returns Index of stuff bit (within whole frame) representing stuff bit
          *          of given value within a bit field.
          */
-        int GenerateFrame(TestVariant test_variant, ElemTest elem_test)
+        size_t GenerateFrame(TestVariant test_variant, ElemTest elem_test)
         {
             BitKind field = BitKind::Sof;
             BitVal value = BitVal::Dominant;
@@ -231,7 +231,7 @@ class TestIso_7_6_9 : public test::TestBase
             /* Search for stuff bit of desired value in field as given by elementary test.
              * If not succefull, then generate the frame again.
              */
-            int num_stuff_bits = 0;
+            size_t num_stuff_bits = 0;
             TestMessage("Searching for: %d\n", field);
             TestMessage("Value: %d\n", value);
 
@@ -275,7 +275,7 @@ class TestIso_7_6_9 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             /* Generate frame takes care of frame creation */
-            int bit_to_corrupt = GenerateFrame(test_variant, elem_test);
+            size_t bit_to_corrupt = GenerateFrame(test_variant, elem_test);
 
             /* For now skip elementary test number 6 of CAN 2.0 variant!
              * This is because if we want to achive dominant stuff bit in control field

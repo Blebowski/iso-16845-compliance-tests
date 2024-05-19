@@ -108,9 +108,9 @@ class TestIso_7_6_17 : public test::TestBase
             drv_bit_frm->InsertOvrlFrm(0, BitKind::Interm);
 
             Bit *overload_delim = drv_bit_frm->GetBitOf(0, BitKind::OvrlDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(overload_delim);
+            size_t bit_index = drv_bit_frm->GetBitIndex(overload_delim);
 
-            for (int i = 0; i < 7; i++)
+            for (size_t i = 0; i < 7; i++)
             {
                 drv_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Dominant, bit_index);
                 mon_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Recessive, bit_index);

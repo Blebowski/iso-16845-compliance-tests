@@ -92,7 +92,7 @@ class TestIso_7_6_10 : public test::TestBase
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
             AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
-            for (int i = 0; i < 2; i++)
+            for (size_t i = 0; i < 2; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -108,9 +108,9 @@ class TestIso_7_6_10 : public test::TestBase
             } else {
                 uint8_t dlc;
                 if (elem_test.index_ == 1)
-                    dlc = rand() % 0xB;
+                    dlc = static_cast<uint8_t>(rand() % 0xB);
                 else
-                    dlc = (rand() % 0x4) + 0xB;
+                    dlc = static_cast<uint8_t>((rand() % 0x4) + 0xB);
                 gold_frm = std::make_unique<Frame>(*frm_flags, dlc);
             }
             RandomizeAndPrint(gold_frm.get());
@@ -128,14 +128,16 @@ class TestIso_7_6_10 : public test::TestBase
              *      not send ACK then!
              *   3. Insert Active Error flag from first bit of EOF.
              *************************************************************************************/
-            int crc_bit_index;
-            int crc_overall_index;
+            size_t crc_bit_index;
+            size_t crc_overall_index;
             Bit *crc_bit;
+
             do {
-                crc_bit_index = rand() % drv_bit_frm->GetFieldLen(BitKind::Crc);
+                crc_bit_index = static_cast<size_t>(rand()) % drv_bit_frm->GetFieldLen(BitKind::Crc);
                 crc_bit = drv_bit_frm->GetBitOf(crc_bit_index, BitKind::Crc);
                 crc_overall_index = drv_bit_frm->GetBitIndex(crc_bit);
             } while (crc_bit->stuff_kind_ != StuffKind::NoStuff);
+
             crc_bit->FlipVal();
             mon_bit_frm->GetBit(crc_overall_index)->FlipVal();
 

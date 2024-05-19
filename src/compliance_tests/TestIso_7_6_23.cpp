@@ -96,7 +96,7 @@ class TestIso_7_6_23 : public test::TestBase
         {
             FillTestVariants(VariantMatchType::FdTolAndFdEna);
 
-            int num_elem_tests;
+            size_t num_elem_tests;
             if (test_variants[0] == TestVariant::CanFdTol)
                 num_elem_tests = 3;
             else if (test_variants[0] == TestVariant::CanFdEna)
@@ -104,7 +104,7 @@ class TestIso_7_6_23 : public test::TestBase
             else
                 num_elem_tests = 0;
 
-            for (int i = 0; i < num_elem_tests; i++)
+            for (size_t i = 0; i < num_elem_tests; i++)
                 if (i < 3)
                     elem_tests[0].push_back(ElemTest(i + 1, FrameKind::CanFd));
                 else
