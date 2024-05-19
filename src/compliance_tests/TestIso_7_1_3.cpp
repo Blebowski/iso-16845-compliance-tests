@@ -180,6 +180,8 @@ class TestIso_7_1_3 : public test::TestBase
                     iut_id = lt_id;
                     break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
@@ -220,6 +222,8 @@ class TestIso_7_1_3 : public test::TestBase
                     iut_id = lt_id;
                     break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             }
@@ -281,7 +285,10 @@ class TestIso_7_1_3 : public test::TestBase
                     break;
                 case 6:
                     bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
+                    break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
@@ -302,7 +309,10 @@ class TestIso_7_1_3 : public test::TestBase
                 case 4:
                     /* In IUTs frame R1 is on position of RTR */
                     bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::R1);
+                    break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             }
