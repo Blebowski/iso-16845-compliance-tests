@@ -82,7 +82,7 @@ class TestIso_7_7_11 : public test::TestBase
             for (size_t i = 1; i <= nbt.sjw_; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::Common, std::move(test));
             }
         }
@@ -119,7 +119,7 @@ class TestIso_7_7_11 : public test::TestBase
             }
 
             mon_bit_frm->GetBitOf(0, BitKind::CrcDelim)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+                ->ShortenPhase(BitPhase::Ph2, static_cast<int>(elem_test.e_));
 
             Bit *ack = drv_bit_frm->GetBitOf(0, BitKind::Ack);
             ack->val_ = BitVal::Dominant;

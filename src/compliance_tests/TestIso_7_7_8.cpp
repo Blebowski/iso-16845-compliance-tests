@@ -125,7 +125,7 @@ class TestIso_7_7_8 : public test::TestBase
             Bit *second_stuff_bit = drv_bit_frm->GetStuffBit(1);
             second_stuff_bit->val_ = BitVal::Recessive;
 
-            int index = drv_bit_frm->GetBitIndex(second_stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(second_stuff_bit);
             drv_bit_frm->InsertActErrFrm(index + 1);
             mon_bit_frm->InsertActErrFrm(index + 1);
 

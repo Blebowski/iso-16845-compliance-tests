@@ -78,7 +78,7 @@ class TestIso_7_7_2 : public test::TestBase
             FillTestVariants(VariantMatchType::Common);
             for (size_t i = 0; i < nbt.GetBitLenTQ(); i++){
                 ElemTest test = ElemTest(i + 1, FrameKind::Can20);
-                test.e_ = i + 1;
+                test.e_ = static_cast<int>(i) + 1;
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -134,6 +134,8 @@ class TestIso_7_7_2 : public test::TestBase
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph1, nbt.ph1_);
             last_interm_bit_mon->ShortenPhase(BitPhase::Prop, nbt.prop_);
+
+            assert(elem_test.e_ > 0 && "Phase Error non-zero and positive!");
 
             last_interm_bit_drv->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);
             last_interm_bit_mon->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);

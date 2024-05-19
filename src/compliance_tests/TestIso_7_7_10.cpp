@@ -109,12 +109,13 @@ class TestIso_7_7_10 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             Bit *first_stuff_bit = drv_bit_frm->GetStuffBit(0);
-            int tq_position = first_stuff_bit->GetLenTQ() - nbt.ph2_ + 1;
-            first_stuff_bit->GetTQ(tq_position - 1)->ForceVal(BitVal::Recessive);
+            assert (first_stuff_bit->GetLenTQ() >= nbt.ph2_ && "'tq_position' will underflow!");
+            size_t tq_position = first_stuff_bit->GetLenTQ() - nbt.ph2_;
+            first_stuff_bit->GetTQ(tq_position)->ForceVal(BitVal::Recessive);
 
             Bit *second_stuff_bit = drv_bit_frm->GetStuffBit(1);
             second_stuff_bit->val_ = BitVal::Dominant;
-            int index = drv_bit_frm->GetBitIndex(second_stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(second_stuff_bit);
 
             mon_bit_frm->InsertActErrFrm(index + 1);
             drv_bit_frm->InsertPasErrFrm(index + 1);

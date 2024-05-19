@@ -82,7 +82,7 @@ class TestIso_7_7_5 : public test::TestBase
             FillTestVariants(VariantMatchType::Common);
             for (size_t i = 1; i <= nbt.sjw_; i++){
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 elem_tests[0].push_back(test);
             }
 
@@ -95,7 +95,7 @@ class TestIso_7_7_5 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
-            int id = pow(2,11) - 1;
+            int id = static_cast<int>(pow(2, 11)) - 1;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 
@@ -114,15 +114,15 @@ class TestIso_7_7_5 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             drv_bit_frm->GetBitOf(4, BitKind::BaseIdent)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+                ->ShortenPhase(BitPhase::Ph2, static_cast<int>(elem_test.e_));
             mon_bit_frm->GetBitOf(4, BitKind::BaseIdent)
-                ->ShortenPhase(BitPhase::Ph2, elem_test.e_);
+                ->ShortenPhase(BitPhase::Ph2, static_cast<int>(elem_test.e_));
 
             Bit *stuff_bit = drv_bit_frm->GetStuffBit(0);
             stuff_bit->val_ = BitVal::Recessive;
             stuff_bit->GetTQ(0)->ForceVal(BitVal::Dominant);
 
-            int index = drv_bit_frm->GetBitIndex(stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(stuff_bit);
             mon_bit_frm->InsertActErrFrm(index + 1);
             drv_bit_frm->InsertPasErrFrm(index + 1);
 

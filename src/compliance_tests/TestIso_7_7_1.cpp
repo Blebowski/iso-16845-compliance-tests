@@ -83,7 +83,7 @@ class TestIso_7_7_1 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             /* Base ID full of 1s */
-            int id = pow(2,11) - 1;
+            size_t id = static_cast<size_t>(pow(2,11)) - 1;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 
