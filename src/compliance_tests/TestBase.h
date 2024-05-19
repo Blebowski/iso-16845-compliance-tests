@@ -183,10 +183,10 @@ class test::TestBase
         std::unique_ptr<can::BitFrame> mon_bit_frm_4;
 
         /* REC / TEC counters */
-        int rec_old;
-        int rec_new;
-        int tec_old;
-        int tec_new;
+        int rec_old = 0;
+        int rec_new = 0;
+        int tec_old = 0;
+        int tec_new = 0;
 
         /**
          * Obtains frame type based on test variant.
