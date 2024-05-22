@@ -697,13 +697,13 @@ void test::TestBase::PrintTestInfo()
     size_t num_elem_tests = 0;
     for (const auto &variant_tests : elem_tests)
         num_elem_tests += variant_tests.size();
-    TestMessage("Total number of elementary tests: %zu", num_elem_tests);
+    TestMessage("Total number of elementary tests: %d", num_elem_tests);
 }
 
 void test::TestBase::PrintElemTestInfo(ElemTest elem_test)
 {
     TestMessage(std::string(80, '*').c_str());
-    TestMessage("Elementary Test index: %zu", elem_test.index_);
+    TestMessage("Elementary Test index: %d", elem_test.index_);
     //TestMessage("Elementary Test message: %s", elem_test.msg.c_str());
     TestMessage(std::string(80, '*').c_str());
 }
