@@ -167,10 +167,6 @@ void test::TestBase::SetupTestEnv()
     TestBigMessage("Test specific config...");
     ConfigureTest();
     TestMessage("Done");
-
-    PrintTestInfo();
-
-    TestBigMessage("Starting test execution: ", test_name);
 }
 
 
@@ -186,16 +182,17 @@ int test::TestBase::Run()
 {
     SetupTestEnv();
 
-    int variant_index = 0;
-
-    /*
-    if (RunElemTest == 0)
-    {
-        TestBigMessage("Elementary test Run routine not defined, exiting...");
+    // Do not run the test if some assertions failed in the Configure
+    if (failed_assertions > 0) {
         test_result = false;
+        TestMessage("Skipping test execution due to failed assertions in test setup!");
         return (int)FinishTest();
     }
-    */
+
+    PrintTestInfo();
+    TestBigMessage("Starting test execution: ", test_name);
+
+    int variant_index = 0;
 
     for (auto const &test_variant : test_variants)
     {
@@ -220,6 +217,12 @@ int test::TestBase::Run()
 
         variant_index++;
     }
+
+    if (failed_assertions > 0) {
+        test_result = false;
+        TestMessage("Test failed due to assertions failed during the test");
+    }
+
     return (int)FinishTest();
 }
 
@@ -687,6 +690,15 @@ void test::TestBase::CheckLTResult()
     CanAgentDriverStop();
     CanAgentMonitorFlush();
     CanAgentDriverFlush();
+}
+
+void test::TestBase::TestAssertFnc(bool condition, const char *msg, const char *file, const int line)
+{
+    if (condition == false) {
+        TestMessage("Test Assertion Failed at: %s : %d", file, line);
+        TestMessage("   Message: %s", msg);
+        failed_assertions++;
+    }
 }
 
 void test::TestBase::PrintTestInfo()
