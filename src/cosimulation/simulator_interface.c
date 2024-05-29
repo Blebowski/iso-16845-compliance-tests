@@ -84,7 +84,7 @@ void sw_control_req_callback(PLI_CB_ARG)
         char letter = 0;
         for (size_t j = 0; j < 8; j++)
             if (test_name_binary[i + j] == '1')
-                letter |= 0x1 << (7 - j);
+                letter |= (char)((0x1) << (7 - j));
         test_name[i / 8] = letter;
     }
 

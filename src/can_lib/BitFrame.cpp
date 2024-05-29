@@ -555,7 +555,7 @@ bool can::BitFrame::SetStuffParity()
     for (bit_it = bits_.begin(); bit_it->kind_ != BitKind::StuffParity; bit_it++)
         ;
     for (int i = 0; i < 3; i++)
-        val ^= (stuff_cnt_encoded_ >> i) & 0x1;
+        val ^= static_cast<uint8_t>(((stuff_cnt_encoded_ >> i) & 0x1));
     bit_it->val_ = (BitVal)val;
 
     return true;
