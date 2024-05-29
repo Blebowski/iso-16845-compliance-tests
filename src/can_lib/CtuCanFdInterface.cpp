@@ -131,19 +131,19 @@ void can::CtuCanFdInterface::ConfigureBitTiming(can::BitTiming nbt, can::BitTimi
     union ctu_can_fd_btr_fd data_fd;
 
     data.u32 = 0;
-    data.s.brp = nbt.brp_;
-    data.s.ph1 = nbt.ph1_;
-    data.s.ph2 = nbt.ph2_;
-    data.s.sjw = nbt.sjw_;
-    data.s.prop = nbt.prop_;
+    data.s.brp  = nbt.brp_ % 256;
+    data.s.ph1  = nbt.ph1_ % 64;
+    data.s.ph2  = nbt.ph2_ % 64;
+    data.s.sjw  = nbt.sjw_ % 32;
+    data.s.prop = nbt.prop_ % 128;
     MemBusAgentWrite32(CTU_CAN_FD_BTR, data.u32);
 
     data_fd.u32 = 0;
-    data_fd.s.brp_fd = dbt.brp_;
-    data_fd.s.ph1_fd = dbt.ph1_;
-    data_fd.s.ph2_fd = dbt.ph2_;
-    data_fd.s.sjw_fd = dbt.sjw_;
-    data_fd.s.prop_fd = dbt.prop_;
+    data_fd.s.brp_fd  = dbt.brp_ % 256;
+    data_fd.s.ph1_fd  = dbt.ph1_ % 32;
+    data_fd.s.ph2_fd  = dbt.ph2_ % 32;
+    data_fd.s.sjw_fd  = dbt.sjw_ % 32;
+    data_fd.s.prop_fd = dbt.prop_ % 64;
     MemBusAgentWrite32(CTU_CAN_FD_BTR_FD, data_fd.u32);
 }
 
@@ -160,7 +160,7 @@ void can::CtuCanFdInterface::ConfigureSsp(SspType ssp_type, int ssp_offset)
     else if (ssp_type == SspType::Offset)
         ssp_cfg.s.ssp_src = ctu_can_fd_ssp_cfg_ssp_src::SSP_SRC_OFFSET;
 
-    ssp_cfg.s.ssp_offset = ssp_offset;
+    ssp_cfg.s.ssp_offset = static_cast<unsigned char>(ssp_offset);
     MemBusAgentWrite32(CTU_CAN_FD_TRV_DELAY, ssp_cfg.u32);
 }
 
@@ -229,7 +229,7 @@ void can::CtuCanFdInterface::SendFrame(can::Frame *frame)
     else
         frame_format_word.s.esi_rsv = ctu_can_fd_frame_format_w_esi_rsv::ESI_ERR_PASIVE;
 
-    frame_format_word.s.dlc = frame->dlc();
+    frame_format_word.s.dlc = frame->dlc() % 16;
 
     // Identifier word
     identifier_word.u32 = 0;
@@ -395,7 +395,7 @@ void can::CtuCanFdInterface::SetRec(int rec)
 
     ctr_pres.u32 = 0;
     ctr_pres.s.prx = 1;
-    ctr_pres.s.ctpv = rec;
+    ctr_pres.s.ctpv = (static_cast<uint32_t>(rec)) % 512;
 
     MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
 }
@@ -412,7 +412,7 @@ void can::CtuCanFdInterface::SetTec(int tec)
 
     ctr_pres.u32 = 0;
     ctr_pres.s.ptx = 1;
-    ctr_pres.s.ctpv = tec;
+    ctr_pres.s.ctpv = (static_cast<uint32_t>(tec)) % 512;
 
     MemBusAgentWrite32(CTU_CAN_FD_CTR_PRES, ctr_pres.u32);
 }

@@ -80,11 +80,15 @@ class TestIso_7_7_6 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::Common);
-            size_t num_elem_tests = nbt.ph2_ - nbt.sjw_;
+
+            size_t num_elem_tests = 0;
+            if (nbt.ph2_ > nbt.sjw_)
+                num_elem_tests = nbt.ph2_ - nbt.sjw_;
+
             for (size_t i = 0; i < num_elem_tests; i++)
             {
                 ElemTest test = ElemTest(i + 1);
-                test.e_ = nbt.sjw_ + i + 1;
+                test.e_ = static_cast<int>(nbt.sjw_ + i + 1);
                 elem_tests[0].push_back(test);
             }
 
@@ -97,7 +101,7 @@ class TestIso_7_7_6 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
-            int id = pow(2,11) - 1;
+            int id = CAN_BASE_ID_ALL_ONES;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 
@@ -126,7 +130,7 @@ class TestIso_7_7_6 : public test::TestBase
             stuff_bit->val_ = BitVal::Recessive;
             stuff_bit->GetTQ(0)->ForceVal(BitVal::Dominant);
 
-            int index = drv_bit_frm->GetBitIndex(stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(stuff_bit);
             mon_bit_frm->InsertActErrFrm(index + 1);
             drv_bit_frm->InsertPasErrFrm(index + 1);
 

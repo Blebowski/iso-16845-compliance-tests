@@ -129,7 +129,7 @@ class can::BitFrame : public Frame {
          * @param index Index of stuff bit within frame (0 - first stuff bit, 1 - second, ...)
          * @returns Pointer to stuff bit
          */
-        Bit* GetStuffBit(int index);
+        Bit* GetStuffBit(size_t index);
 
         /**
          * Obtains stuff bit within a bit field of a frame
@@ -137,7 +137,7 @@ class can::BitFrame : public Frame {
          * @param kind Bit field to search stuff bit for
          * @returns Pointer to stuff bit
          */
-        Bit* GetStuffBit(int index, BitKind kind);
+        Bit* GetStuffBit(size_t index, BitKind kind);
 
         /**
          * Obtains a Stuff bit within a bit field at certain position.
@@ -357,7 +357,7 @@ class can::BitFrame : public Frame {
          * @param stuff_kind Type of stuff bit to count (No stuff bit, Fixed, regular)
          * @returns Number of stuff bits within bit field of a frame.
          */
-        int GetNumStuffBits(BitKind kind, StuffKind stuff_kind);
+        size_t GetNumStuffBits(BitKind kind, StuffKind stuff_kind);
 
         /**
          * Gets number of Stuff bits in a bit field of a frame with matching value
@@ -366,14 +366,14 @@ class can::BitFrame : public Frame {
          * @param val Value of bit to check
          * @returns Number of stuff bits within bit field of a frame matching required value
          */
-        int GetNumStuffBits(BitKind kind, StuffKind stuff_kind, BitVal val);
+        size_t GetNumStuffBits(BitKind kind, StuffKind stuff_kind, BitVal val);
 
         /**
          * Gets number of Stuff bits in whole frame
          * @param stuff_kind Type of stuff bit to count (No stuff bit, Fixed, regular)
          * @returns Number of stuff bits within a frame.
          */
-        int GetNumStuffBits(StuffKind stuff_kind);
+        size_t GetNumStuffBits(StuffKind stuff_kind);
 
         /**
          * Gets number of Stuff bits with given value
@@ -381,7 +381,7 @@ class can::BitFrame : public Frame {
          * @param val Consider only bits of this value
          * @returns Number of stuff bits within a frame.
          */
-        int GetNumStuffBits(StuffKind stuff_kind, BitVal val);
+        size_t GetNumStuffBits(StuffKind stuff_kind, BitVal val);
 
         /**
          * @returns CRC of frame. Real CRC is returned based on frame type (CAN 2.0 or FD)!
@@ -465,7 +465,7 @@ class can::BitFrame : public Frame {
          * @param from Starting bit which must be transmitted Dominant by IUT.
          * @param input_delay Input delay of DUT in clock cycles.
          */
-        void CompensateEdgeForInputDelay(Bit *from, int input_delay);
+        void CompensateEdgeForInputDelay(Bit *from, size_t input_delay);
 
         /**
          * Flips bit value. If bit was flipped from Recessive to Dominant,then compensates
@@ -473,7 +473,7 @@ class can::BitFrame : public Frame {
          * @param bit Bit to be flipped
          * @param input_delay Input delay of iUT in clock cycles
          */
-        void FlipBitAndCompensate(Bit *bit, int input_delay);
+        void FlipBitAndCompensate(Bit *bit, size_t input_delay);
 
         /**
          * Acknowledges the frame (forces ACK low).
@@ -484,7 +484,7 @@ class can::BitFrame : public Frame {
          * Acknowledges the frame (forces ACK low), and compensates IUTs input delay
          * on ACK bit.
          */
-        void PutAck(int input_delay);
+        void PutAck(size_t input_delay);
 
     private:
         /* Bits within a frame */
@@ -586,7 +586,7 @@ class can::BitFrame : public Frame {
          * @param kind type of bit to be appended
          * @param val Bit value to be set (0 - BitType:Dominant, 1 - BitType:Recessive)
          */
-        void AppendBit(BitKind kind, uint8_t val);
+        void AppendBit(BitKind kind, int val);
 
 
         /**

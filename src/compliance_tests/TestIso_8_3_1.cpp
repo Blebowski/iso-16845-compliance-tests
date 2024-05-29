@@ -79,7 +79,7 @@ class TestIso_8_3_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -123,12 +123,11 @@ class TestIso_8_3_1 : public test::TestBase
             drv_bit_frm->ConvRXFrame();
             drv_bit_frm->GetBitOf(6, BitKind::Data)->val_ = BitVal::Dominant;
 
-            int bit_index = drv_bit_frm->GetBitIndex(
-                drv_bit_frm->GetBitOf(7, BitKind::Data));
+            size_t bit_index = drv_bit_frm->GetBitIndex(drv_bit_frm->GetBitOf(7, BitKind::Data));
             drv_bit_frm->InsertActErrFrm(bit_index);
             mon_bit_frm->InsertActErrFrm(bit_index);
 
-            int bits_to_insert;
+            size_t bits_to_insert;
             if (elem_test.index_ == 1)
                 bits_to_insert = 1;
             else if (elem_test.index_ == 2)
@@ -137,9 +136,9 @@ class TestIso_8_3_1 : public test::TestBase
                 bits_to_insert = 7;
 
             Bit *first_err_delim_bit = drv_bit_frm->GetBitOf(0, BitKind::ErrDelim);
-            int first_err_delim_index = drv_bit_frm->GetBitIndex(first_err_delim_bit);
+            size_t first_err_delim_index = drv_bit_frm->GetBitIndex(first_err_delim_bit);
 
-            for (int k = 0; k < bits_to_insert; k++)
+            for (size_t k = 0; k < bits_to_insert; k++)
             {
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, first_err_delim_index);
                 mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, first_err_delim_index);

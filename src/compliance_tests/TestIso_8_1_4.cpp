@@ -91,7 +91,7 @@ class TestIso_8_1_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 31; i++) {
+            for (size_t i = 0; i < 31; i++) {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
@@ -120,7 +120,7 @@ class TestIso_8_1_4 : public test::TestBase
             /* LT must have n-th bit of ID set to dominant */
             id_lt = id_iut;
             if (elem_test.index_ < 30)
-                id_lt &= ~(1 << (29 - elem_test.index_));
+                id_lt &= ~(1 << (29 - static_cast<int>(elem_test.index_)));
 
             /* On elementary test 31, LT send base frame. Correct the ID so that LT sends base ID
              * with the same bits as IUT. This will guarantee that IUT sending extended frame with
@@ -212,7 +212,7 @@ class TestIso_8_1_4 : public test::TestBase
 
             } else {
                 loosing_bit = mon_bit_frm->GetBitOf(0, BitKind::Ide);
-                TestMessage("Invalid Elementary test index: %d", elem_test.index_);
+                TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
             }
 
             loosing_bit->val_ = BitVal::Recessive;
@@ -226,7 +226,7 @@ class TestIso_8_1_4 : public test::TestBase
             if (elem_test.index_ == 30){
                 Bit *srr_bit = drv_bit_frm->GetBitOf(0, BitKind::Srr);
                 srr_bit->val_ = BitVal::Dominant;
-                int index = drv_bit_frm->GetBitIndex(srr_bit);
+                size_t index = drv_bit_frm->GetBitIndex(srr_bit);
 
                 /* Forcing SRR low will cause 5 consecutive dominant bits at the end of base ID,
                  * therefore IUT inserts recessive stuff bit. Model does not account for this,
@@ -255,8 +255,8 @@ class TestIso_8_1_4 : public test::TestBase
             // Compensate CRC length in monitored frame
             while (mon_bit_frm->GetFieldLen(BitKind::Crc) <
                    drv_bit_frm->GetFieldLen(BitKind::Crc)) {
-                int index = mon_bit_frm->GetBitIndex(
-                                mon_bit_frm->GetBitOf(0, BitKind::Crc));
+                size_t index = mon_bit_frm->GetBitIndex(
+                                    mon_bit_frm->GetBitOf(0, BitKind::Crc));
                 mon_bit_frm->InsertBit(BitKind::Crc, BitVal::Recessive, index);
             }
 

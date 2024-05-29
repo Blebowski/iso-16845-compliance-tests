@@ -101,9 +101,9 @@ class TestIso_7_1_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 6; i++)
+            for (size_t i = 0; i < 6; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1));
-            for (int i = 0; i < 4; i++)
+            for (size_t i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentMonitorSetTrigger(CanAgentMonitorTrigger::TxFalling);
@@ -144,20 +144,20 @@ class TestIso_7_1_3 : public test::TestBase
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Base;
                     iut_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = lt_id;
                     break;
                 case 2:
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Ext;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = (lt_id << 18);
                     break;
                 case 3:
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Ext;
                     lt_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = (lt_id << 18);
                     break;
                 case 4:
@@ -176,10 +176,12 @@ class TestIso_7_1_3 : public test::TestBase
                     lt_id_type = IdentKind::Ext;
                     iut_id_type = IdentKind::Ext;
                     iut_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 29);
+                    lt_id = rand() % CAN_EXTENDED_ID_MAX;
                     iut_id = lt_id;
                     break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
@@ -198,7 +200,7 @@ class TestIso_7_1_3 : public test::TestBase
                     iut_frame_type = FrameKind::Can20;
                     lt_id_type = IdentKind::Base;
                     iut_id_type = IdentKind::Base;
-                    lt_id = rand() % (int)pow(2, 11);
+                    lt_id = rand() % CAN_BASE_ID_MAX;
                     iut_id = lt_id;
                     iut_rtr_flag = RtrFlag::Rtr;
                     break;
@@ -216,10 +218,12 @@ class TestIso_7_1_3 : public test::TestBase
                     lt_id_type = IdentKind::Ext;
                     iut_id_type = IdentKind::Ext;
                     iut_rtr_flag = RtrFlag::Rtr;
-                    lt_id = rand() % (int)pow(2, 29);
+                    lt_id = rand() % CAN_EXTENDED_ID_MAX;
                     iut_id = lt_id;
                     break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             }
@@ -281,7 +285,10 @@ class TestIso_7_1_3 : public test::TestBase
                     break;
                 case 6:
                     bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::Rtr);
+                    break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
@@ -302,7 +309,10 @@ class TestIso_7_1_3 : public test::TestBase
                 case 4:
                     /* In IUTs frame R1 is on position of RTR */
                     bit_to_loose_arb = mon_bit_frm->GetBitOf(0, BitKind::R1);
+                    break;
                 default:
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
+                    assert (false);
                     break;
                 }
             }

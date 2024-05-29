@@ -82,12 +82,12 @@ class TestIso_8_7_5 : public test::TestBase
         {
             FillTestVariants(VariantMatchType::Common);
 
-            int num_elem_tests = nbt.ph2_ - nbt.sjw_;
+            size_t num_elem_tests = nbt.ph2_ - nbt.sjw_;
 
-            for (int i = 0; i < num_elem_tests; i++)
+            for (size_t i = 0; i < num_elem_tests; i++)
             {
                 ElemTest test = ElemTest(i + 1);
-                test.e_ = nbt.sjw_ + i + 1;
+                test.e_ = static_cast<int>(nbt.sjw_ + i + 1);
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -125,7 +125,7 @@ class TestIso_8_7_5 : public test::TestBase
              *************************************************************************************/
             Bit *bit_to_shorten;
             Bit *next_bit;
-            int bit_index;
+            size_t bit_index;
             do
             {
                 bit_to_shorten = drv_bit_frm->GetRandBitOf(BitKind::BaseIdent);
@@ -138,7 +138,7 @@ class TestIso_8_7_5 : public test::TestBase
             mon_bit_frm->GetBit(bit_index)->ShortenPhase(BitPhase::Ph2,
                 nbt.sjw_);
 
-            int phase_2_len = bit_to_shorten->GetPhaseLenTQ(BitPhase::Ph2);
+            size_t phase_2_len = bit_to_shorten->GetPhaseLenTQ(BitPhase::Ph2);
             for (size_t i = 0; i < elem_test.e_ - nbt.sjw_; i++)
                 bit_to_shorten->ForceTQ(phase_2_len - i - 1, BitPhase::Ph2,
                                                 BitVal::Dominant);

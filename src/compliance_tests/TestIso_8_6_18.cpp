@@ -120,7 +120,7 @@ class TestIso_8_6_18 : public test::TestBase
             Bit *last_err_flg_bit = drv_bit_frm->GetBitOf(5, BitKind::PasErrFlag);
             drv_bit_frm->FlipBitAndCompensate(last_err_flg_bit, dut_input_delay);
 
-            int bit_index = drv_bit_frm->GetBitIndex(last_err_flg_bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(last_err_flg_bit);
             drv_bit_frm->InsertPasErrFrm(bit_index + 1);
             mon_bit_frm->InsertPasErrFrm(bit_index + 1);
 

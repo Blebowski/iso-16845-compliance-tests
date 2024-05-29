@@ -74,7 +74,7 @@ class TestIso_7_6_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -108,7 +108,7 @@ class TestIso_7_6_1 : public test::TestBase
             drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
             /* Force n-th bit of Active Error flag on can_rx (driver) to RECESSIVE */
-            int bit_to_corrupt;
+            size_t bit_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_to_corrupt = 1;
             else if (elem_test.index_ == 2)
@@ -116,10 +116,10 @@ class TestIso_7_6_1 : public test::TestBase
             else
                 bit_to_corrupt = 6;
 
-            TestMessage("Forcing Error flag bit %d to recessive", bit_to_corrupt);
+            TestMessage("Forcing Error flag bit %zu to recessive", bit_to_corrupt);
 
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::ActErrFlag);
-            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit);
             bit->val_ = BitVal::Recessive;
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);

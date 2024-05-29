@@ -82,7 +82,7 @@ class TestIso_8_5_11 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 2; i++)
+            for (size_t i = 0; i < 2; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -135,19 +135,19 @@ class TestIso_8_5_11 : public test::TestBase
             drv_bit_frm->GetBitOf(0, BitKind::AckDelim)->val_ = BitVal::Dominant;
 
             Bit *eof_bit = drv_bit_frm->GetBitOf(0, BitKind::Eof);
-            int eof_start = drv_bit_frm->GetBitIndex(eof_bit);
+            size_t eof_start = drv_bit_frm->GetBitIndex(eof_bit);
 
             drv_bit_frm->InsertPasErrFrm(eof_start);
             mon_bit_frm->InsertPasErrFrm(eof_start);
 
-            int interm_index = drv_bit_frm->GetBitIndex(
-                                drv_bit_frm->GetBitOf(0, BitKind::Interm));
+            size_t interm_index = drv_bit_frm->GetBitIndex(
+                                    drv_bit_frm->GetBitOf(0, BitKind::Interm));
             drv_bit_frm->RemoveBitsFrom(interm_index);
             mon_bit_frm->RemoveBitsFrom(interm_index);
 
             if (elem_test.index_ == 1)
             {
-                for (int i = 0; i < 1408; i++)
+                for (size_t i = 0; i < 1408; i++)
                 {
                     drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                     mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
@@ -158,7 +158,7 @@ class TestIso_8_5_11 : public test::TestBase
                 // time as stated in the test! This is more strict, however it would
                 // need to be adjusted for other implementation!
                 // TODO: Genealize for other implementations than CTU CAN FD!
-                for (int i = 0; i < 14; i++)
+                for (size_t i = 0; i < 14; i++)
                 {
                     drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                     mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
@@ -168,7 +168,7 @@ class TestIso_8_5_11 : public test::TestBase
 
             } else {
 
-                for (int i = 0; i < 10; i++)
+                for (size_t i = 0; i < 10; i++)
                 {
                     drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                     mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
@@ -176,7 +176,7 @@ class TestIso_8_5_11 : public test::TestBase
                 drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
                 mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
 
-                for (int i = 0; i < 21; i++)
+                for (size_t i = 0; i < 21; i++)
                 {
                     drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                     mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
@@ -184,9 +184,9 @@ class TestIso_8_5_11 : public test::TestBase
                 drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Dominant);
                 mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
 
-                for (int i = 0; i < 127; i++)
+                for (size_t i = 0; i < 127; i++)
                 {
-                    for (int j = 0; j < 11; j++)
+                    for (size_t j = 0; j < 11; j++)
                     {
                         drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                         mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
@@ -202,7 +202,7 @@ class TestIso_8_5_11 : public test::TestBase
                 // time as stated in the test! This is more strict, however it would
                 // need to be adjusted for other implementation!
                 // TODO: Genealize for other implementations than CTU CAN FD!
-                for (int i = 0; i < 11; i++)
+                for (size_t i = 0; i < 11; i++)
                 {
                     drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                     mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);

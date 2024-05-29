@@ -81,7 +81,7 @@ class TestIso_7_7_3 : public test::TestBase
             FillTestVariants(VariantMatchType::Common);
             for (size_t i = 0; i < nbt.sjw_; i++){
                 ElemTest test = ElemTest(i + 1);
-                test.e_ = i + 1;
+                test.e_ = static_cast<int>(i) + 1;
                 elem_tests[0].push_back(test);
             }
 
@@ -94,7 +94,7 @@ class TestIso_7_7_3 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             /* Base ID full of 1s, 5th will be dominant stuff bit! */
-            int id = pow(2,11) - 1;
+            int id = CAN_BASE_ID_ALL_ONES;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 
@@ -123,10 +123,9 @@ class TestIso_7_7_3 : public test::TestBase
             for (size_t j = 0; j < nbt.ph2_; j++)
                 stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
             BitPhase previous_phase = stuff_bit->PrevBitPhase(BitPhase::Ph2);
-            stuff_bit->GetLastTQIter(previous_phase)
-                ->ForceVal(BitVal::Recessive);
+            stuff_bit->GetLastTQIter(previous_phase)->ForceVal(BitVal::Recessive);
 
-            int index = drv_bit_frm->GetBitIndex(stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(stuff_bit);
             mon_bit_frm->InsertActErrFrm(index + 1);
             drv_bit_frm->InsertPasErrFrm(index + 1);
 

@@ -77,7 +77,7 @@ class TestIso_8_6_9 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -116,7 +116,7 @@ class TestIso_8_6_9 : public test::TestBase
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            int bit_to_flip;
+            size_t bit_to_flip;
             if (elem_test.index_ == 1)
                 bit_to_flip = 1;
             else if (elem_test.index_ == 2)
@@ -125,7 +125,7 @@ class TestIso_8_6_9 : public test::TestBase
                 bit_to_flip = 6;
 
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_flip, BitKind::ErrDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit);
             drv_bit_frm->FlipBitAndCompensate(bit, dut_input_delay);
 
             drv_bit_frm->InsertPasErrFrm(bit_index + 1);

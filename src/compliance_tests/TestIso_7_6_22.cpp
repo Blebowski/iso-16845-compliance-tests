@@ -76,7 +76,7 @@ class TestIso_7_6_22 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
-            for (int i = 0; i < 4; i++)
+            for (size_t i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -90,9 +90,9 @@ class TestIso_7_6_22 : public test::TestBase
 
             /* Tests 1,3 -> DLC < 10. Tests 2,4 -> DLC > 10 */
             if (elem_test.index_ % 2 == 0)
-                dlc = (rand() % 5) + 0xA;
+                dlc = static_cast<uint8_t>((rand() % 5) + 0xA);
             else
-                dlc = rand() % 10;
+                dlc = static_cast<uint8_t>(rand() % 10);
 
             if (elem_test.index_ < 3)
                 bit_value = BitVal::Recessive;
@@ -116,16 +116,16 @@ class TestIso_7_6_22 : public test::TestBase
              *************************************************************************************/
             mon_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Fixed,
+            size_t num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Fixed,
                                                                  bit_value);
-            printf("Number of fixed stuff bits matching: %d\n", num_stuff_bits);
+            TestMessage("Number of fixed stuff bits matching: %zu", num_stuff_bits);
 
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            for (int stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
+            for (size_t stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
             {
-                TestMessage("Testing stuff bit nr: %d", stuff_bit);
+                TestMessage("Testing stuff bit nr: %%zu", stuff_bit);
                 stuff_bits_in_variant++;
 
                 /*
@@ -138,7 +138,7 @@ class TestIso_7_6_22 : public test::TestBase
                 /* Get stuff bit on 'stuff_bit' position */
                 Bit *stuff_bit_to_flip = drv_bit_frm_2->GetFixedStuffBit(stuff_bit, bit_value);
 
-                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                size_t bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
                 stuff_bit_to_flip->FlipVal();
 
                 drv_bit_frm_2->InsertPasErrFrm(bit_index + 1);

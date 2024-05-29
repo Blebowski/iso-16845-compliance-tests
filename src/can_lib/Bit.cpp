@@ -178,7 +178,7 @@ size_t can::Bit::GetPhaseLenTQ(BitPhase phase)
 
 size_t can::Bit::GetPhaseLenCycles(BitPhase phase)
 {
-    int num_cycles = 0;
+    size_t num_cycles = 0;
 
     for (auto &tq : tqs_)
         if (tq.bit_phase() == phase)
@@ -228,6 +228,8 @@ size_t can::Bit::ShortenPhase(BitPhase phase, size_t n_tqs)
     for (size_t i = 0; i < shorten_by; i++)
     {
         tq_it = tqs_.erase(tq_it);
+        if (tqs_.empty())
+            break;
         tq_it--;
     }
 
@@ -542,9 +544,18 @@ std::list<can::TimeQuanta>::iterator can::Bit::GetLastTQIter(BitPhase phase)
     if (HasPhase(phase))
     {
         auto iterator = GetFirstTQIter(phase);
-        while (iterator->bit_phase() == phase)
+
+        assert(iterator != tqs_.end() && "Should not point the the end!");
+
+        std::list<can::TimeQuanta>::iterator rv = iterator;
+        while (true) {
             iterator++;
-        return --iterator;
+            if (iterator == tqs_.end())
+                return rv;
+            if (iterator->bit_phase() != phase)
+                return rv;
+            rv++;
+        }
     }
     return GetFirstTQIter(NextBitPhase(phase));
 }

@@ -124,11 +124,6 @@ class test::TestBase
         can::CanVersion dut_can_version;
 
         /**
-         * Number of elementary tests (usually within single test variant)!
-         */
-        int n_elem_tests;
-
-        /**
          * Test variants to be run. E.g. if DUT is CAN FD Enabled, CAN 2.0 and CAN FD
          * variants needs to be run in most cases.
          */
@@ -188,10 +183,10 @@ class test::TestBase
         std::unique_ptr<can::BitFrame> mon_bit_frm_4;
 
         /* REC / TEC counters */
-        int rec_old;
-        int rec_new;
-        int tec_old;
-        int tec_new;
+        int rec_old = 0;
+        int rec_new = 0;
+        int tec_old = 0;
+        int tec_new = 0;
 
         /**
          * Obtains frame type based on test variant.

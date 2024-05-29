@@ -105,7 +105,7 @@ class TestIso_7_7_9_1 : public test::TestBase
             BitPhase phase = drv_bit_frm->GetBit(0)->PrevBitPhase(BitPhase::Ph2);
             drv_bit_frm->GetBit(0)->ShortenPhase(phase, 1);
 
-            for (int i = 0; i < 9; i++)
+            for (size_t i = 0; i < 9; i++)
             {
                 mon_bit_frm->InsertBit(BitKind::Sof, BitVal::Recessive, 1);
                 drv_bit_frm->InsertBit(BitKind::Sof, BitVal::Recessive, 1);

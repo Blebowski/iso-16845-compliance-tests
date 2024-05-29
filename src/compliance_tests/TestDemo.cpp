@@ -69,7 +69,7 @@ class test::TestDemo : public TestBase
             /****************************************************************
              * Write your test code here!
              ***************************************************************/
-            TestMessage("%d %d", test_variant, elem_test.index_);
+            TestMessage("%d %zu", test_variant, elem_test.index_);
 
             return 0;
         }

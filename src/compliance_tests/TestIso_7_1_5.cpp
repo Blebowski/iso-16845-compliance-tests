@@ -94,7 +94,7 @@ class TestIso_7_1_5 : public test::TestBase
         {
             FillTestVariants(VariantMatchType::OneToOne);
 
-            int num_elem_tests;
+            size_t num_elem_tests;
             FrameKind frame_type;
             if (test_variants[0] == TestVariant::Can20)
             {
@@ -112,7 +112,7 @@ class TestIso_7_1_5 : public test::TestBase
                 frame_type = FrameKind::CanFd;
             }
 
-            for (int i = 0; i < num_elem_tests; i++)
+            for (size_t i = 0; i < num_elem_tests; i++)
                 AddElemTest(test_variants[0], ElemTest(i + 1, frame_type));
 
             CanAgentConfigureTxToRxFeedback(true);

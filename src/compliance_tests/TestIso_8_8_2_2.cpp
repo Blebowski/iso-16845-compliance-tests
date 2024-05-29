@@ -92,7 +92,7 @@ class TestIso_8_8_2_2 : public test::TestBase
              * We have options: Offset, Offset + Measured. This gives us two options for each
              * elementary test, together 4 tests.
              */
-            for (int i = 0; i < 4; i++)
+            for (size_t i = 0; i < 4; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1));
 
             // Following constraint is not due to model or IUT issues.
@@ -132,7 +132,7 @@ class TestIso_8_8_2_2 : public test::TestBase
              *   3. Insert Active Error frame to monitored and driven frames from ESI bit!
              *   4. Append retransmitted frame by IUT!
              *************************************************************************************/
-            int d = dbt.GetBitLenCycles();
+            size_t d = dbt.GetBitLenCycles();
             if (elem_test.index_ == 3 || elem_test.index_ == 4)
                 d *= 2;
             drv_bit_frm->GetBit(0)->GetTQ(0)->Lengthen(d);
@@ -177,14 +177,12 @@ class TestIso_8_8_2_2 : public test::TestBase
                 /* Offset as if normal sample point, TX/RX delay will be measured and added
                  * by IUT. Offset in clock cycles! (minimal time quanta)
                  */
-                int ssp_offset = dbt.brp_ *
-                                 (dbt.prop_ + dbt.ph1_ + 1);
-                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, ssp_offset);
+                size_t ssp_offset = dbt.brp_ * (dbt.prop_ + dbt.ph1_ + 1);
+                dut_ifc->ConfigureSsp(SspType::MeasAndOffset, static_cast<int>(ssp_offset));
             } else {
                 /* We need to incorporate d into the delay! */
-                int ssp_offset = dbt.brp_ *
-                                 (dbt.prop_ + dbt.ph1_ + 1) + d;
-                dut_ifc->ConfigureSsp(SspType::Offset, ssp_offset);
+                size_t ssp_offset = dbt.brp_ * (dbt.prop_ + dbt.ph1_ + 1) + d;
+                dut_ifc->ConfigureSsp(SspType::Offset, static_cast<int>(ssp_offset));
             }
             dut_ifc->Enable();
             while (this->dut_ifc->GetErrorState() != FaultConfState::ErrAct)

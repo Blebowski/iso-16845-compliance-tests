@@ -93,7 +93,7 @@ class TestIso_7_7_8 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
-            int id = pow(2,11) - 1;
+            int id = CAN_BASE_ID_ALL_ONES;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 
@@ -125,7 +125,7 @@ class TestIso_7_7_8 : public test::TestBase
             Bit *second_stuff_bit = drv_bit_frm->GetStuffBit(1);
             second_stuff_bit->val_ = BitVal::Recessive;
 
-            int index = drv_bit_frm->GetBitIndex(second_stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(second_stuff_bit);
             drv_bit_frm->InsertActErrFrm(index + 1);
             mon_bit_frm->InsertActErrFrm(index + 1);
 

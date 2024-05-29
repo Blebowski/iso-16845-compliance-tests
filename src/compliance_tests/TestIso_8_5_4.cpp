@@ -76,8 +76,7 @@ class TestIso_8_5_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            n_elem_tests = 3;
-            for (int i = 0; i < n_elem_tests; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1 , FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -120,7 +119,7 @@ class TestIso_8_5_4 : public test::TestBase
              *************************************************************************************/
             drv_bit_frm->ConvRXFrame();
 
-            int num_suspend_bits = 0;
+            size_t num_suspend_bits = 0;
             switch (elem_test.index_)
             {
                 case 1:
@@ -136,7 +135,7 @@ class TestIso_8_5_4 : public test::TestBase
                     break;
             }
 
-            for (int i = 0; i < num_suspend_bits; i++)
+            for (size_t i = 0; i < num_suspend_bits; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);

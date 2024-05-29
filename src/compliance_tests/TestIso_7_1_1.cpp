@@ -100,9 +100,9 @@ class TestIso_7_1_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 45; i++)
+            for (size_t i = 0; i < 45; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 80; i++)
+            for (size_t i = 0; i < 80; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             CanAgentConfigureTxToRxFeedback(true);
@@ -111,7 +111,7 @@ class TestIso_7_1_1 : public test::TestBase
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
                         [[maybe_unused]] const TestVariant &test_variant)
         {
-            uint8_t dlc = (elem_test.index_ - 1) / 5;
+            uint8_t dlc = static_cast<uint8_t>((elem_test.index_ - 1) / 5);
             int can_id;
 
             switch (elem_test.index_)
@@ -129,7 +129,7 @@ class TestIso_7_1_1 : public test::TestBase
                     can_id = 0x7FF;
                     break;
                 case 5:
-                    can_id = rand() % (int)pow(2, 11);
+                    can_id = rand() % CAN_BASE_ID_MAX;
                     break;
                 default:
                     can_id = 0x0;

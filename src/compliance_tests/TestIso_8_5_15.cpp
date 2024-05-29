@@ -126,7 +126,7 @@ class TestIso_8_5_15 : public test::TestBase
             mon_bit_frm->RemoveBitsFrom(7, BitKind::Data);
 
             /* Append 17, but last will be over-written by next passive error frame! */
-            for (int i = 0; i < 17; i++)
+            for (size_t i = 0; i < 17; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Dominant);

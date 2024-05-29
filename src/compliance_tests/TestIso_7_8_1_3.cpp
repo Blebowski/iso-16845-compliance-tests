@@ -120,15 +120,15 @@ class TestIso_7_8_1_3 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             Bit *crc_delim = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(crc_delim);
-            int dominant_pulse_lenght;
+            size_t bit_index = drv_bit_frm->GetBitIndex(crc_delim);
+            size_t dominant_pulse_lenght;
 
             if (elem_test.index_ == 1)
                 dominant_pulse_lenght = dbt.prop_ + dbt.ph1_;
             else
                 dominant_pulse_lenght = dbt.prop_ + dbt.ph1_ + 1;
 
-            for (int j = 0; j < dominant_pulse_lenght; j++)
+            for (size_t j = 0; j < dominant_pulse_lenght; j++)
                 crc_delim->ForceTQ(j, BitVal::Dominant);
 
             if (elem_test.index_ == 2)

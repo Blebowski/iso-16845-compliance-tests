@@ -91,7 +91,7 @@ class TestIso_7_8_4_1 : public test::TestBase
                  i++)
             {
                 ElemTest test = ElemTest(i - dbt.sjw_);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -124,7 +124,8 @@ class TestIso_7_8_4_1 : public test::TestBase
             Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
             esi_bit->val_ = BitVal::Dominant;
 
-            for (int j = 0; j < elem_test.e_; j++)
+            assert(elem_test.e_ > 0 && "'j' will underflow!");
+            for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++)
                 esi_bit->ForceTQ(j, BitVal::Recessive);
 
             for (size_t j = dbt.sjw_ - 1; j < dbt.ph2_; j++)

@@ -108,8 +108,7 @@ class TestIso_7_8_7_2 : public test::TestBase
 
             Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
             driver_stuff_bit->ForceTQ(1, BitVal::Recessive);
-            driver_stuff_bit->ForceTQ(0, dbt.ph2_ - 1,
-                                              BitPhase::Ph2, BitVal::Recessive);
+            driver_stuff_bit->ForceTQ(0, dbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

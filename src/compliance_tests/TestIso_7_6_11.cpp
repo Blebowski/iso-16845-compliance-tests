@@ -110,7 +110,7 @@ class TestIso_7_6_11 : public test::TestBase
              * On monitor, this bit shall be recessive!
              */
             Bit *bit = drv_bit_frm->GetBitOf(0, BitKind::ErrDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit);
 
             drv_bit_frm->InsertBit(BitKind::ErrDelim, BitVal::Dominant, bit_index);
             mon_bit_frm->InsertBit(BitKind::ErrDelim, BitVal::Recessive, bit_index);

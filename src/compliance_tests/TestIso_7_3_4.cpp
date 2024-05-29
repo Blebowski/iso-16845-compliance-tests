@@ -77,7 +77,7 @@ class TestIso_7_3_4 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -103,14 +103,14 @@ class TestIso_7_3_4 : public test::TestBase
              *   4. Flip 2nd, 4th, 7th bit of Error delimiter to dominant.
              *   5. Insert next Error frame one bit after form error in Error delimiter!
              *************************************************************************************/
-            int bit_to_corrupt;
+            size_t bit_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_to_corrupt = 2;
             else if (elem_test.index_ == 2)
                 bit_to_corrupt = 4;
             else
                 bit_to_corrupt = 7;
-            TestMessage("Forcing Error Delimiter bit %d to dominant", bit_to_corrupt);
+            TestMessage("Forcing Error Delimiter bit %zu to dominant", bit_to_corrupt);
 
             mon_bit_frm->ConvRXFrame();
             drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
@@ -120,7 +120,7 @@ class TestIso_7_3_4 : public test::TestBase
 
             /* Force n-th bit of Error delimiter to dominant */
             Bit *bit = drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::ErrDelim);
-            int bit_index = drv_bit_frm->GetBitIndex(bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit);
             bit->val_ = BitVal::Dominant;
 
             /* Insert new error flag from one bit further, both driver and monitor! */

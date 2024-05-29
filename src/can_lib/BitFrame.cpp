@@ -145,8 +145,8 @@ uint32_t can::BitFrame::crc()
 }
 
 
-// LSB represents bit value we want to push
-void can::BitFrame::AppendBit(BitKind kind, uint8_t value)
+// LSB represents bit value we want to append
+void can::BitFrame::AppendBit(BitKind kind, int value)
 {
     BitVal bit_value;
 
@@ -361,7 +361,7 @@ size_t can::BitFrame::InsertNormalStuffBits()
             bit_it = bits_.insert(bit_it, bit);
             same_bits = 1;
 
-            stuff_cnt_ = (stuff_cnt_ + 1) % 8;
+            stuff_cnt_ = static_cast<uint8_t>((stuff_cnt_ + 1) % 8);
         }
         prev_value = bit_it->val_;
     }
@@ -555,7 +555,7 @@ bool can::BitFrame::SetStuffParity()
     for (bit_it = bits_.begin(); bit_it->kind_ != BitKind::StuffParity; bit_it++)
         ;
     for (int i = 0; i < 3; i++)
-        val ^= (stuff_cnt_encoded_ >> i) & 0x1;
+        val ^= static_cast<uint8_t>(((stuff_cnt_encoded_ >> i) & 0x1));
     bit_it->val_ = (BitVal)val;
 
     return true;
@@ -593,11 +593,12 @@ can::Bit* can::BitFrame::GetRandBitOf(BitKind bit_type)
 can::Bit* can::BitFrame::GetRandBit(BitVal bit_value)
 {
     Bit *bit;
-    int lenght = this->GetLen();
+    size_t lenght = this->GetLen();
     do
     {
         bit = GetBit(rand() % lenght);
     } while (bit->val_ != bit_value);
+
     return bit;
 }
 
@@ -706,10 +707,10 @@ size_t can::BitFrame::GetBitIndex(Bit *bit)
 }
 
 
-can::Bit* can::BitFrame::GetStuffBit(int index)
+can::Bit* can::BitFrame::GetStuffBit(size_t index)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (i <= index && bit_it != bits_.end())
     {
@@ -725,10 +726,10 @@ can::Bit* can::BitFrame::GetStuffBit(int index)
     return &(*bit_it);
 }
 
-can::Bit* can::BitFrame::GetStuffBit(int index, BitKind bit_type)
+can::Bit* can::BitFrame::GetStuffBit(size_t index, BitKind bit_type)
 {
     std::list<Bit>::iterator bit_it = bits_.begin();
-    int i = 0;
+    size_t i = 0;
 
     while (i <= index && bit_it != bits_.end())
     {
@@ -1078,7 +1079,7 @@ void can::BitFrame::ConvRXFrame()
 }
 
 
-int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
+size_t can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type](Bit bit) {
         if (bit.kind_ == bit_type && bit.stuff_kind_ == stuff_bit_type)
@@ -1088,7 +1089,7 @@ int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type)
 }
 
 
-int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
+size_t can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
                                    BitVal bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [bit_type, stuff_bit_type, bit_value](Bit bit) {
@@ -1101,7 +1102,7 @@ int can::BitFrame::GetNumStuffBits(BitKind bit_type, StuffKind stuff_bit_type,
 }
 
 
-int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
+size_t can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type](Bit bit) {
         if (bit.stuff_kind_ == stuff_bit_type)
@@ -1111,7 +1112,7 @@ int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type)
 }
 
 
-int can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type, BitVal bit_value)
+size_t can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type, BitVal bit_value)
 {
     return std::count_if(bits_.begin(), bits_.end(), [stuff_bit_type, bit_value](Bit bit) {
         if (bit.stuff_kind_ == stuff_bit_type &&
@@ -1273,7 +1274,7 @@ found:
 }
 
 
-void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
+void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, size_t input_delay)
 {
     [[maybe_unused]] Bit *prev_bit = GetBit(GetBitIndex(from) - 1);
 
@@ -1283,7 +1284,7 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
            "Input delay compensation shall start at Recessive bit");
 
     Cycle *cycle = from->GetTQ(0)->getCycleBitValue(0);
-    for (int i = 0; i < input_delay; i++)
+    for (size_t i = 0; i < input_delay; i++)
     {
         Cycle *compensated_cycle = MoveCyclesBack(cycle, i + 1);
         compensated_cycle->ForceVal(BitVal::Dominant);
@@ -1291,11 +1292,11 @@ void can::BitFrame::CompensateEdgeForInputDelay(Bit *from, int input_delay)
 }
 
 
-void can::BitFrame::FlipBitAndCompensate(Bit *bit, int input_delay)
+void can::BitFrame::FlipBitAndCompensate(Bit *bit, size_t input_delay)
 {
     bit->FlipVal();
 
-    int index = GetBitIndex(bit);
+    size_t index = GetBitIndex(bit);
 
     // If we are flipping bit 0, then there will be no edge introduced!
     if (index == 0)
@@ -1318,7 +1319,7 @@ void can::BitFrame::PutAck()
 }
 
 
-void can::BitFrame::PutAck(int input_delay)
+void can::BitFrame::PutAck(size_t input_delay)
 {
     Bit *ack = GetBitOf(0, BitKind::Ack);
     ack->val_ = BitVal::Dominant;
@@ -1375,7 +1376,7 @@ void can::BitFrame::PrintMultiBitField(std::list<Bit>::iterator& bit_it,
         vals->append(bit_it->GetColouredVal() + " ");
     }
 
-    preOffset = (len - fieldName.length()) / 2;
+    preOffset = (len - static_cast<int>(fieldName.length())) / 2;
     postOffset = preOffset;
     if (fieldName.length() % 2 == 1)
         postOffset++;

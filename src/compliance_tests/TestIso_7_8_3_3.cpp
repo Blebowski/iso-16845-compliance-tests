@@ -88,7 +88,7 @@ class TestIso_7_8_3_3 : public test::TestBase
             for (size_t i = 1; i <= dbt.sjw_; i++)
             {
                 ElemTest test = ElemTest(i);
-                test.e_ = i;
+                test.e_ = static_cast<int>(i);
                 AddElemTest(TestVariant::CanFdEna, std::move(test));
             }
 
@@ -127,15 +127,16 @@ class TestIso_7_8_3_3 : public test::TestBase
             Bit *crc_delimiter = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
             crc_delimiter->val_ = BitVal::Dominant;
 
-            for (int j = 0; j < elem_test.e_; j++)
+            assert(elem_test.e_ > 0 && "'j' will underflow");
+            for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++)
                 crc_delimiter->ForceTQ(j, BitVal::Recessive);
 
             mon_bit_frm->GetBitOf(0, BitKind::CrcDelim)
-                ->LengthenPhase(BitPhase::Sync, elem_test.e_);
+                ->LengthenPhase(BitPhase::Sync, static_cast<size_t>(elem_test.e_));
 
             crc_delimiter->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
             BitPhase phase = crc_delimiter->PrevBitPhase(BitPhase::Ph2);
-            crc_delimiter->LengthenPhase(phase, elem_test.e_ - 1);
+            crc_delimiter->LengthenPhase(phase, static_cast<size_t>(elem_test.e_) - 1);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

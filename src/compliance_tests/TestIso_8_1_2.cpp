@@ -104,9 +104,9 @@ class TestIso_8_1_2 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 45; i++)
+            for (size_t i = 0; i < 45; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 80; i++)
+            for (size_t i = 0; i < 80; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -117,9 +117,9 @@ class TestIso_8_1_2 : public test::TestBase
                         [[maybe_unused]] const TestVariant &test_variant)
         {
             int id;
-            uint8_t dlc = (elem_test.index_ - 1) / 5;
+            uint8_t dlc = static_cast<uint8_t>((elem_test.index_ - 1) / 5);
 
-            switch((elem_test.index_ - 1) % 5)
+            switch ((elem_test.index_ - 1) % 5)
             {
                 case 0:
                     id = 0x15555555;
@@ -134,7 +134,7 @@ class TestIso_8_1_2 : public test::TestBase
                     id = 0x1FFFFFFF;
                     break;
                 case 4:
-                    id = rand() % ((int)pow(2, 29));
+                    id = rand() % CAN_EXTENDED_ID_MAX;
                     break;
                 default:
                     break;

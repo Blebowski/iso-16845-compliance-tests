@@ -79,7 +79,7 @@ class TestIso_7_6_8 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -105,14 +105,14 @@ class TestIso_7_6_8 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
             drv_bit_frm->GetBitOf(0, BitKind::Ack)->val_ = BitVal::Dominant;
 
-            int bit_to_corrupt;
+            size_t bit_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_to_corrupt = 2;
             else if (elem_test.index_ == 2)
                 bit_to_corrupt = 3;
             else
                 bit_to_corrupt = 5;
-            TestMessage("Forcing EOF bit %d to Dominant", bit_to_corrupt);
+            TestMessage("Forcing EOF bit %zu to Dominant", bit_to_corrupt);
             drv_bit_frm->GetBitOf(bit_to_corrupt - 1, BitKind::Eof)->val_ =
                 BitVal::Dominant;
 

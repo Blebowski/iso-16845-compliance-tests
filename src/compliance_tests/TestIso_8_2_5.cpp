@@ -95,9 +95,9 @@ class TestIso_8_2_5 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 5; i++)
+            for (size_t i = 0; i < 5; i++)
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
-            for (int i = 0; i < 18; i++)
+            for (size_t i = 0; i < 18; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -116,7 +116,7 @@ class TestIso_8_2_5 : public test::TestBase
             case 3:
             case 4:
             case 5:
-                dlc = rand() % 9;
+                dlc = static_cast<uint8_t>(rand() % 9);
                 break;
             case 6:
             case 7:
@@ -195,11 +195,11 @@ class TestIso_8_2_5 : public test::TestBase
                 bit_to_corrupt = drv_bit_frm->GetFixedStuffBit(elem_test.index_ - 12);
                 break;
             default:
-                TestMessage("Invalid Elementary test index: %d", elem_test.index_);
+                TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
                 bit_to_corrupt = drv_bit_frm->GetFixedStuffBit(elem_test.index_ - 12);
             }
 
-            int bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
             drv_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);

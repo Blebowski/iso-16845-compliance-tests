@@ -83,7 +83,7 @@ class TestIso_8_8_5_2 : public test::TestBase
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
 
             ElemTest test = ElemTest(1);
-            test.e_ = dbt.sjw_;
+            test.e_ = static_cast<int>(dbt.sjw_);
             AddElemTest(TestVariant::CanFdEna, std::move(test));
 
             dut_ifc->ConfigureSsp(SspType::Disabled, 0);
@@ -120,12 +120,12 @@ class TestIso_8_8_5_2 : public test::TestBase
             Bit *next_bit;
             do {
                 random_bit = drv_bit_frm->GetRandBitOf(BitKind::Data);
-                int bit_index = drv_bit_frm->GetBitIndex(random_bit);
+                size_t bit_index = drv_bit_frm->GetBitIndex(random_bit);
                 next_bit = drv_bit_frm->GetBit(bit_index + 1);
             } while (! (random_bit->val_ == BitVal::Recessive &&
                         next_bit->val_ == BitVal::Dominant));
 
-            for (int i = 0; i < elem_test.e_; i++)
+            for (size_t i = 0; i < static_cast<size_t>(elem_test.e_); i++)
                 next_bit->ForceTQ(i, BitVal::Recessive);
 
             for (size_t i = 0; i < dbt.ph2_; i++)

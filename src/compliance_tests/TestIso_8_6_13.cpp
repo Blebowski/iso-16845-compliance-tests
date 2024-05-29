@@ -112,10 +112,10 @@ class TestIso_8_6_13 : public test::TestBase
             drv_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
             mon_bit_frm->InsertOvrlFrm(1, BitKind::Interm);
 
-            for (int i = 0; i < 7; i++)
+            for (size_t i = 0; i < 7; i++)
             {
-                int bit_index = drv_bit_frm->GetBitIndex(
-                    drv_bit_frm->GetBitOf(0, BitKind::OvrlDelim));
+                size_t bit_index = drv_bit_frm->GetBitIndex(
+                                        drv_bit_frm->GetBitOf(0, BitKind::OvrlDelim));
                 drv_bit_frm->InsertBit(BitKind::OvrlFlag, BitVal::Dominant, bit_index);
                 mon_bit_frm->InsertBit(BitKind::OvrlDelim, BitVal::Recessive, bit_index);
             }

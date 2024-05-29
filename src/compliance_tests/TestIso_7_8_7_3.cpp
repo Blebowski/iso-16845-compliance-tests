@@ -106,8 +106,7 @@ class TestIso_7_8_7_3 : public test::TestBase
             Bit *ack_bit = drv_bit_frm->GetBitOf(0, BitKind::Ack);
             ack_bit->val_ = BitVal::Dominant;
             ack_bit->ForceTQ(1, BitVal::Recessive);
-            ack_bit->ForceTQ(0, nbt.ph2_ - 1,
-                                     BitPhase::Ph2, BitVal::Recessive);
+            ack_bit->ForceTQ(0, nbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

@@ -73,12 +73,12 @@ void test::TestBase::ConfigureTest()
     TestMessage("Querying test configuration from TB:");
     this->dut_clk_period = TestControllerAgentGetCfgDutClockPeriod();
     TestMessage("DUT clock period:");
-    std::cout << this->dut_clk_period.count() << " ns" << std::endl;
+    TestMessage("%d ns", this->dut_clk_period.count());
 
     // TODO: Query input delay from TB, and eventually from VIP configuration !!!
     this->dut_input_delay = 2;
     TestMessage("DUT input delay:");
-    std::cout << "2 clock cycles" << std::endl;
+    TestMessage("2 clock cycles");
 
     // TODO: Query DUTs information processing time from TB!
     this->dut_ipt = 2;
@@ -352,11 +352,11 @@ void test::TestBase::AddElemTestForEachSP(TestVariant test_variant,
 {
     TestMessage("Adding Elementary tests for each sample point...");
 
-    int num_sp_points = CalcNumSPs(nominal);
+    size_t num_sp_points = CalcNumSPs(nominal);
 
-    TestMessage("Number of sample points: %d", num_sp_points);
+    TestMessage("Number of sample points: %zu", num_sp_points);
 
-    for (int i = 1; i <= num_sp_points; i++)
+    for (size_t i = 1; i <= num_sp_points; i++)
         AddElemTest(test_variant, ElemTest(i, frame_type));
 }
 
@@ -693,8 +693,8 @@ void test::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: %s", test_name.c_str());
-    TestMessage("Number of variants: %d", test_variants.size());
-    int num_elem_tests = 0;
+    TestMessage("Number of variants: %zu", test_variants.size());
+    size_t num_elem_tests = 0;
     for (const auto &variant_tests : elem_tests)
         num_elem_tests += variant_tests.size();
     TestMessage("Total number of elementary tests: %d", num_elem_tests);
@@ -750,7 +750,7 @@ void test::TestBase::FreeTestObjects()
 
 size_t test::TestBase::CalcNumSPs(bool nominal)
 {
-    int tmp;
+    size_t tmp;
     if (nominal)
         tmp = nbt.GetBitLenTQ();
     else
@@ -782,14 +782,14 @@ size_t test::TestBase::CalcNumSPs(bool nominal)
 }
 
 BitTiming test::TestBase::GenerateBitTiming(const ElemTest &elem_test, bool nominal,
-                                           size_t minimal_ph1)
+                                            size_t minimal_ph1)
 {
     BitTiming new_bt;
     BitTiming *orig_bt;
 
-    TestMessage("Generating new bit timing for elementary test index: %d", elem_test.index_);
+    TestMessage("Generating new bit timing for elementary test index: %zu", elem_test.index_);
     TestMessage("Bit timing type: %s", (nominal) ? "Nominal" : "Data");
-    TestMessage("Target Minimal PH1 Length: %d", minimal_ph1);
+    TestMessage("Target Minimal PH1 Length: %zu", minimal_ph1);
 
     if (nominal)
         orig_bt = &bckp_nbt;
@@ -801,7 +801,7 @@ BitTiming test::TestBase::GenerateBitTiming(const ElemTest &elem_test, bool nomi
     if (init_ph1 < minimal_ph1)
         init_ph1 = minimal_ph1;
 
-    TestMessage("Actual Minimal PH1 Length: %d", init_ph1);
+    TestMessage("Actual Minimal PH1 Length: %zu", init_ph1);
 
     // If we have N Time Quanta bit time, then we can have at most N - 1 Sample point positions
     // regardless of bit time parameters / constraints. If we have more, this shows we have some

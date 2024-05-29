@@ -131,7 +131,7 @@ class TestIso_8_7_9 : public test::TestBase
              *   6. Append retransmitted frame
              *************************************************************************************/
             Bit *rand_bit = drv_bit_frm->GetRandBit(BitVal::Dominant);
-            int rand_bit_index = drv_bit_frm->GetBitIndex(rand_bit);
+            size_t rand_bit_index = drv_bit_frm->GetBitIndex(rand_bit);
 
             rand_bit->ForceTQ(0, BitPhase::Ph2, BitVal::Recessive);
             rand_bit->GetLastTQIter(rand_bit->PrevBitPhase(BitPhase::Ph2))
@@ -144,8 +144,7 @@ class TestIso_8_7_9 : public test::TestBase
             //       If we do this, we no more need min TQ(N) == 2!
 
             rand_bit->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
-            mon_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2,
-                nbt.sjw_);
+            mon_bit_frm->GetBit(rand_bit_index)->ShortenPhase(BitPhase::Ph2, nbt.sjw_);
 
             drv_bit_frm->InsertActErrFrm(rand_bit_index + 1);
             mon_bit_frm->InsertActErrFrm(rand_bit_index + 1);

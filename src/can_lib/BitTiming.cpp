@@ -48,7 +48,12 @@ can::BitTiming::BitTiming(size_t prop, size_t ph1, size_t ph2, size_t brp, size_
     assert(sjw <= ph2);
 }
 
-can::BitTiming::BitTiming()
+can::BitTiming::BitTiming():
+    prop_(2),
+    ph1_(2),
+    ph2_(2),
+    brp_(2),
+    sjw_(2)
 {}
 
 

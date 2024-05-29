@@ -81,7 +81,7 @@ class TestIso_8_6_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -120,7 +120,7 @@ class TestIso_8_6_1 : public test::TestBase
             drv_bit_frm->InsertActErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            int bit_index_to_corrupt;
+            size_t bit_index_to_corrupt;
             if (elem_test.index_ == 1)
                 bit_index_to_corrupt = 0;
             else if (elem_test.index_ == 2)
@@ -132,7 +132,7 @@ class TestIso_8_6_1 : public test::TestBase
                                                             BitKind::ActErrFlag);
             bit_to_corrupt->val_ = BitVal::Recessive;
 
-            int bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
+            size_t bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
             drv_bit_frm->InsertActErrFrm(bit_index + 1);
             mon_bit_frm->InsertActErrFrm(bit_index + 1);
 

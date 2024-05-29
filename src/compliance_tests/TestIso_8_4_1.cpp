@@ -78,7 +78,7 @@ class TestIso_8_4_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 2; i++)
+            for (size_t i = 0; i < 2; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -123,7 +123,7 @@ class TestIso_8_4_1 : public test::TestBase
             mon_bit_frm->InsertOvrlFrm(elem_test.index_, BitKind::Interm);
             drv_bit_frm->InsertPasErrFrm(elem_test.index_, BitKind::Interm);
 
-            for (int k = 0; k < 15; k++)
+            for (size_t k = 0; k < 15; k++)
             {
                 drv_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::Idle, BitVal::Recessive);

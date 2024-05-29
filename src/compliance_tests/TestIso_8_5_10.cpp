@@ -96,7 +96,6 @@ class TestIso_8_5_10 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            n_elem_tests = 1;
             AddElemTest(TestVariant::Common, ElemTest(1, FrameKind::Can20));
             AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 
@@ -163,24 +162,23 @@ class TestIso_8_5_10 : public test::TestBase
              **************************************************************************************/
             drv_bit_frm->GetBitOf(6, BitKind::Data)->FlipVal();
 
-            int index_to_remove = drv_bit_frm->GetBitIndex(
-                                    drv_bit_frm->GetBitOf(7, BitKind::Data));
+            size_t index_to_remove = drv_bit_frm->GetBitIndex(drv_bit_frm->GetBitOf(7, BitKind::Data));
             drv_bit_frm->RemoveBitsFrom(index_to_remove);
             mon_bit_frm->RemoveBitsFrom(index_to_remove);
 
-            for (int i = 0; i < 16; i++)
+            for (size_t i = 0; i < 16; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Dominant);
             }
 
-            for (int i = 0; i < 6; i++)
+            for (size_t i = 0; i < 6; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
             }
 
-            for (int i = 0; i < 112; i++)
+            for (size_t i = 0; i < 112; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Dominant);
                 mon_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Recessive);
@@ -192,19 +190,19 @@ class TestIso_8_5_10 : public test::TestBase
             mon_bit_frm->GetBitOf(16, BitKind::ActErrFlag)
                 ->GetFirstTQIter(BitPhase::Sync)->Lengthen(dut_input_delay);
 
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::ErrDelim, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::ErrDelim, BitVal::Recessive);
             }
 
-            for (int i = 0; i < 3; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::Interm, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::Interm, BitVal::Recessive);
             }
 
-            for (int i = 0; i < 8; i++)
+            for (size_t i = 0; i < 8; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::SuspTrans, BitVal::Recessive);
@@ -237,12 +235,12 @@ class TestIso_8_5_10 : public test::TestBase
             drv_bit_frm->RemoveBit(drv_bit_frm->GetBitOf(5, BitKind::Interm));
             mon_bit_frm->RemoveBit(mon_bit_frm->GetBitOf(5, BitKind::Interm));
 
-            for (int i = 0; i < 6; i++)
+            for (size_t i = 0; i < 6; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Recessive);
             }
-            for (int i = 0; i < 7; i++)
+            for (size_t i = 0; i < 7; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::ErrDelim, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::ErrDelim, BitVal::Recessive);
@@ -257,7 +255,7 @@ class TestIso_8_5_10 : public test::TestBase
             mon_bit_frm->AppendBit(BitKind::Interm, BitVal::Dominant);
 
             /* 6 + 8 + 8 + 3 frames */
-            for (int i = 0; i < 25; i++)
+            for (size_t i = 0; i < 25; i++)
             {
                 /* Bit type in frame is don't care pretty much */
                 drv_bit_frm->AppendBit(BitKind::Interm, BitVal::Recessive);

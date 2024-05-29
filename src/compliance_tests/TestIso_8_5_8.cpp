@@ -74,7 +74,6 @@ class TestIso_8_5_8 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            n_elem_tests = 1;
             AddElemTest(TestVariant::Common, ElemTest(1 , FrameKind::Can20));
             AddElemTest(TestVariant::CanFdEna, ElemTest(1, FrameKind::CanFd));
 

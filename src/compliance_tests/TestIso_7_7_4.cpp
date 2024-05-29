@@ -81,12 +81,15 @@ class TestIso_7_7_4 : public test::TestBase
             FillTestVariants(VariantMatchType::Common);
             size_t num_elem_tests = nbt.GetBitLenTQ() -
                                     nbt.ph2_ -
-                                    nbt.sjw_ - 1;
+                                    nbt.sjw_ -
+                                    1;
+
+            assert(num_elem_tests > 0 && "Number of elementary tests positive and non-zero!");
 
             for (size_t i = 0; i < num_elem_tests; i++)
             {
                 ElemTest test = ElemTest(i + 1);
-                test.e_ = nbt.sjw_ + 1 + i;
+                test.e_ = static_cast<int>(nbt.sjw_ + i + 1);
                 AddElemTest(TestVariant::Common, std::move(test));
             }
 
@@ -100,7 +103,7 @@ class TestIso_7_7_4 : public test::TestBase
             frm_flags = std::make_unique<FrameFlags>(FrameKind::Can20, IdentKind::Base);
 
             // Base ID full of 1s, 5th will be dominant stuff bit!
-            int id = pow(2,11) - 1;
+            int id = CAN_BASE_ID_ALL_ONES;
             gold_frm = std::make_unique<Frame>(*frm_flags, 0x1, id);
             RandomizeAndPrint(gold_frm.get());
 
@@ -132,9 +135,11 @@ class TestIso_7_7_4 : public test::TestBase
             for (size_t j = 0; j < nbt.ph2_; j++)
                 driver_stuff_bit->ForceTQ(j, BitPhase::Ph2, BitVal::Recessive);
             BitPhase prev_phase = driver_stuff_bit->PrevBitPhase(BitPhase::Ph2);
-            int to_be_shortened = elem_test.e_ - nbt.sjw_ + 1;
 
-            int shortened = driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened);
+            size_t to_be_shortened = static_cast<size_t>(elem_test.e_) + 1 - nbt.sjw_;
+            assert(to_be_shortened < 100000 && "'to_be_shortened' underflow");
+
+            size_t shortened = driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened);
 
             if (shortened < to_be_shortened)
             {
@@ -142,7 +147,7 @@ class TestIso_7_7_4 : public test::TestBase
                 driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened - shortened);
             }
 
-            int index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
+            size_t index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
             mon_bit_frm->InsertActErrFrm(index + 1);
             drv_bit_frm->InsertPasErrFrm(index + 1);
 

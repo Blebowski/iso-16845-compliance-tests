@@ -113,14 +113,14 @@ class TestIso_7_2_3 : public test::TestBase
             FillTestVariants(VariantMatchType::ClasCanFdCommon);
             for (const auto &test_variant : test_variants)
             {
-                int num_elem_tests = 0;
+                size_t num_elem_tests = 0;
                 if (test_variant == TestVariant::Can20 ||
                     test_variant == TestVariant::CanFdTol)
                     num_elem_tests = 8;
                 if (test_variant == TestVariant::CanFdEna)
                     num_elem_tests = 11;
 
-                for (int j = 0; j < num_elem_tests; j++)
+                for (size_t j = 0; j < num_elem_tests; j++)
                     AddElemTest(test_variant, ElemTest(j + 1));
             }
 
@@ -422,7 +422,7 @@ class TestIso_7_2_3 : public test::TestBase
 
             mon_bit_frm->ConvRXFrame();
 
-            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
+            size_t num_stuff_bits = drv_bit_frm->GetNumStuffBits(StuffKind::Normal);
 
             /* In FD enabled variant, if last bit of data field is stuff bit, but model has this bit
              * as fixed stuff bit before Stuff count. So count in also each fixed stuff bit even
@@ -432,7 +432,7 @@ class TestIso_7_2_3 : public test::TestBase
             if (test_variant == TestVariant::CanFdEna)
             {
                 Bit *bit = drv_bit_frm->GetBitOf(0, BitKind::StuffCnt);
-                int index = drv_bit_frm->GetBitIndex(bit);
+                size_t index = drv_bit_frm->GetBitIndex(bit);
                 BitVal value = drv_bit_frm->GetBit(index - 1)->val_;
                 if ((value == drv_bit_frm->GetBit(index - 2)->val_) &&
                     (value == drv_bit_frm->GetBit(index - 3)->val_) &&
@@ -444,9 +444,9 @@ class TestIso_7_2_3 : public test::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
-            for (int stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
+            for (size_t stuff_bit = 0; stuff_bit < num_stuff_bits; stuff_bit++)
             {
-                TestMessage("Testing stuff bit nr: %d", stuff_bit);
+                TestMessage("Testing stuff bit nr: %zu", stuff_bit);
                 TestMessage("Total stuff bits in variant so far: %d", stuff_bits_in_variant);
                 stuff_bits_in_variant++;
 
@@ -458,7 +458,7 @@ class TestIso_7_2_3 : public test::TestBase
                 mon_bit_frm_2 = std::make_unique<BitFrame>(*mon_bit_frm);
 
                 Bit *stuff_bit_to_flip = drv_bit_frm_2->GetStuffBit(stuff_bit);
-                int bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
+                size_t bit_index = drv_bit_frm_2->GetBitIndex(stuff_bit_to_flip);
                 stuff_bit_to_flip->FlipVal();
 
                 drv_bit_frm_2->InsertPasErrFrm(bit_index + 1);

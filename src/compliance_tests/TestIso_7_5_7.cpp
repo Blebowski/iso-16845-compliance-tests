@@ -119,13 +119,13 @@ class TestIso_7_5_7 : public test::TestBase
              * We need to insert 18 since following insertion of passive error frame over
              * writes bit from which error frame starts!
              */
-            for (int i = 0; i < 18; i++)
+            for (size_t i = 0; i < 18; i++)
             {
                 drv_bit_frm->AppendBit(BitKind::ActErrFlag, BitVal::Recessive);
                 mon_bit_frm->AppendBit(BitKind::PasErrFlag, BitVal::Dominant);
             }
 
-            int last_bit = drv_bit_frm->GetLen();
+            size_t last_bit = drv_bit_frm->GetLen();
             drv_bit_frm->InsertPasErrFrm(last_bit - 1);
             mon_bit_frm->InsertPasErrFrm(last_bit - 1);
 

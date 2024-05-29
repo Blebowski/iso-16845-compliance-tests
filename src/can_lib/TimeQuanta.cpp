@@ -33,20 +33,20 @@
 #include "Cycle.h"
 
 
-can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase phase):
+can::TimeQuanta::TimeQuanta(Bit *parent, size_t brp, BitPhase phase):
     phase_(phase),
     parent_(parent)
 {
-    for (int i = 0; i < brp; i++)
+    for (size_t i = 0; i < brp; i++)
         cycles_.push_back(Cycle(this));
 }
 
 
-can::TimeQuanta::TimeQuanta(Bit *parent, int brp, BitPhase phase, BitVal val):
+can::TimeQuanta::TimeQuanta(Bit *parent, size_t brp, BitPhase phase, BitVal val):
     phase_(phase),
     parent_(parent)
 {
-    for (int i = 0; i < brp; i++)
+    for (size_t i = 0; i < brp; i++)
         cycles_.push_back(Cycle(this, val));
 }
 

@@ -94,7 +94,7 @@ class TestIso_7_2_1 : public test::TestBase
             mon_bit_frm->ConvRXFrame();
 
             Bit *ack_bit = mon_bit_frm->GetBitOf(0, BitKind::Ack);
-            int ack_index = mon_bit_frm->GetBitIndex(ack_bit);
+            size_t ack_index = mon_bit_frm->GetBitIndex(ack_bit);
             mon_bit_frm->InsertActErrFrm(ack_index + 1);
             drv_bit_frm->InsertActErrFrm(ack_index + 1);
 

@@ -130,7 +130,6 @@ class TestIso_9_6_2 : public test::TestBase
             drv_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm_2->InsertPasErrFrm(7, BitKind::Data);
 
-
             TestMessage("First frame");
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);
@@ -150,9 +149,9 @@ class TestIso_9_6_2 : public test::TestBase
             dut_ifc->SetTec(127);
             dut_ifc->SetRec(0);
 
-            for (int i = 0; i < 128; i++)
+            for (size_t i = 0; i < 128; i++)
             {
-                TestMessage("Sending frame nr. : %d", i);
+                TestMessage("Sending frame nr. : %zu", i);
                 int rec_old = dut_ifc->GetRec();
                 PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
                 RunLT(true, true);

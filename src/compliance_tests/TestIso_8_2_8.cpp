@@ -85,7 +85,7 @@ class TestIso_8_2_8 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
-            for (int i = 0; i < 1008; i++)
+            for (size_t i = 0; i < 1008; i++)
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
 
             SetupMonitorTxTests();
@@ -100,7 +100,7 @@ class TestIso_8_2_8 : public test::TestBase
             uint8_t data_first;
             uint8_t data_rest;
 
-            int stuff_bit_index;
+            size_t stuff_bit_index;
 
             if (elem_test.index_ < 127) {
                 data_first = 0x10;
@@ -137,7 +137,7 @@ class TestIso_8_2_8 : public test::TestBase
             }
 
             data[0] = data_first;
-            for (int i = 1; i < 64; i++)
+            for (size_t i = 1; i < 64; i++)
                 data[i] = data_rest;
 
             frm_flags = std::make_unique<FrameFlags>(FrameKind::CanFd, IdentKind::Base,
@@ -161,8 +161,7 @@ class TestIso_8_2_8 : public test::TestBase
              *   4. Append retransmitted frame if one shot mode is not enabled. If it is enabled,
              *      IUT will not retransmitt the frame. This serves to shorten the test time!
              *************************************************************************************/
-            int num_stuff_bits = drv_bit_frm->GetNumStuffBits(BitKind::Data,
-                                    StuffKind::Normal);
+            size_t num_stuff_bits = drv_bit_frm->GetNumStuffBits(BitKind::Data, StuffKind::Normal);
             Bit *stuff_bit;
 
             /* It can be that last bit is right after last bit of data!! */
@@ -172,7 +171,7 @@ class TestIso_8_2_8 : public test::TestBase
                 stuff_bit = drv_bit_frm->GetStuffBit(0, BitKind::StuffCnt);
 
             stuff_bit->FlipVal();
-            int bit_index = drv_bit_frm->GetBitIndex(stuff_bit);
+            size_t bit_index = drv_bit_frm->GetBitIndex(stuff_bit);
 
             drv_bit_frm->InsertActErrFrm(bit_index + 1);
             mon_bit_frm->InsertActErrFrm(bit_index + 1);

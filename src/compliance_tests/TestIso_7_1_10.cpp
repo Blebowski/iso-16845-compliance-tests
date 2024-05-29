@@ -215,7 +215,7 @@ class TestIso_7_1_10 : public test::TestBase
                     break;
 
                 default:
-                    TestMessage("Invalid Elementary test index: %d", elem_test.index_);
+                    TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
                     break;
                 }
 

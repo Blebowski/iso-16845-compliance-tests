@@ -111,7 +111,7 @@ class TestIso_7_1_11 : public test::TestBase
             FillTestVariants(VariantMatchType::ClasCanFdCommon);
             for (const auto &test_variant : test_variants)
             {
-                int num_elem_tests = 0;
+                size_t num_elem_tests = 0;
                 if (test_variant == TestVariant::Can20)
                     num_elem_tests = 7;
                 if (test_variant == TestVariant::CanFdTol)
@@ -119,7 +119,7 @@ class TestIso_7_1_11 : public test::TestBase
                 if (test_variant == TestVariant::CanFdEna)
                     num_elem_tests = 11;
 
-                for (int j = 0; j < num_elem_tests; j++)
+                for (size_t j = 0; j < num_elem_tests; j++)
                     AddElemTest(test_variant, ElemTest(j + 1));
             }
 

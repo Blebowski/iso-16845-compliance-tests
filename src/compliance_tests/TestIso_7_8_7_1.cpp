@@ -105,8 +105,7 @@ class TestIso_7_8_7_1 : public test::TestBase
             // Res post EDL in model we mark r0 as in original CAN FD 1.0 by Bosch.
             Bit *res_bit = drv_bit_frm->GetBitOf(0, BitKind::R0);
             res_bit->ForceTQ(1, BitVal::Recessive);
-            res_bit->ForceTQ(0, nbt.ph2_ - 1,
-                                     BitPhase::Ph2, BitVal::Recessive);
+            res_bit->ForceTQ(0, nbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);
             mon_bit_frm->Print(true);

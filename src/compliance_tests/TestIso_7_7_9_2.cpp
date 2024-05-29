@@ -120,9 +120,9 @@ class TestIso_7_7_9_2 : public test::TestBase
             // Set glitch lengths
 
             // First reduce other phases, we create glitches it from SYNC!
-            for (int i = 0; i < 5; i++)
+            for (size_t i = 0; i < 5; i++)
             {
-                printf("Setting bit %d\n", i);
+                TestMessage("Setting bit %zu\n", i);
                 drv_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Ph2, nbt.ph2_);
                 drv_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Ph1, nbt.ph2_);
                 drv_bit_frm->GetBit(i)->ShortenPhase(BitPhase::Prop, nbt.ph2_);

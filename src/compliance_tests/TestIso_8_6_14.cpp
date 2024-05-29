@@ -115,10 +115,10 @@ class TestIso_8_6_14 : public test::TestBase
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             mon_bit_frm->InsertActErrFrm(7, BitKind::Data);
 
-            for (int i = 0; i < 7; i++)
+            for (size_t i = 0; i < 7; i++)
             {
-                int bit_index = drv_bit_frm->GetBitIndex(
-                    drv_bit_frm->GetBitOf(0, BitKind::ErrDelim));
+                size_t bit_index = drv_bit_frm->GetBitIndex(
+                                        drv_bit_frm->GetBitOf(0, BitKind::ErrDelim));
                 drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, bit_index);
                 mon_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Recessive, bit_index);
             }

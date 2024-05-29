@@ -80,8 +80,7 @@ class TestIso_8_5_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            n_elem_tests = 3;
-            for (int i = 0; i < n_elem_tests; i++)
+            for (size_t i = 0; i < 3; i++)
             {
                 AddElemTest(TestVariant::Common, ElemTest(i + 1 , FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
@@ -134,7 +133,7 @@ class TestIso_8_5_3 : public test::TestBase
             mon_bit_frm->InsertPasErrFrm(7, BitKind::Data);
             drv_bit_frm->InsertPasErrFrm(7, BitKind::Data);
 
-            int bits_to_insert = 0;
+            size_t bits_to_insert = 0;
             switch (elem_test.index_)
             {
                 case 1:
@@ -150,15 +149,13 @@ class TestIso_8_5_3 : public test::TestBase
                     break;
             }
 
-            for (int i = 0; i < bits_to_insert; i++)
+            for (size_t i = 0; i < bits_to_insert; i++)
             {
                 Bit *err_delim_bit = drv_bit_frm->GetBitOf(0, BitKind::ErrDelim);
-                int err_delim_index = drv_bit_frm->GetBitIndex(err_delim_bit);
+                size_t err_delim_index = drv_bit_frm->GetBitIndex(err_delim_bit);
 
-                drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant,
-                                          err_delim_index);
-                mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive,
-                                           err_delim_index);
+                drv_bit_frm->InsertBit(BitKind::ActErrFlag, BitVal::Dominant, err_delim_index);
+                mon_bit_frm->InsertBit(BitKind::PasErrFlag, BitVal::Recessive, err_delim_index);
 
                 /* First dominant bit inserted will cause re-synchronisation due to input
                  * delay. We need to compensate it by lenghtening monitoried sequence (what

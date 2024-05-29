@@ -114,6 +114,7 @@ class TestIso_7_6_20 : public test::TestBase
             /**************************************************************************************
              * Execute test
              *************************************************************************************/
+            rec_old = dut_ifc->GetRec();
             PushFramesToLT(*drv_bit_frm, *mon_bit_frm);
             RunLT(true, true);
 

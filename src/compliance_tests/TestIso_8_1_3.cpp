@@ -88,7 +88,7 @@ class TestIso_8_1_3 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CommonAndFd);
-            for (int i = 0; i < 11; i++){
+            for (size_t i = 0; i < 11; i++){
                 AddElemTest(TestVariant::Common, ElemTest(i + 1, FrameKind::Can20));
                 AddElemTest(TestVariant::CanFdEna, ElemTest(i + 1, FrameKind::CanFd));
             }
@@ -112,7 +112,7 @@ class TestIso_8_1_3 : public test::TestBase
 
             /* LT must have n-th bit of ID set to dominant */
             id_lt = id_iut;
-            id_lt &= ~(1 << (11 - elem_test.index_));
+            id_lt &= ~(1 << (11 - static_cast<int>(elem_test.index_)));
 
             /* In this test, we MUST NOT shift bit-rate! After loosing arbitration, IUT will
              * resynchronize in data bit-rate if granularity of data bit-rate is higher than
