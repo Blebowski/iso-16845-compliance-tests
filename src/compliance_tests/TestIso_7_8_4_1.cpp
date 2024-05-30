@@ -97,8 +97,8 @@ class TestIso_7_8_4_1 : public test::TestBase
 
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert(nbt.brp_ == dbt.brp_ &&
-                   "TQ(N) shall equal TQ(D) for this test due to test architecture!");
+            TEST_ASSERT(nbt.brp_ == dbt.brp_,
+                        "TQ(N) shall equal TQ(D) for this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
@@ -124,7 +124,7 @@ class TestIso_7_8_4_1 : public test::TestBase
             Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
             esi_bit->val_ = BitVal::Dominant;
 
-            assert(elem_test.e_ > 0 && "'j' will underflow!");
+            TEST_ASSERT(elem_test.e_ > 0, "'j' will underflow!");
             for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++)
                 esi_bit->ForceTQ(j, BitVal::Recessive);
 

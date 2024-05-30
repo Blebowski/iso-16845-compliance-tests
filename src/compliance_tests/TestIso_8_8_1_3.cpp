@@ -105,8 +105,8 @@ class TestIso_8_8_1_3 : public test::TestBase
 
             SetupMonitorTxTests();
 
-            assert(dbt.brp_ > 2 &&
-                   "TQ(D) shall bigger than 2 for this test due to test architecture!");
+            TEST_ASSERT(dbt.brp_ > 2,
+                        "TQ(D) shall bigger than 2 for this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,

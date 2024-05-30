@@ -154,7 +154,8 @@ class TestIso_7_6_9 : public test::TestBase
 
             if (test_variant == TestVariant::Common)
             {
-                assert(elem_test.index_ > 0 && elem_test.index_ < 9);
+                TEST_ASSERT(elem_test.index_ > 0 && elem_test.index_ < 9,
+                            "Invalid Elementary test index");
                 switch (elem_test.index_)
                 {
                 case 1:
@@ -185,7 +186,8 @@ class TestIso_7_6_9 : public test::TestBase
                     value = BitVal::Dominant;
 
             } else if (test_variant == TestVariant::CanFdEna) {
-                assert(elem_test.index_ > 0 && elem_test.index_ < 7);
+                TEST_ASSERT(elem_test.index_ > 0 && elem_test.index_ < 7,
+                            "Invalid Elementary Test index");
                 switch (elem_test.index_)
                 {
                 case 1:

@@ -124,7 +124,7 @@ class TestIso_7_8_3_2 : public test::TestBase
 
             // 7-th bit should be stuff bit
             Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
-            assert(driver_stuff_bit->val_ == BitVal::Dominant);
+            TEST_ASSERT(driver_stuff_bit->val_ == BitVal::Dominant, "Driven Stuff Bit Dominant");
 
             size_t bit_index = drv_bit_frm->GetBitIndex(driver_stuff_bit);
             for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++)
@@ -132,7 +132,7 @@ class TestIso_7_8_3_2 : public test::TestBase
 
             //driver_stuff_bit->shortenPhase(PH2_PHASE, dataBitTiming.ph2 - i);
 
-            assert(elem_test.e_ > 0 && "'j' will underflow!");
+            TEST_ASSERT(elem_test.e_ > 0, "'j' will underflow!");
             for (size_t j = elem_test.e_ - 1; j < dbt.ph2_; j++)
                 driver_stuff_bit->GetTQ(BitPhase::Ph2, j)
                     ->ForceVal(BitVal::Recessive);

@@ -118,7 +118,7 @@ class TestIso_7_8_6_2 : public test::TestBase
             Bit *driver_stuff_bit = drv_bit_frm->GetBitOf(6, BitKind::Data);
 
             for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++) {
-                assert((dbt.ph2_ >= j + 1) && "'ForceTQ' will underflow");
+                TEST_ASSERT((dbt.ph2_ >= j + 1), "'ForceTQ' will underflow");
                 driver_before_stuff_bit->ForceTQ(dbt.ph2_ - 1 - j, BitPhase::Ph2,
                                                          BitVal::Dominant);
             }

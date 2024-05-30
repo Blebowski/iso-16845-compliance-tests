@@ -84,8 +84,8 @@ class TestIso_7_8_2_1 : public test::TestBase
         void ConfigureTest()
         {
             FillTestVariants(VariantMatchType::CanFdEnaOnly);
-            assert(nbt.GetBitLenTQ() > (nbt.ph2_ + nbt.sjw_) &&
-                    "'num_elem_tests' will underflow. Choose different Bit timing configuration!");
+            TEST_ASSERT(nbt.GetBitLenTQ() > (nbt.ph2_ + nbt.sjw_),
+                        "'num_elem_tests' will underflow. Choose different Bit timing configuration!");
             size_t num_elem_tests = nbt.GetBitLenTQ() -
                                     nbt.ph2_ -
                                     nbt.sjw_ -

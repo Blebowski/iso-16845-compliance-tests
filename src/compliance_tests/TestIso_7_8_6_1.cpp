@@ -121,11 +121,11 @@ class TestIso_7_8_6_1 : public test::TestBase
             Bit *esi_bit = drv_bit_frm->GetBitOf(0, BitKind::Esi);
 
             for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++) {
-                assert(dbt.ph2_ >= j + 1 && "'ForceTQ' will underflow!");
+                TEST_ASSERT(dbt.ph2_ >= j + 1, "'ForceTQ' will underflow!");
                 brs_bit_driver->ForceTQ(dbt.ph2_ - 1 - j, BitPhase::Ph2, BitVal::Dominant);
             }
 
-            assert(dbt.ph2_ > 0 && "'ForceTQ' will underflow!");
+            TEST_ASSERT(dbt.ph2_ > 0, "'ForceTQ' will underflow!");
             esi_bit->ForceTQ(0, dbt.ph2_ - 1, BitPhase::Ph2, BitVal::Recessive);
 
             drv_bit_frm->Print(true);

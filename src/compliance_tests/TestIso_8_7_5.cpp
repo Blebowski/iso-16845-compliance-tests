@@ -93,8 +93,8 @@ class TestIso_8_7_5 : public test::TestBase
 
             SetupMonitorTxTests();
 
-            assert((nbt.brp_ > 2 &&
-                    "BRP Nominal must be bigger than 2 in this test due to test architecture!"));
+            TEST_ASSERT(nbt.brp_ > 2,
+                        "BRP Nominal must be bigger than 2 in this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,

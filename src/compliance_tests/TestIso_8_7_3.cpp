@@ -90,7 +90,7 @@ class TestIso_8_7_3 : public test::TestBase
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert(dut_input_delay == dut_ipt && "Needed due to test assumptions!");
+            TEST_ASSERT(dut_input_delay == dut_ipt, "Needed due to test assumptions!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
