@@ -103,6 +103,9 @@ class TestIso_8_8_2_2 : public test::TestBase
             TEST_ASSERT(dbt.GetBitLenCycles() * 2 < ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_),
                         " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
 
+            TEST_ASSERT(dbt.GetBitLenCycles() * 3 < dut_max_secondary_sample,
+                        "Bit time (N) * 3 < Limit for maximal Secondary sample point compensation!");
+
             SetupMonitorTxTests();
         }
 

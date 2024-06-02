@@ -97,6 +97,11 @@ class test::TestBase
         size_t dut_ipt;
 
         /**
+         * Maximal size of Secondary sample point delay (in clock cycles)
+         */
+        size_t dut_max_secondary_sample;
+
+        /**
          * CAN Bus bit timing. By default contains bit timing queryied from TB.
          * If test requires other bit timing, it will modify it!
          */

@@ -83,6 +83,9 @@ void test::TestBase::ConfigureTest()
     // TODO: Query DUTs information processing time from TB!
     this->dut_ipt = 2;
 
+    // TODO: Query this from TB instead of putting CTU CAN FD specific value!
+    this->dut_max_secondary_sample = 255;
+
     this->nbt.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
     this->nbt.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
     this->nbt.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");
@@ -705,7 +708,7 @@ void test::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: %s", test_name.c_str());
-    TestMessage("Number of variants: %zu", test_variants.size());
+    TestMessage("Number of variants: %d", test_variants.size());
     size_t num_elem_tests = 0;
     for (const auto &variant_tests : elem_tests)
         num_elem_tests += variant_tests.size();
