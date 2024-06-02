@@ -116,17 +116,16 @@ class TestIso_8_8_2_3 : public test::TestBase
 
             SetupMonitorTxTests();
 
-            //assert(data_bit_timing.brp_ > 2 &&
-            //       "TQ(D) shall bigger than 2 for this test due to test architecture!");
-
             // Following constraint is not due to model or IUT issues.
             // It is due to principle of the test, we can't avoid it!
             // This is because we are delaying received sequence by up to: 2 x Bit time (D).
             // If such big delay is applied, and TSEG1(N) is smaller than this number, an
             // error frame is detected still in Nominal Bit-rate.
-            assert(dbt.GetBitLenCycles() * 2 <
-                   ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_) &&
-                   " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
+            TEST_ASSERT(dbt.GetBitLenCycles() * 2 < ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_),
+                       " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
+
+            TEST_ASSERT(dbt.GetBitLenCycles() * 4 < dut_max_secondary_sample,
+                        "Bit time (N) * 3 < Limit for maximal Secondary sample point compensation!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,

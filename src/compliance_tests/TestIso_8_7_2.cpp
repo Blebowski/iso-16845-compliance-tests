@@ -94,8 +94,8 @@ class TestIso_8_7_2 : public test::TestBase
             SetupMonitorTxTests();
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert((nbt.brp_ > 1 &&
-                    "BRP Nominal must be bigger than 1 in this test due to test architecture!"));
+            TEST_ASSERT(nbt.brp_ > 1,
+                        "BRP Nominal must be bigger than 1 in this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,

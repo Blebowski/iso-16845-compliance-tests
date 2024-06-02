@@ -135,7 +135,7 @@ class TestIso_7_7_2 : public test::TestBase
             last_interm_bit_mon->ShortenPhase(BitPhase::Ph1, nbt.ph1_);
             last_interm_bit_mon->ShortenPhase(BitPhase::Prop, nbt.prop_);
 
-            assert(elem_test.e_ > 0 && "Phase Error non-zero and positive!");
+            TEST_ASSERT(elem_test.e_ > 0, "Phase Error non-zero and positive!");
 
             last_interm_bit_drv->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);
             last_interm_bit_mon->LengthenPhase(BitPhase::Sync, elem_test.e_ - 1);

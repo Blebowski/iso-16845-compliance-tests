@@ -83,6 +83,9 @@ void test::TestBase::ConfigureTest()
     // TODO: Query DUTs information processing time from TB!
     this->dut_ipt = 2;
 
+    // TODO: Query this from TB instead of putting CTU CAN FD specific value!
+    this->dut_max_secondary_sample = 255;
+
     this->nbt.brp_ = TestControllerAgentGetBitTimingElement("CFG_DUT_BRP");
     this->nbt.prop_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PROP");
     this->nbt.ph1_ = TestControllerAgentGetBitTimingElement("CFG_DUT_PH1");
@@ -167,10 +170,6 @@ void test::TestBase::SetupTestEnv()
     TestBigMessage("Test specific config...");
     ConfigureTest();
     TestMessage("Done");
-
-    PrintTestInfo();
-
-    TestBigMessage("Starting test execution: ", test_name);
 }
 
 
@@ -186,16 +185,17 @@ int test::TestBase::Run()
 {
     SetupTestEnv();
 
-    int variant_index = 0;
-
-    /*
-    if (RunElemTest == 0)
-    {
-        TestBigMessage("Elementary test Run routine not defined, exiting...");
+    // Do not run the test if some assertions failed in the Configure
+    if (failed_assertions > 0) {
         test_result = false;
+        TestMessage("Skipping test execution due to failed assertions in test setup!");
         return (int)FinishTest();
     }
-    */
+
+    PrintTestInfo();
+    TestBigMessage("Starting test execution: ", test_name);
+
+    int variant_index = 0;
 
     for (auto const &test_variant : test_variants)
     {
@@ -220,6 +220,12 @@ int test::TestBase::Run()
 
         variant_index++;
     }
+
+    if (failed_assertions > 0) {
+        test_result = false;
+        TestMessage("Test failed due to assertions failed during the test");
+    }
+
     return (int)FinishTest();
 }
 
@@ -689,11 +695,20 @@ void test::TestBase::CheckLTResult()
     CanAgentDriverFlush();
 }
 
+void test::TestBase::TestAssertFnc(bool condition, const char *msg, const char *file, const int line)
+{
+    if (condition == false) {
+        TestMessage("Test Assertion Failed at: %s : %d", file, line);
+        TestMessage("   Message: %s", msg);
+        failed_assertions++;
+    }
+}
+
 void test::TestBase::PrintTestInfo()
 {
     TestMessage(std::string(80, '*').c_str());
     TestMessage("Test Name: %s", test_name.c_str());
-    TestMessage("Number of variants: %zu", test_variants.size());
+    TestMessage("Number of variants: %d", test_variants.size());
     size_t num_elem_tests = 0;
     for (const auto &variant_tests : elem_tests)
         num_elem_tests += variant_tests.size();

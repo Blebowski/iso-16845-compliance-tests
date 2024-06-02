@@ -120,9 +120,11 @@ class TestIso_8_8_2_4 : public test::TestBase
             // This is because we are delaying received sequence by up to: 2 x Bit time (D).
             // If such big delay is applied, and TSEG1(N) is smaller than this number, an
             // error frame is detected still in Nominal Bit-rate.
-            assert(dbt.GetBitLenCycles() * 2 <
-                   ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_) &&
-                   " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
+            TEST_ASSERT(dbt.GetBitLenCycles() * 2 < ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_),
+                        " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
+
+            TEST_ASSERT(dbt.GetBitLenCycles() * 3 < dut_max_secondary_sample,
+                        "Bit time (N) * 3 < Limit for maximal Secondary sample point compensation!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
@@ -177,16 +179,16 @@ class TestIso_8_8_2_4 : public test::TestBase
             if (elem_test.index_ == 1 || elem_test.index_ == 3)
             {
                 /* Offset as if two time quantas before regular sample point! This is because if
-                 * we set offset as if in sample point, the SSP fro last bit of CRC would already
+                 * we set offset as if in sample point, the SSP for last bit of CRC would already
                  * be ignored since it reaches to SP of CRC delimiter. Test description explicitly
                  * says that SSP shall be configured before SP of CRC delimiter. Since prolonging
                  * of SSP past CRC delimiter SP is optional, we must set it just before SP of CRC
-                 * Delimiter to properly test this feauter!
+                 * Delimiter to properly test this feauter!or
                  *
                  * TX/RX delay will be measured and added by IUT. Offset in clock cycles!
                  * (minimal time quanta)
                  */
-                size_t ssp_offset = dbt.brp_ * (dbt.prop_ + dbt.ph1_ -1);
+                size_t ssp_offset = dbt.brp_ * (dbt.prop_ + dbt.ph1_ - 1);
                 dut_ifc->ConfigureSsp(SspType::MeasAndOffset, static_cast<int>(ssp_offset));
             } else {
                 /* We need to incorporate d into the delay! Also, move offest slightly before

@@ -84,7 +84,8 @@ class TestIso_7_7_4 : public test::TestBase
                                     nbt.sjw_ -
                                     1;
 
-            assert(num_elem_tests > 0 && "Number of elementary tests positive and non-zero!");
+            TEST_ASSERT(num_elem_tests > 0,
+                        "Number of elementary tests positive and non-zero!");
 
             for (size_t i = 0; i < num_elem_tests; i++)
             {
@@ -137,8 +138,6 @@ class TestIso_7_7_4 : public test::TestBase
             BitPhase prev_phase = driver_stuff_bit->PrevBitPhase(BitPhase::Ph2);
 
             size_t to_be_shortened = static_cast<size_t>(elem_test.e_) + 1 - nbt.sjw_;
-            assert(to_be_shortened < 100000 && "'to_be_shortened' underflow");
-
             size_t shortened = driver_stuff_bit->ShortenPhase(prev_phase, to_be_shortened);
 
             if (shortened < to_be_shortened)

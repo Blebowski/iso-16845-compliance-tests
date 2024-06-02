@@ -35,6 +35,8 @@
 #include <can_lib.h>
 #include <test_lib.h>
 
+#define TEST_ASSERT(cond, msg) TestAssertFnc(cond, msg, __FILE__, __LINE__);
+
 /**
  * @namespace test
  * @class TestBase
@@ -93,6 +95,11 @@ class test::TestBase
          * Information processing time of DUT (in minimal time quanta = clock cycles)
          */
         size_t dut_ipt;
+
+        /**
+         * Maximal size of Secondary sample point delay (in clock cycles)
+         */
+        size_t dut_max_secondary_sample;
 
         /**
          * CAN Bus bit timing. By default contains bit timing queryied from TB.
@@ -187,6 +194,9 @@ class test::TestBase
         int rec_new = 0;
         int tec_old = 0;
         int tec_new = 0;
+
+        // Assertion counters
+        int failed_assertions = 0;
 
         /**
          * Obtains frame type based on test variant.
@@ -363,6 +373,11 @@ class test::TestBase
          * monitoring, it prints error report to simulation log!
          */
         void CheckLTResult();
+
+        /*
+         * Assertion check that will not actually cause simulation crash.
+         */
+        void TestAssertFnc(bool condition, const char *msg, const char *file, const int line);
 
         /**********************************************************************
          * Print functions.

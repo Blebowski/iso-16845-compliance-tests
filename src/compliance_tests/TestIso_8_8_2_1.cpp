@@ -102,9 +102,11 @@ class TestIso_8_8_2_1 : public test::TestBase
             // This is because we are delaying received sequence by up to: 2 x Bit time (D).
             // If such big delay is applied, and TSEG1(N) is smaller than this number, an
             // error frame is detected still in Nominal Bit-rate.
-            assert(dbt.GetBitLenCycles() * 2 <
-                   ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_) &&
-                   " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
+            TEST_ASSERT(dbt.GetBitLenCycles() * 2 < ((nbt.ph1_ + nbt.prop_ + 1) * nbt.brp_),
+                        " In this test TSEG1(N) > 2 * Bit time(D) due to test architecture!");
+
+            TEST_ASSERT(dbt.GetBitLenCycles() * 3 < dut_max_secondary_sample,
+                        "Bit time (N) * 3 < Limit for maximal Secondary sample point compensation!");
 
             SetupMonitorTxTests();
         }

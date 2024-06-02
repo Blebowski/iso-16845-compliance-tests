@@ -167,7 +167,7 @@ class TestIso_8_1_7 : public test::TestBase
                         break;
 
                     default:
-                        assert(false && " We should never get here!");
+                        TEST_ASSERT(false, " Invalid elementary test index!");
                         break;
                 }
 

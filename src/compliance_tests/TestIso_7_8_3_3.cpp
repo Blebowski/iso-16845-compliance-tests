@@ -127,7 +127,7 @@ class TestIso_7_8_3_3 : public test::TestBase
             Bit *crc_delimiter = drv_bit_frm->GetBitOf(0, BitKind::CrcDelim);
             crc_delimiter->val_ = BitVal::Dominant;
 
-            assert(elem_test.e_ > 0 && "'j' will underflow");
+            TEST_ASSERT(elem_test.e_ > 0, "'j' will underflow");
             for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++)
                 crc_delimiter->ForceTQ(j, BitVal::Recessive);
 

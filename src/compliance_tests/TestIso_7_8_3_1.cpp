@@ -89,8 +89,8 @@ class TestIso_7_8_3_1 : public test::TestBase
 
             CanAgentConfigureTxToRxFeedback(true);
 
-            assert(nbt.brp_ == dbt.brp_ &&
-                   "TQ(N) shall equal TQ(D) for this test due to test architecture!");
+            TEST_ASSERT(nbt.brp_ == dbt.brp_,
+                        "TQ(N) shall equal TQ(D) for this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,

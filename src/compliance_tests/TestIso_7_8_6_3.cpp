@@ -120,7 +120,7 @@ class TestIso_7_8_6_3 : public test::TestBase
             Bit *ack_driver = drv_bit_frm->GetBitOf(0, BitKind::Ack);
 
             for (size_t j = 0; j < static_cast<size_t>(elem_test.e_); j++) {
-                assert(nbt.ph2_ >= j + 1 && "'ForceTQ' will undreflow");
+                TEST_ASSERT(nbt.ph2_ >= j + 1, "'ForceTQ' will undreflow");
                 crc_delimiter_driver->ForceTQ(nbt.ph2_ - 1 - j, BitPhase::Ph2, BitVal::Dominant);
             }
 

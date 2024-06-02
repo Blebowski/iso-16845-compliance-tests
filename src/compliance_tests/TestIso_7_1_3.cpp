@@ -114,8 +114,8 @@ class TestIso_7_1_3 : public test::TestBase
             // Following constraint is not due to model or IUT issues.
             // It is due to principle of the test, we can't avoid it!
             // This is
-            assert(dbt.brp_ == nbt.brp_ &&
-                   " In this test BRP(N) must be equal to BRP(D) due to test architecture!");
+            TEST_ASSERT(dbt.brp_ == nbt.brp_,
+                        " In this test BRP(N) must be equal to BRP(D) due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
@@ -181,7 +181,7 @@ class TestIso_7_1_3 : public test::TestBase
                     break;
                 default:
                     TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
-                    assert (false);
+                    TEST_ASSERT (false, "Invalid Elementary test index");
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
@@ -223,7 +223,7 @@ class TestIso_7_1_3 : public test::TestBase
                     break;
                 default:
                     TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
-                    assert (false);
+                    TEST_ASSERT (false, "Invalid Elementary test index");
                     break;
                 }
             }
@@ -288,7 +288,7 @@ class TestIso_7_1_3 : public test::TestBase
                     break;
                 default:
                     TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
-                    assert (false);
+                    TEST_ASSERT (false, "Invalid Elementary test index");
                     break;
                 }
             } else if (test_variant == TestVariant::CanFdEna) {
@@ -312,7 +312,7 @@ class TestIso_7_1_3 : public test::TestBase
                     break;
                 default:
                     TestMessage("Invalid Elementary test index: %zu", elem_test.index_);
-                    assert (false);
+                    TEST_ASSERT (false, "Invalid Elementary test index");
                     break;
                 }
             }

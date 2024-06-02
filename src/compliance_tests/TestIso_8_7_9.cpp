@@ -86,8 +86,8 @@ class TestIso_8_7_9 : public test::TestBase
 
             SetupMonitorTxTests();
 
-            assert(nbt.brp_ > 2 &&
-                   "TQ(N) shall bigger than 2 for this test due to test architecture!");
+            TEST_ASSERT(nbt.brp_ > 2,
+                        "TQ(N) shall bigger than 2 for this test due to test architecture!");
         }
 
         int RunElemTest([[maybe_unused]] const ElemTest &elem_test,
