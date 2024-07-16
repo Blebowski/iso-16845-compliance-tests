@@ -504,3 +504,17 @@ void can::CtuCanFdInterface::SendReintegrationRequest()
 
     MemBusAgentWrite32(CTU_CAN_FD_COMMAND, data.u32);
 }
+
+
+bool can::CtuCanFdInterface::ConfigureRestrictedOperation(bool enable)
+{
+    union ctu_can_fd_mode_settings data;
+    data.u32 = MemBusAgentRead32(CTU_CAN_FD_MODE);
+    if (enable)
+        data.s.rom = 1;
+    else
+        data.s.rom = 0;
+
+    MemBusAgentWrite32(CTU_CAN_FD_MODE, data.u32);
+    return true;
+}

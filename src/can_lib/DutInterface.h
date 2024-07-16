@@ -161,6 +161,12 @@ class can::DutInterface
          * Issues reintegration request to DUT.
          */
         virtual void SendReintegrationRequest() = 0;
+
+        /**
+         * Configures Restricted operation mode
+         * @return True if succesfull, false otherwise (e.g. restricted operation mode not supported)
+         */
+        virtual bool ConfigureRestrictedOperation(bool enable) = 0;
 };
 
 #endif

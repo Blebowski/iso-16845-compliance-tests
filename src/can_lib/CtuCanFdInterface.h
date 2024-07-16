@@ -70,6 +70,7 @@ extern "C" {
             bool ConfigureProtocolException(bool enable);
             bool ConfigureOneShot(bool enable);
             void SendReintegrationRequest();
+            bool ConfigureRestrictedOperation(bool enable);
 
             /* Number of TXT buffers. Read by "Enable" */
             unsigned int num_txt_buffers_;
