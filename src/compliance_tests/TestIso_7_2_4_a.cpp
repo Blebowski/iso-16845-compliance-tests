@@ -79,7 +79,7 @@
 using namespace can;
 using namespace test;
 
-class TestIso_7_2_4_1 : public test::TestBase
+class TestIso_7_2_4_a : public test::TestBase
 {
     public:
 
