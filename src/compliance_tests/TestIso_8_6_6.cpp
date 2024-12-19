@@ -192,12 +192,37 @@ class TestIso_8_6_6 : public test::TestBase
                 break;
             }
 
-            /* Find random bit within bitfield with value */
-            Bit *bit_to_corrupt = drv_bit_frm->GetRandBitOf(bit_type_to_corrupt);
-            while (bit_to_corrupt->val_ != value_to_corrupt ||
-                   bit_to_corrupt->stuff_kind_ != StuffKind::NoStuff)
+            /* Find random bit that:
+                - Belongs to the bitfield based on elementary test
+                - Is of requested value
+                - Is non-stuff bit
+
+               The frame was previously generated such that all fields but CRC
+               will have at least one Dominant and one Recessive bit.
+
+               It may happen all zero CRC will occur. So for CRC field allow flipping
+               also stuff bits. In such case it is simultaneous stuff error and
+               bit error, but bit error shall have priority. Therefore DUTs TEC
+               shall also increment by 8.
+             */
+
+            Bit *bit_to_corrupt;
+            bool keep_looping = true;
+
+            do {
                 bit_to_corrupt = drv_bit_frm->GetRandBitOf(bit_type_to_corrupt);
-            // TODO: CRC can be possibly all zeroes or all ones causing infinite loop!
+
+                if (bit_to_corrupt->val_ == value_to_corrupt) {
+                    if (bit_to_corrupt->stuff_kind_ == StuffKind::NoStuff)
+                        keep_looping = false;
+
+                    // Special case to handle potentially all zero CRC, allow flipping
+                    // also stuff bits
+                    if (bit_type_to_corrupt == BitKind::Crc)
+                        keep_looping = false;
+                }
+            } while (keep_looping);
+
 
             drv_bit_frm->FlipBitAndCompensate(bit_to_corrupt, dut_input_delay);
             size_t bit_index = drv_bit_frm->GetBitIndex(bit_to_corrupt);
