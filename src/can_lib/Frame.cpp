@@ -171,7 +171,7 @@ void can::Frame::set_identifier(int identifier)
 
 void can::Frame::CopyData(uint8_t *data, int dataLen)
 {
-    if (data == 0){
+    if (data == nullptr) {
         std::cerr << "Null pointer: source data" << std::endl;
         return;
     }
