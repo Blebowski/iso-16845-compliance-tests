@@ -289,7 +289,7 @@ class can::Bit {
 
     protected:
 
-        const BitKindName bit_kind_names_[29] =
+        const BitKindName bit_kind_names_[30] =
         {
             {BitKind::Sof,                  "SOF"},
             {BitKind::BaseIdent,            "Base identifer"},
@@ -304,7 +304,7 @@ class can::Bit {
             {BitKind::Esi,                  "ESI"},
             {BitKind::Dlc,                  "DLC"},
             {BitKind::Data,                 "Data field"},
-            {BitKind::StuffCnt,           "St.Ct."},
+            {BitKind::StuffCnt,             "St.Ct."},
             {BitKind::StuffParity,          "STP"},
             {BitKind::Crc,                  "CRC"},
             {BitKind::CrcDelim,             "CRD"},
@@ -317,8 +317,9 @@ class can::Bit {
             {BitKind::ActErrFlag,           "Active Error flag"},
             {BitKind::PasErrFlag,           "Passive Error flag"},
             {BitKind::ErrDelim,             "Error delimiter"},
-            {BitKind::OvrlFlag,            "Overload flag"},
-            {BitKind::OvrlDelim,           "Overload delimiter"}
+            {BitKind::OvrlFlag,             "Overload flag"},
+            {BitKind::OvrlDelim,            "Overload delimiter"},
+            {BitKind::Undefined,            "-"}
         };
 
         /**

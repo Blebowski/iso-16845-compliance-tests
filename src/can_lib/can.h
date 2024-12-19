@@ -101,7 +101,8 @@ namespace can {
         PasErrFlag,
         ErrDelim,
         OvrlFlag,
-        OvrlDelim
+        OvrlDelim,
+        Undefined
     };
 
     struct BitKindName

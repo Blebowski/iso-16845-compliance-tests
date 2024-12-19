@@ -1122,29 +1122,60 @@ size_t can::BitFrame::GetNumStuffBits(StuffKind stuff_bit_type, BitVal bit_value
     });
 }
 
-
 void can::BitFrame::Print(bool print_stuff_bits)
 {
-    std::list<Bit>::iterator bit_it;
-
     std::string vals = "";
     std::string names = "";
 
-    for (bit_it = bits_.begin(); bit_it != bits_.end();)
-    {
-        // Print separators betwen different field types (also prints separator
-        //  at start of frame)
-        vals += "|";
-        names += " ";
+    BitKind curr_kind;
+    BitKind last_kind = BitKind::Undefined;
+    int field_len = 0;
 
-        // Both methods advance iterator when bit is printed.
-        if (bit_it->IsSingleBitField()) {
-            //if (printStuffBits == false && bit->stuffBitType != NoStuffBit)
-            //    continue;
-            PrintSingleBitField(bit_it, &vals, &names, print_stuff_bits);
-        } else {
-            PrintMultiBitField(bit_it, &vals, &names, print_stuff_bits);
+    for (auto bit_it = bits_.begin(); bit_it != bits_.end(); bit_it++)
+    {
+        curr_kind = bit_it->kind_;
+        bool is_last = (bit_it == std::prev(bits_.end()));
+
+        if (bit_it->IsStuffBit() && !print_stuff_bits) {
+            last_kind = curr_kind;
+            continue;
         }
+
+        if (is_last) {
+            vals += " " + bit_it->GetColouredVal();
+            field_len++;
+        }
+
+        if ((curr_kind != last_kind || is_last) &&
+            (bit_it != bits_.begin()))
+        {
+            vals += " |";
+
+            std::string bit_name = std::prev(bit_it)->GetBitKindName();
+            int total_pad = (field_len * 2) + 1 - ((int) bit_name.length());
+            int pre_pad = total_pad / 2;
+            int post_pad = (total_pad % 2 == 0) ? pre_pad : pre_pad + 1;
+
+            if (pre_pad > 0)
+                names += std::string(pre_pad, ' ');
+
+            names += bit_name;
+
+            if (post_pad > 0)
+                names += std::string(post_pad, ' ');
+
+            names += " ";
+
+            field_len = 0;
+        }
+
+        if (is_last)
+            break;
+
+        vals += " " + bit_it->GetColouredVal();
+        field_len++;
+
+        last_kind = curr_kind;
     }
 
     std::cout << names << std::endl;
@@ -1324,70 +1355,4 @@ void can::BitFrame::PutAck(size_t input_delay)
     Bit *ack = GetBitOf(0, BitKind::Ack);
     ack->val_ = BitVal::Dominant;
     CompensateEdgeForInputDelay(ack, input_delay);
-}
-
-
-void can::BitFrame::PrintSingleBitField(std::list<Bit>::iterator& bit_it,
-                                        std::string *vals,
-                                        std::string *names,
-                                        bool printStuffBits)
-{
-    std::list<Bit>::iterator nxtBitIt;
-    nxtBitIt = bit_it;
-    nxtBitIt++;
-
-    // Print the bit itself
-    vals->append(" " + bit_it->GetColouredVal() + " ");
-    names->append(bit_it->GetBitKindName());
-    bit_it++;
-
-    // Handle stuff bit. If stuff bit is inserted behind a single bit
-    // field it is marked with the same bit field!
-    if (nxtBitIt->kind_ == bit_it->kind_ &&
-        (nxtBitIt->stuff_kind_ == StuffKind::Fixed ||
-         nxtBitIt->stuff_kind_ == StuffKind::Normal))
-    {
-        if (printStuffBits == true)
-        {
-            names->append(std::string(3, ' '));
-            vals->append(" " + bit_it->GetColouredVal() + " ");
-        }
-        bit_it++;
-    }
-}
-
-void can::BitFrame::PrintMultiBitField(std::list<Bit>::iterator& bit_it,
-                                       std::string *vals,
-                                       std::string *names,
-                                       bool printStuffBits)
-{
-    int len = 0;
-    int preOffset = 0;
-    int postOffset = 0;
-    std::string fieldName = bit_it->GetBitKindName();
-    std::list<Bit>::iterator firstBitIt = bit_it;
-
-    for (; bit_it->kind_ == firstBitIt->kind_; bit_it++)
-    {
-        if (printStuffBits == false && bit_it->stuff_kind_ != StuffKind::NoStuff)
-            continue;
-
-        len += 2;
-        vals->append(bit_it->GetColouredVal() + " ");
-    }
-
-    preOffset = (len - static_cast<int>(fieldName.length())) / 2;
-    postOffset = preOffset;
-    if (fieldName.length() % 2 == 1)
-        postOffset++;
-
-    // Do best effort here, if name is longer, keep no offset
-    if (postOffset < 0)
-        postOffset = 0;
-    if (preOffset < 0)
-        preOffset = 0;
-
-    names->append(std::string(preOffset, ' '));
-    names->append(fieldName);
-    names->append(std::string(postOffset, ' '));
 }
