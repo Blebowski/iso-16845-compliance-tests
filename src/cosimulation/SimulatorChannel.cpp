@@ -76,7 +76,7 @@ void SimulatorChannelStartRequest()
 void SimulatorChannelWaitRequestDone()
 {
     std::atomic_thread_fence(std::memory_order_seq_cst);
-    while(simulator_channel.req.load())
+    while (simulator_channel.req.load())
         usleep(100);
 }
 

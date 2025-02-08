@@ -24,7 +24,7 @@
 static t_pli_msg_severity pli_severity_level = PLI_INFO;
 
 
-#if PLI_KIND == PLI_KIND_VCS_VHPI
+#if (PLI_KIND == PLI_KIND_VCS_VHPI) || (PLI_KIND == PLI_KIND_NVC_VHPI)
 
 static char raw_to_std_logic_char(char raw) {
     switch (raw) {
@@ -97,7 +97,7 @@ int pli_drive_str_value(const char *signal_name, const char *value)
     for (size_t i = 0; i < strlen(value); i++)
         tmp[i] = (unsigned)std_logic_char_to_raw(value[i]);
 
-    // Flip bits
+    // Flip bits - VCD passes the vector in reverse order
     if (len > 1) {
         for (size_t i = 0; i < len; i += 8)
             tmp2[i] = tmp[len - i - 1];
@@ -121,6 +121,34 @@ int pli_drive_str_value(const char *signal_name, const char *value)
     free(tmp);
     free(tmp2);
 
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+
+    size_t len = node->signal_size;
+
+    // Allocate Buffers
+    uint32_t *tmp = pli_malloc(sizeof(uint32_t) * len);
+    for (size_t i = 0; i < len; i++)
+        tmp[i] = 0x2;
+
+    // Convert std_logic string to VCS raw format
+    for (size_t i = 0; i < strlen(value); i++)
+        tmp[i] = (unsigned)std_logic_char_to_raw(value[i]);
+
+    vhpiValueT vhpi_value;
+    vhpi_value.bufSize = (vhpiIntT)(sizeof(uint32_t) * len);
+
+    if (len == 1) {
+        vhpi_value.format = vhpiLogicVal;
+        vhpi_value.value.enumv = tmp[0];
+    } else {
+        vhpi_value.format = vhpiLogicVecVal;
+        vhpi_value.value.enumvs = tmp;
+    }
+
+    vhpi_put_value(node->handle, &vhpi_value, vhpiForcePropagate);
+
+    free(tmp);
+
 #endif
 
     return 0;
@@ -129,7 +157,7 @@ int pli_drive_str_value(const char *signal_name, const char *value)
 
 int pli_read_str_value(const char *signal_name, char *ret_value)
 {
-    pli_printf(PLI_DEBUG, "pli_read_str_value: %s Entered \n", signal_name);
+    pli_printf(PLI_DEBUG, "pli_read_str_value: %s Entered", signal_name);
 
     struct hlist_node* node = hman_get_ctu_vip_net_handle(signal_name);
 
@@ -172,9 +200,45 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
     free(tmp);
     free(tmp2);
 
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+
+    size_t len = node->signal_size;
+    vhpiValueT vhpi_value;
+    vhpi_value.bufSize = (vhpiIntT)(len * sizeof(vhpiEnumT));
+
+    if (len > 1) {
+        vhpi_value.format = vhpiLogicVecVal;
+        // NVC expects the buffer to be allocated, VCS allocates the buffer
+        // for us and (likely) also disposes it
+        vhpi_value.value.ptr = pli_malloc(vhpi_value.bufSize);
+    } else {
+        vhpi_value.format = vhpiLogicVal;
+    }
+
+    vhpi_get_value(node->handle, &vhpi_value);
+    char *tmp = pli_malloc(len + 1);
+    memset(tmp, 0, len + 1);
+
+    if (len > 1) {
+        for (size_t i = 0; i < len; i++) {
+            uint32_t *bit = (uint32_t*)(vhpi_value.value.ptr) + i;
+            tmp[i] = raw_to_std_logic_char(*bit);
+        }
+    } else {
+        tmp[0] = raw_to_std_logic_char((uint32_t)(vhpi_value.value.intg));
+    }
+
+    // Caller must satisfy sufficient length of ret_value buffer
+    memcpy(ret_value, tmp, len);
+
+    free(tmp);
+
+    if (len > 1)
+        free(vhpi_value.value.ptr);
+
 #endif
 
-    pli_printf(PLI_DEBUG, "pli_read_str_value: %s Returns: %s \n", signal_name, ret_value);
+    pli_printf(PLI_DEBUG, "pli_read_str_value: %s Returns: %s", signal_name, ret_value);
 
     return 0;
 }
@@ -182,7 +246,7 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
 
 T_PLI_HANDLE pli_register_cb(T_PLI_REASON reason, T_PLI_HANDLE handle, void (*cb_fnc)(T_PLI_CB_ARGS))
 {
-    pli_printf(PLI_DEBUG, "pli_register_cb: reason: %d, handle: %p, cb_fnc: %p \n",
+    pli_printf(PLI_DEBUG, "pli_register_cb: reason: %d, handle: %p, cb_fnc: %p",
                 reason, handle, cb_fnc);
 
 #if PLI_KIND == PLI_KIND_GHDL_VPI
@@ -229,6 +293,25 @@ T_PLI_HANDLE pli_register_cb(T_PLI_REASON reason, T_PLI_HANDLE handle, void (*cb
 
     // TODO: Figure out why VCS returns NULL handle despite correctly registering the handle!
     return vhpi_register_cb(&cb, 0);
+
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+
+    static vhpiCbDataT cb;
+    static vhpiValueT value;
+    static vhpiTimeT time;
+
+    value.format = vhpiEnumVal;
+    value.bufSize = 0;
+    value.value.intgs = 0;
+
+    cb.reason = reason;
+    cb.cb_rtn = cb_fnc;
+    cb.time = &time;
+    cb.value = &value;
+    cb.obj = handle;
+
+    return vhpi_register_cb(&cb, 0);
+
 #endif
 
 }
@@ -248,6 +331,8 @@ void pli_printf(t_pli_msg_severity severity, const char *fmt, ...)
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
         vhpi_printf("%s ", PLI_TAG);
         vhpi_printf("%s ", tmp);
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+        vhpi_printf("%s %s\n", PLI_TAG, tmp);
 #endif
         va_end(args);
     }

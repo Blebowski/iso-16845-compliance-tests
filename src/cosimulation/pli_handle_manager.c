@@ -56,6 +56,10 @@ static void hman_search_ctu_vip_handle(T_PLI_HANDLE module, char *exp_name)
 
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
     ctu_vip_handle = vhpi_handle_by_name(CTU_VIP_HIERARCHICAL_PATH, NULL);
+
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+    ctu_vip_handle = vhpi_handle_by_name(CTU_VIP_HIERARCHICAL_PATH, NULL);
+
 #endif
 }
 
@@ -91,6 +95,11 @@ static T_PLI_HANDLE hman_get_ctu_vip_handle()
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
         hman_search_ctu_vip_handle(NULL, 0);
         full_path = vhpi_get_str(vhpiFullNameP, ctu_vip_handle);
+
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+        hman_search_ctu_vip_handle(NULL, 0);
+        full_path = vhpi_get_str(vhpiFullNameP, ctu_vip_handle);
+
 #endif
 
         pli_printf(PLI_INFO, "Found CTU CAN FD VIP is: %s\n", full_path, ctu_vip_handle);
@@ -149,6 +158,24 @@ static T_PLI_HANDLE hman_create_ctu_vip_signal_handle(const char *signal_name)
     vhpiHandleT sig_handle = vhpi_handle_by_name(full_name, NULL);
     if (sig_handle != NULL)
         return sig_handle;
+
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+    // Get signals directly via VHPI
+    char full_name[1024];
+    memset(full_name, 0, sizeof(full_name));
+    sprintf(full_name, "%s:%s", CTU_VIP_HIERARCHICAL_PATH, signal_name);
+
+    // VCS VHDL signals are converted to upper-case
+    char *curr = full_name;
+    while (*curr) {
+        *curr = (char)toupper((unsigned char) *curr);
+        curr++;
+    }
+
+    vhpiHandleT sig_handle = vhpi_handle_by_name(full_name, NULL);
+    if (sig_handle != NULL)
+        return sig_handle;
+
 #endif
 
     pli_printf(PLI_ERROR, "Can't find handle for signal %s\n", signal_name);
@@ -253,6 +280,8 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
 #if PLI_KIND == PLI_KIND_GHDL_VPI
         full_name = vpi_get_str(vpiFullName, new_signal_handle);
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
+        full_name = vhpi_get_str(vhpiFullNameP, new_signal_handle);
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
         full_name = vhpi_get_str(vhpiFullNameP, new_signal_handle);
 #endif
         pli_printf(PLI_DEBUG, "Caching signal handle of: %s\n", full_name);

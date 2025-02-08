@@ -158,15 +158,18 @@ int register_pli_clk_cb()
 void pli_start_of_sim(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
-    pli_printf(PLI_INFO, "Simulation start callback\n");
+    pli_printf(PLI_INFO, "Simulation start callback");
 
-    pli_printf(PLI_INFO, "Registering callback for control to SW\n");
-    register_control_transfer_cb();
-    pli_printf(PLI_INFO, "Done\n");
+    // If order of registration is swapped, then the PLI_CLK callback stops
+    // working in NVC once the control transfer callback is called!
 
-    pli_printf(PLI_INFO, "Registering PLI clock callback\n");
+    pli_printf(PLI_INFO, "Registering PLI clock callback");
     register_pli_clk_cb();
-    pli_printf(PLI_INFO, "Done\n");
+    pli_printf(PLI_INFO, "Done");
+
+    pli_printf(PLI_INFO, "Registering callback for control to SW");
+    register_control_transfer_cb();
+    pli_printf(PLI_INFO, "Done");
 
     return;
 }
@@ -177,7 +180,7 @@ void pli_start_of_sim(PLI_CB_ARG)
 void pli_end_of_sim(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
-    pli_printf(PLI_INFO, "End of simulation callback SW\n");
+    pli_printf(PLI_INFO, "End of simulation callback SW");
     hman_cleanup();
 }
 
@@ -188,20 +191,20 @@ void pli_end_of_sim(PLI_CB_ARG)
 void handle_register()
 {
     /* Start of simulation hook */
-    pli_printf(PLI_INFO, "Registering start of simulation callback...\n");
+    pli_printf(PLI_INFO, "Registering start of simulation callback...");
     if (pli_register_cb(P_PLI_CB_START_OF_SIMULATION, NULL, &pli_start_of_sim) == NULL) {
-        pli_printf(PLI_ERROR, "Cannot register start of simulation callback callback\n");
+        pli_printf(PLI_ERROR, "Cannot register start of simulation callback callback");
         return;
     }
-    pli_printf(PLI_INFO, "Done\n");
+    pli_printf(PLI_INFO, "Done");
 
     /* End of simulation hook */
-    pli_printf(PLI_INFO, "Registering end of simulation callback...\n");
+    pli_printf(PLI_INFO, "Registering end of simulation callback...");
     if (pli_register_cb(P_PLI_CB_END_OF_SIMULATION, NULL, &pli_end_of_sim) == NULL) {
-        pli_printf (PLI_ERROR, "Cannot register end of simulation callback\n");
+        pli_printf (PLI_ERROR, "Cannot register end of simulation callback");
         return;
     }
-    pli_printf(PLI_INFO, "Done\n");
+    pli_printf(PLI_INFO, "Done");
 }
 
 
@@ -217,7 +220,7 @@ void (*vlog_startup_routines[]) () =
   0
 };
 
-#elif PLI_KIND == PLI_KIND_VCS_VHPI
+#elif (PLI_KIND == PLI_KIND_VCS_VHPI) || (PLI_KIND == PLI_KIND_NVC_VHPI)
 
 void (*vhpi_startup_routines[])() = {
    handle_register,
