@@ -165,7 +165,7 @@
 // Types
 #define T_PLI_HANDLE vhpiHandleT
 #define T_PLI_REASON int32_t
-#define T_PLI_CB_ARGS struct vhpiCbDataS*
+#define T_PLI_CB_ARGS const struct vhpiCbDataS*
 #define PLI_CB_ARG T_PLI_CB_ARGS data
 #define UNUSED_PLI_CB_ARG (void)(data);
 

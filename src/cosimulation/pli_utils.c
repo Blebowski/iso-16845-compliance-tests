@@ -135,7 +135,7 @@ int pli_drive_str_value(const char *signal_name, const char *value)
         tmp[i] = (unsigned)std_logic_char_to_raw(value[i]);
 
     vhpiValueT vhpi_value;
-    vhpi_value.bufSize = (vhpiIntT)(sizeof(uint32_t) * len);
+    vhpi_value.bufSize = (size_t)(sizeof(uint32_t) * len);
 
     if (len == 1) {
         vhpi_value.format = vhpiLogicVal;
@@ -204,7 +204,7 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
 
     size_t len = node->signal_size;
     vhpiValueT vhpi_value;
-    vhpi_value.bufSize = (vhpiIntT)(len * sizeof(vhpiEnumT));
+    vhpi_value.bufSize = (size_t)(len * sizeof(vhpiEnumT));
 
     if (len > 1) {
         vhpi_value.format = vhpiLogicVecVal;
@@ -222,10 +222,10 @@ int pli_read_str_value(const char *signal_name, char *ret_value)
     if (len > 1) {
         for (size_t i = 0; i < len; i++) {
             uint32_t *bit = (uint32_t*)(vhpi_value.value.ptr) + i;
-            tmp[i] = raw_to_std_logic_char(*bit);
+            tmp[i] = raw_to_std_logic_char((char)*bit);
         }
     } else {
-        tmp[0] = raw_to_std_logic_char((uint32_t)(vhpi_value.value.intg));
+        tmp[0] = raw_to_std_logic_char((char)(vhpi_value.value.intg));
     }
 
     // Caller must satisfy sufficient length of ret_value buffer

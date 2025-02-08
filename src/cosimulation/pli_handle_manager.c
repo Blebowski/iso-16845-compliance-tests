@@ -17,13 +17,14 @@
 
 #include "pli_handle_manager.h"
 
-
-/* Handle to CTU CAN FD VIP - Test controller agent module */
-static T_PLI_HANDLE ctu_vip_handle = NULL;
-
 /* List of handles which has been already queried by library */
 static struct hlist_node *list_head = NULL;
 
+
+#if PLI_KIND == PLI_KIND_GHDL_VPI
+
+/* Handle to CTU CAN FD VIP - Test controller agent module */
+static T_PLI_HANDLE ctu_vip_handle = NULL;
 
 /**
  * @brief Searches through module instances recursively if module matches
@@ -33,9 +34,10 @@ static struct hlist_node *list_head = NULL;
  */
 static void hman_search_ctu_vip_handle(T_PLI_HANDLE module, char *exp_name)
 {
+    (void)(module);
+
     pli_printf(PLI_DEBUG, "hman_search_ctu_vip_handle: %s", exp_name);
 
-#if PLI_KIND == PLI_KIND_GHDL_VPI
     char *curr_name = vpi_get_str(vpiName, module);
     pli_printf(PLI_DEBUG, "Checking path: %s", curr_name);
 
@@ -53,16 +55,7 @@ static void hman_search_ctu_vip_handle(T_PLI_HANDLE module, char *exp_name)
         while ((mod_tmp = (vpiHandle)vpi_scan(mod_it)) != NULL)
             hman_search_ctu_vip_handle(mod_tmp, name);
     }
-
-#elif PLI_KIND == PLI_KIND_VCS_VHPI
-    ctu_vip_handle = vhpi_handle_by_name(CTU_VIP_HIERARCHICAL_PATH, NULL);
-
-#elif PLI_KIND == PLI_KIND_NVC_VHPI
-    ctu_vip_handle = vhpi_handle_by_name(CTU_VIP_HIERARCHICAL_PATH, NULL);
-
-#endif
 }
-
 
 /**
  * @returns Handle to CTU CAN FD VIP module inside HDL simulation.
@@ -79,8 +72,6 @@ static T_PLI_HANDLE hman_get_ctu_vip_handle()
 
         /* Finds the handle and assigns to "ctu_vip_handle" */
         char *full_path;
-
-#if PLI_KIND == PLI_KIND_GHDL_VPI
         char ctu_vip_path[] = CTU_VIP_HIERARCHICAL_PATH;
         char *top_name = strtok(ctu_vip_path, PLI_HIER_SEP);
 
@@ -91,22 +82,13 @@ static T_PLI_HANDLE hman_get_ctu_vip_handle()
         vpi_free_object(top_mod_it);
 
         full_path = vpi_get_str(vpiFullName, ctu_vip_handle);
-
-#elif PLI_KIND == PLI_KIND_VCS_VHPI
-        hman_search_ctu_vip_handle(NULL, 0);
-        full_path = vhpi_get_str(vhpiFullNameP, ctu_vip_handle);
-
-#elif PLI_KIND == PLI_KIND_NVC_VHPI
-        hman_search_ctu_vip_handle(NULL, 0);
-        full_path = vhpi_get_str(vhpiFullNameP, ctu_vip_handle);
-
-#endif
-
         pli_printf(PLI_INFO, "Found CTU CAN FD VIP is: %s", full_path, ctu_vip_handle);
     }
 
     return ctu_vip_handle;
 }
+
+#endif
 
 
 /**
@@ -279,10 +261,8 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
         char *full_name;
 #if PLI_KIND == PLI_KIND_GHDL_VPI
         full_name = vpi_get_str(vpiFullName, new_signal_handle);
-#elif PLI_KIND == PLI_KIND_VCS_VHPI
-        full_name = vhpi_get_str(vhpiFullNameP, new_signal_handle);
-#elif PLI_KIND == PLI_KIND_NVC_VHPI
-        full_name = vhpi_get_str(vhpiFullNameP, new_signal_handle);
+#elif (PLI_KIND == PLI_KIND_VCS_VHPI) || (PLI_KIND == PLI_KIND_NVC_VHPI)
+        full_name = (char *)vhpi_get_str(vhpiFullNameP, new_signal_handle);
 #endif
         pli_printf(PLI_DEBUG, "Caching signal handle of: %s", full_name);
         list_entry = hman_add_handle_to_list(new_signal_handle, signal_name);
