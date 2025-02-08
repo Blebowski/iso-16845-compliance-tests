@@ -73,6 +73,7 @@
 
 #define PLI_KIND_GHDL_VPI 0
 #define PLI_KIND_VCS_VHPI 1
+#define PLI_KIND_NVC_VHPI 2
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -151,10 +152,46 @@
 #define PLI_FREE vhpi_release_handle
 #define PLI_GET vhpi_get
 
+#elif PLI_KIND == PLI_KIND_NVC_VHPI
+
+// For VCS header file
+//#define STD_VCS_VHPI
+
+#include "nvc_vhpi_user.h"
+
+#define PLI_TAG "\033[1;33mVHPI: \033[0m"
+#define PLI_HIER_SEP ":"
+
+// Types
+#define T_PLI_HANDLE vhpiHandleT
+#define T_PLI_REASON int32_t
+#define T_PLI_CB_ARGS const struct vhpiCbDataS*
+#define PLI_CB_ARG T_PLI_CB_ARGS data
+#define UNUSED_PLI_CB_ARG (void)(data);
+
+// Properties
+#define P_PLI_NAME vhpiNameP
+#define P_PLI_FULL_NAME vhpiFullNameP
+#define P_PLI_MODULE vhpiCompInstStmts
+#define P_PLI_SIZE vhpiSizeP
+
+#define P_PLI_SCOPE vhpiUpperRegion
+#define P_PLI_NET vhpiSigDecls
+#define P_PLI_CB_VALUE_CHANGE vhpiCbValueChange
+#define P_PLI_CB_START_OF_SIMULATION vhpiCbStartOfSimulation
+#define P_PLI_CB_END_OF_SIMULATION vhpiCbEndOfSimulation
+
+// Functions
+#define PLI_GET_STR vhpi_get_str
+#define PLI_ITERATE vhpi_iterator
+#define PLI_SCAN vhpi_scan
+#define PLI_HANDLE vhpi_handle
+#define PLI_FREE vhpi_release_handle
+#define PLI_GET vhpi_get
 
 // Unknown
 #else
-    #error Invalid PLI_KIND. Set to either 0 (VPI) or 1 (VHPI)
+    #error Invalid PLI_KIND. Set to either 0 (VPI), 1 (VCS VHPI) or 2 (NVC VHPI)
 #endif
 
 typedef enum {

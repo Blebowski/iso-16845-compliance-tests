@@ -65,9 +65,17 @@ void ProcessPliClkCallback();
 void sw_control_req_callback(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
-    pli_printf(PLI_INFO, "Simulator requests passing control to SW!\n");
+
+    char req_val;
+    pli_read_str_value(PLI_SIGNAL_CONTROL_REQ, &(req_val));
+    if (req_val != '1') {
+        pli_printf(PLI_INFO, "Simulator control request dropped to zero");
+        return;
+    }
+
+    pli_printf(PLI_INFO, "Simulator requests passing control to SW!");
     pli_drive_str_value(PLI_SIGNAL_CONTROL_GNT, "1");
-    pli_printf(PLI_INFO, "Control passed to SW\n");
+    pli_printf(PLI_INFO, "Control passed to SW");
 
     char test_name_binary[1024];
     memset(test_name_binary, 0, sizeof(test_name_binary));
@@ -88,8 +96,7 @@ void sw_control_req_callback(PLI_CB_ARG)
         test_name[i / 8] = letter;
     }
 
-    printf("TEST NAME: %s\n", test_name);
-    pli_printf(PLI_INFO, "Test name fetched from TB: \033[1;31m%s\n\033[0m", test_name);
+    pli_printf(PLI_INFO, "Test name fetched from TB: \033[1;31m%s\033[0m", test_name);
     RunCppTest(test_name);
 }
 
@@ -110,18 +117,18 @@ void pli_clk_callback(PLI_CB_ARG)
  */
 int register_control_transfer_cb()
 {
-    pli_printf(PLI_INFO, "Registering callback for control request...\n");
+    pli_printf(PLI_INFO, "Registering callback for control request...");
     struct hlist_node* node = hman_get_ctu_vip_net_handle(PLI_SIGNAL_CONTROL_REQ);
 
     if (node == NULL)
     {
-        pli_printf(PLI_INFO, "Can't get handle for %s\n", PLI_SIGNAL_CONTROL_REQ);
+        pli_printf(PLI_INFO, "Can't get handle for %s", PLI_SIGNAL_CONTROL_REQ);
         return -1;
     }
 
     if (pli_register_cb(P_PLI_CB_VALUE_CHANGE, node->handle, &sw_control_req_callback) == NULL)
     {
-        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s\n", PLI_SIGNAL_CONTROL_REQ);
+        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s", PLI_SIGNAL_CONTROL_REQ);
         return -2;
     }
 
@@ -138,13 +145,13 @@ int register_pli_clk_cb()
 
     if (node == NULL)
     {
-        pli_printf(PLI_INFO, "Can't obtain request handle for %s\n", PLI_SIGNAL_CLOCK);
+        pli_printf(PLI_INFO, "Can't obtain request handle for %s", PLI_SIGNAL_CLOCK);
         return -1;
     }
 
     if (pli_register_cb(P_PLI_CB_VALUE_CHANGE, node->handle, &pli_clk_callback) == NULL)
     {
-        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s\n", PLI_SIGNAL_CLOCK);
+        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s", PLI_SIGNAL_CLOCK);
         return -2;
     }
 
@@ -158,15 +165,18 @@ int register_pli_clk_cb()
 void pli_start_of_sim(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
-    pli_printf(PLI_INFO, "Simulation start callback\n");
+    pli_printf(PLI_INFO, "Simulation start callback");
 
-    pli_printf(PLI_INFO, "Registering callback for control to SW\n");
-    register_control_transfer_cb();
-    pli_printf(PLI_INFO, "Done\n");
+    // If order of registration is swapped, then the PLI_CLK callback stops
+    // working in NVC once the control transfer callback is called!
 
-    pli_printf(PLI_INFO, "Registering PLI clock callback\n");
+    pli_printf(PLI_INFO, "Registering PLI clock callback");
     register_pli_clk_cb();
-    pli_printf(PLI_INFO, "Done\n");
+    pli_printf(PLI_INFO, "Done");
+
+    pli_printf(PLI_INFO, "Registering callback for control to SW");
+    register_control_transfer_cb();
+    pli_printf(PLI_INFO, "Done");
 
     return;
 }
@@ -177,7 +187,7 @@ void pli_start_of_sim(PLI_CB_ARG)
 void pli_end_of_sim(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
-    pli_printf(PLI_INFO, "End of simulation callback SW\n");
+    pli_printf(PLI_INFO, "End of simulation callback SW");
     hman_cleanup();
 }
 
@@ -188,20 +198,20 @@ void pli_end_of_sim(PLI_CB_ARG)
 void handle_register()
 {
     /* Start of simulation hook */
-    pli_printf(PLI_INFO, "Registering start of simulation callback...\n");
+    pli_printf(PLI_INFO, "Registering start of simulation callback...");
     if (pli_register_cb(P_PLI_CB_START_OF_SIMULATION, NULL, &pli_start_of_sim) == NULL) {
-        pli_printf(PLI_ERROR, "Cannot register start of simulation callback callback\n");
+        pli_printf(PLI_ERROR, "Cannot register start of simulation callback callback");
         return;
     }
-    pli_printf(PLI_INFO, "Done\n");
+    pli_printf(PLI_INFO, "Done");
 
     /* End of simulation hook */
-    pli_printf(PLI_INFO, "Registering end of simulation callback...\n");
+    pli_printf(PLI_INFO, "Registering end of simulation callback...");
     if (pli_register_cb(P_PLI_CB_END_OF_SIMULATION, NULL, &pli_end_of_sim) == NULL) {
-        pli_printf (PLI_ERROR, "Cannot register end of simulation callback\n");
+        pli_printf (PLI_ERROR, "Cannot register end of simulation callback");
         return;
     }
-    pli_printf(PLI_INFO, "Done\n");
+    pli_printf(PLI_INFO, "Done");
 }
 
 
@@ -217,7 +227,7 @@ void (*vlog_startup_routines[]) () =
   0
 };
 
-#elif PLI_KIND == PLI_KIND_VCS_VHPI
+#elif (PLI_KIND == PLI_KIND_VCS_VHPI) || (PLI_KIND == PLI_KIND_NVC_VHPI)
 
 void (*vhpi_startup_routines[])() = {
    handle_register,
