@@ -37,6 +37,7 @@
 
 #include "TestLoader.h"
 
+
 /******************************************************************************
  * Implementations of compliance tests
  *****************************************************************************/
@@ -728,6 +729,7 @@ void TestMessage(const char *fmt, ...)
     }
     va_end(args);
     printf("\n");
+    fflush(stdout);
 }
 
 void TestBigMessage(std::string message, ...)
