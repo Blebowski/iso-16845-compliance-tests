@@ -65,6 +65,14 @@ void ProcessPliClkCallback();
 void sw_control_req_callback(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
+
+    char req_val;
+    pli_read_str_value(PLI_SIGNAL_CONTROL_REQ, &(req_val));
+    if (req_val != '1') {
+        pli_printf(PLI_INFO, "Simulator control request dropped to zero");
+        return;
+    }
+
     pli_printf(PLI_INFO, "Simulator requests passing control to SW!");
     pli_drive_str_value(PLI_SIGNAL_CONTROL_GNT, "1");
     pli_printf(PLI_INFO, "Control passed to SW");
