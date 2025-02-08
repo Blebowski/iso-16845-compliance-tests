@@ -61,7 +61,7 @@ static char std_logic_char_to_raw(char std_logic) {
 
 int pli_drive_str_value(const char *signal_name, const char *value)
 {
-    pli_printf(PLI_DEBUG, "pli_drive_str_value: %s = %s\n", signal_name, value);
+    pli_printf(PLI_DEBUG, "pli_drive_str_value: %s = %s", signal_name, value);
 
     struct hlist_node* node = hman_get_ctu_vip_net_handle(signal_name);
 
@@ -327,10 +327,10 @@ void pli_printf(t_pli_msg_severity severity, const char *fmt, ...)
 
 #if PLI_KIND == PLI_KIND_GHDL_VPI
         vpi_printf("%s ", PLI_TAG);
-        vpi_printf("%s", tmp);
+        vpi_printf("%s\n", tmp);
 #elif PLI_KIND == PLI_KIND_VCS_VHPI
         vhpi_printf("%s ", PLI_TAG);
-        vhpi_printf("%s ", tmp);
+        vhpi_printf("%s\n", tmp);
 #elif PLI_KIND == PLI_KIND_NVC_VHPI
         vhpi_printf("%s %s\n", PLI_TAG, tmp);
 #endif
@@ -340,13 +340,13 @@ void pli_printf(t_pli_msg_severity severity, const char *fmt, ...)
 
 void* pli_malloc(size_t size)
 {
-    pli_printf(PLI_DEBUG, "pli_malloc: size=%d\n", size);
+    pli_printf(PLI_DEBUG, "pli_malloc: size=%d", size);
 
     void *p = malloc(size);
 
     if (p == NULL) {
-        pli_printf(PLI_ERROR, "malloc failed for size of: %d\n", size);
-        pli_printf(PLI_ERROR, "Can't continue, exiting application...\n", size);
+        pli_printf(PLI_ERROR, "malloc failed for size of: %d", size);
+        pli_printf(PLI_ERROR, "Can't continue, exiting application...", size);
         exit(1);
     }
 
@@ -355,7 +355,7 @@ void* pli_malloc(size_t size)
 
 void pli_print_handle(T_PLI_HANDLE handle)
 {
-    pli_printf(PLI_INFO, "HANDLE: %p\n", handle);
+    pli_printf(PLI_INFO, "HANDLE: %p", handle);
 }
 
 

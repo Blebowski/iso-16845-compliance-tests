@@ -65,9 +65,9 @@ void ProcessPliClkCallback();
 void sw_control_req_callback(PLI_CB_ARG)
 {
     UNUSED_PLI_CB_ARG
-    pli_printf(PLI_INFO, "Simulator requests passing control to SW!\n");
+    pli_printf(PLI_INFO, "Simulator requests passing control to SW!");
     pli_drive_str_value(PLI_SIGNAL_CONTROL_GNT, "1");
-    pli_printf(PLI_INFO, "Control passed to SW\n");
+    pli_printf(PLI_INFO, "Control passed to SW");
 
     char test_name_binary[1024];
     memset(test_name_binary, 0, sizeof(test_name_binary));
@@ -88,8 +88,7 @@ void sw_control_req_callback(PLI_CB_ARG)
         test_name[i / 8] = letter;
     }
 
-    printf("TEST NAME: %s\n", test_name);
-    pli_printf(PLI_INFO, "Test name fetched from TB: \033[1;31m%s\n\033[0m", test_name);
+    pli_printf(PLI_INFO, "Test name fetched from TB: \033[1;31m%s\033[0m", test_name);
     RunCppTest(test_name);
 }
 
@@ -110,18 +109,18 @@ void pli_clk_callback(PLI_CB_ARG)
  */
 int register_control_transfer_cb()
 {
-    pli_printf(PLI_INFO, "Registering callback for control request...\n");
+    pli_printf(PLI_INFO, "Registering callback for control request...");
     struct hlist_node* node = hman_get_ctu_vip_net_handle(PLI_SIGNAL_CONTROL_REQ);
 
     if (node == NULL)
     {
-        pli_printf(PLI_INFO, "Can't get handle for %s\n", PLI_SIGNAL_CONTROL_REQ);
+        pli_printf(PLI_INFO, "Can't get handle for %s", PLI_SIGNAL_CONTROL_REQ);
         return -1;
     }
 
     if (pli_register_cb(P_PLI_CB_VALUE_CHANGE, node->handle, &sw_control_req_callback) == NULL)
     {
-        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s\n", PLI_SIGNAL_CONTROL_REQ);
+        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s", PLI_SIGNAL_CONTROL_REQ);
         return -2;
     }
 
@@ -138,13 +137,13 @@ int register_pli_clk_cb()
 
     if (node == NULL)
     {
-        pli_printf(PLI_INFO, "Can't obtain request handle for %s\n", PLI_SIGNAL_CLOCK);
+        pli_printf(PLI_INFO, "Can't obtain request handle for %s", PLI_SIGNAL_CLOCK);
         return -1;
     }
 
     if (pli_register_cb(P_PLI_CB_VALUE_CHANGE, node->handle, &pli_clk_callback) == NULL)
     {
-        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s\n", PLI_SIGNAL_CLOCK);
+        pli_printf(PLI_INFO, "Cannot register cbValueChange call back for %s", PLI_SIGNAL_CLOCK);
         return -2;
     }
 

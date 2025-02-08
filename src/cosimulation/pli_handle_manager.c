@@ -33,11 +33,11 @@ static struct hlist_node *list_head = NULL;
  */
 static void hman_search_ctu_vip_handle(T_PLI_HANDLE module, char *exp_name)
 {
-    pli_printf(PLI_DEBUG, "hman_search_ctu_vip_handle: %s\n", exp_name);
+    pli_printf(PLI_DEBUG, "hman_search_ctu_vip_handle: %s", exp_name);
 
 #if PLI_KIND == PLI_KIND_GHDL_VPI
     char *curr_name = vpi_get_str(vpiName, module);
-    pli_printf(PLI_DEBUG, "Checking path: %s\n", curr_name);
+    pli_printf(PLI_DEBUG, "Checking path: %s", curr_name);
 
     if (!strcmp(exp_name, curr_name)) {
         vpiHandle mod_it = vpi_iterate(vpiModule, module);
@@ -69,12 +69,12 @@ static void hman_search_ctu_vip_handle(T_PLI_HANDLE module, char *exp_name)
  */
 static T_PLI_HANDLE hman_get_ctu_vip_handle()
 {
-    pli_printf(PLI_DEBUG, "hman_get_ctu_vip_handle\n");
+    pli_printf(PLI_DEBUG, "hman_get_ctu_vip_handle");
 
     /* Search upon first request and cache the handle */
     if (ctu_vip_handle == NULL)
     {
-        pli_printf(PLI_DEBUG, "Searching for CTU CAN FD VIP module: %s\n",
+        pli_printf(PLI_DEBUG, "Searching for CTU CAN FD VIP module: %s",
                    CTU_VIP_HIERARCHICAL_PATH);
 
         /* Finds the handle and assigns to "ctu_vip_handle" */
@@ -102,7 +102,7 @@ static T_PLI_HANDLE hman_get_ctu_vip_handle()
 
 #endif
 
-        pli_printf(PLI_INFO, "Found CTU CAN FD VIP is: %s\n", full_path, ctu_vip_handle);
+        pli_printf(PLI_INFO, "Found CTU CAN FD VIP is: %s", full_path, ctu_vip_handle);
     }
 
     return ctu_vip_handle;
@@ -116,7 +116,7 @@ static T_PLI_HANDLE hman_get_ctu_vip_handle()
  */
 static T_PLI_HANDLE hman_create_ctu_vip_signal_handle(const char *signal_name)
 {
-    pli_printf(PLI_DEBUG, "hman_create_ctu_vip_signal_handle: %s\n", signal_name);
+    pli_printf(PLI_DEBUG, "hman_create_ctu_vip_signal_handle: %s", signal_name);
 
 #if PLI_KIND == PLI_KIND_GHDL_VPI
     // Search through all signals in ctu_van_fd_vip handle
@@ -128,12 +128,12 @@ static T_PLI_HANDLE hman_create_ctu_vip_signal_handle(const char *signal_name)
     while ((signal_handle = (vpiHandle)vpi_scan(net_iterator)) != NULL)
     {
         name = vpi_get_str(vpiName, signal_handle);
-        pli_printf(PLI_DEBUG, "Searching for signal: %s, Checking signal: %s\n",
+        pli_printf(PLI_DEBUG, "Searching for signal: %s, Checking signal: %s",
                               signal_name, name);
 
         if (strcmp(name, signal_name) == 0)
         {
-            pli_printf(PLI_DEBUG, "Found handle for: %s\n", signal_name);
+            pli_printf(PLI_DEBUG, "Found handle for: %s", signal_name);
             vpi_free_object(net_iterator);
             vpi_free_object(ctu_scope_h);
             return signal_handle;
@@ -178,7 +178,7 @@ static T_PLI_HANDLE hman_create_ctu_vip_signal_handle(const char *signal_name)
 
 #endif
 
-    pli_printf(PLI_ERROR, "Can't find handle for signal %s\n", signal_name);
+    pli_printf(PLI_ERROR, "Can't find handle for signal %s", signal_name);
 
     return NULL;
 }
@@ -191,7 +191,7 @@ static T_PLI_HANDLE hman_create_ctu_vip_signal_handle(const char *signal_name)
  */
 static struct hlist_node* hman_search_handle_list(const char *signal_name)
 {
-    pli_printf(PLI_DEBUG, "hman_search_handle_list: %s\n", signal_name);
+    pli_printf(PLI_DEBUG, "hman_search_handle_list: %s", signal_name);
 
     if (list_head == NULL)
         return NULL;
@@ -214,7 +214,7 @@ static struct hlist_node* hman_search_handle_list(const char *signal_name)
  */
 static struct hlist_node* hman_add_handle_to_list(T_PLI_HANDLE handle, const char *signal_name)
 {
-    pli_printf(PLI_DEBUG, "hman_add_handle_to_list: %s\n", signal_name);
+    pli_printf(PLI_DEBUG, "hman_add_handle_to_list: %s", signal_name);
 
     /* First entry to empty list */
     if (list_head == NULL)
@@ -266,7 +266,7 @@ static struct hlist_node* hman_add_handle_to_list(T_PLI_HANDLE handle, const cha
 
 struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
 {
-    pli_printf(PLI_DEBUG, "hman_get_ctu_vip_net_handle: %s\n", signal_name);
+    pli_printf(PLI_DEBUG, "hman_get_ctu_vip_net_handle: %s", signal_name);
 
     /* Get enry from list (cached handle) */
     struct hlist_node* list_entry = hman_search_handle_list(signal_name);
@@ -284,7 +284,7 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
 #elif PLI_KIND == PLI_KIND_NVC_VHPI
         full_name = vhpi_get_str(vhpiFullNameP, new_signal_handle);
 #endif
-        pli_printf(PLI_DEBUG, "Caching signal handle of: %s\n", full_name);
+        pli_printf(PLI_DEBUG, "Caching signal handle of: %s", full_name);
         list_entry = hman_add_handle_to_list(new_signal_handle, signal_name);
     }
 
@@ -294,7 +294,7 @@ struct hlist_node* hman_get_ctu_vip_net_handle(const char *signal_name)
 
 void hman_cleanup()
 {
-    pli_printf(PLI_DEBUG, "hman_cleanup\n");
+    pli_printf(PLI_DEBUG, "hman_cleanup");
 
     struct hlist_node *current = list_head;
     struct hlist_node *next;
