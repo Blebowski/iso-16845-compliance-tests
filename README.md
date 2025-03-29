@@ -29,6 +29,7 @@ monitor. There are two types of frames in each test:
 
 Currently, the simulation is supported with following simulators:
  - Synopsys VCS - via VHPI interface
+ - NVC - via VHPI interface
  - GHDL - via GHDL specific subset of VPI interface.
 
 There is an ongoing effort to port the implementation to NVC.
